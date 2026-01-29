@@ -1,15 +1,14 @@
-import { useState } from 'react'
 import './App.css'
 import Navbar from './components/navbar'
+import DarkModeIcon from '@mui/icons-material/DarkMode';
 
 function App() {
-  const [count, setCount] = useState(0)
 
   return (
     <>
       <Navbar />
       <div>
-      Hello  
+      NaviiGo
       </div>
     </>
   )

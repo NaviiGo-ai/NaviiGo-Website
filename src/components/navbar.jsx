@@ -17,8 +17,9 @@ function Navbar() {
         
         <h2>Profile</h2>
         <h2>About Us</h2>
-        <h2>Mode</h2>
         <h2>Explore</h2>
+        <DarkModeIcon/>
+        
       </div>
     </div>  
     </>
