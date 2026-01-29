@@ -1,6 +1,6 @@
 import './App.css'
 import Navbar from './components/navbar'
-import DarkModeIcon from '@mui/icons-material/DarkMode';
+
 
 function App() {
 
