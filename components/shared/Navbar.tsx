@@ -4,8 +4,9 @@ import { JSX, useEffect, useRef, useState} from 'react';
 import Link from 'next/link';
 import { motion, useMotionValueEvent, useScroll, useTransform } from 'framer-motion';
 import { gsap } from 'gsap';
-import { Globe, Heart, Menu, Plane, Search, User, X } from 'lucide-react';
+import { Globe, Heart, Menu, Search, User, X, LifeBuoy, LogOut } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
+import { useAuth } from '@/lib/AuthContext';
 
 /**
  * Navbar Component
@@ -52,24 +53,23 @@ export default function Navbar() {
   }, []);
 
   const toggleMenu = () => setIsOpen((v) => !v);
+  const { user, signInWithGoogle, signOut } = useAuth();
 
   type NavIcon = (props: { className?: string }) => React.ReactNode;
   const navItems: Array<{ name: string; href: string; icon: NavIcon }> = [
-    { name: 'Flights', href: '/flights', icon: Plane },
     { name: 'Explore', href: '/explore', icon: Globe },
     { name: 'Saved', href: '/saved', icon: Heart },
+    { name: 'Support', href: '/support', icon: LifeBuoy },
   ];
 
   return (
     <>
       {/* Main Navbar */}
       <motion.nav
-        ref={navRef}
-        style={{ opacity: backgroundOpacity }}
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
           isScrolled
             ? 'bg-white/85 backdrop-blur-md shadow-lg ring-1 ring-black/5 dark:bg-slate-950/60 dark:ring-white/10'
-            : 'bg-white/70 backdrop-blur-md ring-1 ring-black/5 dark:bg-slate-950/40 dark:ring-white/10'
+            : 'bg-transparent'
         }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -89,7 +89,7 @@ export default function Navbar() {
                   <span className="h-4 w-4 rounded-sm bg-slate-300/80 dark:bg-slate-600/70" />
                 </span>
                 <span className="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
-                  Naviigo
+                  NaviiGO
                 </span>
               </Link>
             </motion.div>
@@ -132,17 +132,56 @@ export default function Navbar() {
               <ThemeToggle />
 
               {/* User Account */}
-              <motion.button
-                className="flex items-center space-x-2 px-4 py-2 rounded-full bg-gradient-to-r from-primary to-primary/90 text-white hover:shadow-lg transition-shadow"
-                whileHover={{ scale: 1.05, boxShadow: '0 10px 25px rgba(0, 102, 204, 0.3)' }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <User className="w-4 h-4" />
-                <span className="font-medium text-sm">Sign In</span>
-              </motion.button>
+              {user ? (
+                <div className="flex items-center gap-3 pl-2">
+                  <div className="hidden lg:flex flex-col items-end">
+                    <span className="text-sm font-medium text-slate-700 dark:text-slate-200 leading-none mb-0.5">
+                      {user.displayName?.split(' ')[0]}
+                    </span>
+                    <span className="text-[10px] text-slate-500 font-medium tracking-wide">MEMBER</span>
+                  </div>
+                  
+                  {user.photoURL ? (
+                    <motion.div whileHover={{ scale: 1.05 }} className="relative">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img 
+                        src={user.photoURL} 
+                        alt="User" 
+                        className="w-9 h-9 rounded-full border-2 border-white dark:border-slate-800 shadow-sm" 
+                      />
+                      <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white dark:border-slate-800"></div>
+                    </motion.div>
+                  ) : (
+                    <div className="w-9 h-9 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center">
+                      <User className="w-4 h-4 text-slate-500 dark:text-slate-400" />
+                    </div>
+                  )}
+
+                  <motion.button
+                    onClick={() => signOut()}
+                    className="p-2 ml-1 rounded-full text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                    whileHover={{ scale: 1.1, rotate: 10 }}
+                    whileTap={{ scale: 0.9 }}
+                    title="Sign Out"
+                  >
+                    <LogOut className="w-4 h-4" />
+                  </motion.button>
+                </div>
+              ) : (
+                <motion.button
+                  onClick={() => signInWithGoogle()}
+                  className="flex items-center space-x-2 px-5 py-2.5 rounded-full bg-[#0066cc] text-white shadow-lg shadow-blue-900/20 hover:shadow-blue-900/30 transition-all font-medium"
+                  whileHover={{ scale: 1.02, y: -1 }}
+                  whileTap={{ scale: 0.98 }}
+                >
+                  <User className="w-4 h-4" />
+                  <span className="text-sm">Sign In</span>
+                </motion.button>
+              )}
             </div>
 
             {/* Mobile Menu Button */}
+
             <motion.button
               onClick={toggleMenu}
               className="md:hidden p-2 rounded-lg hover:bg-black/5 text-slate-700 dark:text-slate-200 dark:hover:bg-white/10"

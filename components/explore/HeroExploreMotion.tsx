@@ -103,17 +103,17 @@ export default function HeroExploreMotion({ containerId }: Props) {
       const titleLines = container.querySelectorAll<HTMLElement>('[data-hero-title-line]');
       const titleWords = container.querySelectorAll<HTMLElement>('[data-hero-title] [data-split="word"]');
       const sub = container.querySelector<HTMLElement>('[data-hero-sub]');
-      const kicker = container.querySelector<HTMLElement>('[data-hero-kicker]');
       const rail = container.querySelector<HTMLElement>('[data-hero-rail]');
       const dots = container.querySelectorAll<HTMLElement>('[data-hero-dot]');
-      const tags = container.querySelector<HTMLElement>('[data-hero-tags]');
       const cta = container.querySelector<HTMLElement>('[data-hero-cta]');
+      const ctaWrap = container.querySelector<HTMLElement>('[data-hero-cta-wrap]');
       const cards = container.querySelectorAll<HTMLElement>('[data-hero-card]');
       const cardsInner = container.querySelector<HTMLElement>('[data-hero-cards-inner]');
       const nav = container.querySelector<HTMLElement>('[data-hero-nav]');
       const bgImg = container.querySelector<HTMLElement>('[data-hero-bg-img]');
       const left = container.querySelector<HTMLElement>('[data-hero-left]');
       const right = container.querySelector<HTMLElement>('[data-hero-right]');
+      const ghost = container.querySelector<HTMLElement>('[data-hero-ghost]');
 
       if (reduce) {
         gsap.set([
@@ -124,14 +124,14 @@ export default function HeroExploreMotion({ containerId }: Props) {
           ...titleLines,
           ...Array.from(titleWords),
           sub,
-          kicker,
           rail,
           ...Array.from(dots),
-          tags,
           cta,
+          ctaWrap,
           ...Array.from(cards),
           cardsInner,
           nav,
+          ghost,
         ], { clearProps: 'all', opacity: 1 });
         return;
       }
@@ -139,11 +139,11 @@ export default function HeroExploreMotion({ containerId }: Props) {
       const tl = gsap.timeline({ defaults: { ease: 'power3.out' } });
 
       // Slide-in whole scene (text + cards + bg) on load.
-      const enterX = 12;
+      const enterX = 6;
       tl.fromTo(
         [left, right].filter(Boolean),
-        { xPercent: enterX, opacity: 0, filter: 'blur(10px)' },
-        { xPercent: 0, opacity: 1, filter: 'blur(0px)', duration: 0.5, stagger: 0.06 },
+        { xPercent: enterX, opacity: 0, filter: 'blur(8px)' },
+        { xPercent: 0, opacity: 1, filter: 'blur(0px)', duration: 0.45, stagger: 0.06 },
         0
       );
       if (bgImg) {
@@ -154,6 +154,13 @@ export default function HeroExploreMotion({ containerId }: Props) {
           0
         );
       }
+
+      tl.fromTo(
+        ghost,
+        { y: 16, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.6 },
+        0.1
+      );
 
       tl.fromTo(
         titleLines,
@@ -173,14 +180,7 @@ export default function HeroExploreMotion({ containerId }: Props) {
         sub,
         { y: 24, opacity: 0, filter: 'blur(8px)' },
         { y: 0, opacity: 1, filter: 'blur(0px)', duration: 0.72 },
-        0.32
-      );
-
-      tl.fromTo(
-        kicker,
-        { y: -10, opacity: 0 },
-        { y: 0, opacity: 0.8, duration: 0.45 },
-        0.2
+        0.36
       );
 
       tl.fromTo(
@@ -190,26 +190,21 @@ export default function HeroExploreMotion({ containerId }: Props) {
         0.28
       );
 
-      tl.fromTo(
-        [tags, cta],
-        { y: 18, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.65, stagger: 0.1 },
-        0.36
-      );
+      tl.fromTo(ctaWrap, { y: 16, opacity: 0 }, { y: 0, opacity: 1, duration: 0.45 }, 0.42);
+
+      tl.fromTo(cta, { scale: 0.96 }, { scale: 1, duration: 0.45 }, 0.44);
 
       tl.fromTo(
         cards,
-        { x: 80, y: 10, scale: 0.96, opacity: 0 },
+        { opacity: 0, filter: 'blur(8px)' },
         {
-          x: 0,
-          y: 0,
-          scale: 1,
           opacity: 1,
+          filter: 'blur(0px)',
           duration: 0.9,
           ease: 'power3.out',
           stagger: { each: 0.08, from: 'center' },
         },
-        0.32
+        0.28
       );
 
       tl.fromTo(
@@ -229,53 +224,90 @@ export default function HeroExploreMotion({ containerId }: Props) {
         });
       });
 
-      // Subtle breathing on background
-      if (bgImg) {
-        const breathe = gsap.to(bgImg, {
-          scale: 1.02,
-          duration: 8,
-          yoyo: true,
-          repeat: -1,
-          ease: 'sine.inOut',
-        });
-        tl.eventCallback('onComplete', () => {
-          breathe.play();
-        });
-        const pauseBreathe = () => breathe.pause();
-        const resumeBreathe = () => breathe.resume();
-        container.addEventListener('pointerenter', pauseBreathe);
-        container.addEventListener('pointerleave', resumeBreathe);
-        container.addEventListener('focusin', pauseBreathe);
-        container.addEventListener('focusout', resumeBreathe);
-
-        cleanups.push(() => {
-          breathe.kill();
-          container.removeEventListener('pointerenter', pauseBreathe);
-          container.removeEventListener('pointerleave', resumeBreathe);
-          container.removeEventListener('focusin', pauseBreathe);
-          container.removeEventListener('focusout', resumeBreathe);
-        });
-      }
-
       // Note: Slide changes are handled by the parent. This motion layer focuses on scene transitions + ambiance.
 
-      // ScrollTrigger parallax
-      if (bg) {
-        gsap.fromTo(
-          bg,
-          { yPercent: -4 },
+      let slideTimeline: gsap.core.Timeline | null = null;
+      let slideDirection: -1 | 1 = 1;
+
+      const animateSlideOut = () => {
+        if (reduce) return;
+
+        slideTimeline?.kill();
+        const scene = container.querySelector<HTMLElement>('[data-hero-scene]');
+        if (!scene) return;
+
+        slideTimeline = gsap.timeline({ defaults: { ease: 'power2.out' } });
+        slideTimeline.to(scene, {
+          opacity: 0,
+          xPercent: -4 * slideDirection,
+          duration: 0.2,
+        }, 0);
+
+        if (bgImg) {
+          slideTimeline.to(bgImg, { opacity: 0.35, duration: 0.22 }, 0);
+        }
+      };
+
+      const animateSlideIn = () => {
+        if (reduce) return;
+
+        slideTimeline?.kill();
+
+        const nextScene = container.querySelector<HTMLElement>('[data-hero-scene]');
+        const nextCards = container.querySelectorAll<HTMLElement>('[data-hero-card]');
+        const nextBgImg = container.querySelector<HTMLElement>('[data-hero-bg-img]');
+        if (!nextScene) return;
+
+        gsap.set(nextScene, { opacity: 0, xPercent: 7 * slideDirection });
+        gsap.set(ghost, { opacity: 0, y: 12 });
+        gsap.set(nextCards, { opacity: 0, filter: 'blur(8px)' });
+
+        if (nextBgImg) {
+          gsap.set(nextBgImg, { opacity: 0.35, scale: 1.02 });
+        }
+
+        slideTimeline = gsap.timeline({ defaults: { ease: 'power3.out' } });
+
+        if (nextBgImg) {
+          slideTimeline.to(nextBgImg, { opacity: 1, scale: 1, duration: 0.55 }, 0);
+        }
+
+        slideTimeline.to(nextScene, { opacity: 1, xPercent: 0, duration: 0.45 }, 0);
+
+        if (ghost) {
+          slideTimeline.to(ghost, { opacity: 1, y: 0, duration: 0.4 }, 0.1);
+        }
+
+        slideTimeline.to(
+          nextCards,
           {
-            yPercent: 4,
-            ease: 'none',
-            scrollTrigger: {
-              trigger: container,
-              start: 'top top',
-              end: 'bottom+=200 top',
-              scrub: 0.2,
-            },
-          }
+            opacity: 1,
+            filter: 'blur(0px)',
+            duration: 0.5,
+            stagger: { each: 0.06, from: 'center' },
+          },
+          0.06
         );
-      }
+      };
+
+      const onWillChange = (event: Event) => {
+        const detail = (event as CustomEvent<{ direction?: number }>).detail;
+        slideDirection = detail?.direction === -1 ? -1 : 1;
+        animateSlideOut();
+      };
+
+      const onDidChange = () => {
+        // Wait a frame to ensure Next/React has committed updated content.
+        requestAnimationFrame(() => animateSlideIn());
+      };
+
+      container.addEventListener('naviigo:exploreHero:will-change', onWillChange as EventListener);
+      container.addEventListener('naviigo:exploreHero:did-change', onDidChange as EventListener);
+      cleanups.push(() => {
+        container.removeEventListener('naviigo:exploreHero:will-change', onWillChange as EventListener);
+        container.removeEventListener('naviigo:exploreHero:did-change', onDidChange as EventListener);
+        slideTimeline?.kill();
+      });
 
       const reveals = container.querySelectorAll<HTMLElement>('[data-reveal]');
       reveals.forEach((el) => {
