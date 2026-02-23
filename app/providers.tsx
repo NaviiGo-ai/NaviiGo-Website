@@ -1,6 +1,7 @@
 "use client";
 
 import { ThemeProvider } from 'next-themes';
+import { AuthProvider } from '@/lib/AuthContext';
 
 export default function Providers({
   children,
@@ -12,7 +13,9 @@ export default function Providers({
       enableSystem
       disableTransitionOnChange={false}
     >
-      {children}
+      <AuthProvider>
+        {children}
+      </AuthProvider>
     </ThemeProvider>
   );
 }

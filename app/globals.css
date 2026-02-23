@@ -2,19 +2,13 @@
 @tailwind components;
 @tailwind utilities;
 
-/*
-  Theme tokens
-  - We animate theme changes by transitioning properties that *use* CSS variables.
-  - We do NOT animate layout properties.
-*/
-
 :root {
   --color-primary: #0066cc;
   --color-secondary: #ff9900;
   --motion-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
   --motion-duration: 850ms;
 
-  /* Base palette (rgb triples for easy alpha composition) */
+  /* Base palette */
   --bg-rgb: 247 249 252;
   --fg-rgb: 15 23 42;
   --surface-rgb: 255 255 255;
@@ -31,7 +25,6 @@
 }
 
 .dark {
-  /* Premium calm dark (not pure black) */
   --bg-rgb: 7 12 22;
   --fg-rgb: 226 232 240;
   --surface-rgb: 10 18 34;
@@ -40,97 +33,54 @@
   --glass-alpha: 0.48;
   --glass-strong-alpha: 0.62;
   --ring-alpha: 0.12;
-
-  --accent-primary-rgb: 0 102 204;
-  --accent-secondary-rgb: 255 153 0;
 }
 
 html,
 body {
   height: 100%;
-}
-
-body {
-  color-scheme: light;
+  overflow-x: hidden;
   background-color: rgb(var(--bg-rgb));
   color: rgb(var(--fg-rgb));
-
-  /* Smooth theme transitions: properties using variables will animate. */
-  transition:
-    background-color 350ms ease,
-    color 350ms ease;
-
-  /* Editorial background (transform-free; safe for performance) */
-  background-image:
-    radial-gradient(
-      1200px circle at 20% 10%,
-      rgb(var(--accent-primary-rgb) / 0.14),
-      transparent 55%
-    ),
-    radial-gradient(
-      1000px circle at 80% 20%,
-      rgb(var(--accent-secondary-rgb) / 0.12),
-      transparent 55%
-    ),
-    radial-gradient(
-      900px circle at 50% 90%,
-      rgb(var(--accent-primary-rgb) / 0.10),
-      transparent 60%
-    );
-  background-attachment: fixed;
-}
-
-.dark body {
-  color-scheme: dark;
-}
-
-::selection {
-  background: rgba(0, 102, 204, 0.18);
 }
 
 @layer utilities {
   /*
-    Glass utilities
-    - Uses backdrop-filter + variable-driven alpha.
-    - Border uses a low-alpha ring token for subtle separation.
+    Hides native scrollbars while maintaining scroll functionality.
+    Used for the cinematic card rail.
+  */
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  /*
+    Glass effects for UI elements
   */
   .glass {
     background-color: rgb(var(--surface-rgb) / var(--glass-alpha));
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     border: 1px solid rgb(var(--ring-rgb) / var(--ring-alpha));
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
-    transition:
-      background-color 350ms ease,
-      border-color 350ms ease;
   }
+}
 
-  .glass-strong {
-    background-color: rgb(var(--surface-rgb) / var(--glass-strong-alpha));
-    backdrop-filter: blur(18px);
-    -webkit-backdrop-filter: blur(18px);
-    border: 1px solid rgb(var(--ring-rgb) / var(--ring-alpha));
-    box-shadow: 0 10px 38px rgba(0, 0, 0, 0.10);
-    transition:
-      background-color 350ms ease,
-      border-color 350ms ease;
-  }
+/* THE NUCLEAR OVERRIDE: 
+   Specifically targets and nukes the rogue injected scrollbars 
+   caused by browser-level 'overflow-x-auto' on containers.
+*/
+.overflow-x-auto.pb-3::-webkit-scrollbar {
+  display: none !important;
+  height: 0 !important;
+  background: transparent !important;
+}
 
-  /*
-    Visual-only masking helper
-    - Uses mask-image (no layout reflow)
-    - Helps create cinematic edge falloff over photos/gradients
-  */
-  .mask-vignette {
-    -webkit-mask-image: radial-gradient(
-      120% 120% at 50% 40%,
-      rgba(0, 0, 0, 1) 55%,
-      rgba(0, 0, 0, 0) 100%
-    );
-    mask-image: radial-gradient(
-      120% 120% at 50% 40%,
-      rgba(0, 0, 0, 1) 55%,
-      rgba(0, 0, 0, 0) 100%
-    );
-  }
+.overflow-x-auto.pb-3 {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+  /* Aggressively forces clipping to stop native scroll UI */
+  overflow-x: clip !important; 
 }
