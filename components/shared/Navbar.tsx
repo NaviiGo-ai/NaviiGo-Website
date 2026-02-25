@@ -4,7 +4,7 @@ import { JSX, useEffect, useRef, useState} from 'react';
 import Link from 'next/link';
 import { motion, useMotionValueEvent, useScroll, useTransform } from 'framer-motion';
 import { gsap } from 'gsap';
-import { Globe, Heart, Menu, Search, User, X, LifeBuoy, LogOut } from 'lucide-react';
+import { Globe, Heart, Menu, Search, User, X, LifeBuoy, LogOut, Info } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
 import { useAuth } from '@/lib/AuthContext';
 
@@ -59,6 +59,7 @@ export default function Navbar() {
   const navItems: Array<{ name: string; href: string; icon: NavIcon }> = [
     { name: 'Explore', href: '/explore', icon: Globe },
     { name: 'Saved', href: '/saved', icon: Heart },
+    { name: 'About', href: '/about', icon: Info },
     { name: 'Support', href: '/support', icon: LifeBuoy },
   ];
 
