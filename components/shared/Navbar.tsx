@@ -2,6 +2,7 @@
 
 import { JSX, useEffect, useRef, useState} from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion, useMotionValueEvent, useScroll, useTransform } from 'framer-motion';
 import { gsap } from 'gsap';
 import { Globe, Heart, Menu, Search, User, X, LifeBuoy, LogOut, Info } from 'lucide-react';
@@ -32,9 +33,41 @@ export default function Navbar() {
     [0.8, 0.95]
   );
 
+  
+  // Use a standard scroll listener for robustness alongside Framer Motion
+  useEffect(() => {
+    const handleScroll = () => {
+      // Safety check for window
+      if (typeof window === 'undefined') return;
+      
+      const scrollPosition = window.scrollY;
+      const windowHeight = window.innerHeight;
+      
+      // Trigger when the user has scrolled past 70% of the viewport height.
+      // This ensures the background appears well before the next section reaches the top.
+      const threshold = windowHeight * 0.7;
+      
+      setIsScrolled(scrollPosition > threshold);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('resize', handleScroll);
+    
+    // Initial check to set correct state on load
+    handleScroll();
+    
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleScroll);
+    };
+  }, []);
+
+  // Removed useMotionValueEvent to avoid potential conflicts or hydration mismatches
+  /* 
   useMotionValueEvent(scrollY, 'change', (latest) => {
-    setIsScrolled(latest > 20);
-  });
+     ...
+  }); 
+  */
 
   useEffect(() => {
     if (!navRef.current) return;
@@ -69,8 +102,8 @@ export default function Navbar() {
       <motion.nav
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
           isScrolled
-            ? 'bg-white/85 backdrop-blur-md shadow-lg ring-1 ring-black/5 dark:bg-slate-950/60 dark:ring-white/10'
-            : 'bg-transparent'
+            ? 'bg-white/90 dark:bg-slate-950/90 backdrop-blur-xl border-b border-black/5 dark:border-white/10 shadow-sm'
+            : 'bg-slate-950/30 backdrop-blur-md border-b border-white/5'
         }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -83,12 +116,14 @@ export default function Navbar() {
               whileTap={{ scale: 0.95 }}
             >
               <Link href="/" className="flex items-center space-x-3">
-                <span
-                  aria-hidden="true"
-                  className="grid h-10 w-10 place-items-center rounded-full bg-white/50 backdrop-blur-md ring-1 ring-black/10 dark:bg-slate-900/40 dark:ring-white/10"
-                >
-                  <span className="h-4 w-4 rounded-sm bg-slate-300/80 dark:bg-slate-600/70" />
-                </span>
+                <div className="relative h-10 w-10 overflow-hidden rounded-full">
+                  <Image
+                    src="/content.png"
+                    alt="NaviiGo Logo"
+                    fill
+                    className="object-cover"
+                  />
+                </div>
                 <span className="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
                   NaviiGO
                 </span>
