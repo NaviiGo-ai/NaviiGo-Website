@@ -1,24 +1,30 @@
 {
   "app": {
-    "[project]/app/_not-found/page": [
+    "[project]/NaviiGo-Website/app/_not-found/page": [
       "static/media/83afe278b6a6bb3c-s.p.3a6ba036.woff2"
     ],
-    "[project]/app/about/page": [
+    "[project]/NaviiGo-Website/app/about/page": [
       "static/media/83afe278b6a6bb3c-s.p.3a6ba036.woff2"
     ],
-    "[project]/app/explore/page": [
+    "[project]/NaviiGo-Website/app/bookings/page": [
       "static/media/83afe278b6a6bb3c-s.p.3a6ba036.woff2"
     ],
-    "[project]/app/flights/page": [
+    "[project]/NaviiGo-Website/app/explore/page": [
       "static/media/83afe278b6a6bb3c-s.p.3a6ba036.woff2"
     ],
-    "[project]/app/page": [
+    "[project]/NaviiGo-Website/app/itinerary/page": [
       "static/media/83afe278b6a6bb3c-s.p.3a6ba036.woff2"
     ],
-    "[project]/app/saved/page": [
+    "[project]/NaviiGo-Website/app/page": [
       "static/media/83afe278b6a6bb3c-s.p.3a6ba036.woff2"
     ],
-    "[project]/app/support/page": [
+    "[project]/NaviiGo-Website/app/passport/page": [
+      "static/media/83afe278b6a6bb3c-s.p.3a6ba036.woff2"
+    ],
+    "[project]/NaviiGo-Website/app/saved/page": [
+      "static/media/83afe278b6a6bb3c-s.p.3a6ba036.woff2"
+    ],
+    "[project]/NaviiGo-Website/app/support/page": [
       "static/media/83afe278b6a6bb3c-s.p.3a6ba036.woff2"
     ]
   },

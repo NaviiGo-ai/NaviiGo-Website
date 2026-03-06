@@ -35,9 +35,28 @@
   --ring-alpha: 0.12;
 }
 
+html.lenis, html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+.lenis.lenis-smooth iframe {
+  pointer-events: none;
+}
+
 html,
 body {
-  height: 100%;
   overflow-x: hidden;
   background-color: rgb(var(--bg-rgb));
   color: rgb(var(--fg-rgb));

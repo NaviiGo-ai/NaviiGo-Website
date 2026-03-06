@@ -47,16 +47,28 @@
       "namedRegex": "^/about(?:/)?$"
     },
     {
+      "page": "/bookings",
+      "regex": "^/bookings(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/bookings(?:/)?$"
+    },
+    {
       "page": "/explore",
       "regex": "^/explore(?:/)?$",
       "routeKeys": {},
       "namedRegex": "^/explore(?:/)?$"
     },
     {
-      "page": "/flights",
-      "regex": "^/flights(?:/)?$",
+      "page": "/itinerary",
+      "regex": "^/itinerary(?:/)?$",
       "routeKeys": {},
-      "namedRegex": "^/flights(?:/)?$"
+      "namedRegex": "^/itinerary(?:/)?$"
+    },
+    {
+      "page": "/passport",
+      "regex": "^/passport(?:/)?$",
+      "routeKeys": {},
+      "namedRegex": "^/passport(?:/)?$"
     },
     {
       "page": "/saved",

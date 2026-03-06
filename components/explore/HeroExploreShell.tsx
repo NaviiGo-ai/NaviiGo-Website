@@ -20,42 +20,42 @@ type HeroSlide = {
 
 const slides: HeroSlide[] = [
   {
-    name: 'Indonesia',
+    name: 'Varanasi',
     blurb:
-      'As the largest archipelagic country in the world, Indonesia is blessed with so many different people, cultures, customs, traditions, artworks, food, animals, plants, landscapes, and everything that made it almost like 100 (or even 200) countries melted beautifully into one.',
-    primaryImage: 'https://images.unsplash.com/photo-1537953773345-d172ccf13cf1?auto=format&fit=crop&w=1920&q=80',
+      'Experience the spiritual heart of India. Varanasi, one of the oldest living cities, offers deep cultural roots, ancient ghats, and mesmerizing Ganga Aarti ceremonies.',
+    primaryImage: 'https://images.unsplash.com/photo-1561361513-2d000a50f0dc?auto=format&fit=crop&w=1920&q=80',
     accentA: '255 196 140',
     accentB: '94 231 255',
     cards: [
-      { title: 'Buddha temple, Thailand', tag: 'Thailand', image: 'https://images.unsplash.com/photo-1587474260584-136574528ed5?auto=format&fit=crop&w=900&q=80', accent: 'amber' },
-      { title: 'Broken Beach, Bali', tag: 'Bali', image: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=900&q=80', accent: 'blue' },
-      { title: 'Kerala', tag: 'India', image: 'https://images.unsplash.com/photo-1544644181-1484b3fdfc62?auto=format&fit=crop&w=900&q=80', accent: 'emerald' },
+      { title: 'Ganga Aarti', tag: 'Varanasi', image: 'https://images.unsplash.com/photo-1582283925565-d053709d3bdf?auto=format&fit=crop&w=900&q=80', accent: 'amber' },
+      { title: 'Dashashwamedh Ghat', tag: 'Varanasi', image: 'https://images.unsplash.com/photo-1621516900609-0d1dc90b6cb9?auto=format&fit=crop&w=900&q=80', accent: 'blue' },
+      { title: 'Assi Ghat', tag: 'Varanasi', image: 'https://images.unsplash.com/photo-1628126235206-5260b9ea6441?auto=format&fit=crop&w=900&q=80', accent: 'emerald' },
     ],
   },
   {
-    name: 'Thailand',
+    name: 'Rajasthan',
     blurb:
-      'Thailand moves from golden temples to emerald bays with a rhythm of night markets, riverfront skylines, and island sunsets.',
-    primaryImage: 'https://images.unsplash.com/photo-1528181304800-259b08848526?auto=format&fit=crop&w=1920&q=80',
+      'Step into the land of Kings. Rajasthan features golden deserts, majestic forts, opulent palaces, and a vibrant culture that echoes tales of historic grandeur.',
+    primaryImage: 'https://images.unsplash.com/photo-1477587458883-47145ed94245?auto=format&fit=crop&w=1920&q=80',
     accentA: '255 153 0',
     accentB: '0 102 204',
     cards: [
-      { title: 'Wat Arun', tag: 'Bangkok', image: 'https://images.unsplash.com/photo-1563492065599-3520f775eeed?auto=format&fit=crop&w=900&q=80', accent: 'amber' },
-      { title: 'Phi Phi Viewpoint', tag: 'Krabi', image: 'https://images.unsplash.com/photo-1526481280695-3c4691d7f5d1?auto=format&fit=crop&w=900&q=80', accent: 'blue' },
-      { title: 'Doi Suthep', tag: 'Chiang Mai', image: 'https://images.unsplash.com/photo-1552465011-b4e21bf6e79a?auto=format&fit=crop&w=900&q=80', accent: 'emerald' },
+      { title: 'Amer Fort', tag: 'Jaipur', image: 'https://images.unsplash.com/photo-1599661502283-a44ea24dfc74?auto=format&fit=crop&w=900&q=80', accent: 'amber' },
+      { title: 'City Palace', tag: 'Udaipur', image: 'https://images.unsplash.com/photo-1615836245337-f5b9b2301f49?auto=format&fit=crop&w=900&q=80', accent: 'blue' },
+      { title: 'Mehrangarh Fort', tag: 'Jodhpur', image: 'https://images.unsplash.com/photo-1590050860551-8dfaa6c15b10?auto=format&fit=crop&w=900&q=80', accent: 'emerald' },
     ],
   },
   {
-    name: 'Bali',
+    name: 'Himalayas',
     blurb:
-      'Bali pairs jungle temples, dramatic cliffs, and calm rice valleys with sunrise-to-sunset experiences in every direction.',
-    primaryImage: 'https://images.unsplash.com/photo-1539367628448-4bc5c9d171c8?auto=format&fit=crop&w=1920&q=80',
+      'Ascend to the breathtaking peaks. The Indian Himalayas offer snow-clad mountains, spiritual retreats, and thrilling adventures in a landscape of pristine beauty.',
+    primaryImage: 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?auto=format&fit=crop&w=1920&q=80',
     accentA: '255 153 0',
     accentB: '34 211 238',
     cards: [
-      { title: 'Tegallalang Rice Terrace', tag: 'Ubud', image: 'https://images.unsplash.com/photo-1577717903315-1691ae25ab3f?auto=format&fit=crop&w=900&q=80', accent: 'emerald' },
-      { title: 'Uluwatu Temple', tag: 'Pecatu', image: 'https://images.unsplash.com/photo-1583417319070-4a69db38a482?auto=format&fit=crop&w=900&q=80', accent: 'amber' },
-      { title: 'Sekumpul Falls', tag: 'Buleleng', image: 'https://images.unsplash.com/photo-1596402184320-417e7178b2cd?auto=format&fit=crop&w=900&q=80', accent: 'blue' },
+      { title: 'Spiti Valley', tag: 'Himachal', image: 'https://images.unsplash.com/photo-1574883584852-6bdde6f3be69?auto=format&fit=crop&w=900&q=80', accent: 'emerald' },
+      { title: 'Pangong Lake', tag: 'Ladakh', image: 'https://images.unsplash.com/photo-1577717467651-78924b232753?auto=format&fit=crop&w=900&q=80', accent: 'amber' },
+      { title: 'Solang Valley', tag: 'Manali', image: 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?auto=format&fit=crop&w=900&q=80', accent: 'blue' },
     ],
   },
   {
