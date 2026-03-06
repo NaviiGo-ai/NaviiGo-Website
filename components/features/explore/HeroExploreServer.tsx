@@ -19,16 +19,16 @@ type HeroSlide = {
 };
 
 const heroSlide: HeroSlide = {
-  name: 'Indonesia',
+  name: 'Varanasi',
   meta: '01 / 04',
   blurb:
-    'As the largest archipelagic country in the world, Indonesia is blessed with people, cultures, and landscapes that feel cinematic from dawn to dusk.',
+    'Experience the spiritual heart of India. Varanasi, one of the oldest living cities, offers deep cultural roots, ancient ghats, and mesmerizing Ganga Aarti ceremonies.',
   primary: '/explore/cover-main.svg',
-  tags: ['Bali', 'Borobudur', 'Flores'],
+  tags: ['Ghats', 'Spirituality', 'Temples'],
   cards: [
-    { title: 'Buddha temple, Thailand', image: '/explore/destination-01.svg', badge: 'Popular', align: 'down' },
-    { title: 'Broken Beach, Bali', image: '/explore/destination-02.svg', badge: 'Coast', align: 'flat' },
-    { title: 'Kerala', image: '/explore/destination-03.svg', badge: 'River', align: 'up' },
+    { title: 'Ganga Aarti', image: '/explore/destination-01.svg', badge: 'Popular', align: 'down' },
+    { title: 'Kashi Vishwanath', image: '/explore/destination-02.svg', badge: 'Holy', align: 'flat' },
+    { title: 'Assi Ghat', image: '/explore/destination-03.svg', badge: 'River', align: 'up' },
   ],
 };
 

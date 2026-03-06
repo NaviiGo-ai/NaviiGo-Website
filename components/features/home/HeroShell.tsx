@@ -2,6 +2,7 @@ import HeroMotion from './HeroMotion';
 import SearchMotion from './SearchMotion';
 import ScrollScenes from './ScrollScenes';
 import { splitText } from '../../../lib/motion/splitText';
+import { AuroraBackground } from '../../ui/AuroraBackground';
 
 export default function HeroShell() {
   return (
@@ -11,21 +12,8 @@ export default function HeroShell() {
         data-hero
         className="relative overflow-hidden rounded-3xl ring-1 ring-black/5 dark:ring-white/10"
       >
-        {/* Full-bleed background layer */}
-        <div className="absolute inset-0">
-          <div
-            data-hero-bg
-            className="absolute inset-0 will-change-transform will-change-[filter] will-change-opacity"
-            style={{
-              backgroundImage:
-                'radial-gradient(1200px circle at 10% 20%, rgba(0, 102, 204, 0.35), transparent 60%), radial-gradient(900px circle at 90% 10%, rgba(255, 153, 0, 0.25), transparent 55%), linear-gradient(180deg, rgba(255,255,255,0.55), rgba(255,255,255,0.20))',
-            }}
-          />
-          <div className="absolute inset-0 bg-white/25 backdrop-blur-[2px] dark:bg-slate-950/35" />
-          <div className="absolute inset-0 bg-gradient-to-t from-white/70 via-transparent to-transparent dark:from-slate-950/70" />
-        </div>
-
-        <div className="relative px-6 py-14 sm:px-10 sm:py-20">
+        <AuroraBackground className="h-auto w-full min-h-[600px] justify-start items-stretch pt-0 pb-0 bg-transparent dark:bg-transparent">
+          <div className="relative px-6 py-14 sm:px-10 sm:py-20 z-10">
           <div className="max-w-3xl">
             <p className="text-xs font-medium tracking-[0.22em] text-slate-600 dark:text-slate-300">
               NAVIIGO • TRAVEL AGGREGATOR
@@ -47,6 +35,8 @@ export default function HeroShell() {
             </div>
           </div>
         </div>
+        </AuroraBackground>
+
 
         {/* GSAP hero timeline (isolated client component) */}
         <HeroMotion />

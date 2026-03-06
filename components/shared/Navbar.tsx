@@ -3,7 +3,7 @@
 import { JSX, useEffect, useRef, useState} from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { motion, useMotionValueEvent, useScroll, useTransform } from 'framer-motion';
+import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 import { gsap } from 'gsap';
 import { Globe, Heart, Menu, Search, User, X, LifeBuoy, LogOut, Info } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
@@ -24,6 +24,8 @@ export default function Navbar() {
   const navRef = useRef<HTMLElement | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const { scrollY } = useScroll();
   
   // Transform scroll position to opacity for background
@@ -91,6 +93,9 @@ export default function Navbar() {
   type NavIcon = (props: { className?: string }) => React.ReactNode;
   const navItems: Array<{ name: string; href: string; icon: NavIcon }> = [
     { name: 'Explore', href: '/explore', icon: Globe },
+      { name: 'Passport', href: '/passport', icon: Heart },
+      { name: 'Itinerary', href: '/itinerary', icon: Info },
+      { name: 'Bookings', href: '/bookings', icon: Globe },
     { name: 'Saved', href: '/saved', icon: Heart },
     { name: 'About', href: '/about', icon: Info },
     { name: 'Support', href: '/support', icon: LifeBuoy },
@@ -131,17 +136,17 @@ export default function Navbar() {
             </motion.div>
 
             {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center space-x-1">
+            <div className="hidden lg:flex items-center gap-1 justify-center flex-1 mx-4">
               {navItems.map((item) => (
                 <motion.div
                   key={item.name}
-                  className="flex items-center space-x-2 px-4 py-2 rounded-lg text-slate-700 hover:text-primary transition-colors relative group dark:text-slate-200 dark:hover:text-secondary"
-                  whileHover={{ y: -2 }}
+                  className="flex items-center px-2.5 py-1.5 rounded-full text-slate-600 hover:text-primary hover:bg-slate-100 transition-all relative group dark:text-slate-300 dark:hover:text-secondary dark:hover:bg-white/5"
+                  whileHover={{ y: -1 }}
                   whileTap={{ y: 0 }}
                 >
-                  <Link href={item.href} className="flex items-center space-x-2">
-                    <item.icon className="w-4 h-4" />
-                    <span className="font-medium">{item.name}</span>
+                  <Link href={item.href} className="flex items-center gap-1.5 text-[13px]">
+                    <item.icon className="w-3.5 h-3.5 opacity-70 group-hover:opacity-100" />
+                    <span className="font-semibold tracking-wide">{item.name}</span>
                   </Link>
                   <motion.div
                     className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-primary to-secondary rounded-full"
@@ -157,6 +162,7 @@ export default function Navbar() {
             <div className="hidden md:flex items-center space-x-3">
               {/* Search Button */}
               <motion.button
+                onClick={() => setIsSearchOpen(true)}
                 className="p-2 rounded-full hover:bg-black/5 text-slate-700 transition-colors dark:text-slate-200 dark:hover:bg-white/10"
                 whileHover={{ scale: 1.1, rotate: 90 }}
                 whileTap={{ scale: 0.9 }}
@@ -321,6 +327,80 @@ export default function Navbar() {
           </div>
         </motion.div>
       </motion.div>
+
+      {/* Search Overlay */}
+      <AnimatePresence>
+        {isSearchOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[60] flex items-start justify-center pt-20 sm:pt-24 px-4"
+          >
+            {/* Backdrop */}
+            <div
+              className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+              onClick={() => setIsSearchOpen(false)}
+            />
+
+            {/* Search Box */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: -20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: -20 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
+              className="relative w-full max-w-2xl bg-white dark:bg-slate-900 rounded-2xl shadow-2xl overflow-hidden ring-1 ring-black/5 dark:ring-white/10"
+            >
+              <div className="flex items-center px-4 py-4 border-b border-slate-100 dark:border-slate-800">
+                <Search className="w-5 h-5 text-slate-400 dark:text-slate-500" />
+                <input
+                  type="text"
+                  placeholder="Search destinations, itineraries, or users..."
+                  className="flex-1 bg-transparent border-none outline-none px-4 text-slate-800 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-0"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === 'Escape') setIsSearchOpen(false);
+                  }}
+                />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery('')}
+                    className="p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 transition-colors"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+                <button
+                  onClick={() => setIsSearchOpen(false)}
+                  className="ml-2 px-3 py-1 rounded-lg text-sm font-medium text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 transition-colors"
+                >
+                  Esc
+                </button>
+              </div>
+              
+              {/* Quick Suggestions */}
+              <div className="px-4 py-6 bg-slate-50/50 dark:bg-slate-800/50">
+                <h3 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">
+                  Quick Jump
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {['Paris', 'Tokyo', 'Summer Itinerary', 'My Bookings'].map((term) => (
+                    <button
+                      key={term}
+                      onClick={() => setSearchQuery(term)}
+                      className="px-3 py-1.5 rounded-full bg-white dark:bg-slate-900 text-sm text-slate-600 dark:text-slate-300 shadow-sm ring-1 ring-black/5 dark:ring-white/5 hover:text-primary transition-colors"
+                    >
+                      {term}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }

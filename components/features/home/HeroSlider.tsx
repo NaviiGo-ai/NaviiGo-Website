@@ -18,25 +18,25 @@ type SpotCard = {
 
 const slides: Slide[] = [
   {
-    name: 'INDONESIA',
+    name: 'VARANASI',
     blurb:
-      'As the largest archipelagic country in the world, Indonesia is blessed with many different people, cultures, customs, traditions, artworks, food, animals, plants, landscapes, and everything that made it almost like 100 countries melted beautifully into one.',
+      'Experience the spiritual heart of India. Varanasi, one of the oldest living cities, offers deep cultural roots, ancient ghats, and mesmerizing Ganga Aarti ceremonies.',
     background:
-      'https://images.unsplash.com/photo-1518544866330-95a2f10f10f7?auto=format&fit=crop&w=2200&q=80',
+      'https://images.unsplash.com/photo-1561361513-2d000a50f0dc?auto=format&fit=crop&w=2200&q=80',
   },
   {
-    name: 'THAILAND',
+    name: 'RAJASTHAN',
     blurb:
-      'Thailand is a Southeast Asian country known for tropical beaches, opulent royal palaces, ancient ruins and ornate temples displaying figures of Buddha, all wrapped in vibrant street life and island escapes.',
+      'Step into the land of Kings. Rajasthan features golden deserts, majestic forts, opulent palaces, and a vibrant culture that echoes tales of historic grandeur.',
     background:
-      'https://images.unsplash.com/photo-1563492065599-3520f775eeed?auto=format&fit=crop&w=2200&q=80',
+      'https://images.unsplash.com/photo-1477587458883-47145ed94245?auto=format&fit=crop&w=2200&q=80',
   },
   {
-    name: 'BALI',
+    name: 'HIMALAYAS',
     blurb:
-      'Bali blends volcanic mountains, iconic rice terraces, dramatic coastlines, and a spiritual culture that makes each region feel different while still unmistakably connected to the island rhythm.',
+      'Ascend to the breathtaking peaks. The Indian Himalayas offer snow-clad mountains, spiritual retreats, and thrilling adventures in a landscape of pristine beauty.',
     background:
-      'https://images.unsplash.com/photo-1537953773345-d172ccf13cf1?auto=format&fit=crop&w=2200&q=80',
+      'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?auto=format&fit=crop&w=2200&q=80',
   },
   {
     name: 'KERALA',
@@ -48,32 +48,32 @@ const slides: Slide[] = [
 ];
 
 const fallbackSlide: Slide = {
-  name: 'DISCOVER',
-  blurb: 'Discover curated destinations and experiences across top travel regions.',
+  name: 'INDIA',
+  blurb: 'Discover the diverse, deeply spiritual, and culturally rich landscapes of India.',
   background:
-    'https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=2200&q=80',
+    'https://images.unsplash.com/photo-1524492412937-b28074a5d7da?auto=format&fit=crop&w=2200&q=80',
 };
 
 const spotCards: SpotCard[] = [
   {
-    title: 'Buddha temple, Thailand',
+    title: 'Ganga Aarti, Varanasi',
     image:
-      'https://images.unsplash.com/photo-1548013146-72479768bada?auto=format&fit=crop&w=900&q=80',
+      'https://images.unsplash.com/photo-1582283925565-d053709d3bdf?auto=format&fit=crop&w=900&q=80',
   },
   {
-    title: 'Broken Beach, Bali',
+    title: 'Amer Fort, Jaipur',
     image:
-      'https://images.unsplash.com/photo-1555400038-63f5ba517a47?auto=format&fit=crop&w=900&q=80',
+      'https://images.unsplash.com/photo-1599661502283-a44ea24dfc74?auto=format&fit=crop&w=900&q=80',
   },
   {
-    title: 'Kerala',
+    title: 'Tea Gardens, Munnar',
     image:
-      'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?auto=format&fit=crop&w=900&q=80',
+      'https://images.unsplash.com/photo-1593693411515-c20261bcad6e?auto=format&fit=crop&w=900&q=80',
   },
   {
-    title: 'Nusa Penida',
+    title: 'Spiti Valley, Himalayas',
     image:
-      'https://images.unsplash.com/photo-1604999333679-b86d54738315?auto=format&fit=crop&w=900&q=80',
+      'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?auto=format&fit=crop&w=900&q=80',
   },
 ];
 
@@ -127,7 +127,8 @@ export default function HeroSlider() {
         </motion.div>
       </AnimatePresence>
 
-      <div className="absolute inset-0 bg-slate-950/58" />
+      {/* Background with darker gradient overlay for better text visibility */}
+      <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/50 to-slate-950/20 backdrop-blur-[2px]" />
 
       <div className="relative z-10 mx-auto flex min-h-dvh w-full max-w-[1500px] items-center px-6 py-10 lg:px-10">
         
@@ -161,7 +162,7 @@ export default function HeroSlider() {
                 <motion.h1
                   key={currentSlide.name}
                   // Restored 'absolute' so the text lines overlap perfectly during the transition
-                  className="absolute left-0 top-0 text-6xl font-extrabold tracking-tight sm:text-7xl lg:text-8xl leading-none"
+                  className="absolute left-0 top-0 text-6xl font-extrabold tracking-tight sm:text-7xl lg:text-8xl leading-none drop-shadow-2xl"
                   initial={{ y: "100%", opacity: 0 }}
                   animate={{ y: "0%", opacity: 1 }}
                   exit={{ y: "-100%", opacity: 0 }}
@@ -179,7 +180,7 @@ export default function HeroSlider() {
             <AnimatePresence mode="wait">
               <motion.p
                 key={`blurb-${currentSlide.name}`}
-                className="mt-5 max-w-xl text-sm leading-relaxed text-white/80 sm:text-base"
+                className="mt-5 max-w-xl text-sm leading-relaxed text-white/90 drop-shadow-md sm:text-base font-medium"
                 initial={{ y: 16, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 exit={{ y: -16, opacity: 0 }}
