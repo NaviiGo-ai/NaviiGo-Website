@@ -130,7 +130,7 @@ export default function Navbar() {
                   />
                 </div>
                 <span className="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">
-                  NaviiGO
+                  NaviiGo
                 </span>
               </Link>
             </motion.div>
