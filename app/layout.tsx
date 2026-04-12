@@ -3,9 +3,7 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import Navbar from '@/components/shared/Navbar';
 import Providers from './providers';
-import SocialButton from '@/components/shared/SocialButton';
-import MorphSurface from '@/components/shared/MorphSurface';
-import WebGLBackground from '@/components/shared/WebGLBackground';
+import { LazySocialButton, LazyMorphSurface, LazyWebGLBackground } from '@/components/shared/LazyComponents';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -14,14 +12,14 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'NaviiGO | The Ultimate Indian Spiritual Travel Tech & Aggregator',
+  title: 'NaviiGo | The Ultimate Indian Spiritual Travel Tech & Aggregator',
   description: 'AI-Powered temple itineraries, digital pilgrim passports, and universal booking hub for cheap travel options across India.',
   keywords: 'India travel, seamless spiritual journey, digital passport, automatic temple stamps, AI itinerary generator, darshan timings planner, NaviiGO travel aggregator',
   openGraph: {
-    title: 'NaviiGO | Indian Spiritual Travel Planner',
+    title: 'NaviiGo | Indian Spiritual Travel Planner',
     description: 'Transform your journey with our Digital Pilgrim Passport and AI-powered temple itineraries.',
     url: 'https://naviigo.com',
-    siteName: 'NaviiGO',
+    siteName: 'NaviiGo',
     images: [
       {
         url: 'https://images.unsplash.com/photo-1524492412937-b28074a5d7da?auto=format&fit=crop&w=1200&q=80',
@@ -49,15 +47,13 @@ export default function RootLayout({
       className={`${inter.variable}`}
       suppressHydrationWarning
     >
-      <body className="font-sans antialiased overflow-x-hidden">
+      <body className="font-sans antialiased">
         <Providers>
-          <div className="fixed right-0 top-1/3 z-50 rounded-l-lg overflow-hidden">
-            <SocialButton />
-          </div>
-          <WebGLBackground />
+          <LazySocialButton />
+          <LazyWebGLBackground />
           <Navbar />
           <main>{children}</main>
-          <MorphSurface />
+          <LazyMorphSurface />
         </Providers>
       </body>
     </html>

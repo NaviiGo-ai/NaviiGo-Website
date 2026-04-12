@@ -1,74 +1,115 @@
 "use client";
 
+import { useState, useEffect } from 'react';
 import { motion } from "framer-motion";
-
-const savedItems = [
-  { id: 1, type: "Flight", title: "DEL to VNS", date: "Oct 12 - Oct 15", price: "₹4,500", image: "https://images.unsplash.com/photo-1561361513-2d000a50f0dc?q=80&w=800&auto=format&fit=crop" },
-  { id: 2, type: "Hotel", title: "Taj Lake Palace", date: "Nov 03 - Nov 06", price: "₹25,000/night", image: "https://images.unsplash.com/photo-1595815771614-ade9d652a65d?q=80&w=800&auto=format&fit=crop" },
-  { id: 3, type: "Circuit", title: "Char Dham Yatra", date: "Flexible", price: "AI Planned", image: "https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?q=80&w=800&auto=format&fit=crop" },
-];
+import { useRouter } from 'next/navigation';
+import { getSavedItineraries, deleteItinerary, SavedItinerary } from '@/lib/savedItineraries';
+import { DESTINATIONS } from '@/app/itinerary/data';
 
 export default function SavedPage() {
+  const router = useRouter();
+  const [savedItems, setSavedItems] = useState<SavedItinerary[]>([]);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setSavedItems(getSavedItineraries());
+    setMounted(true);
+  }, []);
+
+  const handleClearAll = () => {
+    savedItems.forEach(i => deleteItinerary(i.id));
+    setSavedItems([]);
+  };
+
+  const handleDelete = (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    deleteItinerary(id);
+    setSavedItems(getSavedItineraries());
+  };
+
   const container = {
     hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.2
-      }
-    }
+    show: { opacity: 1, transition: { staggerChildren: 0.1 } }
   };
 
-  const item = {
+  const itemAnim = {
     hidden: { opacity: 0, y: 30 },
-    show: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] } }
+    show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } }
   };
+
+  if (!mounted) return null; // Avoid hydration mismatch
 
   return (
-    <div className="min-h-screen bg-white dark:bg-zinc-950 pt-32 px-6 md:px-12 pb-24">
+    <div className="min-h-screen bg-[#f7f8fc] dark:bg-[#0a0a0f] pt-32 px-6 md:px-12 pb-24">
       <div className="max-w-7xl mx-auto">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, x: -30 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.8 }}
-          className="mb-16 border-b border-zinc-200 dark:border-zinc-800 pb-8 flex justify-between items-end"
+          className="mb-16 border-b border-zinc-200 dark:border-white/5 pb-8 flex justify-between items-end"
         >
           <div>
-            <h1 className="text-5xl md:text-7xl font-bold tracking-tighter">Your <span className="italic font-serif text-zinc-500">Saved</span> Trips.</h1>
+            <h1 className="text-5xl md:text-7xl font-bold tracking-tighter text-zinc-900 dark:text-white">Your <span className="italic font-serif text-emerald-500">Saved</span> Trips.</h1>
             <p className="text-zinc-500 dark:text-zinc-400 mt-4 text-lg">Pick up right where you left off.</p>
           </div>
-          <button className="hidden md:block text-sm font-medium uppercase tracking-widest text-zinc-400 hover:text-black dark:hover:text-white transition-colors">Clear All</button>
+          {savedItems.length > 0 && (
+            <button onClick={handleClearAll} className="hidden md:block text-sm font-medium uppercase tracking-widest text-zinc-400 hover:text-red-500 transition-colors">Clear All</button>
+          )}
         </motion.div>
 
-        <motion.div 
-          variants={container}
-          initial="hidden"
-          animate="show"
-          className="grid grid-cols-1 md:grid-cols-3 gap-8"
-        >
-          {savedItems.map((saved) => (
-            <motion.div key={saved.id} variants={item} className="group cursor-pointer">
-              <div className="relative h-64 rounded-2xl overflow-hidden mb-6">
-                <img src={saved.image} alt={saved.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" />
-                <div className="absolute top-4 left-4 bg-white/90 dark:bg-black/80 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider">
-                  {saved.type}
-                </div>
-              </div>
-              <div className="flex justify-between items-start pr-4">
-                <div>
-                  <h3 className="text-2xl font-semibold mb-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{saved.title}</h3>
-                  <p className="text-zinc-500 text-sm">{saved.date}</p>
-                </div>
-                <div className="text-lg font-medium">{saved.price}</div>
-              </div>
+        {savedItems.length === 0 ? (
+          <div className="text-center py-20">
+            <div className="text-6xl mb-4">🧳</div>
+            <h3 className="text-xl font-semibold text-zinc-800 dark:text-zinc-200 mb-2">No saved trips yet</h3>
+            <p className="text-zinc-500 mb-6">Start planning your next adventure to save it here.</p>
+            <button onClick={() => router.push('/itinerary')} className="px-6 py-3 bg-emerald-600 text-white rounded-full font-semibold hover:bg-emerald-500 transition-colors">Start Planning</button>
+          </div>
+        ) : (
+          <motion.div variants={container} initial="hidden" animate="show" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {savedItems.map((saved) => {
+              const destInfo = DESTINATIONS.find(d => d.id === saved.destId);
+              const imgUrl = destInfo ? `https://images.unsplash.com/photo-${destInfo.img}?auto=format&fit=crop&w=800&q=80` : '';
+
+              // format dates
+              const form = saved.form as any;
+              const title = saved.destName;
+              let dates = `${form.days} Days`;
+              if (form.startDate && form.endDate) {
+                try {
+                  dates = `${new Date(form.startDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} - ${new Date(form.endDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}`;
+                } catch (e) { }
+              }
+              const typeLabel = form.purpose ? (form.purpose.charAt(0).toUpperCase() + form.purpose.slice(1)) : 'Trip';
+
+              return (
+                <motion.div key={saved.id} variants={itemAnim}
+                  onClick={() => router.push(`/itinerary?load=${saved.id}`)}
+                  className="group cursor-pointer bg-white dark:bg-zinc-900 rounded-3xl p-3 border border-zinc-100 dark:border-white/5 shadow-sm hover:shadow-xl transition-all"
+                >
+                  <div className="relative h-48 rounded-2xl overflow-hidden mb-4">
+                    <img src={imgUrl} alt={title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" />
+                    <div className="absolute top-3 left-3 bg-white/90 dark:bg-black/80 backdrop-blur-sm px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider text-zinc-800 dark:text-zinc-200 shadow-sm">
+                      {typeLabel}
+                    </div>
+                    <button onClick={(e) => handleDelete(e, saved.id)} className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 dark:bg-black/80 flex items-center justify-center text-red-500 opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500 hover:text-white shadow-sm z-10">✕</button>
+                  </div>
+                  <div className="px-2 pb-2">
+                    <h3 className="text-xl font-bold mb-1 text-zinc-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">{title}</h3>
+                    <div className="flex justify-between items-center mt-2">
+                      <p className="text-zinc-500 font-medium text-sm">{dates}</p>
+                      <p className="text-emerald-600 dark:text-emerald-400 font-bold text-sm">₹{Number(form.budget).toLocaleString('en-IN')}</p>
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
+
+            <motion.div variants={itemAnim} onClick={() => router.push('/itinerary')} className="h-full min-h-[280px] rounded-3xl border-2 border-dashed border-zinc-200 dark:border-zinc-800 flex flex-col items-center justify-center text-zinc-400 hover:text-emerald-500 hover:border-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-colors cursor-pointer group">
+              <span className="text-4xl mb-3 group-hover:scale-110 transition-transform">➕</span>
+              <span className="font-bold">Plan New Trip</span>
             </motion.div>
-          ))}
-          
-          <motion.div variants={item} className="h-64 rounded-2xl border-2 border-dashed border-zinc-300 dark:border-zinc-800 flex flex-col items-center justify-center text-zinc-400 hover:text-black hover:border-black dark:hover:text-white dark:hover:border-white transition-colors cursor-pointer group">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8 mb-2 group-hover:scale-110 transition-transform"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
-            <span className="font-medium">Discover More</span>
           </motion.div>
-        </motion.div>
+        )}
       </div>
     </div>
   );
