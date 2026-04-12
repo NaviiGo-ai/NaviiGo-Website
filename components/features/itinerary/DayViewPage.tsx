@@ -1,0 +1,511 @@
+'use client';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useMemo, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
+import dynamic from 'next/dynamic';
+import { saveItinerary } from '@/lib/savedItineraries';
+import { saveSharedItinerary, listenToItinerary } from '@/lib/firestore';
+import {
+    DEST_DATA, FALLBACK_DEST, CROWD_COLOR, CROWD_DOT,
+    type DayPlan, type CrowdLevel,
+} from '@/app/itinerary/data';
+import { genShareId, CrowdDot } from './helpers';
+import ShareDropdown from './ShareDropdown';
+
+const ItineraryMap = dynamic(() => import('@/components/shared/ItineraryMap'), { ssr: false });
+const AIChat = dynamic(() => import('@/components/shared/AIChat'), { ssr: false });
+
+interface DayViewPageProps {
+    form: Record<string, unknown>;
+    onBack: () => void;
+}
+
+export default function DayViewPage({ form, onBack }: DayViewPageProps) {
+    const router = useRouter();
+    const [isSaved, setIsSaved] = useState(false);
+    const destId = form.destination as string, destName = form.destName as string;
+    const data = DEST_DATA[destId] ?? FALLBACK_DEST;
+    const [activeDay, setActiveDay] = useState(0);
+    const [activeActivity, setActiveActivity] = useState(-1);
+    const [dayRouteInfo, setDayRouteInfo] = useState<{ distance: string, time: string } | null>(null);
+    const [customPlans, setCustomPlans] = useState<DayPlan[]>(() => (form.customPlans as DayPlan[]) || JSON.parse(JSON.stringify(data.dayPlans)));
+    const plan: DayPlan = customPlans[activeDay] ?? customPlans[0];
+
+    const [isSharing, setIsSharing] = useState(false);
+    const [collaborators, setCollaborators] = useState(1);
+
+    const handleShare = useCallback(async () => {
+        setIsSharing(true);
+        try {
+            const id = genShareId();
+            await saveSharedItinerary(id, { form, customPlans, destName });
+            const url = `${window.location.origin}/itinerary?shareId=${id}`;
+            await navigator.clipboard.writeText(url);
+            listenToItinerary(id, (data) => setCollaborators(data.collaborators ?? 1), () => { });
+        } catch (e) {
+            const url = `${window.location.origin}/itinerary?load=${destId}`;
+            navigator.clipboard.writeText(url);
+        }
+        setIsSharing(false);
+    }, [form, customPlans, destName, destId]);
+
+    const [searchQuery, setSearchQuery] = useState('');
+    const [searchRes, setSearchRes] = useState<any[]>([]);
+    const [isSearching, setIsSearching] = useState(false);
+
+    const handleSearch = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!searchQuery.trim()) return;
+        setIsSearching(true);
+        try {
+            const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(searchQuery)}&format=json&limit=5`);
+            const results = await res.json();
+            setSearchRes(results);
+        } catch (err) { console.error(err); }
+        setIsSearching(false);
+    };
+
+    const addCustomActivity = (place: any) => {
+        setCustomPlans(prev => {
+            const copy = [...prev];
+            const newAct = {
+                name: place.name || place.display_name.split(',')[0],
+                desc: place.display_name,
+                time: 'Custom Time',
+                lat: parseFloat(place.lat),
+                lng: parseFloat(place.lon),
+                crowd: 'Low' as CrowdLevel,
+                crowdTip: 'Custom added location',
+                slot: 'Afternoon' as any,
+                tags: ['Custom']
+            };
+            copy[activeDay] = { ...copy[activeDay], activities: [...copy[activeDay].activities, newAct] };
+            return copy;
+        });
+        setSearchQuery('');
+        setSearchRes([]);
+        setIsSaved(false);
+    };
+
+    const moveActivity = (fromIdx: number, toIdx: number) => {
+        setCustomPlans(prev => {
+            const copy = [...prev];
+            const acts = [...copy[activeDay].activities];
+            const [moved] = acts.splice(fromIdx, 1);
+            acts.splice(toIdx, 0, moved);
+            copy[activeDay] = { ...copy[activeDay], activities: acts };
+            return copy;
+        });
+        setIsSaved(false);
+    };
+
+    const removeActivity = (idx: number) => {
+        setCustomPlans(prev => {
+            const copy = [...prev];
+            const acts = [...copy[activeDay].activities];
+            acts.splice(idx, 1);
+            copy[activeDay] = { ...copy[activeDay], activities: acts };
+            return copy;
+        });
+        setIsSaved(false);
+    };
+
+    const slotEmoji: Record<string, string> = { Morning: '🌅', Afternoon: '☀️', Evening: '🌙' };
+
+    const mapPins = useMemo(() => plan.activities.map((a, i) => ({
+        lat: a.lat, lng: a.lng, label: a.name, number: i + 1,
+    })), [plan]);
+
+    let totalHours = 0;
+    plan.activities.forEach(a => {
+        const parts = a.time.split('–').map(s => s.trim());
+        if (parts.length === 2 && parts[0].includes(':') && parts[1].includes(':')) {
+            const parse = (s: string) => {
+                const m = s.match(/(\d+):(\d+)\s*(AM|PM)/i);
+                if (!m) return null;
+                let h = parseInt(m[1]);
+                if (m[3].toUpperCase() === 'PM' && h !== 12) h += 12;
+                if (m[3].toUpperCase() === 'AM' && h === 12) h = 0;
+                return h + parseInt(m[2]) / 60;
+            };
+            const s = parse(parts[0]), e = parse(parts[1]);
+            if (s !== null && e !== null) { let d = e - s; if (d < 0) d += 24; totalHours += d; }
+        } else totalHours += 2.5;
+        if (a.travelFromPrev) totalHours += 0.5;
+    });
+
+    const isExhausting = totalHours > 10 || plan.activities.length > 5;
+    const isRaining = plan.weather.rain > 20;
+
+    return (
+        <div className="min-h-screen bg-[#f7f8fc] dark:bg-[#0a0a0f] pt-20">
+            {/* Top bar */}
+            <div className="sticky top-20 z-40 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-lg border-b border-zinc-100 dark:border-white/5 px-4 py-3 flex items-center gap-4">
+                <button onClick={onBack} className="w-9 h-9 rounded-full border border-zinc-200 dark:border-zinc-700 flex items-center justify-center hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors text-sm text-zinc-600 dark:text-zinc-300">←</button>
+                <div className="flex-1">
+                    <h1 className="font-bold text-zinc-900 dark:text-white text-sm">{destName} — Day-by-Day Itinerary</h1>
+                    <p className="text-xs text-zinc-400 hidden sm:block">Full plan with crowd & weather alerts</p>
+                </div>
+                <ShareDropdown onCopyLink={handleShare} destName={destName} isSharing={isSharing} collaborators={collaborators} />
+                <button onClick={() => { saveItinerary(destId, destName, { ...form, customPlans }); setIsSaved(true); }} disabled={isSaved}
+                    className={`px-4 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-colors ${isSaved ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 cursor-default' : 'bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 hover:bg-zinc-800 dark:hover:bg-zinc-200'}`}>
+                    {isSaved ? '✓ Saved' : '💾 Save'}
+                </button>
+            </div>
+
+            {/* Day tabs */}
+            <div className="sticky top-[120px] z-10 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-lg border-b border-zinc-100 dark:border-white/5 px-4 py-2 overflow-x-auto no-scrollbar">
+                <div className="flex gap-2">
+                    {data.dayPlans.map((dp, i) => (
+                        <button key={dp.day} onClick={() => { setActiveDay(i); setActiveActivity(-1); }}
+                            className={`flex-shrink-0 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all
+                ${activeDay === i ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/25' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'}`}>
+                            Day {dp.day}
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            <div className="max-w-[1400px] mx-auto px-4 lg:px-8 py-6">
+                <AnimatePresence mode="wait">
+                    <motion.div key={activeDay} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+
+                        {/* DAY DASHBOARD */}
+                        <div className="mb-8">
+                            <div className="flex items-center justify-between mb-4">
+                                <h2 className="text-3xl md:text-4xl font-bold text-zinc-900 dark:text-white">Day {plan.day}: {plan.title}</h2>
+                                <button onClick={() => {
+                                    const baseDate = form.startDate ? new Date(form.startDate as string) : new Date();
+                                    baseDate.setDate(baseDate.getDate() + activeDay);
+                                    let ics = "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//NaviiGo//Itinerary//EN\n";
+                                    plan.activities.forEach((a) => {
+                                        const parts = a.time.split('–').map(s => s.trim());
+                                        let sh = 9, sm = 0, eh = 10, em = 0;
+                                        if (parts.length === 2) {
+                                            const parse = (s: string) => { const m = s.match(/(\d+):(\d+)\s*(AM|PM)/i); if (!m) return null; let h = parseInt(m[1]); if (m[3].toUpperCase() === 'PM' && h !== 12) h += 12; if (m[3].toUpperCase() === 'AM' && h === 12) h = 0; return [h, parseInt(m[2])]; };
+                                            const s = parse(parts[0]), e = parse(parts[1]);
+                                            if (s) { sh = s[0]; sm = s[1]; }
+                                            if (e) { eh = e[0]; em = e[1]; }
+                                        }
+                                        const sd = new Date(baseDate); sd.setHours(sh, sm, 0);
+                                        const ed = new Date(baseDate); ed.setHours(eh, em, 0);
+                                        const fmt = (d: Date) => d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+                                        ics += `BEGIN:VEVENT\nSUMMARY:${a.name}\nDESCRIPTION:${a.desc}\nDTSTART:${fmt(sd)}\nDTEND:${fmt(ed)}\nLOCATION:${a.lat},${a.lng}\nEND:VEVENT\n`;
+                                    });
+                                    ics += "END:VCALENDAR";
+                                    const url = URL.createObjectURL(new Blob([ics], { type: 'text/calendar' }));
+                                    const a = document.createElement('a'); a.href = url; a.download = `NaviiGo_Day${plan.day}.ics`; a.click();
+                                }} className="text-xs bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 px-3 py-1.5 rounded-full font-bold shadow-sm hover:scale-105 transition-transform flex items-center gap-1.5 shrink-0">
+                                    <span>📅</span> Add to Calendar
+                                </button>
+                            </div>
+
+                            {/* Top Dashboard Grid */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                                {/* Weather */}
+                                <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-100 dark:border-zinc-800 p-4 flex items-center gap-4 shadow-sm hover:shadow-md transition-shadow">
+                                    <span className="text-4xl">{plan.weather.emoji}</span>
+                                    <div>
+                                        <div className="font-bold text-lg text-zinc-900 dark:text-white leading-tight">{plan.weather.temp}</div>
+                                        <div className="text-xs text-zinc-500">{plan.weather.condition}</div>
+                                        <div className="text-xs text-emerald-600 dark:text-emerald-400 mt-0.5 font-medium flex items-center gap-1">
+                                            <span className="text-[10px]">💡</span> {plan.weather.tip}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Daily Budget Progress */}
+                                <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-100 dark:border-zinc-800 p-4 shadow-sm flex flex-col justify-center hover:shadow-md transition-shadow">
+                                    <div className="flex justify-between items-center mb-2">
+                                        <h4 className="text-xs font-bold text-zinc-700 dark:text-zinc-300 flex items-center gap-1.5"><span>💳</span> Daily Budget Use</h4>
+                                        <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-500/10 px-1.5 py-0.5 rounded">
+                                            ₹{(form.budget as number / (form.days as number || 1)).toLocaleString('en-IN', { maximumFractionDigits: 0 })} cap
+                                        </span>
+                                    </div>
+                                    <div className="w-full h-2 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden flex">
+                                        <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min(100, (plan.activities.length * 20))}%` }} transition={{ duration: 1 }} className={`h-full ${plan.activities.length > 4 ? 'bg-amber-400' : 'bg-emerald-500'}`} />
+                                    </div>
+                                    <div className="text-[10px] text-zinc-400 mt-2 text-right">{plan.activities.length} activities planned</div>
+                                </div>
+
+                                {/* Crowd Context */}
+                                <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-100 dark:border-zinc-800 p-4 shadow-sm flex flex-col justify-center hover:shadow-md transition-shadow">
+                                    <h4 className="text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-2 flex items-center gap-1.5"><span>👥</span> Crowd Level</h4>
+                                    <div className="flex gap-2">
+                                        {(['Low', 'Medium', 'High'] as CrowdLevel[]).map(level => {
+                                            const count = plan.activities.filter(a => a.crowd === level).length;
+                                            if (count === 0) return null;
+                                            return (
+                                                <div key={level} className="flex-1 bg-zinc-50 dark:bg-zinc-800 rounded-lg p-1.5 text-center">
+                                                    <CrowdDot level={level} />
+                                                    <div className="text-[10px] font-medium text-zinc-600 dark:text-zinc-400 mt-0.5">{count} {level}</div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+
+                                {/* Route Info */}
+                                {dayRouteInfo ? (
+                                    <div className="bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-500/10 dark:to-blue-500/10 rounded-2xl border border-indigo-100 dark:border-indigo-500/20 p-4 shadow-sm flex flex-col justify-center hover:shadow-md transition-shadow">
+                                        <div className="flex items-center gap-2 mb-1"><span className="text-xl">🗺️</span><span className="font-bold text-xs text-indigo-900 dark:text-indigo-300 uppercase tracking-wide">Total Commute</span></div>
+                                        <div className="font-bold text-indigo-700 dark:text-indigo-400 text-lg leading-tight">{dayRouteInfo.time}</div>
+                                        <div className="text-[11px] text-indigo-600/70 dark:text-indigo-400/70 font-medium">{dayRouteInfo.distance} driving distance</div>
+                                    </div>
+                                ) : (
+                                    <div className="bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800 p-4 shadow-sm flex flex-col items-center justify-center text-center opacity-70">
+                                        <div className="text-base mb-1">📍</div>
+                                        <div className="text-[10px] font-medium text-zinc-500">Route calculating...</div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Alerts Row */}
+                            {(isRaining || isExhausting || plan.activities.length > 5) && (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {isRaining && (
+                                        <div className="bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 rounded-2xl p-4 flex gap-3 shadow-sm items-center">
+                                            <div className="text-3xl">🌧️</div>
+                                            <div>
+                                                <h4 className="text-sm font-bold text-blue-900 dark:text-blue-400 mb-0.5">Rain Expected</h4>
+                                                <p className="text-xs text-blue-700 dark:text-blue-300">{plan.weather.rain}% chance of rain today. Keep an umbrella handy!</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                    {isExhausting && (
+                                        <div className="bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-2xl p-4 flex gap-3 shadow-sm items-center">
+                                            <div className="text-3xl">⚠️</div>
+                                            <div className="flex-1">
+                                                <h4 className="text-sm font-bold text-red-900 dark:text-red-400 mb-0.5">Overstuffed Schedule</h4>
+                                                <p className="text-[11px] text-red-700 dark:text-red-300 leading-tight">This day involves ~{Math.round(totalHours)} hours of activity. Consider removing an item to avoid exhaustion.</p>
+                                            </div>
+                                            <button onClick={() => removeActivity(plan.activities.length - 1)} className="shrink-0 text-[10px] bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-300 font-bold px-2.5 py-1.5 rounded-lg hover:bg-red-200 transition-colors">
+                                                Drop Last
+                                            </button>
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* 2-Col Layout: Timeline + Map */}
+                        <div className="flex flex-col lg:flex-row gap-8">
+                            {/* Left Column: Activities Timeline */}
+                            <div className="flex-1 space-y-6">
+                                {/* Action Bar */}
+                                <div className="flex gap-3 flex-wrap bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl p-2 shadow-sm">
+                                    <button onClick={(e) => {
+                                        e.stopPropagation();
+                                        const currentPlans = customPlans.length > 0 ? [...customPlans] : [...data.dayPlans];
+                                        const optimizedActivities = [...plan.activities].sort((a, b) => {
+                                            const slots = { 'Morning': 1, 'Afternoon': 2, 'Evening': 3 };
+                                            const sA = slots[a.slot as keyof typeof slots] || 9;
+                                            const sB = slots[b.slot as keyof typeof slots] || 9;
+                                            if (sA !== sB) return sA - sB;
+                                            return (a.lng || 0) - (b.lng || 0);
+                                        });
+                                        currentPlans[activeDay] = { ...plan, activities: optimizedActivities };
+                                        setCustomPlans(currentPlans);
+                                    }}
+                                        className="flex-1 bg-zinc-900 dark:bg-white hover:bg-zinc-800 dark:hover:bg-zinc-100 text-white dark:text-zinc-900 transition-all px-4 py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2">
+                                        <span>✨</span> Optimize Order
+                                    </button>
+                                    <button onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (plan.activities.length <= 3) { alert("Your schedule is already very relaxed!"); return; }
+                                        const currentPlans = customPlans.length > 0 ? [...customPlans] : [...data.dayPlans];
+                                        let toRemoveIdx = plan.activities.length - 1;
+                                        const crowdedIdx = plan.activities.findIndex(a => a.crowd === 'High');
+                                        if (crowdedIdx >= 0) toRemoveIdx = crowdedIdx;
+                                        const newActivities = [...plan.activities];
+                                        newActivities.splice(toRemoveIdx, 1);
+                                        currentPlans[activeDay] = { ...plan, activities: newActivities };
+                                        setCustomPlans(currentPlans);
+                                    }}
+                                        className="flex-1 bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-white hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-all px-4 py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2">
+                                        <span>😌</span> Make it Relaxed
+                                    </button>
+                                </div>
+
+                                {/* Timeline */}
+                                <div className="space-y-0 pt-4">
+                                    {plan.activities.map((act, i) => {
+                                        const isLast = i === plan.activities.length - 1;
+                                        const slotChanged = i === 0 || plan.activities[i - 1].slot !== act.slot;
+                                        const isActive = activeActivity === i;
+                                        return (
+                                            <div key={act.name + i}>
+                                                {slotChanged && (
+                                                    <div className="flex items-center gap-3 mb-6 mt-8 first:mt-0">
+                                                        <span className="text-xl bg-white dark:bg-zinc-800 rounded-full w-8 h-8 flex items-center justify-center shadow-sm border border-zinc-200 dark:border-zinc-700">{slotEmoji[act.slot]}</span>
+                                                        <span className="text-sm font-bold text-zinc-800 dark:text-zinc-200 uppercase tracking-widest">{act.slot}</span>
+                                                        <div className="flex-1 h-px bg-zinc-200 dark:bg-zinc-800" />
+                                                    </div>
+                                                )}
+                                                {act.travelFromPrev && (
+                                                    <div className="flex items-center gap-3 ml-[38px] mb-4">
+                                                        <div className="w-1.5 flex flex-col gap-1 items-center justify-center h-8">
+                                                            <div className="w-1 h-1 bg-indigo-300 dark:bg-indigo-700 rounded-full" />
+                                                            <div className="w-1 h-1 bg-indigo-300 dark:bg-indigo-700 rounded-full" />
+                                                            <div className="w-1 h-1 bg-indigo-300 dark:bg-indigo-700 rounded-full" />
+                                                        </div>
+                                                        <span className="text-[11px] font-bold text-indigo-700 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 rounded-full px-3 py-1 flex items-center gap-1.5 shadow-sm">
+                                                            🚘 {act.travelFromPrev} drive
+                                                        </span>
+                                                    </div>
+                                                )}
+                                                <motion.div initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}
+                                                    className="flex gap-4 mb-4 cursor-pointer group" onClick={() => setActiveActivity(isActive ? -1 : i)}>
+                                                    <div className="flex flex-col items-center pt-2">
+                                                        <div className={`w-10 h-10 rounded-full text-white text-sm font-bold flex items-center justify-center shadow-lg shrink-0 transition-transform duration-300
+                              ${isActive ? 'bg-zinc-900 dark:bg-emerald-500 scale-110' : 'bg-emerald-500 dark:bg-zinc-800'}`}>{i + 1}</div>
+                                                        {!isLast && <div className={`w-0.5 flex-1 mt-3 rounded-full transition-colors ${isActive ? 'bg-zinc-900 dark:bg-emerald-500' : 'bg-emerald-100 dark:bg-zinc-800'}`} />}
+                                                    </div>
+                                                    <div className={`flex-1 bg-white dark:bg-zinc-900 rounded-[1.5rem] border p-5 transition-all relative overflow-hidden group-hover:shadow-md
+                            ${isActive ? 'border-zinc-500 dark:border-emerald-500/50 shadow-xl scale-[1.02]' : 'border-zinc-200 dark:border-zinc-800 shadow-sm'}`}>
+                                                        <div className="flex items-start justify-between mb-3">
+                                                            <div className="pr-4">
+                                                                <div className="inline-flex items-center gap-2 mb-2">
+                                                                    <span className="px-2.5 py-1 bg-zinc-100 dark:bg-zinc-800 rounded-lg text-xs font-bold text-zinc-700 dark:text-zinc-300 font-mono tracking-tight">{act.time}</span>
+                                                                    <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${CROWD_COLOR[act.crowd]}`}>
+                                                                        <CrowdDot level={act.crowd} /> {act.crowd}
+                                                                    </div>
+                                                                </div>
+                                                                <h4 className="font-bold text-zinc-900 dark:text-white text-lg leading-tight">{act.name}</h4>
+                                                            </div>
+                                                            <div className="opacity-0 group-hover:opacity-100 transition-opacity flex bg-zinc-100 dark:bg-zinc-800 rounded-xl text-zinc-500 overflow-hidden shrink-0 border border-zinc-200 dark:border-zinc-700 shadow-sm">
+                                                                <button onClick={(e) => { e.stopPropagation(); moveActivity(i, Math.max(0, i - 1)); }} disabled={i === 0} className="w-8 h-8 flex items-center justify-center hover:bg-zinc-200 dark:hover:bg-zinc-700 disabled:opacity-30">↑</button>
+                                                                <button onClick={(e) => { e.stopPropagation(); moveActivity(i, Math.min(plan.activities.length - 1, i + 1)); }} disabled={isLast} className="w-8 h-8 flex items-center justify-center hover:bg-zinc-200 dark:hover:bg-zinc-700 border-l border-zinc-200 dark:border-zinc-700 disabled:opacity-30">↓</button>
+                                                                <button onClick={(e) => { e.stopPropagation(); removeActivity(i); }} className="w-8 h-8 flex items-center justify-center hover:bg-red-500 hover:text-white transition-colors border-l border-zinc-200 dark:border-zinc-700">✕</button>
+                                                            </div>
+                                                        </div>
+                                                        <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-4 leading-relaxed line-clamp-3">{act.desc}</p>
+                                                        <div className="text-[11px] font-semibold px-2.5 py-1.5 rounded-lg bg-blue-50/80 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400 border border-blue-100 dark:border-blue-500/20 inline-flex items-center gap-1.5 mb-4">
+                                                            {act.slot === 'Morning' ? '👍 Best time: Early' : (act.desc.toLowerCase().includes('rain') ? '⚠️ Skip if raining' : '☕ Pair with nearby cafe')}
+                                                        </div>
+                                                        <div className="flex items-center justify-between pt-3 border-t border-zinc-100 dark:border-zinc-800/80">
+                                                            <div className="flex gap-2">
+                                                                <div className="flex items-center gap-1.5 text-xs font-medium bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 rounded-lg px-3 py-1">
+                                                                    <span>💡</span> {act.crowdTip}
+                                                                </div>
+                                                                <div className="flex items-center gap-1.5 text-xs font-bold text-zinc-700 dark:text-zinc-300 bg-zinc-50 dark:bg-zinc-800 rounded-lg px-3 py-1 border border-zinc-200 dark:border-zinc-700 shadow-sm">
+                                                                    <span>💳</span> ₹{act.priceBase || [250, 400, 800, 1500][i % 4]}
+                                                                </div>
+                                                            </div>
+                                                            <button onClick={(e) => { e.stopPropagation(); router.push(`/itinerary/detail?type=attraction&dest=${destId}&name=${encodeURIComponent(act.name)}`); }}
+                                                                className="text-xs font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 px-4 py-1.5 rounded-xl hover:bg-emerald-100 dark:hover:bg-emerald-500/20 transition-colors">
+                                                                Explorer ➔
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </motion.div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+
+                                {/* Nearby Recommendations */}
+                                {(data.hotels?.length > 0 || data.restaurants?.length > 0) && (
+                                    <div className="mt-8 pt-8 border-t border-zinc-200 dark:border-zinc-800">
+                                        <h3 className="text-zinc-900 dark:text-white font-bold text-xl mb-4">Nearby Recommendations</h3>
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                            {data.hotels && data.hotels.length > 0 && (
+                                                <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 shadow-sm group cursor-pointer hover:shadow-md transition-all"
+                                                    onClick={() => router.push(`/itinerary/detail?type=hotel&dest=${destId}&name=${encodeURIComponent(data.hotels[0].name)}`)}>
+                                                    <div className="flex items-center gap-3 mb-2 text-xs font-bold text-zinc-400 uppercase tracking-widest"><span className="text-base leading-none">🏨</span> Place to stay</div>
+                                                    <div className="flex gap-4">
+                                                        <div className="w-16 h-16 rounded-xl shrink-0 bg-cover bg-center" style={{ backgroundImage: `url(https://images.unsplash.com/photo-${data.hotels[0].img}?auto=format&fit=crop&w=150&q=70)` }} />
+                                                        <div className="flex flex-col justify-center">
+                                                            <div className="font-bold text-base text-zinc-900 dark:text-white line-clamp-1 group-hover:text-emerald-500 transition-colors">{data.hotels[0].name}</div>
+                                                            <div className="text-xs text-zinc-500 mt-0.5">{data.hotels[0].type} • {data.hotels[0].priceRange}</div>
+                                                            <div className="text-xs font-bold text-amber-500 mt-1">★ {data.hotels[0].rating}</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
+                                            {data.restaurants && data.restaurants.length > 0 && (
+                                                <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 shadow-sm group cursor-pointer hover:shadow-md transition-all"
+                                                    onClick={() => router.push(`/itinerary/detail?type=restaurant&dest=${destId}&name=${encodeURIComponent(data.restaurants[0].name)}`)}>
+                                                    <div className="flex items-center gap-3 mb-2 text-xs font-bold text-zinc-400 uppercase tracking-widest"><span className="text-base leading-none">🍽️</span> Where to eat</div>
+                                                    <div className="flex gap-4">
+                                                        <div className="w-16 h-16 rounded-xl shrink-0 bg-cover bg-center" style={{ backgroundImage: `url(https://images.unsplash.com/photo-${data.restaurants[0].img}?auto=format&fit=crop&w=150&q=70)` }} />
+                                                        <div className="flex flex-col justify-center">
+                                                            <div className="font-bold text-base text-zinc-900 dark:text-white line-clamp-1 group-hover:text-amber-500 transition-colors">{data.restaurants[0].name}</div>
+                                                            <div className="text-xs text-zinc-500 mt-0.5">{data.restaurants[0].cuisine}</div>
+                                                            <div className="text-xs font-bold text-amber-500 mt-1">★ {data.restaurants[0].rating}</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Search & Add Panel */}
+                                <div className="mt-8 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2rem] p-6 shadow-inner">
+                                    <h4 className="font-bold text-lg text-zinc-900 dark:text-white mb-4 flex items-center gap-2">
+                                        <span className="p-2 bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-xl">➕</span>
+                                        Add a spot
+                                    </h4>
+                                    <form onSubmit={handleSearch} className="flex gap-3">
+                                        <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search cafes, hidden gems..."
+                                            className="flex-1 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-2xl px-5 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all shadow-sm" />
+                                        <button type="submit" disabled={isSearching} className="bg-emerald-600 text-white px-6 rounded-2xl text-sm font-bold shadow-md hover:bg-emerald-500 hover:shadow-lg disabled:opacity-50 transition-all active:scale-95">
+                                            {isSearching ? '...' : 'Search'}
+                                        </button>
+                                    </form>
+                                    {searchRes.length > 0 && (
+                                        <div className="mt-4 bg-white dark:bg-zinc-800 rounded-2xl border border-zinc-200 dark:border-zinc-700 overflow-hidden divide-y divide-zinc-100 dark:divide-zinc-700/50">
+                                            {searchRes.map(res => (
+                                                <div key={res.place_id} className="p-3 flex items-center justify-between gap-4 hover:bg-zinc-50 dark:hover:bg-zinc-700/50 transition-colors">
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="font-bold text-sm text-zinc-900 dark:text-white line-clamp-1">{res.name || res.display_name.split(',')[0]}</div>
+                                                        <div className="text-[11px] text-zinc-500 line-clamp-1 mt-0.5">{res.display_name}</div>
+                                                    </div>
+                                                    <button onClick={() => addCustomActivity(res)} className="px-4 py-1.5 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-xl text-xs font-bold hover:scale-105 transition-transform shrink-0 shadow-sm">Add</button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                    <div className="mt-6 pt-6 border-t border-zinc-200 dark:border-zinc-800/80">
+                                        <h4 className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3">Or Pick a Top Highlight</h4>
+                                        <div className="grid grid-cols-2 gap-3">
+                                            {data.highlights?.filter(a => !plan.activities.find(pa => pa.name === a.name)).slice(0, 4).map(sug => (
+                                                <div key={sug.name} className="bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl p-2.5 flex gap-3 group cursor-pointer hover:border-emerald-400 hover:shadow-md transition-all"
+                                                    onClick={() => addCustomActivity({ name: sug.name, display_name: sug.desc, lat: sug.lat || data.mapCenter.lat, lon: sug.lng || data.mapCenter.lng })}>
+                                                    <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 bg-cover bg-center" style={{ backgroundImage: `url(https://images.unsplash.com/photo-${sug.img}?auto=format&fit=crop&w=150&q=70)` }} />
+                                                    <div className="min-w-0 flex flex-col justify-center">
+                                                        <div className="text-[11px] font-bold text-zinc-900 dark:text-white truncate group-hover:text-emerald-600 transition-colors">{sug.name}</div>
+                                                        <div className="text-[9px] text-zinc-500 truncate mt-0.5">{sug.desc}</div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Right Column: Sticky Map */}
+                            <div className="hidden lg:block lg:w-[460px] xl:w-[500px] shrink-0 self-start sticky top-[100px] z-10 pb-4">
+                                <div className="h-[calc(100vh-140px)] min-h-[500px] rounded-[2rem] overflow-hidden border-4 border-white dark:border-zinc-800 shadow-xl bg-zinc-100 dark:bg-zinc-900">
+                                    <ItineraryMap
+                                        pins={mapPins}
+                                        center={data.mapCenter}
+                                        zoom={12}
+                                        showRoute={true}
+                                        activePin={activeActivity >= 0 ? activeActivity : undefined}
+                                        onRouteCalculated={(legs: { distance: string, time: string }[]) => { if (legs && legs.length > 0) setDayRouteInfo(legs[0]); }}
+                                        className="w-full h-full"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </motion.div>
+                </AnimatePresence>
+            </div>
+
+            {/* AI Chat Assistant */}
+            <AIChat currentPlans={customPlans} onPlanUpdate={setCustomPlans} />
+        </div>
+    );
+}

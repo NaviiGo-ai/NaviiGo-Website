@@ -16,14 +16,12 @@ interface ItineraryMapProps {
     zoom?: number;
     className?: string;
     showRoute?: boolean;
-    activePin?: number; // 0-indexed
+    activePin?: number;
     onRouteCalculated?: (legs: { distance: string; time: string }[]) => void;
+    /** When provided, renders a live pulsing blue dot at the user's location */
+    userLocation?: { lat: number; lng: number } | null;
 }
 
-/**
- * Interactive Leaflet map with numbered markers, route polyline, and popups.
- * Loads Leaflet from CDN — no npm package needed.
- */
 export default function ItineraryMap({
     pins,
     center,
@@ -32,11 +30,13 @@ export default function ItineraryMap({
     showRoute = true,
     activePin,
     onRouteCalculated,
+    userLocation,
 }: ItineraryMapProps) {
     const containerRef = useRef<HTMLDivElement>(null);
     const mapRef = useRef<any>(null);
     const markersRef = useRef<any[]>([]);
     const polylineRef = useRef<any>(null);
+    const userMarkerRef = useRef<any>(null);
     const [leafletLoaded, setLeafletLoaded] = useState(false);
 
     // Load Leaflet CSS + JS from CDN
@@ -44,7 +44,6 @@ export default function ItineraryMap({
         if (typeof window === 'undefined') return;
         if ((window as any).L && (window as any).L.Routing) { setLeafletLoaded(true); return; }
 
-        // CSS
         if (!document.querySelector('link[href*="leaflet@1.9.4"]')) {
             const link = document.createElement('link');
             link.rel = 'stylesheet';
@@ -56,7 +55,6 @@ export default function ItineraryMap({
             document.head.appendChild(link2);
         }
 
-        // JS
         if (!document.querySelector('script[src*="leaflet@1.9.4"]')) {
             const script = document.createElement('script');
             script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
@@ -81,7 +79,6 @@ export default function ItineraryMap({
         const L = (window as any).L;
         if (!L) return;
 
-        // Destroy previous map instance
         if (mapRef.current) { mapRef.current.remove(); mapRef.current = null; }
 
         const defaultCenter = center ?? (pins.length > 0 ? { lat: pins[0].lat, lng: pins[0].lng } : { lat: 20.5937, lng: 78.9629 });
@@ -92,15 +89,12 @@ export default function ItineraryMap({
             attributionControl: true,
         });
 
-        // Tile layer — CartoDB Voyager for clean look
         L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>',
             maxZoom: 19,
         }).addTo(map);
 
-        // Zoom control top-right
         L.control.zoom({ position: 'topright' }).addTo(map);
-
         mapRef.current = map;
 
         return () => {
@@ -115,7 +109,6 @@ export default function ItineraryMap({
         const L = (window as any).L;
         const map = mapRef.current;
 
-        // Clear old markers
         markersRef.current.forEach((m: any) => map.removeLayer(m));
         markersRef.current = [];
         if (polylineRef.current) { map.removeLayer(polylineRef.current); polylineRef.current = null; }
@@ -127,7 +120,6 @@ export default function ItineraryMap({
         pins.forEach((pin, i) => {
             const isActive = activePin !== undefined && activePin === i;
 
-            // Custom numbered marker
             const icon = L.divIcon({
                 className: 'custom-map-marker',
                 html: `<div style="
@@ -147,8 +139,6 @@ export default function ItineraryMap({
             });
 
             const marker = L.marker([pin.lat, pin.lng], { icon }).addTo(map);
-
-            // Popup with thumbnail if available
             const imgHtml = pin.img ? `<img src="https://images.unsplash.com/photo-${pin.img}?auto=format&fit=crop&w=200&q=60" style="width:100%;height:80px;object-fit:cover;border-radius:8px;margin-bottom:6px;" />` : '';
             marker.bindPopup(`
         <div style="min-width:180px;font-family:system-ui,sans-serif;">
@@ -158,69 +148,104 @@ export default function ItineraryMap({
       `, { closeButton: false, offset: [0, -10] });
 
             if (isActive) marker.openPopup();
-
             markersRef.current.push(marker);
             coords.push([pin.lat, pin.lng]);
         });
 
-        // Draw route polyline using Routing Machine
         if (showRoute && coords.length > 1) {
             polylineRef.current = L.Routing.control({
                 waypoints: coords.map(([lat, lng]: [number, number]) => L.latLng(lat, lng)),
                 lineOptions: {
                     styles: [{ color: '#10b981', weight: 4, opacity: 0.8, dashArray: '6, 6' }]
                 },
-                createMarker: function () { return null; }, // Hide default routing markers
-                show: false, // Hide the text directions UI
+                createMarker: function () { return null; },
+                show: false,
                 addWaypoints: false,
                 routeWhileDragging: false,
                 fitSelectedRoutes: true,
                 showAlternatives: false,
             }).addTo(map);
 
-            // Hide the default routing container entirely via DOM
             const hideRoutingUi = () => {
                 const routeContainers = document.querySelectorAll('.leaflet-routing-container');
                 routeContainers.forEach(c => (c as any).style.display = 'none');
             };
             hideRoutingUi();
-            setTimeout(hideRoutingUi, 500); // ensure it's hidden after render
+            setTimeout(hideRoutingUi, 500);
 
             polylineRef.current.on('routesfound', function (e: any) {
                 const routes = e.routes;
                 if (routes && routes.length > 0 && typeof onRouteCalculated === 'function') {
-                    const legs: { distance: string; time: string }[] = [];
-                    // Extract instruction step info or total duration per leg
-                    // Leaflet routing machine provides coordinates and summary per route
-                    // Waypoint pairs define the legs. OSRM actually returns it in `routes[0].summary`
-                    // But we want it between each marker. `routes[0].coordinates` has the whole path
-                    // Luckily, `routes[0].instructions` holds steps. But the easiest is to just compute distance/time per leg based on waypoints
-
-                    // The easiest approach for legs:
                     const summary = routes[0].summary;
-                    // For now, if we cannot get per-leg from standard OSRM easily, we return total
-                    // Actually, L.Routing.OSRMv1 gives `e.routes[0].summary.totalTime` and `totalDistance`.
-                    // We'll pass an array with dummy split or just 1 element for overall if legs aren't easily parsed.
-                    // Wait, waypoints' distances can be tracked through instructions.
-                    // For simplicity, we just pass the total route info for now as the first element:
                     const t = summary.totalTime;
                     const d = summary.totalDistance;
-                    legs.push({
+                    onRouteCalculated([{
                         distance: d > 1000 ? (d / 1000).toFixed(1) + ' km' : Math.round(d) + ' m',
                         time: t > 3600 ? Math.floor(t / 3600) + ' hr ' + Math.round((t % 3600) / 60) + ' min' : Math.round(t / 60) + ' min'
-                    });
-
-                    onRouteCalculated(legs);
+                    }]);
                 }
             });
         }
 
-        // Fit bounds
         if (coords.length > 0) {
             const bounds = L.latLngBounds(coords.map(([lat, lng]: [number, number]) => [lat, lng]));
             map.fitBounds(bounds, { padding: [40, 40], maxZoom: 14 });
         }
     }, [pins, activePin, leafletLoaded, showRoute]);
+
+    // ── User Location Blue Dot ──────────────────────────────────
+    useEffect(() => {
+        if (!mapRef.current || !leafletLoaded) return;
+        const L = (window as any).L;
+        const map = mapRef.current;
+
+        if (userMarkerRef.current) {
+            map.removeLayer(userMarkerRef.current);
+            userMarkerRef.current = null;
+        }
+
+        if (!userLocation) return;
+
+        const blueDotIcon = L.divIcon({
+            className: '',
+            html: `
+        <div style="position:relative;width:24px;height:24px;">
+          <div style="
+            position:absolute;inset:0;
+            background:rgba(59,130,246,0.25);
+            border-radius:50%;
+            animation: gps-pulse 2s infinite;
+          "></div>
+          <div style="
+            position:absolute;
+            top:50%;left:50%;
+            transform:translate(-50%,-50%);
+            width:14px;height:14px;
+            background:#3b82f6;
+            border:2.5px solid white;
+            border-radius:50%;
+            box-shadow:0 2px 8px rgba(59,130,246,0.5);
+          "></div>
+        </div>
+      `,
+            iconSize: [24, 24],
+            iconAnchor: [12, 12],
+        });
+
+        // Inject CSS for pulse animation once
+        if (!document.getElementById('gps-pulse-style')) {
+            const style = document.createElement('style');
+            style.id = 'gps-pulse-style';
+            style.textContent = `@keyframes gps-pulse { 0%,100%{transform:scale(1);opacity:0.6} 50%{transform:scale(2.5);opacity:0} }`;
+            document.head.appendChild(style);
+        }
+
+        userMarkerRef.current = L.marker([userLocation.lat, userLocation.lng], { icon: blueDotIcon, zIndexOffset: 1000 })
+            .addTo(map)
+            .bindPopup('<div style="font-size:13px;font-weight:700">📍 You are here</div>', { offset: [0, -12] });
+
+        map.setView([userLocation.lat, userLocation.lng], Math.max(map.getZoom(), 13));
+    }, [userLocation, leafletLoaded]);
 
     return (
         <div className={`relative rounded-2xl overflow-hidden ${className}`}>

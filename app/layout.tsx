@@ -4,7 +4,6 @@ import './globals.css';
 import Navbar from '@/components/shared/Navbar';
 import Providers from './providers';
 import { LazySocialButton, LazyMorphSurface, LazyWebGLBackground } from '@/components/shared/LazyComponents';
-import AskAIButton from '@/components/shared/AskAIButton';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -48,13 +47,12 @@ export default function RootLayout({
       className={`${inter.variable}`}
       suppressHydrationWarning
     >
-      <body className="font-sans antialiased overflow-x-hidden">
+      <body className="font-sans antialiased">
         <Providers>
           <LazySocialButton />
           <LazyWebGLBackground />
           <Navbar />
           <main>{children}</main>
-          <AskAIButton />
           <LazyMorphSurface />
         </Providers>
       </body>
