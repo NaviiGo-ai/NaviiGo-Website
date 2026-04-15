@@ -29,3 +29,12 @@ dist-ssr
 out
 build
 dist
+
+# Temp dev artifacts
+scratch/
+build_output.txt
+ts_errors.txt
+tsconfig.tsbuildinfo
+download_*.js
+fetch_*.js
+patch_*.js

@@ -55,6 +55,25 @@ export default function RootLayout({
           <main>{children}</main>
           <LazyMorphSurface />
         </Providers>
+
+        {/* TravelPayouts White Label Script */}
+        <script 
+          data-noptimize="1" 
+          data-cfasync="false" 
+          data-wpfc-render="false" 
+          suppressHydrationWarning
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function () {
+                var script = document.createElement("script");
+                script.async = 1;
+                script.type = "module";
+                script.src = "https://tpwgts.com/wl_web/main.js?wl_id=16321";
+                document.head.appendChild(script);
+              })();
+            `
+          }}
+        />
       </body>
     </html>
   );

@@ -1,23 +1,26 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAnalytics, isSupported } from "firebase/analytics";
 import { getAuth } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
 
-// Your web app's Firebase configuration
+// NaviiGo Firebase Configuration — naviigo-firebase project
 const firebaseConfig = {
-  apiKey: "AIzaSyBKl8nEpq5yBGtxZ99xTnwqM2fv4zTg_Ss",
-  authDomain: "naviigo-tourism.firebaseapp.com",
-  projectId: "naviigo-tourism",
-  storageBucket: "naviigo-tourism.firebasestorage.app",
-  messagingSenderId: "754148618223",
-  appId: "1:754148618223:web:5a8a64b79825a54854d01a",
-  measurementId: "G-39JJ87DFXS"
+  apiKey: "AIzaSyBaVxZhhxIIsodXZLzWQMTKdhKGdEKfHg4",
+  authDomain: "naviigo-firebase.firebaseapp.com",
+  projectId: "naviigo-firebase",
+  storageBucket: "naviigo-firebase.firebasestorage.app",
+  messagingSenderId: "683587822562",
+  appId: "1:683587822562:android:25fb7e31e8f84533444fbb"
 };
 
-// Initialize Firebase
+// Initialize Firebase (singleton)
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
+const db = getFirestore(app);
+const storage = getStorage(app);
 
-let analytics;
+let analytics: ReturnType<typeof getAnalytics> | null = null;
 
 if (typeof window !== 'undefined') {
   isSupported().then((supported) => {
@@ -27,4 +30,4 @@ if (typeof window !== 'undefined') {
   });
 }
 
-export { app, analytics, auth };
+export { app, analytics, auth, db, storage };

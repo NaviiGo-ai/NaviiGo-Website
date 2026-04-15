@@ -66,14 +66,14 @@ export const PURPOSES = [
 ];
 
 export const DESTINATIONS = [
-    { id: 'kerala', name: 'Kerala', sub: "God's Own Country", state: 'Kerala', img: '1593693397690-362cb9666fc2' },
-    { id: 'jaipur', name: 'Jaipur', sub: 'The Pink City', state: 'Rajasthan', img: '1599661502283-a44ea24dfc74' },
-    { id: 'varanasi', name: 'Varanasi', sub: 'City of Light', state: 'Uttar Pradesh', img: '1582283925565-d053709d3bdf' },
-    { id: 'goa', name: 'Goa', sub: 'Sun, Sand & Soul', state: 'Goa', img: '1512343779784-a1d53b98b8ef' },
-    { id: 'manali', name: 'Manali', sub: 'Gateway to Himalayas', state: 'Himachal Pradesh', img: '1626621341517-bbf3d9990a23' },
+    { id: 'kerala', name: 'Kerala', sub: "God's Own Country", state: 'Kerala', img: '1602216056096-3b40cc0c9944' },
+    { id: 'jaipur', name: 'Jaipur', sub: 'The Pink City', state: 'Rajasthan', img: '1477587458883-47145ed94245' },
+    { id: 'varanasi', name: 'Varanasi', sub: 'City of Light', state: 'Uttar Pradesh', img: '1590132840509-3286380695c0' },
+    { id: 'goa', name: 'Goa', sub: 'Sun, Sand & Soul', state: 'Goa', img: '1507525428034-b723cf961d3e' },
+    { id: 'manali', name: 'Manali', sub: 'Gateway to Himalayas', state: 'Himachal Pradesh', img: '1585409677983-0f6c41ca9c3b' },
     { id: 'udaipur', name: 'Udaipur', sub: 'City of Lakes', state: 'Rajasthan', img: '1524492412937-b28074a5d7da' },
     { id: 'agra', name: 'Agra', sub: 'Land of the Taj', state: 'Uttar Pradesh', img: '1564507592333-c60657eea523' },
-    { id: 'rishikesh', name: 'Rishikesh', sub: 'Yoga Capital of World', state: 'Uttarakhand', img: '1547471080-7fad851863b3' },
+    { id: 'rishikesh', name: 'Rishikesh', sub: 'Yoga Capital of World', state: 'Uttarakhand', img: '1585409677983-0f6c41ca9c3b' },
 ];
 
 export const GROUP_SIZES = [

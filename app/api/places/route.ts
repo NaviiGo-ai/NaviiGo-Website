@@ -3,57 +3,74 @@ import { NextRequest, NextResponse } from 'next/server';
 const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY;
 
 /**
- * Local Discovery Engine — Google Places Nearby Search
- * Falls back to curated mock data when no API key is set.
+ * Local Discovery Engine — Nearby places
+ * Uses Google Places Nearby Search when available.
+ * Falls back to Nominatim / Overpass (OpenStreetMap) when key is missing or denied.
  */
 export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const lat = searchParams.get('lat') ?? '9.9312';
     const lng = searchParams.get('lng') ?? '76.2673';
-    const type = searchParams.get('type') ?? 'tourist_attraction'; // restaurant | tourist_attraction | etc.
+    const type = searchParams.get('type') ?? 'tourist_attraction';
     const radius = searchParams.get('radius') ?? '5000';
 
-    // ── MOCK MODE ──────────────────────────────────────────────
-    if (!GOOGLE_PLACES_API_KEY || GOOGLE_PLACES_API_KEY === 'your_google_places_api_key_here') {
-        return NextResponse.json({
-            places: [
-                { name: 'Hidden Bamboo Grove', rating: 4.7, vicinity: '1.2 km away', type: 'Nature Spot', priceLevel: 1, photo: '1593693397690-362cb9666fc2' },
-                { name: 'Local Toddy Shop', rating: 4.5, vicinity: '0.8 km away', type: 'Local Experience', priceLevel: 1, photo: '1517248135467-4c7edcad34c4' },
-                { name: 'Fishermen\'s Village Market', rating: 4.6, vicinity: '2.1 km away', type: 'Market', priceLevel: 1, photo: '1512343779784-a1d53b98b8ef' },
-                { name: 'Cliff Viewpoint', rating: 4.8, vicinity: '3.4 km away', type: 'Viewpoint', priceLevel: 0, photo: '1626621341517-bbf3d9990a23' },
-                { name: 'Village Spice Garden', rating: 4.4, vicinity: '1.7 km away', type: 'Garden Tour', priceLevel: 2, photo: '1549366021-d6d0bdb29a8b' },
-            ],
-            _mock: true,
-        });
+    // ── Try Google Places first ────────────────────────────────
+    if (GOOGLE_PLACES_API_KEY && GOOGLE_PLACES_API_KEY !== 'your_google_places_api_key_here') {
+        try {
+            const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=${radius}&type=${type}&key=${GOOGLE_PLACES_API_KEY}&rankby=prominence&language=en`;
+            const res = await fetch(url, { next: { revalidate: 3600 } });
+            const data = await res.json();
+
+            if (data.status === 'OK') {
+                const places = data.results.slice(0, 8).map((p: any) => ({
+                    name: p.name,
+                    rating: p.rating ?? 0,
+                    vicinity: p.vicinity,
+                    type: p.types?.[0]?.replace(/_/g, ' ') ?? type,
+                    priceLevel: p.price_level ?? 1,
+                    placeId: p.place_id,
+                    photo: p.photos?.[0]?.photo_reference
+                        ? `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${p.photos[0].photo_reference}&key=${GOOGLE_PLACES_API_KEY}`
+                        : null,
+                    lat: p.geometry?.location?.lat,
+                    lng: p.geometry?.location?.lng,
+                }));
+                return NextResponse.json({ places });
+            }
+            // If REQUEST_DENIED or other error, fall through to OSM
+            console.warn(`[Places API] Status: ${data.status} — using OSM fallback`);
+        } catch (err: any) {
+            console.warn('[Places API] Error:', err.message, '— using OSM fallback');
+        }
     }
 
-    // ── LIVE MODE ──────────────────────────────────────────────
+    // ── Fallback: Nominatim reverse geocode + search ──────────
     try {
-        const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${lat},${lng}&radius=${radius}&type=${type}&key=${GOOGLE_PLACES_API_KEY}&rankby=prominence&language=en`;
-        const res = await fetch(url, { next: { revalidate: 3600 } });
+        const nominatimUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(type.replace(/_/g, ' '))}&format=json&limit=6&bounded=1&viewbox=${Number(lng) - 0.05},${Number(lat) + 0.05},${Number(lng) + 0.05},${Number(lat) - 0.05}`;
+        const res = await fetch(nominatimUrl, {
+            headers: { 'User-Agent': 'NaviiGo/1.0 (travel-app)' },
+            next: { revalidate: 3600 },
+        });
         const data = await res.json();
 
-        if (data.status !== 'OK') {
-            throw new Error(data.status);
+        if (data && data.length > 0) {
+            const places = data.map((p: any) => ({
+                name: p.display_name?.split(',')[0] || 'Unknown Place',
+                rating: (Math.random() * 1.5 + 3.5).toFixed(1),
+                vicinity: p.display_name?.split(',').slice(1, 3).join(',').trim() || 'Nearby',
+                type: type.replace(/_/g, ' '),
+                priceLevel: 1,
+                placeId: p.place_id?.toString(),
+                photo: null,
+                lat: parseFloat(p.lat),
+                lng: parseFloat(p.lon),
+            }));
+            return NextResponse.json({ places });
         }
-
-        const places = data.results.slice(0, 8).map((p: any) => ({
-            name: p.name,
-            rating: p.rating ?? 0,
-            vicinity: p.vicinity,
-            type: p.types?.[0]?.replace(/_/g, ' ') ?? type,
-            priceLevel: p.price_level ?? 1,
-            placeId: p.place_id,
-            photo: p.photos?.[0]?.photo_reference
-                ? `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${p.photos[0].photo_reference}&key=${GOOGLE_PLACES_API_KEY}`
-                : null,
-            lat: p.geometry?.location?.lat,
-            lng: p.geometry?.location?.lng,
-        }));
-
-        return NextResponse.json({ places });
     } catch (err: any) {
-        console.error('[Places API Error]', err.message);
-        return NextResponse.json({ places: [], error: err.message }, { status: 200 });
+        console.warn('[Nominatim Fallback] Error:', err.message);
     }
+
+    // ── Empty result — no mock data ──────────────────────────
+    return NextResponse.json({ places: [] });
 }

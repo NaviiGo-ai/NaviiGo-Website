@@ -13,7 +13,6 @@ const ITINERARY_DROPDOWN = [
   { name: 'Create New', href: '/itinerary', icon: PlusCircle, desc: 'AI-powered trip planner', accent: 'text-emerald-500' },
   { name: 'Ongoing Trips', href: '/itinerary/ongoing', icon: Navigation, desc: 'Currently active journeys', accent: 'text-blue-500' },
   { name: 'Upcoming Trips', href: '/itinerary/upcoming', icon: Clock, desc: 'Planned future adventures', accent: 'text-purple-500' },
-  { name: 'Live Tracking', href: '/itinerary/tracking', icon: MapPin, desc: 'Real-time trip tracker', accent: 'text-red-500' },
   { name: 'Trip History', href: '/itinerary/history', icon: History, desc: 'Past trips & memories', accent: 'text-amber-500' },
 ];
 

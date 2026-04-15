@@ -1,6 +1,6 @@
 'use client';
 import { motion } from 'framer-motion';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { GEN_STEPS, DEST_DATA, FALLBACK_DEST, GROUP_SIZES, PURPOSES } from '@/app/itinerary/data';
 
@@ -8,7 +8,7 @@ const ItineraryMap = dynamic(() => import('@/components/shared/ItineraryMap'), {
 
 interface LoadingScreenProps {
     form: Record<string, unknown>;
-    onDone: () => void;
+    onDone: (data: any) => void;
 }
 
 export default function LoadingScreen({ form, onDone }: LoadingScreenProps) {
@@ -22,11 +22,55 @@ export default function LoadingScreen({ form, onDone }: LoadingScreenProps) {
     const [currentSub, setCurrentSub] = useState(0);
     const [elapsed, setElapsed] = useState(0);
     const [revealedPins, setRevealedPins] = useState(0);
+    const [apiData, setApiData] = useState<any>(null);
+    const [apiDone, setApiDone] = useState(false);
+    const fetchedRef = useRef(false);
 
+    // Timer
     useEffect(() => { const t = setInterval(() => setElapsed(e => e + 1), 1000); return () => clearInterval(t); }, []);
 
+    // Call Gemini API to generate itinerary
     useEffect(() => {
-        if (currentStep >= GEN_STEPS.length) { setTimeout(onDone, 600); return; }
+        if (fetchedRef.current) return;
+        fetchedRef.current = true;
+
+        const generate = async () => {
+            try {
+                const res = await fetch('/api/itinerary/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        destination: destId,
+                        destName: destName,
+                        purpose: form.purpose,
+                        group: form.group,
+                        days: form.days,
+                        budget: form.budget,
+                        startDate: form.startDate,
+                    }),
+                });
+                const result = await res.json();
+                if (result.success && result.itinerary) {
+                    setApiData(result.itinerary);
+                }
+            } catch (err) {
+                console.error('Itinerary generation failed:', err);
+            }
+            setApiDone(true);
+        };
+
+        generate();
+    }, [destId, destName, form]);
+
+    // Step animation — when both animation and API are done, call onDone
+    useEffect(() => {
+        if (currentStep >= GEN_STEPS.length) {
+            // Wait for API if still loading
+            if (apiDone) {
+                setTimeout(() => onDone(apiData), 600);
+            }
+            return;
+        }
         const step = GEN_STEPS[currentStep];
         const subInterval = step.duration / (step.sub.length + 1);
         if (currentSub < step.sub.length) {
@@ -36,7 +80,14 @@ export default function LoadingScreen({ form, onDone }: LoadingScreenProps) {
             const t = setTimeout(() => { setCurrentStep(s => s + 1); setCurrentSub(0); }, subInterval);
             return () => clearTimeout(t);
         }
-    }, [currentStep, currentSub, onDone, data.highlights.length]);
+    }, [currentStep, currentSub, apiDone, apiData, onDone, data.highlights.length]);
+
+    // If API finishes after animation, trigger onDone
+    useEffect(() => {
+        if (apiDone && currentStep >= GEN_STEPS.length) {
+            setTimeout(() => onDone(apiData), 600);
+        }
+    }, [apiDone, currentStep, apiData, onDone]);
 
     const fmt = (s: number) => `${Math.floor(s / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`;
 
@@ -52,9 +103,9 @@ export default function LoadingScreen({ form, onDone }: LoadingScreenProps) {
             <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-lg border-b border-zinc-100 dark:border-white/5 px-6 py-3 text-center">
                 <div className="flex items-center justify-center gap-2">
                     <span className="text-xl">✨</span>
-                    <span className="font-bold text-zinc-900 dark:text-white">Working our magic</span>
+                    <span className="font-bold text-zinc-900 dark:text-white">NaviiGo AI is crafting your trip</span>
                 </div>
-                <span className="text-[10px] bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 px-2 py-0.5 rounded-full font-bold uppercase tracking-wide">Beta</span>
+                <span className="text-[10px] bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 px-2 py-0.5 rounded-full font-bold uppercase tracking-wide">Powered by Gemini</span>
             </div>
 
             <div className="flex flex-col lg:flex-row max-w-7xl mx-auto px-4 md:px-8 py-8 gap-6 min-h-[calc(100vh-160px)]">
@@ -111,7 +162,7 @@ export default function LoadingScreen({ form, onDone }: LoadingScreenProps) {
 
                         <div className="mt-4 pt-4 border-t border-zinc-100 dark:border-zinc-800 text-center">
                             <span className="text-emerald-500 font-mono text-sm font-bold">{fmt(elapsed)}</span>
-                            <p className="text-[11px] text-zinc-400 mt-1">NaviiGo AI is in beta — some results may vary.</p>
+                            <p className="text-[11px] text-zinc-400 mt-1">Generating with Google Gemini AI…</p>
                         </div>
                     </div>
                 </div>

@@ -2,6 +2,7 @@
 
 import { ThemeProvider } from 'next-themes';
 import { AuthProvider } from '@/lib/AuthContext';
+import { AIProvider } from '@/context/AIContext';
 import { ReactLenis } from '@studio-freight/react-lenis';
 
 export default function Providers({
@@ -16,7 +17,9 @@ export default function Providers({
         disableTransitionOnChange={false}
       >
         <AuthProvider>
-          {children}
+          <AIProvider>
+            {children}
+          </AIProvider>
         </AuthProvider>
       </ThemeProvider>
     </ReactLenis>

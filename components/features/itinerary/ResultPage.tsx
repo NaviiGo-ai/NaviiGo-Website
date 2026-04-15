@@ -1,10 +1,10 @@
 'use client';
 import { motion } from 'framer-motion';
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
-import { saveItinerary } from '@/lib/savedItineraries';
-import { saveSharedItinerary, listenToItinerary } from '@/lib/firestore';
+import { saveSharedItinerary, listenToItinerary, saveItineraryToFirestore } from '@/lib/firestore';
+import { useAuth } from '@/lib/AuthContext';
 import {
     PURPOSES, DESTINATIONS, GROUP_SIZES,
     DEST_DATA, FALLBACK_DEST, CROWD_COLOR, WALK_COLOR,
@@ -12,30 +12,60 @@ import {
 } from '@/app/itinerary/data';
 import { Badge, genShareId } from './helpers';
 import ShareDropdown from './ShareDropdown';
+import { useAI } from '@/context/AIContext';
 
 const ItineraryMap = dynamic(() => import('@/components/shared/ItineraryMap'), { ssr: false });
 const VideoCard = dynamic(() => import('@/components/shared/VideoCard'), { ssr: false });
 
 interface ResultPageProps {
     form: Record<string, unknown>;
+    generatedData?: any;
     onDayView: () => void;
     onReset: () => void;
 }
 
-export default function ResultPage({ form, onDayView, onReset }: ResultPageProps) {
+export default function ResultPage({ form, generatedData, onDayView, onReset }: ResultPageProps) {
     const router = useRouter();
+    const { user } = useAuth();
+    const { registerItinerary } = useAI();
     const [isSaved, setIsSaved] = useState(false);
     const [collaborators, setCollaborators] = useState(1);
     const [isSharing, setIsSharing] = useState(false);
     const [hiddenGems, setHiddenGems] = useState<any[]>([]);
+    const autoSaveRef = useRef(false);
     const destId = form.destination as string, destName = form.destName as string;
     const purpose = form.purpose as string, group = form.group as string;
     const displayMonth = form.startDate ? new Date(form.startDate as string).toLocaleString('en-US', { month: 'short' }) : 'Jan';
-    const data = DEST_DATA[destId] ?? FALLBACK_DEST;
+    const staticData = DEST_DATA[destId] ?? FALLBACK_DEST;
+    const data: any = generatedData ? { ...staticData, ...generatedData } : staticData;
     const destInfo = DESTINATIONS.find(d => d.id === destId);
     const purposeLabel = PURPOSES.find(p => p.id === purpose)?.label ?? purpose;
     const groupLabel = GROUP_SIZES.find(g => g.id === group)?.label ?? group;
-    const weatherForMonth = data.weather[displayMonth] ?? data.weather['Jan'];
+    const weatherForMonth = data.weather?.[displayMonth] ?? data.weather?.['Jan'] ?? '20–30°C';
+
+    useEffect(() => {
+        registerItinerary(data, (newData) => {
+            console.log("AI modified itinerary data:", newData);
+        });
+    }, [data, registerItinerary]);
+
+    // ── Auto-save itinerary to Firestore on generation ─────────
+    useEffect(() => {
+        if (!user?.uid || autoSaveRef.current || isSaved) return;
+        autoSaveRef.current = true;
+        saveItineraryToFirestore(user.uid, {
+            destId,
+            destName,
+            form,
+            generatedData: generatedData || null,
+        }).then(() => {
+            setIsSaved(true);
+            console.log('[Itinerary] Auto-saved to Firestore');
+        }).catch((err) => {
+            console.error('[Itinerary] Auto-save failed:', err);
+            autoSaveRef.current = false;
+        });
+    }, [user?.uid, destId, destName, form, generatedData, isSaved]);
 
     useEffect(() => {
         if (data.mapCenter) {
@@ -44,9 +74,9 @@ export default function ResultPage({ form, onDayView, onReset }: ResultPageProps
                 .then(d => setHiddenGems(d.places?.slice(0, 4) ?? []))
                 .catch(() => { });
         }
-    }, [destId]);
+    }, [destId, data.mapCenter]);
 
-    const mapPins = useMemo(() => data.highlights.filter(h => h.lat).map((h, i) => ({
+    const mapPins = useMemo(() => data.highlights.filter((h: any) => h.lat).map((h: any, i: number) => ({
         lat: h.lat!, lng: h.lng!, label: h.name, number: i + 1, img: h.img,
     })), [data]);
 
@@ -80,7 +110,12 @@ export default function ResultPage({ form, onDayView, onReset }: ResultPageProps
                 </div>
                 <div className="flex items-center gap-2">
                     <ShareDropdown onCopyLink={handleShare} destName={destName} isSharing={isSharing} collaborators={collaborators} />
-                    <button onClick={() => { saveItinerary(destId, destName, form); setIsSaved(true); }} disabled={isSaved}
+                    <button onClick={async () => {
+                        if (user?.uid) {
+                            await saveItineraryToFirestore(user.uid, { destId, destName, form, generatedData: generatedData || null });
+                        }
+                        setIsSaved(true);
+                    }} disabled={isSaved}
                         className={`flex px-4 py-1.5 rounded-full text-xs font-semibold items-center gap-1.5 transition-colors ${isSaved ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 cursor-default' : 'bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 hover:bg-zinc-800 dark:hover:bg-zinc-200'}`}>
                         {isSaved ? '✓ Saved' : '💾 Save'}
                     </button>
@@ -123,7 +158,7 @@ export default function ResultPage({ form, onDayView, onReset }: ResultPageProps
                             </div>
                             <div className="bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl p-5 border border-zinc-100 dark:border-zinc-700/50">
                                 <div className="flex items-center gap-2 text-purple-600 dark:text-purple-400 mb-2"><span>👥</span><span className="text-[10px] font-bold uppercase tracking-wider">Crowd Levels</span></div>
-                                <Badge label={data.crowdLevel} colorClass={CROWD_COLOR[data.crowdLevel]} />
+                                <Badge label={data.crowdLevel} colorClass={CROWD_COLOR[data.crowdLevel as CrowdLevel]} />
                                 <div className="text-xs text-zinc-500 mt-2">{data.crowdNote}</div>
                             </div>
                         </div>
@@ -162,13 +197,35 @@ export default function ResultPage({ form, onDayView, onReset }: ResultPageProps
                             <div>
                                 <h2 className="text-lg font-bold text-zinc-900 dark:text-white mb-4 flex items-center gap-2"><span>✈️</span> How to Get There</h2>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-100 dark:border-zinc-800 p-4 shadow-sm flex items-start gap-4 hover:border-emerald-500/30 transition-colors">
+                                    <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-100 dark:border-zinc-800 p-4 shadow-sm flex items-start gap-4 hover:border-emerald-500/30 transition-all group/card">
                                         <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-500/10 text-blue-500 flex items-center justify-center text-xl shrink-0">🛫</div>
-                                        <div><h4 className="font-bold text-sm text-zinc-900 dark:text-white mb-1">Flights</h4><p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">{data.logistics.flights}</p></div>
+                                        <div className="flex-1 min-w-0">
+                                            <h4 className="font-bold text-sm text-zinc-900 dark:text-white mb-1">Flights</h4>
+                                            <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed mb-3">{data.logistics.flights}</p>
+                                            <a
+                                                href={`https://www.makemytrip.com/flights/results/?from=DEL&to=${data.logistics.airportCode || 'BOM'}&date=${form.startDate || ''}&adults=1&children=0&infants=0&cabinClass=E`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="inline-flex items-center gap-1.5 text-[10px] font-bold bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 px-3 py-1.5 rounded-lg hover:scale-105 transition-transform"
+                                            >
+                                                Book on MMT ↗
+                                            </a>
+                                        </div>
                                     </div>
-                                    <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-100 dark:border-zinc-800 p-4 shadow-sm flex items-start gap-4 hover:border-emerald-500/30 transition-colors">
+                                    <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-100 dark:border-zinc-800 p-4 shadow-sm flex items-start gap-4 hover:border-emerald-500/30 transition-all group/card">
                                         <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-500/10 text-amber-500 flex items-center justify-center text-xl shrink-0">🚆</div>
-                                        <div><h4 className="font-bold text-sm text-zinc-900 dark:text-white mb-1">Trains</h4><p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed">{data.logistics.trains}</p></div>
+                                        <div className="flex-1 min-w-0">
+                                            <h4 className="font-bold text-sm text-zinc-900 dark:text-white mb-1">Trains</h4>
+                                            <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed mb-3">{data.logistics.trains}</p>
+                                            <a
+                                                href={`https://www.cleartrip.com/trains/results?fromSTN=NDLS&toSTN=${data.logistics.stationCode || 'BSB'}&date=${form.startDate ? new Date(form.startDate as string).toLocaleDateString('en-IN').replace(/\//g, '-') : ''}&adults=1&children=0&male_seniors=0&female_seniors=0`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="inline-flex items-center gap-1.5 text-[10px] font-bold bg-[#f77728] text-white px-3 py-1.5 rounded-lg hover:scale-105 transition-transform"
+                                            >
+                                                Book on Cleartrip ↗
+                                            </a>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -178,21 +235,21 @@ export default function ResultPage({ form, onDayView, onReset }: ResultPageProps
                         <div>
                             <h2 className="text-lg font-bold text-zinc-900 dark:text-white mb-4">🏆 Top Highlights</h2>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                {data.highlights.map((a, i) => (
+                                {data.highlights.map((a: any, i: number) => (
                                     <motion.div key={a.name} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}
                                         onClick={() => router.push(`/itinerary/detail?type=attraction&dest=${destId}&name=${encodeURIComponent(a.name)}`)}
                                         className="bg-white dark:bg-zinc-900 rounded-2xl overflow-hidden border border-zinc-100 dark:border-zinc-800 shadow-sm hover:shadow-md transition-all cursor-pointer hover:-translate-y-1">
                                         <div className="relative h-36">
                                             <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(https://images.unsplash.com/photo-${a.img}?auto=format&fit=crop&w=500&q=70)` }} />
                                             <div className="absolute top-2 left-2 w-7 h-7 rounded-full bg-emerald-500 text-white text-xs font-bold flex items-center justify-center shadow-md">{i + 1}</div>
-                                            <div className="absolute bottom-2 left-2 flex gap-1">{a.tags.slice(0, 2).map(t => <span key={t} className="text-[10px] bg-black/50 text-white backdrop-blur px-2 py-0.5 rounded-full font-medium">{t}</span>)}</div>
+                                            <div className="absolute bottom-2 left-2 flex gap-1">{a.tags.slice(0, 2).map((t: string) => <span key={t} className="text-[10px] bg-black/50 text-white backdrop-blur px-2 py-0.5 rounded-full font-medium">{t}</span>)}</div>
                                         </div>
                                         <div className="p-3">
                                             <h3 className="font-bold text-zinc-900 dark:text-white text-sm mb-1">{a.name}</h3>
                                             <p className="text-xs text-zinc-500 dark:text-zinc-400 line-clamp-2 mb-2">{a.desc}</p>
                                             <div className="flex gap-2 text-xs flex-wrap">
                                                 <span className="bg-zinc-50 dark:bg-zinc-800 rounded-lg px-2 py-1">📅 {a.bestMonths}</span>
-                                                <Badge label={a.walking} colorClass={WALK_COLOR[a.walking]} />
+                                                <Badge label={a.walking} colorClass={(WALK_COLOR as any)[a.walking]} />
                                             </div>
                                         </div>
                                     </motion.div>
@@ -211,7 +268,7 @@ export default function ResultPage({ form, onDayView, onReset }: ResultPageProps
                             <div>
                                 <h2 className="text-lg font-bold text-zinc-900 dark:text-white mb-4">🍽️ Cuisine & Dining</h2>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    {data.restaurants.map((r, i) => (
+                                    {data.restaurants.map((r: any, i: number) => (
                                         <motion.div key={r.id} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
                                             onClick={() => router.push(`/itinerary/detail?type=restaurant&dest=${destId}&name=${encodeURIComponent(r.name)}`)}
                                             className="bg-white dark:bg-zinc-900 rounded-2xl overflow-hidden border border-zinc-100 dark:border-zinc-800 shadow-sm hover:shadow-md transition-all cursor-pointer hover:-translate-y-1">
@@ -238,7 +295,7 @@ export default function ResultPage({ form, onDayView, onReset }: ResultPageProps
                             <div>
                                 <h2 className="text-lg font-bold text-zinc-900 dark:text-white mb-4">🏨 Stay Options</h2>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    {data.hotels.map((h, i) => (
+                                    {data.hotels.map((h: any, i: number) => (
                                         <motion.div key={h.id} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
                                             onClick={() => router.push(`/itinerary/detail?type=hotel&dest=${destId}&name=${encodeURIComponent(h.name)}`)}
                                             className="bg-white dark:bg-zinc-900 rounded-2xl overflow-hidden border border-zinc-100 dark:border-zinc-800 shadow-sm hover:shadow-md transition-all cursor-pointer hover:-translate-y-1">
@@ -254,7 +311,7 @@ export default function ResultPage({ form, onDayView, onReset }: ResultPageProps
                                                 </div>
                                                 <p className="text-xs text-zinc-500 dark:text-zinc-400 line-clamp-2 mb-2">{h.desc}</p>
                                                 <div className="flex gap-1 flex-wrap">
-                                                    {h.amenities.slice(0, 3).map(a => <span key={a} className="text-[9px] text-zinc-500 bg-zinc-100 dark:bg-zinc-800 dark:text-zinc-400 px-1.5 py-0.5 rounded">{a}</span>)}
+                                                    {h.amenities.slice(0, 3).map((a: string) => <span key={a} className="text-[9px] text-zinc-500 bg-zinc-100 dark:bg-zinc-800 dark:text-zinc-400 px-1.5 py-0.5 rounded">{a}</span>)}
                                                 </div>
                                             </div>
                                         </motion.div>
@@ -282,6 +339,28 @@ export default function ResultPage({ form, onDayView, onReset }: ResultPageProps
                                         </motion.div>
                                     ))}
                                 </div>
+                            </div>
+                        )}
+
+                        {/* Travel Tips from AI */}
+                        {data.travelTips && data.travelTips.length > 0 && (
+                            <div>
+                                <h2 className="text-lg font-bold text-zinc-900 dark:text-white mb-4">🧭 Travel Tips from Locals</h2>
+                                <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-100 dark:border-zinc-800 p-5 shadow-sm space-y-3">
+                                    {data.travelTips.map((tip: string, i: number) => (
+                                        <div key={i} className="flex gap-3 items-start">
+                                            <span className="text-emerald-500 font-bold text-sm mt-0.5">💡</span>
+                                            <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed">{tip}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {generatedData && (
+                            <div className="flex items-center gap-2 text-xs text-zinc-400 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl px-4 py-3 border border-zinc-100 dark:border-zinc-800">
+                                <span>✨</span>
+                                <span>This itinerary was generated by <strong className="text-emerald-500">Google Gemini AI</strong> based on your preferences and real traveler data.</span>
                             </div>
                         )}
                     </div>

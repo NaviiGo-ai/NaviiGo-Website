@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 const DEST_VIDEOS: Record<string, { id: string; title: string; channel: string }> = {
     kerala: { id: 'qGDMlqJG3To', title: 'Kerala Travel Guide — Backwaters, Hills & Beaches', channel: 'Wander with Josh' },
     jaipur: { id: 'sGFEhSjbPJw', title: 'Jaipur in 48 Hours — Pink City Guide', channel: 'Travel Monks' },
-    varanasi: { id: 'Zso6Z2Yx6QA', title: 'Varanasi — The Eternal City of India', channel: 'Lost LeBlanc' },
+    varanasi: { id: '0h09g8Zp_tM', title: 'Varanasi — The Eternal City of India', channel: 'Lost LeBlanc' },
     goa: { id: 'dpIAJNtdJ3I', title: 'Goa Travel Guide — Best Beaches & Food', channel: 'Nomadic Boys' },
     manali: { id: 'gbsGiC6-aF0', title: 'Manali Complete Guide — Himalayas & Rohtang', channel: 'Traveller\'s Mind' },
     udaipur: { id: 'iJWlAPVMDKU', title: 'Udaipur — City of Lakes & Palaces', channel: 'Karan Gupta Vlogs' },
