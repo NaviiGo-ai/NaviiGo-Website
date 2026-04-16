@@ -153,7 +153,7 @@ function FlightForm({ onTravelersChange }: { onTravelersChange: (val: string) =>
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr_1fr_1.2fr] gap-4 items-center">
       <PlaceAutocomplete name="from" placeholder="From City" icon="plane" />
-      
+
       <button type="button" className="flex items-center justify-center w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-all shrink-0 mx-auto border border-zinc-200 dark:border-zinc-700 hover:rotate-180">
         <ArrowRightLeft className="w-4 h-4 text-zinc-500" />
       </button>
@@ -174,7 +174,7 @@ function TrainForm({ onTravelersChange }: { onTravelersChange: (val: string) => 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr_1fr_1fr] gap-4 items-center">
       <PlaceAutocomplete name="from" placeholder="From Station" icon="train" />
-      
+
       <button type="button" className="flex items-center justify-center w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all shrink-0 mx-auto border border-zinc-200 dark:border-zinc-700 hover:rotate-180">
         <ArrowRightLeft className="w-4 h-4 text-zinc-500" />
       </button>
@@ -195,7 +195,7 @@ function CabForm({ onTravelersChange }: { onTravelersChange: (val: string) => vo
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr_1fr_1fr] gap-4 items-center">
       <PlaceAutocomplete name="from" placeholder="Pickup City" icon="map" />
-      
+
       <button type="button" className="flex items-center justify-center w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 transition-all shrink-0 mx-auto border border-zinc-200 dark:border-zinc-700 hover:rotate-180">
         <ArrowRightLeft className="w-4 h-4 text-zinc-500" />
       </button>
@@ -238,8 +238,8 @@ function HotelForm({ onTravelersChange }: { onTravelersChange: (val: string) => 
 function FlightCard({ f, onBook }: { f: any, onBook: (item: any) => void }) {
   return (
     <div className={`result-card group bg-white dark:bg-[#111] border rounded-2xl p-5 hover:shadow-xl transition-all duration-300 ${f.badge === 'cheapest' ? 'border-emerald-200 dark:border-emerald-700/40 ring-1 ring-emerald-100 dark:ring-emerald-900/30'
-        : f.badge === 'bestvalue' ? 'border-violet-200 dark:border-violet-700/40'
-          : 'border-zinc-100 dark:border-white/5 hover:border-zinc-200 dark:hover:border-white/10'
+      : f.badge === 'bestvalue' ? 'border-violet-200 dark:border-violet-700/40'
+        : 'border-zinc-100 dark:border-white/5 hover:border-zinc-200 dark:hover:border-white/10'
       }`}>
       <div className="flex flex-col md:flex-row items-center gap-6">
         <div className="flex items-center gap-4 w-full md:w-auto">
@@ -297,8 +297,8 @@ function FlightCard({ f, onBook }: { f: any, onBook: (item: any) => void }) {
 function TrainCard({ t, onBook }: { t: any, onBook: (item: any) => void }) {
   return (
     <div className={`result-card bg-white dark:bg-[#111] border rounded-2xl p-5 hover:shadow-xl transition-all duration-300 ${t.badge === 'cheapest' ? 'border-emerald-200 dark:border-emerald-700/40 ring-1 ring-emerald-100 dark:ring-emerald-900/30'
-        : t.badge === 'fastest' ? 'border-amber-200 dark:border-amber-700/40'
-          : 'border-zinc-100 dark:border-white/5 hover:border-zinc-200 dark:hover:border-white/10'
+      : t.badge === 'fastest' ? 'border-amber-200 dark:border-amber-700/40'
+        : 'border-zinc-100 dark:border-white/5 hover:border-zinc-200 dark:hover:border-white/10'
       }`}>
       <div className="flex flex-col md:flex-row items-center gap-6">
         <div className="w-full md:w-auto">
@@ -353,8 +353,8 @@ function TrainCard({ t, onBook }: { t: any, onBook: (item: any) => void }) {
 function CabCard({ c }: { c: any }) {
   return (
     <div className={`result-card bg-white dark:bg-[#111] border rounded-2xl p-5 hover:shadow-xl transition-all duration-300 ${c.badge === 'cheapest' ? 'border-emerald-200 dark:border-emerald-700/40 ring-1 ring-emerald-100 dark:ring-emerald-900/30'
-        : c.badge === 'bestvalue' ? 'border-violet-200 dark:border-violet-700/40'
-          : 'border-zinc-100 dark:border-white/5 hover:border-zinc-200 dark:hover:border-white/10'
+      : c.badge === 'bestvalue' ? 'border-violet-200 dark:border-violet-700/40'
+        : 'border-zinc-100 dark:border-white/5 hover:border-zinc-200 dark:hover:border-white/10'
       }`}>
       <div className="flex flex-col md:flex-row items-center gap-6">
         <div className="flex items-center gap-4 w-full md:w-auto">
@@ -406,8 +406,8 @@ function CabCard({ c }: { c: any }) {
 function HotelCard({ h, onBook }: { h: any, onBook: (item: any) => void }) {
   return (
     <div className={`result-card bg-white dark:bg-[#111] border rounded-2xl p-5 hover:shadow-xl transition-all duration-300 ${h.badge === 'cheapest' ? 'border-emerald-200 dark:border-emerald-700/40 ring-1 ring-emerald-100 dark:ring-emerald-900/30'
-        : h.badge === 'bestvalue' ? 'border-violet-200 dark:border-violet-700/40'
-          : 'border-zinc-100 dark:border-white/5 hover:border-zinc-200 dark:hover:border-white/10'
+      : h.badge === 'bestvalue' ? 'border-violet-200 dark:border-violet-700/40'
+        : 'border-zinc-100 dark:border-white/5 hover:border-zinc-200 dark:hover:border-white/10'
       }`}>
       <div className="flex flex-col md:flex-row gap-5">
         <div className="w-full md:w-28 h-28 rounded-xl bg-gradient-to-br from-zinc-100 to-zinc-200 dark:from-zinc-800 dark:to-zinc-700 flex items-center justify-center text-5xl shrink-0 border border-zinc-100 dark:border-white/5">
@@ -490,6 +490,69 @@ export default function BookingsPage() {
 
   useEffect(() => {
     setMounted(true);
+
+    // BRUTE FORCE Widget Theming scrubber
+    // Due to TravelPayouts using CSS variables, highly specific inline dynamic styling, and potential Web Component Shadow DOMs!
+    const interval = setInterval(() => {
+      const tpwl = document.getElementById('tpwl-search');
+      if (tpwl) {
+        // Only run overrides if the site is in dark mode
+        const isDark = document.documentElement.classList.contains('dark');
+
+        if (isDark) {
+          // Overwrite Native TravelPayouts CSS Variables that leak the white highlights
+          tpwl.style.setProperty('--border-color', '#27272a', 'important');
+          tpwl.style.setProperty('--ticket-cards-background', '#18181b', 'important');
+          tpwl.style.setProperty('--main-accent-contrast-color', '#18181b', 'important');
+
+          // Check if the widget is protected by a Web Component Shadow Boundary
+          const sRoot = tpwl.shadowRoot || tpwl.children[0]?.shadowRoot;
+          if (sRoot) {
+            let styleTag = sRoot.getElementById('naviigo-shadow-override');
+            if (!styleTag) {
+              styleTag = document.createElement('style');
+              styleTag.id = 'naviigo-shadow-override';
+              styleTag.innerHTML = `
+                        div[class*="Passengers"], div[class*="passengers" i] { background: #18181b !important; color: white !important; }
+                        input { background: transparent !important; box-shadow: none !important; }
+                        div { border-color: #27272a !important; outline: none !important; gap: 0 !important; }
+                        div[class*="divider"], div[class*="separator"] { background: transparent !important; }
+                        *::before, *::after { background-color: #18181b !important; border-color: #27272a !important; box-shadow: none !important; }
+                    `;
+              sRoot.appendChild(styleTag);
+            }
+          }
+
+          // Enforce dark background on ALL passenger wrappers violently
+          tpwl.querySelectorAll('div[class*="passengers" i], div[class*="Passengers"]').forEach(el => {
+            const e = el as HTMLElement;
+            e.style.setProperty('background-color', '#18181b', 'important');
+            e.style.setProperty('background', '#18181b', 'important');
+            e.style.setProperty('color', '#ffffff', 'important');
+          });
+
+          // Kill the exact input that causes the highlight
+          tpwl.querySelectorAll('input').forEach(el => {
+            const e = el as HTMLElement;
+            e.style.setProperty('background-color', 'transparent', 'important');
+            e.style.setProperty('box-shadow', 'none', 'important');
+          });
+
+          // Nuke all white lines and borders globally across widget
+          tpwl.querySelectorAll('*').forEach(el => {
+            const e = el as HTMLElement;
+            e.style.setProperty('border-color', '#27272a', 'important');
+            e.style.setProperty('outline-color', 'transparent', 'important');
+            const cls = e.className;
+            if (typeof cls === 'string' && (cls.toLowerCase().includes('divider') || cls.toLowerCase().includes('separator'))) {
+              e.style.setProperty('background-color', 'transparent', 'important');
+            }
+          });
+        }
+      }
+    }, 150);
+
+    return () => clearInterval(interval);
   }, []);
 
   const handleOpenPortal = (item: any, type: any) => {
@@ -509,7 +572,7 @@ export default function BookingsPage() {
     setFormError(null);
 
     const formData = e?.currentTarget ? Object.fromEntries(new FormData(e.currentTarget)) : {};
-    
+
     // Unify date for hotels (checkin -> date)
     const normalizedDate = formData.date || formData.checkin || "";
     const from = formData.from as string;
@@ -525,15 +588,15 @@ export default function BookingsPage() {
     setHasSearched(true);
     setSearchResults([]);
 
-    const query = { 
-      ...formData, 
-      from, 
-      to, 
-      date: normalizedDate, 
-      type: activeTab, 
-      page: 1 
+    const query = {
+      ...formData,
+      from,
+      to,
+      date: normalizedDate,
+      type: activeTab,
+      page: 1
     };
-    
+
     setLastQuery(query);
     setResultsPage(1);
 
@@ -545,10 +608,10 @@ export default function BookingsPage() {
       });
       const data = await res.json();
       if (data.success && data.results) {
-         setSearchResults(data.results);
+        setSearchResults(data.results);
       } else {
-         console.error("Search failed:", data.error);
-         setFormError(data.error || "No results found for this route.");
+        console.error("Search failed:", data.error);
+        setFormError(data.error || "No results found for this route.");
       }
     } catch (err) {
       console.error(err);
@@ -708,21 +771,21 @@ export default function BookingsPage() {
 
         {/* Search Modules Container */}
         <motion.div
-           initial={{ opacity: 0, y: -12 }}
-           animate={{ opacity: 1, y: 0 }}
-           className="mb-8 rounded-[1.75rem] overflow-hidden bg-white dark:bg-[#111] border border-zinc-100 dark:border-white/5 shadow-xl shadow-black/5 dark:shadow-black/20 p-4 sm:p-6"
+          initial={{ opacity: 0, y: -12 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8 rounded-[1.75rem] overflow-hidden bg-white dark:bg-[#111] border border-zinc-100 dark:border-white/5 shadow-xl shadow-black/5 dark:shadow-black/20 p-4 sm:p-6"
         >
           {/* TravelPayouts Metasearch Widget (Always in DOM for Script, visually hidden if not flights) */}
           <div className={activeTab === 'flights' ? 'block' : 'hidden'}>
             <div id="tpwl-search"></div>
           </div>
-          
+
           {/* Native NaviiGo Forms (For Trains, Cabs, Hotels) */}
           {activeTab !== 'flights' && (
             <form onSubmit={handleSearch}>
               {renderForm()}
               <FilterChips options={filtersByTab[activeTab]} active={activeFilters} onToggle={toggleFilter} />
-              
+
               <div className="mt-6 flex justify-center">
                 <button type="submit" disabled={isSearching} className={`group relative flex items-center justify-center gap-2 w-full sm:w-auto px-10 py-3.5 rounded-xl bg-gradient-to-r ${tabConfig.find(t => t.id === activeTab)?.accent} text-white font-black text-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 disabled:opacity-50 overflow-hidden`}>
                   {isSearching ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Search className="w-5 h-5" />}
@@ -776,8 +839,8 @@ export default function BookingsPage() {
                 <p className="text-center text-xs text-zinc-400 animate-pulse pt-2">🔍 Searching 120+ sites for the best deals…</p>
               </div>
             ) : !hasSearched ? (
-              <motion.div 
-                initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} 
+              <motion.div
+                initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
                 className="flex flex-col items-center justify-center py-20 px-4 text-center opacity-70"
               >
                 <div className="w-20 h-20 bg-zinc-100 dark:bg-zinc-800/50 rounded-full flex items-center justify-center mb-5">
@@ -792,7 +855,7 @@ export default function BookingsPage() {
                 {renderResults()}
                 <SmartInsights tab={activeTab} />
                 <div className="pt-4 flex justify-center">
-                  <button 
+                  <button
                     onClick={handleLoadMore}
                     disabled={loadingMore}
                     className="flex items-center gap-2 px-6 py-3 rounded-xl border-2 border-dashed border-zinc-200 dark:border-zinc-700 text-zinc-500 dark:text-zinc-400 hover:border-orange-400 hover:text-orange-500 dark:hover:border-orange-600 dark:hover:text-orange-400 font-semibold text-sm transition-all duration-200 disabled:opacity-50"
@@ -808,7 +871,7 @@ export default function BookingsPage() {
       </div>
 
       {isPortalOpen && mounted && typeof document !== 'undefined' && createPortal(
-        <BookingPortal 
+        <BookingPortal
           isOpen={isPortalOpen}
           onClose={() => setIsPortalOpen(false)}
           selectedItem={selectedBooking}

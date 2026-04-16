@@ -15,7 +15,7 @@
   --ring-rgb: 15 23 42;
 
   /* Glass tuning */
-  --glass-alpha: 0.70;
+  --glass-alpha: 0.7;
   --glass-strong-alpha: 0.85;
   --ring-alpha: 0.08;
 
@@ -35,7 +35,8 @@
   --ring-alpha: 0.12;
 }
 
-html.lenis, html.lenis body {
+html.lenis,
+html.lenis body {
   height: auto;
 }
 
@@ -63,6 +64,7 @@ body {
 }
 
 @layer utilities {
+
   /*
     Hides native scrollbars while maintaining scroll functionality.
     Used for the cinematic card rail.
@@ -101,7 +103,7 @@ body {
   -ms-overflow-style: none !important;
   scrollbar-width: none !important;
   /* Aggressively forces clipping to stop native scroll UI */
-  overflow-x: clip !important; 
+  overflow-x: clip !important;
 }
 
 /* ─── TravelPayouts Widget Dark Theme Overrides ──────────────────────────── */
@@ -117,11 +119,11 @@ body {
 .dark #tpwl-search,
 .dark #tpwl-tickets {
   /* Override TravelPayouts' inline CSS variables directly */
-  --font-color: #ffffff !important;
+  --font-color: #808080 !important;
   --font-color-light: #e4e4e7 !important;
   --ticket-cards-background: #18181b !important;
   --border-color: #27272a !important;
-  --main-accent-contrast-color: #ffffff !important;
+  --main-accent-contrast-color: #18181b !important;
   --search-form-icon-color: #a1a1aa !important;
   --search-form-link-color: #f97316 !important;
   --link-color: #f97316 !important;
@@ -133,7 +135,7 @@ body {
 }
 
 /* Force ALL top-level functional containers to transparent/dark */
-.dark #tpwl-search > div,
+.dark #tpwl-search>div,
 .dark #tpwl-search form,
 .dark #tpwl-search [class*="SearchEdit-module"],
 .dark #tpwl-search [class*="DefaultSearch-module"] {
@@ -154,6 +156,68 @@ body {
   background-color: #18181b !important;
   border-color: #27272a !important;
   color: #ffffff !important;
+}
+
+/* Universal Pseudo-Element Killer (Separators/Dividers/Fake Backgrounds) */
+[id="tpwl-search"] *::before,
+[id="tpwl-search"] *::after {
+  background-color: #18181b !important;
+  background-image: none !important;
+  border-color: #27272a !important;
+  box-shadow: none !important;
+}
+
+div[class*="__divider"],
+div[class*="Separator"],
+div[class*="Delimiter"] {
+  background-color: transparent !important;
+  background: transparent !important;
+  border-color: transparent !important;
+  width: 0 !important;
+}
+
+[id="tpwl-search"] div,
+[id="tpwl-search"] input,
+[id="tpwl-search"] span {
+  border-color: #27272a !important;
+  box-shadow: none !important;
+}
+
+/* ─── PASSENGER & CLASS PICKER (Pseudo-Element Aware) ─── */
+/* Travelpayouts often uses ::before to paint the background. Clear it out and enforce dark. */
+div[class*="Passengers-module"],
+div[class*="PassengersBase-module"],
+div[class*="passengers" i] {
+  background-color: #18181b !important;
+  background: #18181b !important;
+  border-color: #27272a !important;
+  color: #ffffff !important;
+}
+
+div[class*="Passengers-module"]::before,
+div[class*="PassengersBase-module"]::before,
+div[class*="passengers" i]::before {
+  background-color: #18181b !important;
+  background: #18181b !important;
+}
+
+div[class*="Passengers-module"] *:not(svg):not(path) {
+  background-color: #18181b !important;
+  background: #18181b !important;
+  color: #ffffff !important;
+  border-color: #27272a !important;
+}
+
+div[class*="Passengers-module"] input {
+  background-color: transparent !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+div[class*="Passengers-module__passengersLabel"],
+div[class*="Passengers-module__passengersDescription"] {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
 }
 
 .dark #tpwl-search [class*="Input-module__input"]:focus,
@@ -185,6 +249,7 @@ body {
   color: #71717a !important;
   -webkit-text-fill-color: #71717a !important;
 }
+
 .dark #tpwl-search [class*="Input-module"] svg {
   color: #71717a !important;
   fill: #71717a !important;
@@ -195,6 +260,7 @@ body {
 .dark #tpwl-search [class*="Input-module"] button {
   color: #71717a !important;
 }
+
 .dark #tpwl-search [class*="Input-module"] button:hover {
   color: #f97316 !important;
 }
@@ -205,27 +271,30 @@ body {
   border-color: #3f3f46 !important;
   color: #a1a1aa !important;
 }
+
 .dark #tpwl-search [class*="swapButton"]:hover {
   background-color: #3f3f46 !important;
   color: #f97316 !important;
 }
 
-/* ─── PASSENGER & CLASS PICKER (THE BIG WHITE BOX FIX) ─── */
-.dark #tpwl-search [class*="Passengers"],
-.dark #tpwl-search [class*="passengers"],
-.dark #tpwl-search [role="button"],
-.dark #tpwl-search [class*="Select-module__container"],
-.dark #tpwl-search [class*="Container"] {
-  background-color: #18181b !important;
+/* Passenger popover / dropdown panel */
+.dark #tpwl-search [class*="PassengersPicker"],
+.dark #tpwl-search [class*="PassengersDropdown"],
+.dark #tpwl-search [class*="PassengersBase-module"] [class*="popover"],
+.dark #tpwl-search [class*="PassengersBase-module"] [class*="dropdown"] {
+  background-color: #111 !important;
   border-color: #27272a !important;
-  color: #e4e4e7 !important;
+  color: #000000 !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
 }
+
 .dark #tpwl-search [class*="PassengerControl"] button,
 .dark #tpwl-search [class*="CountControl"] button {
   background-color: #27272a !important;
   border-color: #3f3f46 !important;
   color: #e4e4e7 !important;
 }
+
 .dark #tpwl-search [class*="PassengerControl"] button:hover,
 .dark #tpwl-search [class*="CountControl"] button:hover {
   background-color: #3f3f46 !important;
@@ -243,6 +312,7 @@ body {
   font-weight: 700 !important;
   opacity: 1 !important;
 }
+
 .dark #tpwl-search button[type="submit"]:hover,
 .dark #tpwl-search [class*="submitBtn"]:hover {
   opacity: 0.9 !important;
@@ -260,18 +330,21 @@ body {
 .dark #tpwl-search [class*="Popover"] {
   background-color: #111 !important;
   border-color: #27272a !important;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.5) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
 }
+
 .dark #tpwl-search [class*="Dropdown-module__list"] li,
 .dark #tpwl-search [class*="Autocomplete"] li,
 .dark #tpwl-search ul[role="listbox"] li {
   color: #e4e4e7 !important;
 }
+
 .dark #tpwl-search [class*="Dropdown-module__list"] li:hover,
 .dark #tpwl-search [class*="Autocomplete"] li:hover,
 .dark #tpwl-search ul[role="listbox"] li:hover {
   background-color: #1c1917 !important;
 }
+
 .dark #tpwl-search [class*="Calendar"] button:hover,
 .dark #tpwl-search [class*="DatePicker"] button:hover {
   background-color: #27272a !important;
@@ -284,6 +357,7 @@ body {
 .dark #tpwl-search span[class*="link"] {
   color: #f97316 !important;
 }
+
 .dark #tpwl-search [class*="Toggle-module"],
 .dark #tpwl-search [class*="Checkbox"] {
   color: #a1a1aa !important;
@@ -311,10 +385,12 @@ body {
   border-color: #27272a !important;
   color: #e4e4e7 !important;
 }
+
 .dark #tpwl-tickets [class*="ProgressBar"] [class*="fill"],
 .dark #tpwl-tickets [class*="progress"] [class*="bar"] {
   background: linear-gradient(to right, #f97316, #e11d48) !important;
 }
+
 .dark #tpwl-tickets [class*="Progress-module"] svg path {
   stroke: #f97316 !important;
   fill: #f97316 !important;
@@ -325,13 +401,14 @@ body {
 .dark #tpwl-tickets [class*="ticket"],
 .dark #tpwl-tickets [class*="Card"] {
   background-color: #111 !important;
-  border-color: rgba(255,255,255,0.05) !important;
+  border-color: rgba(255, 255, 255, 0.05) !important;
   color: #e4e4e7 !important;
 }
+
 .dark #tpwl-tickets [class*="Ticket-module"]:hover,
 .dark #tpwl-tickets [class*="ticket"]:hover {
-  border-color: rgba(255,255,255,0.1) !important;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.3) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3) !important;
 }
 
 /* Sidebar & Filters */
@@ -339,7 +416,7 @@ body {
 .dark #tpwl-tickets [class*="filter"],
 .dark #tpwl-tickets [class*="Sidebar"] {
   background-color: #111 !important;
-  border-color: rgba(255,255,255,0.05) !important;
+  border-color: rgba(255, 255, 255, 0.05) !important;
   color: #e4e4e7 !important;
 }
 
@@ -347,8 +424,10 @@ body {
 .dark #tpwl-tickets p,
 .dark #tpwl-tickets span,
 .dark #tpwl-tickets label,
-.dark #tpwl-tickets h1, .dark #tpwl-tickets h2,
-.dark #tpwl-tickets h3, .dark #tpwl-tickets h4 {
+.dark #tpwl-tickets h1,
+.dark #tpwl-tickets h2,
+.dark #tpwl-tickets h3,
+.dark #tpwl-tickets h4 {
   color: #e4e4e7 !important;
 }
 
@@ -358,6 +437,7 @@ body {
 .dark #tpwl-tickets [class*="light"] {
   color: #a1a1aa !important;
 }
+
 .dark #tpwl-tickets [class*="price"],
 .dark #tpwl-tickets [class*="Price"] {
   color: #fff !important;
@@ -373,4 +453,4 @@ body {
   background: linear-gradient(to right, #f97316, #e11d48) !important;
   color: #fff !important;
   border: none !important;
-}
+}

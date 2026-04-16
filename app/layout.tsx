@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     siteName: 'NaviiGo',
     images: [
       {
-        url: 'https://images.unsplash.com/photo-1524492412937-b28074a5d7da?auto=format&fit=crop&w=1200&q=80',
+        url: 'https://images.unsplash.com/photo-1564507592333-c60657eea523?auto=format&fit=crop&w=1280&q=80',
         width: 1200,
         height: 630,
       }
@@ -34,7 +34,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'NaviiGO Spiritual Travel Planner',
     description: 'Start your ultimate Indian journey with an AI agent specifically built for Darshan timings and seamless cabs.',
-    images: ['https://images.unsplash.com/photo-1524492412937-b28074a5d7da?auto=format&fit=crop&w=1200&q=80'],
+    images: ['https://images.unsplash.com/photo-1564507592333-c60657eea523?auto=format&fit=crop&w=1280&q=80'],
   }
 };
 

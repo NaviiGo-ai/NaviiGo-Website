@@ -1,9 +1,18 @@
 'use client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useSearchParams } from 'next/navigation';
 import CalendarPicker from '@/components/shared/CalendarPicker';
 import { PURPOSES, DESTINATIONS, GROUP_SIZES } from '@/app/itinerary/data';
 import { StepBar } from './helpers';
+
+/** Resolve a city name to its DEST_DATA key (e.g. 'Jaipur' → 'jaipur') */
+function resolveDestKey(name: string): { id: string; name: string } | null {
+    const lower = name.toLowerCase().trim();
+    const match = DESTINATIONS.find(d => d.name.toLowerCase() === lower || d.id === lower);
+    if (match) return { id: match.id, name: match.name };
+    return null;
+}
 
 const STEP_VISUALS = ['🌍', '📍', '🗓️', '👥'];
 const STEP_TITLES = ["What's the purpose of your trip?", "Where in India do you want to go?", "When & how long is your trip?", "Who's travelling & what's your budget?"];
@@ -89,9 +98,12 @@ function CitySearch({ value, destName, onSelect }: { value: string; destName: st
                                         key={r.place_id || i}
                                         onClick={() => {
                                             const cityName = r.description.split(',')[0].trim();
-                                            const cityId = r.place_id || cityName.toLowerCase();
-                                            onSelect(cityId, cityName);
-                                            setQuery(cityName);
+                                            // Resolve to DEST_DATA key if it's a known destination
+                                            const resolved = resolveDestKey(cityName);
+                                            const cityId = resolved ? resolved.id : cityName.toLowerCase().replace(/\s+/g, '-');
+                                            const displayName = resolved ? resolved.name : cityName;
+                                            onSelect(cityId, displayName);
+                                            setQuery(displayName);
                                             setIsOpen(false);
                                         }}
                                         className="w-full flex items-center gap-4 px-5 py-4 text-left hover:bg-emerald-50 dark:hover:bg-emerald-500/10 rounded-2xl transition-all group/item"
@@ -139,7 +151,7 @@ function CitySearch({ value, destName, onSelect }: { value: string; destName: st
                     {DESTINATIONS.map(d => (
                         <button key={d.id} onClick={() => { onSelect(d.id, d.name); setQuery(d.name); }}
                             className={`group relative h-40 rounded-3xl overflow-hidden border-2 transition-all duration-300 text-left ${value === d.id ? 'border-emerald-500 shadow-xl shadow-emerald-500/20 scale-[1.02]' : 'border-transparent hover:border-zinc-300 dark:hover:border-zinc-700'}`}>
-                            <div className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110" style={{ backgroundImage: `url(https://images.unsplash.com/photo-${d.img}?auto=format&fit=crop&w=400&q=70)` }} />
+                            <div className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110" style={{ backgroundImage: `url(${d.img.startsWith('http') ? d.img : `https://images.unsplash.com/photo-${d.img}?auto=format&fit=crop&w=400&q=70`})` }} />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                             {value === d.id && (
                                 <div className="absolute top-3 right-3 w-7 h-7 bg-emerald-500 rounded-full flex items-center justify-center shadow-lg">
@@ -159,6 +171,7 @@ function CitySearch({ value, destName, onSelect }: { value: string; destName: st
 }
 
 export default function SetupWizard({ onDone }: SetupWizardProps) {
+    const searchParams = useSearchParams();
     const [step, setStep] = useState(1);
     const [dir, setDir] = useState(1);
     const [form, setForm] = useState({ purpose: '', destination: '', destName: '', startDate: '', endDate: '', days: 0, group: '', budget: 15000 });
@@ -166,6 +179,20 @@ export default function SetupWizard({ onDone }: SetupWizardProps) {
     const next = () => { setDir(1); setStep(s => s + 1); };
     const back = () => { setDir(-1); setStep(s => s - 1); };
     const canNext = [form.purpose !== '', form.destination !== '', form.startDate !== '' && form.endDate !== '', form.group !== ''][step - 1] ?? false;
+
+    // Pre-fill destination from URL query params (e.g. from Explore deep-dive CTA)
+    useEffect(() => {
+        const destParam = searchParams.get('destination') || searchParams.get('destName');
+        if (destParam && !form.destination) {
+            const resolved = resolveDestKey(destParam);
+            if (resolved) {
+                setForm(p => ({ ...p, destination: resolved.id, destName: resolved.name }));
+            } else {
+                const name = decodeURIComponent(destParam);
+                setForm(p => ({ ...p, destination: name.toLowerCase().replace(/\s+/g, '-'), destName: name }));
+            }
+        }
+    }, [searchParams]); // eslint-disable-line react-hooks/exhaustive-deps
     const variants = { enter: (d: number) => ({ opacity: 0, x: d * 40 }), center: { opacity: 1, x: 0 }, exit: (d: number) => ({ opacity: 0, x: -d * 40 }) };
 
     return (

@@ -66,14 +66,68 @@ export const PURPOSES = [
 ];
 
 export const DESTINATIONS = [
-    { id: 'kerala', name: 'Kerala', sub: "God's Own Country", state: 'Kerala', img: '1602216056096-3b40cc0c9944' },
-    { id: 'jaipur', name: 'Jaipur', sub: 'The Pink City', state: 'Rajasthan', img: '1477587458883-47145ed94245' },
-    { id: 'varanasi', name: 'Varanasi', sub: 'City of Light', state: 'Uttar Pradesh', img: '1590132840509-3286380695c0' },
-    { id: 'goa', name: 'Goa', sub: 'Sun, Sand & Soul', state: 'Goa', img: '1507525428034-b723cf961d3e' },
-    { id: 'manali', name: 'Manali', sub: 'Gateway to Himalayas', state: 'Himachal Pradesh', img: '1585409677983-0f6c41ca9c3b' },
-    { id: 'udaipur', name: 'Udaipur', sub: 'City of Lakes', state: 'Rajasthan', img: '1524492412937-b28074a5d7da' },
-    { id: 'agra', name: 'Agra', sub: 'Land of the Taj', state: 'Uttar Pradesh', img: '1564507592333-c60657eea523' },
-    { id: 'rishikesh', name: 'Rishikesh', sub: 'Yoga Capital of World', state: 'Uttarakhand', img: '1585409677983-0f6c41ca9c3b' },
+    // ── North India ──────────────────────────────────────────────
+    { id: 'delhi', name: 'Delhi', sub: 'Capital of Contrasts', state: 'Delhi', img: 'https://images.unsplash.com/photo-1587474260584-136574528ed5?auto=format&fit=crop&w=800&q=80' },
+    { id: 'jaipur', name: 'Jaipur', sub: 'The Pink City', state: 'Rajasthan', img: 'https://images.unsplash.com/photo-1599661046289-e31897846e41?auto=format&fit=crop&w=800&q=80' },
+    { id: 'agra', name: 'Agra', sub: 'Land of the Taj', state: 'Uttar Pradesh', img: 'https://images.unsplash.com/photo-1564507592333-c60657eea523?auto=format&fit=crop&w=800&q=80' },
+    { id: 'varanasi', name: 'Varanasi', sub: 'City of Light', state: 'Uttar Pradesh', img: 'https://images.unsplash.com/photo-1561361513-2d000a50f0dc?auto=format&fit=crop&w=800&q=80' },
+    { id: 'amritsar', name: 'Amritsar', sub: 'Golden City', state: 'Punjab', img: 'https://images.unsplash.com/photo-1514222134-b57cbb8ce073?auto=format&fit=crop&w=800&q=80' },
+    { id: 'lucknow', name: 'Lucknow', sub: 'City of Nawabs', state: 'Uttar Pradesh', img: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?auto=format&fit=crop&w=800&q=80' },
+
+    // ── Rajasthan ────────────────────────────────────────────────
+    { id: 'udaipur', name: 'Udaipur', sub: 'City of Lakes', state: 'Rajasthan', img: 'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?auto=format&fit=crop&w=800&q=80' },
+    { id: 'jodhpur', name: 'Jodhpur', sub: 'The Blue City', state: 'Rajasthan', img: 'https://images.unsplash.com/photo-1568495248636-6432b97bd949?auto=format&fit=crop&w=800&q=80' },
+    { id: 'jaisalmer', name: 'Jaisalmer', sub: 'Golden City', state: 'Rajasthan', img: 'https://images.unsplash.com/photo-1609866138210-84bb689f3c61?auto=format&fit=crop&w=800&q=80' },
+    { id: 'pushkar', name: 'Pushkar', sub: 'Rose Garden of Rajasthan', state: 'Rajasthan', img: 'https://images.unsplash.com/photo-1599661046289-e31897846e41?auto=format&fit=crop&w=800&q=80' },
+
+    // ── Himalayan ────────────────────────────────────────────────
+    { id: 'manali', name: 'Manali', sub: 'Gateway to Himalayas', state: 'Himachal Pradesh', img: 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?auto=format&fit=crop&w=800&q=80' },
+    { id: 'shimla', name: 'Shimla', sub: 'Queen of Hills', state: 'Himachal Pradesh', img: 'https://images.unsplash.com/photo-1597074866923-dc0589150358?auto=format&fit=crop&w=800&q=80' },
+    { id: 'rishikesh', name: 'Rishikesh', sub: 'Yoga Capital of World', state: 'Uttarakhand', img: 'https://images.unsplash.com/photo-1583309219338-a582f1f9ca6b?auto=format&fit=crop&w=800&q=80' },
+    { id: 'dharamshala', name: 'Dharamshala', sub: 'Little Lhasa', state: 'Himachal Pradesh', img: 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?auto=format&fit=crop&w=800&q=80' },
+    { id: 'nainital', name: 'Nainital', sub: 'Lake District', state: 'Uttarakhand', img: 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?auto=format&fit=crop&w=800&q=80' },
+    { id: 'mussoorie', name: 'Mussoorie', sub: 'Queen of Hills', state: 'Uttarakhand', img: 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?auto=format&fit=crop&w=800&q=80' },
+    { id: 'haridwar', name: 'Haridwar', sub: 'Gateway to Gods', state: 'Uttarakhand', img: 'https://images.unsplash.com/photo-1561361513-2d000a50f0dc?auto=format&fit=crop&w=800&q=80' },
+
+    // ── Kashmir & Ladakh ─────────────────────────────────────────
+    { id: 'srinagar', name: 'Srinagar', sub: 'Paradise on Earth', state: 'J&K', img: 'https://images.unsplash.com/photo-1596402184320-417e7178b2cd?auto=format&fit=crop&w=800&q=80' },
+    { id: 'ladakh', name: 'Ladakh', sub: 'Land of High Passes', state: 'Ladakh', img: 'https://images.unsplash.com/photo-1512100356356-de1b84283e18?auto=format&fit=crop&w=800&q=80' },
+    { id: 'gulmarg', name: 'Gulmarg', sub: 'Meadow of Flowers', state: 'J&K', img: 'https://images.unsplash.com/photo-1596402184320-417e7178b2cd?auto=format&fit=crop&w=800&q=80' },
+
+    // ── South India ──────────────────────────────────────────────
+    { id: 'kerala', name: 'Kerala', sub: "God's Own Country", state: 'Kerala', img: 'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?auto=format&fit=crop&w=800&q=80' },
+    { id: 'goa', name: 'Goa', sub: 'Sun, Sand & Soul', state: 'Goa', img: 'https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?auto=format&fit=crop&w=800&q=80' },
+    { id: 'mysuru', name: 'Mysuru', sub: 'Palace City', state: 'Karnataka', img: 'https://images.unsplash.com/photo-1600100397608-e5a7c7bca4b1?auto=format&fit=crop&w=800&q=80' },
+    { id: 'hampi', name: 'Hampi', sub: 'Boulder Kingdom', state: 'Karnataka', img: 'https://images.unsplash.com/photo-1590050752117-238cb20e10a0?auto=format&fit=crop&w=800&q=80' },
+    { id: 'pondicherry', name: 'Pondicherry', sub: 'French Riviera of East', state: 'Tamil Nadu', img: 'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?auto=format&fit=crop&w=800&q=80' },
+    { id: 'ooty', name: 'Ooty', sub: 'Queen of Nilgiris', state: 'Tamil Nadu', img: 'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?auto=format&fit=crop&w=800&q=80' },
+    { id: 'coorg', name: 'Coorg', sub: 'Scotland of India', state: 'Karnataka', img: 'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?auto=format&fit=crop&w=800&q=80' },
+    { id: 'hyderabad', name: 'Hyderabad', sub: 'City of Pearls', state: 'Telangana', img: 'https://images.unsplash.com/photo-1572097662878-03e200dfe2c4?auto=format&fit=crop&w=800&q=80' },
+    { id: 'madurai', name: 'Madurai', sub: 'Temple City', state: 'Tamil Nadu', img: 'https://images.unsplash.com/photo-1582510003544-4d00b7f74220?auto=format&fit=crop&w=800&q=80' },
+
+    // ── West India ────────────────────────────────────────────────
+    { id: 'mumbai', name: 'Mumbai', sub: 'City of Dreams', state: 'Maharashtra', img: 'https://images.unsplash.com/photo-1570168007204-dfb528c6958f?auto=format&fit=crop&w=800&q=80' },
+    { id: 'kutch', name: 'Kutch', sub: 'White Desert', state: 'Gujarat', img: 'https://images.unsplash.com/photo-1609866138210-84bb689f3c61?auto=format&fit=crop&w=800&q=80' },
+    { id: 'dwarka', name: 'Dwarka', sub: 'Kingdom of Krishna', state: 'Gujarat', img: 'https://images.unsplash.com/photo-1609947017136-9daf32a2cd73?auto=format&fit=crop&w=800&q=80' },
+
+    // ── East India ────────────────────────────────────────────────
+    { id: 'kolkata', name: 'Kolkata', sub: 'City of Joy', state: 'West Bengal', img: 'https://images.unsplash.com/photo-1558431382-27e303142255?auto=format&fit=crop&w=800&q=80' },
+    { id: 'darjeeling', name: 'Darjeeling', sub: 'Queen of Hills', state: 'West Bengal', img: 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=800&q=80' },
+    { id: 'gangtok', name: 'Gangtok', sub: 'Land of Monasteries', state: 'Sikkim', img: 'https://images.unsplash.com/photo-1544735716-392fe2489ffa?auto=format&fit=crop&w=800&q=80' },
+    { id: 'puri', name: 'Puri', sub: 'Abode of Lord Jagannath', state: 'Odisha', img: 'https://images.unsplash.com/photo-1609947017136-9daf32a2cd73?auto=format&fit=crop&w=800&q=80' },
+
+    // ── Northeast ────────────────────────────────────────────────
+    { id: 'shillong', name: 'Shillong', sub: 'Scotland of East', state: 'Meghalaya', img: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=800&q=80' },
+    { id: 'tawang', name: 'Tawang', sub: 'Monastery in Clouds', state: 'Arunachal Pradesh', img: 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?auto=format&fit=crop&w=800&q=80' },
+
+    // ── Islands ──────────────────────────────────────────────────
+    { id: 'andaman', name: 'Andaman', sub: 'Tropical Paradise', state: 'A&N Islands', img: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80' },
+    { id: 'lakshadweep', name: 'Lakshadweep', sub: 'Coral Islands', state: 'Lakshadweep', img: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80' },
+
+    // ── Pilgrimages ──────────────────────────────────────────────
+    { id: 'tirupati', name: 'Tirupati', sub: 'Lord Venkateswara', state: 'Andhra Pradesh', img: 'https://images.unsplash.com/photo-1609947017136-9daf32a2cd73?auto=format&fit=crop&w=800&q=80' },
+    { id: 'ujjain', name: 'Ujjain', sub: 'City of Mahakal', state: 'Madhya Pradesh', img: 'https://images.unsplash.com/photo-1609947017136-9daf32a2cd73?auto=format&fit=crop&w=800&q=80' },
+    { id: 'bodhgaya', name: 'Bodh Gaya', sub: 'Seat of Enlightenment', state: 'Bihar', img: 'https://images.unsplash.com/photo-1524492412937-b28074a5d7da?auto=format&fit=crop&w=800&q=80' },
 ];
 
 export const GROUP_SIZES = [
@@ -323,6 +377,114 @@ export const DEST_DATA: Record<string, DestInfo> = {
                     { time: '02:00 PM', slot: 'Afternoon', name: 'Vashisht Hot Springs', desc: 'Sacred natural hot water springs inside a stone temple — perfect after trekking.', crowd: 'Medium', crowdTip: 'Weekday afternoons are quieter', travelFromPrev: '10 min drive', lat: 32.2680, lng: 77.1830 },
                     { time: '04:30 PM', slot: 'Evening', name: 'Jogini Waterfall Trek', desc: 'Short scenic trek through apple orchards to a beautiful Himalayan waterfall.', crowd: 'Low', crowdTip: 'Trail is narrow — go in daylight only', travelFromPrev: '15 min drive', lat: 32.2590, lng: 77.1700 },
                     { time: '07:00 PM', slot: 'Evening', name: 'Dinner at Johnson\'s Café', desc: 'Fresh river trout and apple crumble in a beautiful stone cottage setting.', crowd: 'Medium', crowdTip: 'Reserve ahead — popular with tourists', travelFromPrev: '10 min drive', lat: 32.2400, lng: 77.1900, type: 'restaurant' },
+                ],
+            },
+        ],
+    },
+    udaipur: {
+        logistics: { flights: 'Nearest Airport: Maharana Pratap (UDR) — ~₹4,500 avg', trains: 'Major Station: Udaipur City (UDZ)' },
+        description: 'Udaipur, the City of Lakes, is a fairytale of shimmering waters, marble palaces, and romantic sunsets framed by the ancient Aravalli hills.',
+        avgCost: '₹2,500 – ₹8,000',
+        weather: { Jan: '8–24°C', Feb: '11–27°C', Mar: '16–32°C', Apr: '22–37°C', May: '26–40°C', Jun: '25–35°C', Jul: '24–30°C', Aug: '23–29°C', Sep: '22–31°C', Oct: '18–33°C', Nov: '12–28°C', Dec: '8–24°C' },
+        crowdLevel: 'Medium', crowdNote: 'Oct–Mar is peak season; monsoon brings lush greenery',
+        mapCenter: { lat: 24.5854, lng: 73.7125 },
+        highlights: [
+            { name: 'City Palace', img: '1599661502283-a44ea24dfc74', desc: 'Sprawling lakeside palace complex with museums, courtyards, and panoramic terraces.', bestMonths: 'Oct – Mar', duration: '3–5 hrs', walking: 'Medium', value: 'High', tags: ['Palace', 'History', 'Lake'], lat: 24.5764, lng: 73.6915 },
+            { name: 'Lake Pichola Boat Ride', img: '1593693397690-362cb9666fc2', desc: 'Cruise past island palaces and ghats as the sun sets over the Aravallis.', bestMonths: 'Oct – Mar', duration: '1–2 hrs', walking: 'Easy', value: 'High', tags: ['Lake', 'Sunset', 'Romantic'], lat: 24.5716, lng: 73.6806 },
+            { name: 'Monsoon Palace', img: '1626621341517-bbf3d9990a23', desc: 'Hilltop palace with sweeping 360° views of the city and surrounding countryside.', bestMonths: 'Oct – Mar', duration: '2–3 hrs', walking: 'Easy', value: 'High', tags: ['Fort', 'Sunset'], lat: 24.5780, lng: 73.6359 },
+            { name: 'Jagdish Temple', img: '1582283925565-d053709d3bdf', desc: 'Ornate Indo-Aryan temple dedicated to Lord Vishnu, dating to 1651.', bestMonths: 'All year', duration: '1–2 hrs', walking: 'Easy', value: 'High', tags: ['Temple', 'Heritage'], lat: 24.5780, lng: 73.6835 },
+        ],
+        restaurants: [
+            { id: 'ur1', name: 'Ambrai Restaurant', img: '1555396273-367ea4eb4db5', desc: 'Lakeside fine dining with City Palace illuminated across the water. Rajasthani and Continental cuisine.', cuisine: 'Rajasthani-Continental', priceRange: '₹600–₹1,500', rating: 4.7, mustTry: 'Laal Maas & Dal Baati', timing: '12:00 PM – 11:00 PM', lat: 24.5744, lng: 73.6824, tags: ['Fine Dining', 'Lake View'] },
+            { id: 'ur2', name: 'Natraj Dining Hall', img: '1567521464027-f127ff144326', desc: 'Famous pure-veg Rajasthani thali since 1967. Unlimited and authentic.', cuisine: 'Rajasthani Thali', priceRange: '₹200–₹500', rating: 4.5, mustTry: 'Unlimited Rajasthani Thali', timing: '10:30 AM – 10:00 PM', lat: 24.5805, lng: 73.6850, tags: ['Thali', 'Vegetarian'] },
+        ],
+        hotels: [
+            { id: 'uh1', name: 'Taj Lake Palace', img: '1571896349842-33c89424de2d', desc: 'Iconic floating marble palace on Lake Pichola — one of the most romantic hotels in the world.', type: 'Hotel', priceRange: '₹30,000–₹1,00,000/night', rating: 4.9, amenities: ['Lake', 'Spa', 'Heritage', 'Pool'], checkIn: '2:00 PM', lat: 24.5750, lng: 73.6820 },
+            { id: 'uh2', name: 'Zostel Udaipur', img: '1564501049412-61c2a3083791', desc: 'Rooftop hostel with Lake Pichola views, cozy dorms, and social traveler vibe.', type: 'Hostel', priceRange: '₹600–₹2,500/night', rating: 4.4, amenities: ['Rooftop', 'WiFi', 'Lake View'], checkIn: '1:00 PM', lat: 24.5780, lng: 73.6840 },
+        ],
+        dayPlans: [
+            {
+                day: 1, title: 'Lakeside Royalty & Heritage Walk',
+                weather: { temp: '12–28°C', condition: 'Clear Skies', emoji: '☀️', rain: 0, tip: 'Carry sunglasses — reflections off the lake are bright' },
+                activities: [
+                    { time: '08:00 AM', slot: 'Morning', name: 'City Palace Complex', desc: 'Explore the sprawling royal palace with its museums and panoramic terraces.', crowd: 'Low', crowdTip: 'Opens at 8 — be first in to avoid tour groups', lat: 24.5764, lng: 73.6915 },
+                    { time: '10:30 AM', slot: 'Morning', name: 'Jagdish Temple', desc: 'Beautifully carved Indo-Aryan temple in the heart of the old city.', crowd: 'Medium', crowdTip: 'Visit during aarti for the best experience', travelFromPrev: '5 min walk', lat: 24.5780, lng: 73.6835 },
+                    { time: '12:30 PM', slot: 'Afternoon', name: 'Lunch at Natraj Dining Hall', desc: 'Legendary unlimited Rajasthani thali — authentic and filling.', crowd: 'High', crowdTip: 'Arrive at 12:30 to beat the lunch rush', travelFromPrev: '5 min walk', lat: 24.5805, lng: 73.6850, type: 'restaurant' },
+                    { time: '02:30 PM', slot: 'Afternoon', name: 'Hathi Pol Bazaar Walk', desc: 'Browse handicrafts, miniature paintings, and silver jewellery in narrow lanes.', crowd: 'Medium', crowdTip: 'Bargain at 40% of asking price', travelFromPrev: '5 min walk', lat: 24.5790, lng: 73.6860 },
+                    { time: '05:00 PM', slot: 'Evening', name: 'Lake Pichola Sunset Boat Ride', desc: 'Glide past Jag Mandir and the floating Taj Palace as the sky turns golden.', crowd: 'Medium', crowdTip: 'Book the 5 PM slot for best sunset light', travelFromPrev: '10 min walk', lat: 24.5716, lng: 73.6806 },
+                    { time: '08:00 PM', slot: 'Evening', name: 'Dinner at Ambrai', desc: 'Candlelit lakeside dining with the illuminated City Palace reflecting on the water.', crowd: 'Medium', crowdTip: 'Reserve in advance — very popular', travelFromPrev: '5 min walk', lat: 24.5744, lng: 73.6824, type: 'restaurant' },
+                ],
+            },
+        ],
+    },
+    agra: {
+        logistics: { flights: 'Nearest Airport: Agra (AGR) — ~₹4,000 avg', trains: 'Major Station: Agra Cantt (AGC)' },
+        description: 'Agra is home to the Taj Mahal — one of the Seven Wonders of the World — and a treasure trove of Mughal architecture along the Yamuna.',
+        avgCost: '₹2,000 – ₹6,000',
+        weather: { Jan: '6–21°C', Feb: '9–25°C', Mar: '14–32°C', Apr: '21–39°C', May: '26–43°C', Jun: '27–40°C', Jul: '25–34°C', Aug: '24–33°C', Sep: '23–34°C', Oct: '16–33°C', Nov: '10–27°C', Dec: '6–22°C' },
+        crowdLevel: 'High', crowdNote: 'Busy year-round; Oct–Mar is the best weather; avoid weekends',
+        mapCenter: { lat: 27.1751, lng: 78.0421 },
+        highlights: [
+            { name: 'Taj Mahal', img: '1564507592333-c60657eea523', desc: 'The immortal ivory-white marble mausoleum — a UNESCO World Heritage masterpiece.', bestMonths: 'Oct – Mar', duration: '2–4 hrs', walking: 'Easy', value: 'High', tags: ['Heritage', 'UNESCO', 'Iconic'], lat: 27.1751, lng: 78.0421 },
+            { name: 'Agra Fort', img: '1599661502283-a44ea24dfc74', desc: 'Massive red sandstone Mughal fortress with palaces, mosques and audience halls.', bestMonths: 'Oct – Mar', duration: '2–3 hrs', walking: 'Medium', value: 'High', tags: ['Fort', 'History', 'UNESCO'], lat: 27.1795, lng: 78.0214 },
+            { name: 'Mehtab Bagh', img: '1593693397690-362cb9666fc2', desc: 'Moonlight Garden across the Yamuna with the most iconic sunset view of the Taj.', bestMonths: 'Oct – Mar', duration: '1–2 hrs', walking: 'Easy', value: 'High', tags: ['Sunset', 'Garden'], lat: 27.1843, lng: 78.0389 },
+            { name: "Itimad-ud-Daulah's Tomb", img: '1524492412937-b28074a5d7da', desc: 'The "Baby Taj" — exquisite marble tomb predating the Taj Mahal with similar inlay work.', bestMonths: 'Oct – Mar', duration: '1–2 hrs', walking: 'Easy', value: 'High', tags: ['Heritage', 'Architecture'], lat: 27.1925, lng: 78.0307 },
+        ],
+        restaurants: [
+            { id: 'ar1', name: 'Peshawri (ITC Mughal)', img: '1517248135467-4c7edcad34c4', desc: 'Award-winning North Indian restaurant inside ITC Mughal hotel. Legendary kebabs and dal.', cuisine: 'Mughlai', priceRange: '₹1,000–₹3,000', rating: 4.7, mustTry: 'Dal Bukhara & Sikandari Raan', timing: '12:30 PM – 11:00 PM', lat: 27.1560, lng: 78.0250, tags: ['Fine Dining', 'Mughlai'] },
+            { id: 'ar2', name: 'Mama Chicken', img: '1631515243349-e0cb75fb8d4a', desc: 'Local legend for its butter chicken and brain curry. No frills, all flavor.', cuisine: 'Street Food', priceRange: '₹100–₹300', rating: 4.5, mustTry: 'Butter Chicken & Brain Masala', timing: '11:00 AM – 10:00 PM', lat: 27.1780, lng: 78.0170, tags: ['Street Food', 'Iconic'] },
+        ],
+        hotels: [
+            { id: 'ah1', name: 'The Oberoi Amarvilas', img: '1571896349842-33c89424de2d', desc: 'Luxury hotel with uninterrupted Taj Mahal views from every room, just 600m away.', type: 'Hotel', priceRange: '₹30,000–₹80,000/night', rating: 4.9, amenities: ['Taj View', 'Pool', 'Spa', 'Fine Dining'], checkIn: '2:00 PM', lat: 27.1720, lng: 78.0410 },
+            { id: 'ah2', name: 'Zostel Agra', img: '1564501049412-61c2a3083791', desc: 'Budget-friendly hostel near Taj Mahal with rooftop views and social travel vibe.', type: 'Hostel', priceRange: '₹500–₹2,000/night', rating: 4.3, amenities: ['Rooftop', 'WiFi', 'Taj View'], checkIn: '1:00 PM', lat: 27.1740, lng: 78.0440 },
+        ],
+        dayPlans: [
+            {
+                day: 1, title: 'Taj Mahal & Mughal Heritage',
+                weather: { temp: '10–26°C', condition: 'Clear Skies', emoji: '☀️', rain: 0, tip: 'Sunrise visit to Taj is magical — arrive at opening' },
+                activities: [
+                    { time: '06:00 AM', slot: 'Morning', name: 'Taj Mahal at Sunrise', desc: 'Witness the iconic ivory mausoleum glow pink and gold in the first light of dawn.', crowd: 'Medium', crowdTip: 'First entry slot (6 AM) is least crowded', lat: 27.1751, lng: 78.0421 },
+                    { time: '09:30 AM', slot: 'Morning', name: 'Agra Fort', desc: 'Explore the massive red sandstone Mughal fortress with Diwan-i-Khas and Sheesh Mahal.', crowd: 'Medium', crowdTip: 'Morning light makes for best photos from Musamman Burj', travelFromPrev: '15 min auto', lat: 27.1795, lng: 78.0214 },
+                    { time: '12:30 PM', slot: 'Afternoon', name: 'Lunch at Mama Chicken', desc: 'Legendary local eatery — butter chicken and brain curry that Agra swears by.', crowd: 'High', crowdTip: 'Extremely popular — share a table during rush', travelFromPrev: '10 min auto', lat: 27.1780, lng: 78.0170, type: 'restaurant' },
+                    { time: '02:30 PM', slot: 'Afternoon', name: "Itimad-ud-Daulah's Tomb", desc: 'The "Baby Taj" — delicate marble inlay work that foreshadowed the Taj Mahal.', crowd: 'Low', crowdTip: 'Often overlooked by tourists — peaceful afternoon visit', travelFromPrev: '15 min auto', lat: 27.1925, lng: 78.0307 },
+                    { time: '05:00 PM', slot: 'Evening', name: 'Mehtab Bagh Sunset', desc: 'The most iconic sunset view of the Taj Mahal — across the Yamuna River.', crowd: 'Medium', crowdTip: 'Arrive by 4:30 for best spots', travelFromPrev: '15 min auto', lat: 27.1843, lng: 78.0389 },
+                    { time: '08:00 PM', slot: 'Evening', name: 'Dinner at Peshawri', desc: 'Award-winning Mughlai dining inside ITC Mughal — Dal Bukhara is legendary.', crowd: 'Low', crowdTip: 'Reserve ahead — exclusive dining experience', travelFromPrev: '20 min drive', lat: 27.1560, lng: 78.0250, type: 'restaurant' },
+                ],
+            },
+        ],
+    },
+    rishikesh: {
+        logistics: { flights: 'Nearest Airport: Jolly Grant (DED) — ~₹5,000 avg', trains: 'Major Station: Haridwar (HW), then 1 hr drive' },
+        description: 'Rishikesh, the Yoga Capital of the World, sits where the Ganges emerges from the Himalayas — a sacred town of ashrams, adventure sports, and spiritual awakening.',
+        avgCost: '₹1,500 – ₹5,000',
+        weather: { Jan: '5–18°C', Feb: '7–20°C', Mar: '12–26°C', Apr: '16–32°C', May: '20–36°C', Jun: '22–32°C', Jul: '22–28°C', Aug: '21–28°C', Sep: '19–28°C', Oct: '13–26°C', Nov: '8–22°C', Dec: '5–18°C' },
+        crowdLevel: 'Medium', crowdNote: 'Sep–Nov ideal; Feb–Apr also great; monsoon brings rafting closures',
+        mapCenter: { lat: 30.0869, lng: 78.2676 },
+        highlights: [
+            { name: 'Laxman Jhula & Ram Jhula', img: '1585409677983-0f6c41ca9c3b', desc: 'Iconic iron suspension bridges spanning the Ganges with temple views and monkey encounters.', bestMonths: 'Sep – May', duration: '1–2 hrs', walking: 'Easy', value: 'High', tags: ['Heritage', 'Spiritual', 'Walk'], lat: 30.1254, lng: 78.3237 },
+            { name: 'Beatles Ashram', img: '1524492412937-b28074a5d7da', desc: 'Abandoned ashram where The Beatles stayed in 1968 — covered in vibrant graffiti art.', bestMonths: 'Sep – May', duration: '2–3 hrs', walking: 'Easy', value: 'High', tags: ['Culture', 'History', 'Art'], lat: 30.1098, lng: 78.3148 },
+            { name: 'White Water Rafting', img: '1626621341517-bbf3d9990a23', desc: 'Thrilling Ganges rapids from Shivpuri to Rishikesh — Grade III–IV rapids.', bestMonths: 'Sep – Jun', duration: '3–4 hrs', walking: 'Easy', value: 'High', tags: ['Adventure', 'Rafting'], lat: 30.1500, lng: 78.3000 },
+            { name: 'Triveni Ghat Aarti', img: '1582283925565-d053709d3bdf', desc: 'Mesmerizing evening Ganga Aarti ceremony with hundreds of oil lamps on the river.', bestMonths: 'All year', duration: '1–2 hrs', walking: 'Easy', value: 'High', tags: ['Spiritual', 'Aarti'], lat: 30.1020, lng: 78.2970 },
+        ],
+        restaurants: [
+            { id: 'rr1', name: 'Chotiwala Restaurant', img: '1567521464027-f127ff144326', desc: 'Rishikesh landmark since 1958 — pure veg thali on the ghats with the iconic Chotiwala mascot.', cuisine: 'North Indian Veg', priceRange: '₹100–₹350', rating: 4.3, mustTry: 'Special Thali & Aloo Puri', timing: '8:00 AM – 10:30 PM', lat: 30.1220, lng: 78.3210, tags: ['Iconic', 'Vegetarian'] },
+            { id: 'rr2', name: 'Little Buddha Cafe', img: '1555396273-367ea4eb4db5', desc: 'Bohemian riverside café popular with yoga practitioners — great smoothies, Israeli and Indian food.', cuisine: 'Continental-Indian', priceRange: '₹200–₹500', rating: 4.5, mustTry: 'Shakshuka & Banana Pancakes', timing: '8:00 AM – 9:30 PM', lat: 30.1240, lng: 78.3220, tags: ['Café', 'River View'] },
+        ],
+        hotels: [
+            { id: 'rh1', name: 'Aloha on the Ganges', img: '1582719508461-905c673c825d', desc: 'Boutique riverside resort with stunning Ganges views, yoga deck, and Ayurvedic spa.', type: 'Resort', priceRange: '₹5,000–₹12,000/night', rating: 4.6, amenities: ['River View', 'Yoga', 'Spa', 'Pool'], checkIn: '2:00 PM', lat: 30.1080, lng: 78.3100 },
+            { id: 'rh2', name: 'Zostel Rishikesh', img: '1564501049412-61c2a3083791', desc: 'Riverside hostel near Laxman Jhula with mountain views, hammocks, and bonfire nights.', type: 'Hostel', priceRange: '₹500–₹2,500/night', rating: 4.4, amenities: ['River View', 'WiFi', 'Bonfire'], checkIn: '1:00 PM', lat: 30.1250, lng: 78.3240 },
+        ],
+        dayPlans: [
+            {
+                day: 1, title: 'Sacred Ganges & Ashram Trail',
+                weather: { temp: '12–24°C', condition: 'Clear Skies', emoji: '🏔️', rain: 0, tip: 'Layer up for the cool morning — warm by noon' },
+                activities: [
+                    { time: '06:30 AM', slot: 'Morning', name: 'Sunrise Yoga at Parmarth Niketan', desc: 'Free open-air yoga session on the banks of the Ganges with Himalayan views.', crowd: 'Low', crowdTip: 'Arrive early for front-row Ganges view', lat: 30.1200, lng: 78.3200 },
+                    { time: '09:00 AM', slot: 'Morning', name: 'Beatles Ashram', desc: 'Wander through the graffiti-covered meditation halls where The Beatles found inspiration.', crowd: 'Low', crowdTip: 'Opens at 9 — weekday mornings are quiet', travelFromPrev: '10 min walk', lat: 30.1098, lng: 78.3148 },
+                    { time: '12:00 PM', slot: 'Afternoon', name: 'Lunch at Little Buddha Cafe', desc: 'Riverside café with Israeli breakfasts, smoothies, and Indian classics.', crowd: 'Medium', crowdTip: 'Grab a balcony seat overlooking the Ganges', travelFromPrev: '15 min walk', lat: 30.1240, lng: 78.3220, type: 'restaurant' },
+                    { time: '02:00 PM', slot: 'Afternoon', name: 'Laxman Jhula & Ram Jhula Walk', desc: 'Cross the iconic suspension bridges and explore the temples along the way.', crowd: 'Medium', crowdTip: 'Watch out for monkeys — keep food hidden', travelFromPrev: '5 min walk', lat: 30.1254, lng: 78.3237 },
+                    { time: '05:00 PM', slot: 'Evening', name: 'Triveni Ghat Ganga Aarti', desc: 'Spellbinding fire ceremony on the banks of the holy Ganges at sunset.', crowd: 'High', crowdTip: 'Arrive 30 min early for a seat at the front', travelFromPrev: '20 min auto', lat: 30.1020, lng: 78.2970 },
+                    { time: '07:30 PM', slot: 'Evening', name: 'Dinner at Chotiwala', desc: 'Iconic Rishikesh restaurant since 1958 — hearty veg thali on the ghats.', crowd: 'Medium', crowdTip: 'Evening crowd is lighter than lunch', travelFromPrev: '10 min auto', lat: 30.1220, lng: 78.3210, type: 'restaurant' },
                 ],
             },
         ],

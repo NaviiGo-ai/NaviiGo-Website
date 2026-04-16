@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic';
 import { GEN_STEPS, DEST_DATA, FALLBACK_DEST, GROUP_SIZES, PURPOSES } from '@/app/itinerary/data';
 
 const ItineraryMap = dynamic(() => import('@/components/shared/ItineraryMap'), { ssr: false });
+import { getBrowsingSignals } from '@/lib/browsingSignals';
 
 interface LoadingScreenProps {
     form: Record<string, unknown>;
@@ -47,6 +48,7 @@ export default function LoadingScreen({ form, onDone }: LoadingScreenProps) {
                         days: form.days,
                         budget: form.budget,
                         startDate: form.startDate,
+                        browsingSignals: getBrowsingSignals(),
                     }),
                 });
                 const result = await res.json();
@@ -105,7 +107,7 @@ export default function LoadingScreen({ form, onDone }: LoadingScreenProps) {
                     <span className="text-xl">✨</span>
                     <span className="font-bold text-zinc-900 dark:text-white">NaviiGo AI is crafting your trip</span>
                 </div>
-                <span className="text-[10px] bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 px-2 py-0.5 rounded-full font-bold uppercase tracking-wide">Powered by Gemini</span>
+                <span className="text-[10px] bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 px-2 py-0.5 rounded-full font-bold uppercase tracking-wide">NaviiGo Personalization Engine</span>
             </div>
 
             <div className="flex flex-col lg:flex-row max-w-7xl mx-auto px-4 md:px-8 py-8 gap-6 min-h-[calc(100vh-160px)]">
@@ -162,7 +164,7 @@ export default function LoadingScreen({ form, onDone }: LoadingScreenProps) {
 
                         <div className="mt-4 pt-4 border-t border-zinc-100 dark:border-zinc-800 text-center">
                             <span className="text-emerald-500 font-mono text-sm font-bold">{fmt(elapsed)}</span>
-                            <p className="text-[11px] text-zinc-400 mt-1">Generating with Google Gemini AI…</p>
+                            <p className="text-[11px] text-zinc-400 mt-1">Personalizing with NaviiGo AI…</p>
                         </div>
                     </div>
                 </div>

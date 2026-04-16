@@ -28,21 +28,21 @@ const slides: Slide[] = [
     blurb:
       'Step into the land of Kings. Rajasthan features golden deserts, majestic forts, opulent palaces, and a vibrant culture that echoes tales of historic grandeur.',
     background:
-      'https://images.unsplash.com/photo-1477587458883-47145ed94245?auto=format&fit=crop&w=2200&q=80',
+      'https://images.unsplash.com/photo-1599661046289-e31897846e41?auto=format&fit=crop&w=1280&q=80',
   },
   {
     name: 'HIMALAYAS',
     blurb:
       'Ascend to the breathtaking peaks. The Indian Himalayas offer snow-clad mountains, spiritual retreats, and thrilling adventures in a landscape of pristine beauty.',
     background:
-      'https://images.unsplash.com/photo-1585409677983-0f6c41ca9c3b?auto=format&fit=crop&w=2200&q=80',
+      'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?auto=format&fit=crop&w=1280&q=80',
   },
   {
     name: 'KERALA',
     blurb:
       'Kerala offers serene backwaters, lush tea-covered hills, heritage architecture, and tropical beaches, creating a slower and deeply scenic travel experience along India’s southwestern coast.',
     background:
-      'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?auto=format&fit=crop&w=2200&q=80',
+      'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?auto=format&fit=crop&w=1280&q=80',
   },
 ];
 
@@ -50,7 +50,7 @@ const fallbackSlide: Slide = {
   name: 'INDIA',
   blurb: 'Discover the diverse, deeply spiritual, and culturally rich landscapes of India.',
   background:
-    'https://images.unsplash.com/photo-1524492412937-b28074a5d7da?auto=format&fit=crop&w=2200&q=80',
+    'https://images.unsplash.com/photo-1564507592333-c60657eea523?auto=format&fit=crop&w=1280&q=80',
 };
 
 const spotCards: SpotCard[] = [
@@ -61,17 +61,17 @@ const spotCards: SpotCard[] = [
   {
     title: 'Hawa Mahal, Jaipur',
     image:
-      'https://images.unsplash.com/photo-1477587458883-47145ed94245?auto=format&fit=crop&w=900&q=80',
+      'https://images.unsplash.com/photo-1599661046289-e31897846e41?auto=format&fit=crop&w=1280&q=80',
   },
   {
     title: 'Himalayan Peaks',
     image:
-      'https://images.unsplash.com/photo-1585409677983-0f6c41ca9c3b?auto=format&fit=crop&w=900&q=80',
+      'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?auto=format&fit=crop&w=1280&q=80',
   },
   {
     title: 'Backwaters, Kerala',
     image:
-      'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?auto=format&fit=crop&w=900&q=80',
+      'https://images.unsplash.com/photo-1593693397690-362cb9666fc2?auto=format&fit=crop&w=800&q=80',
   },
 ];
 
@@ -184,7 +184,7 @@ export default function HeroSlider() {
               {currentSlide.blurb}
             </motion.p>
             <Link
-              href="/explore"
+              href={`/explore?q=${currentSlide.name === 'VARANASI' ? 'Varanasi' : currentSlide.name === 'RAJASTHAN' ? 'Rajasthan' : currentSlide.name === 'HIMALAYAS' ? 'Himachal' : 'Kerala'}`}
               className="mt-10 inline-flex items-center gap-4 rounded-xl bg-blue-600/90 px-10 py-4 text-sm font-bold text-white shadow-xl transition-all hover:scale-[1.05] hover:bg-blue-600"
             >
               Explore

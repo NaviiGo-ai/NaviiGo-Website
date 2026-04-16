@@ -23,52 +23,52 @@ const slides: HeroSlide[] = [
     name: 'Varanasi',
     blurb:
       'Experience the spiritual heart of India. Varanasi, one of the oldest living cities, offers deep cultural roots, ancient ghats, and mesmerizing Ganga Aarti ceremonies.',
-    primaryImage: 'https://images.unsplash.com/photo-1561361513-2d000a50f0dc?auto=format&fit=crop&w=1920&q=80',
+    primaryImage: 'https://images.unsplash.com/photo-1561361513-2d000a50f0dc?auto=format&fit=crop&w=1280&q=80',
     accentA: '255 196 140',
     accentB: '94 231 255',
     cards: [
-      { title: 'Ganga Aarti', tag: 'Varanasi', image: 'https://images.unsplash.com/photo-1582283925565-d053709d3bdf?auto=format&fit=crop&w=900&q=80', accent: 'amber' },
-      { title: 'Dashashwamedh Ghat', tag: 'Varanasi', image: 'https://images.unsplash.com/photo-1621516900609-0d1dc90b6cb9?auto=format&fit=crop&w=900&q=80', accent: 'blue' },
-      { title: 'Assi Ghat', tag: 'Varanasi', image: 'https://images.unsplash.com/photo-1628126235206-5260b9ea6441?auto=format&fit=crop&w=900&q=80', accent: 'emerald' },
+      { title: 'Ganga Aarti', tag: 'Varanasi', image: 'https://images.unsplash.com/photo-1561361513-2d000a50f0dc?auto=format&fit=crop&w=1280&q=80', accent: 'amber' },
+      { title: 'Dashashwamedh Ghat', tag: 'Varanasi', image: 'https://images.unsplash.com/photo-1561361513-2d000a50f0dc?auto=format&fit=crop&w=800&q=80', accent: 'blue' },
+      { title: 'Sarnath', tag: 'Varanasi', image: 'https://images.unsplash.com/photo-1524492412937-b28074a5d7da?auto=format&fit=crop&w=800&q=80', accent: 'emerald' },
     ],
   },
   {
     name: 'Rajasthan',
     blurb:
       'Step into the land of Kings. Rajasthan features golden deserts, majestic forts, opulent palaces, and a vibrant culture that echoes tales of historic grandeur.',
-    primaryImage: 'https://images.unsplash.com/photo-1477587458883-47145ed94245?auto=format&fit=crop&w=1920&q=80',
+    primaryImage: 'https://images.unsplash.com/photo-1599661046289-e31897846e41?auto=format&fit=crop&w=1280&q=80',
     accentA: '255 153 0',
     accentB: '0 102 204',
     cards: [
-      { title: 'Amer Fort', tag: 'Jaipur', image: 'https://images.unsplash.com/photo-1599661502283-a44ea24dfc74?auto=format&fit=crop&w=900&q=80', accent: 'amber' },
-      { title: 'City Palace', tag: 'Udaipur', image: 'https://images.unsplash.com/photo-1615836245337-f5b9b2301f49?auto=format&fit=crop&w=900&q=80', accent: 'blue' },
-      { title: 'Mehrangarh Fort', tag: 'Jodhpur', image: 'https://images.unsplash.com/photo-1590050860551-8dfaa6c15b10?auto=format&fit=crop&w=900&q=80', accent: 'emerald' },
+      { title: 'Amer Fort', tag: 'Jaipur', image: 'https://images.unsplash.com/photo-1599661046289-e31897846e41?auto=format&fit=crop&w=800&q=80', accent: 'amber' },
+      { title: 'City Palace', tag: 'Udaipur', image: 'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?auto=format&fit=crop&w=800&q=80', accent: 'blue' },
+      { title: 'Hawa Mahal', tag: 'Jaipur', image: 'https://images.unsplash.com/photo-1599661046289-e31897846e41?auto=format&fit=crop&w=1280&q=80', accent: 'emerald' },
     ],
   },
   {
     name: 'Himalayas',
     blurb:
       'Ascend to the breathtaking peaks. The Indian Himalayas offer snow-clad mountains, spiritual retreats, and thrilling adventures in a landscape of pristine beauty.',
-    primaryImage: 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?auto=format&fit=crop&w=1920&q=80',
+    primaryImage: 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?auto=format&fit=crop&w=1280&q=80',
     accentA: '255 153 0',
     accentB: '34 211 238',
     cards: [
-      { title: 'Spiti Valley', tag: 'Himachal', image: 'https://images.unsplash.com/photo-1574883584852-6bdde6f3be69?auto=format&fit=crop&w=900&q=80', accent: 'emerald' },
-      { title: 'Pangong Lake', tag: 'Ladakh', image: 'https://images.unsplash.com/photo-1577717467651-78924b232753?auto=format&fit=crop&w=900&q=80', accent: 'amber' },
-      { title: 'Solang Valley', tag: 'Manali', image: 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?auto=format&fit=crop&w=900&q=80', accent: 'blue' },
+      { title: 'Solang Valley', tag: 'Manali', image: 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?auto=format&fit=crop&w=1280&q=80', accent: 'emerald' },
+      { title: 'Pangong Lake', tag: 'Ladakh', image: 'https://images.unsplash.com/photo-1512100356356-de1b84283e18?auto=format&fit=crop&w=800&q=80', accent: 'amber' },
+      { title: 'Laxman Jhula', tag: 'Rishikesh', image: 'https://images.unsplash.com/photo-1583309219338-a582f1f9ca6b?auto=format&fit=crop&w=800&q=80', accent: 'blue' },
     ],
   },
   {
     name: 'Kerala',
     blurb:
       'Kerala weaves palm-lined backwaters, misty tea estates, and heritage coast towns into a calm and cinematic southern trail.',
-    primaryImage: 'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?auto=format&fit=crop&w=1920&q=80',
+    primaryImage: 'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?auto=format&fit=crop&w=1280&q=80',
     accentA: '0 102 204',
     accentB: '34 197 94',
     cards: [
-      { title: 'Alleppey Backwaters', tag: 'Houseboats', image: 'https://images.unsplash.com/photo-1593693397690-362cb9666fc2?auto=format&fit=crop&w=900&q=80', accent: 'blue' },
-      { title: 'Eravikulam National Park', tag: 'Munnar', image: 'https://images.unsplash.com/photo-1598091383021-15ddea10925d?auto=format&fit=crop&w=900&q=80', accent: 'amber' },
-      { title: 'Fort Kochi Waterfront', tag: 'Kochi', image: 'https://images.unsplash.com/photo-1621330396167-b3d451b9b83b?auto=format&fit=crop&w=900&q=80', accent: 'emerald' },
+      { title: 'Alleppey Backwaters', tag: 'Houseboats', image: 'https://images.unsplash.com/photo-1593693397690-362cb9666fc2?auto=format&fit=crop&w=800&q=80', accent: 'blue' },
+      { title: 'Munnar Tea Gardens', tag: 'Munnar', image: 'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?auto=format&fit=crop&w=1280&q=80', accent: 'amber' },
+      { title: 'Fort Kochi', tag: 'Kochi', image: 'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?auto=format&fit=crop&w=800&q=80', accent: 'emerald' },
     ],
   },
 ];

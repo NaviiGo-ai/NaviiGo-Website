@@ -47,7 +47,7 @@ function mapItineraryToOngoing(itin: SavedItineraryDoc): TripData | null {
         endDate: end.toISOString().split('T')[0],
         currentActivity: `Exploring ${itin.destName || 'destination'}`,
         nextActivity: 'Continue your itinerary',
-        image: `https://images.unsplash.com/photo-1524492412937-b28074a5d7da?auto=format&fit=crop&w=600&q=80`,
+        image: `https://images.unsplash.com/photo-1564507592333-c60657eea523?auto=format&fit=crop&w=1280&q=80`,
         totalActivities: days * 6,
         completedActivities: Math.round((progress / 100) * days * 6),
     };

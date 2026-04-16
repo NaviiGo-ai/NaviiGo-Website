@@ -150,3 +150,55 @@ export interface SharedItinerary {
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
+
+// ─── Digital Passport ─────────────────────────────────────────────────────────
+// Path: users/{uid}/passport/stats
+export interface PassportStatsDoc {
+  totalStamps: number;
+  totalXP: number;
+  level: number;
+  streak: number;
+  lastTripDate: Timestamp | null;
+  achievements: string[];
+  statesVisited: string[];
+  citiesVisited: string[];
+  categoryCounts: Record<string, number>;
+  updatedAt: Timestamp;
+}
+
+// Path: users/{uid}/passport/stamps/{stampId}
+export interface PassportStampDoc {
+  name: string;
+  location: string;
+  state: string;
+  icon: string;
+  type: 'Spiritual' | 'Heritage' | 'Adventure' | 'Nature' | 'Beach' | 'City';
+  xpEarned: number;
+  visitedDate: Timestamp;
+  activities: string[];
+  verificationMethod: 'itinerary_complete' | 'manual' | 'gps';
+  itineraryId?: string;
+  createdAt: Timestamp;
+}
+
+// ─── Destination Reviews ──────────────────────────────────────────────────────
+// Path: reviews/{destId}/entries/{reviewId}
+export interface DestinationReview {
+  id?: string;
+  userId: string;
+  userName: string;
+  userPhoto: string;
+  destId: string;
+  destName: string;
+  rating: number;
+  title: string;
+  body: string;
+  travelDate: string;
+  group: string;
+  budget: string;
+  pros: string[];
+  cons: string[];
+  helpfulCount: number;
+  createdAt: Timestamp;
+}
+

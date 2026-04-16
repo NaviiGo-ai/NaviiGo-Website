@@ -7,6 +7,7 @@ import { useAuth } from '@/lib/AuthContext';
 import { getUserItineraries, deleteItineraryFromFirestore } from '@/lib/firestore';
 import type { SavedItineraryDoc } from '@/lib/firestoreSchema';
 import { DESTINATIONS } from '@/app/itinerary/data';
+import { resolveImgSrc } from '@/lib/imageService';
 import { Plane, LogIn } from 'lucide-react';
 
 export default function SavedPage() {
@@ -103,7 +104,7 @@ export default function SavedPage() {
           <motion.div variants={container} initial="hidden" animate="show" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {savedItems.map((saved) => {
               const destInfo = DESTINATIONS.find(d => d.id === saved.destId);
-              const imgUrl = destInfo ? `https://images.unsplash.com/photo-${destInfo.img}?auto=format&fit=crop&w=800&q=80` : '';
+              const imgUrl = destInfo ? resolveImgSrc(destInfo.img, 800) : '';
               const form = saved.form as any;
               const title = saved.destName;
               let dates = `${form.days} Days`;

@@ -1,13 +1,14 @@
 'use client';
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, Suspense } from 'react';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Search, MapPin, Star, Utensils, Gem, ChevronRight, Compass, Heart, ArrowRight, Loader2, Users, Calendar, Flame, X, Globe, Sparkles, Sun, Waves, Mountain, Footprints } from 'lucide-react';
 import {
   ALL_DESTINATIONS, HIDDEN_GEMS, CUISINES, TRENDING, SEASONAL,
   CATEGORIES, BENTO_DEST, type Destination,
 } from '@/components/features/explore/exploreData';
+import { startCityView, trackCategoryClick } from '@/lib/browsingSignals';
 
 const CATEGORY_ICONS: Record<string, React.ReactNode> = {
   'All': <Globe className="w-3.5 h-3.5" />,
@@ -19,9 +20,10 @@ const CATEGORY_ICONS: Record<string, React.ReactNode> = {
   'Spiritual': <Compass className="w-3.5 h-3.5" />,
 };
 
-export default function ExplorePage() {
+function ExplorePageContent() {
   const router = useRouter();
-  const [searchQuery, setSearchQuery] = useState('');
+  const searchParams = useSearchParams();
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
   const [activeCategory, setActiveCategory] = useState('All');
   const [visibleSections, setVisibleSections] = useState(3);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -59,7 +61,7 @@ export default function ExplorePage() {
     setLiked(p => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n; });
   }, []);
 
-  const go = (name: string) => router.push(`/itinerary?destination=${encodeURIComponent(name)}`);
+  const go = (name: string) => { startCityView(name); router.push(`/explore/${encodeURIComponent(name)}`); };
 
   return (
     <div className="min-h-screen bg-[#f5f5f7] dark:bg-[#000000] overflow-x-hidden">
@@ -68,7 +70,7 @@ export default function ExplorePage() {
       <section ref={heroRef} className="relative h-[85vh] min-h-[620px] flex items-center justify-center overflow-hidden pt-28">
         {/* Parallax background */}
         <motion.div style={{ scale: heroScale, y: heroY }} className="absolute inset-0">
-          <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1524492412937-b28074a5d7da?auto=format&fit=crop&w=1920&q=60')] bg-cover bg-center" />
+          <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1564507592333-c60657eea523?auto=format&fit=crop&w=1280&q=80')] bg-cover bg-center" />
           <div className="absolute inset-0 bg-black/40" />
           <div className="absolute inset-0 bg-gradient-to-t from-[#f5f5f7] dark:from-black via-transparent to-black/30" />
         </motion.div>
@@ -103,7 +105,7 @@ export default function ExplorePage() {
             {/* Category pills */}
             <div className="flex flex-wrap justify-center gap-2 mt-6">
               {CATEGORIES.map(c => (
-                <button key={c} onClick={() => setActiveCategory(c)}
+                <button key={c} onClick={() => { setActiveCategory(c); trackCategoryClick(c); }}
                   className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-semibold tracking-wide transition-colors duration-200 ${activeCategory === c
                     ? 'bg-white text-black'
                     : 'bg-transparent text-white/60 hover:text-white hover:bg-white/10 border border-transparent hover:border-white/20'
@@ -413,5 +415,13 @@ export default function ExplorePage() {
         </section>
       )}
     </div>
+  );
+}
+
+export default function ExplorePage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#f5f5f7] dark:bg-[#000000] flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-zinc-500" /></div>}>
+      <ExplorePageContent />
+    </Suspense>
   );
 }
