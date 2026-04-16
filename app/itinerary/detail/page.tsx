@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import { DEST_DATA, FALLBACK_DEST, DESTINATIONS } from "@/app/itinerary/data";
+import { resolveImgSrc } from '@/lib/imageService';
 
 function DetailContent() {
     const router = useRouter();
@@ -34,7 +35,7 @@ function DetailContent() {
         );
     }
 
-    const bgUrl = `https://images.unsplash.com/photo-${itemData.img}?auto=format&fit=crop&w=1600&q=80`;
+    const bgUrl = resolveImgSrc(itemData.img, 1600);
 
     return (
         <div className="min-h-screen bg-[#f7f8fc] dark:bg-[#0a0a0f] pb-20">

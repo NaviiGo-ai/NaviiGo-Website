@@ -38,7 +38,7 @@ function mapItineraryToPast(itin: SavedItineraryDoc): PastTrip | null {
         dates: `${start.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })} – ${end.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}`,
         duration: `${days} days`,
         group: form.group || 'Solo',
-        image: `https://images.unsplash.com/photo-1524492412937-b28074a5d7da?auto=format&fit=crop&w=600&q=80`,
+        image: `https://images.unsplash.com/photo-1564507592333-c60657eea523?auto=format&fit=crop&w=1280&q=80`,
     };
 }
 

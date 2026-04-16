@@ -106,3 +106,15 @@ export function handleImageError(
     img.src = unsplashUrl(fallbackId, { width: 600 });
     img.onerror = null; // prevent infinite loop
 }
+
+// ─── Universal Image Source Resolver ──────────────────────────────────────────
+// Handles both full URLs (Wikimedia, any https) and legacy Unsplash IDs.
+// Use this everywhere: resolveImgSrc(item.img, 800)
+
+export function resolveImgSrc(src: string, width: number = 800): string {
+    if (!src) return unsplashUrl(VERIFIED_IMAGES.india_generic, { width });
+    // Already a full URL
+    if (src.startsWith('http://') || src.startsWith('https://')) return src;
+    // Legacy Unsplash ID format
+    return unsplashUrl(src, { width });
+}

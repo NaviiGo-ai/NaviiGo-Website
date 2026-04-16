@@ -1,14 +1,16 @@
-// ─── AI Itinerary Generation Model ────────────────────────────────────────────
-// Structured, context-aware itinerary generation using Google Gemini.
-// Replaces the raw single-prompt approach with:
-//   1. User context extraction (preferences, history)
-//   2. Multi-part structured prompt
-//   3. Output schema validation
-//   4. Retry logic with fallback
+// ─── Personalized Itinerary Generation Model ─────────────────────────────────
+// Deterministic, scoring-based itinerary generation that uses ALL available
+// user signals — wizard inputs, browsing analytics, Firestore preferences,
+// and past trip history. Zero external API dependency.
 
-import { GoogleGenerativeAI, HarmBlockThreshold, HarmCategory } from '@google/generative-ai';
+import {
+    DEST_DATA, DESTINATIONS, FALLBACK_DEST,
+    type DestInfo, type DayPlan, type DayActivity,
+    type Attraction, type Restaurant, type Hotel,
+    type CrowdLevel, type TimeOfDay,
+} from '@/app/itinerary/data';
 
-// ─── Output Schema ────────────────────────────────────────────────────────────
+// ─── Output Schema (unchanged from before) ───────────────────────────────────
 
 export interface GeneratedActivity {
     time: string;
@@ -50,6 +52,7 @@ export interface GeneratedItinerary {
     };
     highlights: Array<{
         name: string;
+        img: string;
         desc: string;
         bestMonths: string;
         duration: string;
@@ -58,7 +61,9 @@ export interface GeneratedItinerary {
         lng: number;
     }>;
     restaurants: Array<{
+        id: string;
         name: string;
+        img: string;
         desc: string;
         cuisine: string;
         priceRange: string;
@@ -66,9 +71,12 @@ export interface GeneratedItinerary {
         mustTry: string;
         lat: number;
         lng: number;
+        tags: string[];
     }>;
     hotels: Array<{
+        id: string;
         name: string;
+        img: string;
         desc: string;
         type: string;
         priceRange: string;
@@ -87,7 +95,6 @@ export interface GeneratedItinerary {
 // ─── User Context ─────────────────────────────────────────────────────────────
 
 export interface UserContext {
-    // From wizard form
     destination: string;
     destName: string;
     purpose: string;
@@ -96,7 +103,6 @@ export interface UserContext {
     budget: number;
     startDate: string;
 
-    // From Firestore (optional enrichment)
     preferences?: {
         travelStyle: string | null;
         interests: string[];
@@ -104,277 +110,471 @@ export interface UserContext {
         accessibilityNeeds: string[];
     } | null;
 
-    // Past trip history summary
     pastTrips?: Array<{
         destName: string;
         purpose: string;
     }>;
+
+    browsingSignals?: {
+        timeOnCity: Record<string, number>;
+        clickedCategories: string[];
+        deepDiveVibes: Array<{ dest: string; companion: string; vibe: string }>;
+        viewedDestinations: string[];
+    } | null;
 }
 
-// ─── Prompt Builder ───────────────────────────────────────────────────────────
+// ─── Scoring Engine ───────────────────────────────────────────────────────────
 
-function buildPrompt(ctx: UserContext): string {
-    const parts: string[] = [];
+/** Purpose → tag affinity weights */
+const PURPOSE_TAG_MAP: Record<string, Record<string, number>> = {
+    spiritual: { Temple: 5, Spiritual: 5, Aarti: 4, Heritage: 3, Culture: 3, Buddhist: 4 },
+    leisure: { Beach: 5, Nature: 4, Sunset: 4, Houseboat: 5, Safari: 3, Relaxation: 5 },
+    adventure: { Trekking: 5, Mountains: 5, Snow: 4, Adventure: 5, Waterfall: 4, Safari: 3 },
+    cultural: { History: 5, Culture: 5, Museum: 4, Heritage: 5, Fort: 4, Palace: 4, Shopping: 3, UNESCO: 4 },
+    honeymoon: { Sunset: 5, Beach: 4, Nature: 4, Romantic: 5, Lake: 4 },
+    celebrate: { Culture: 3, Shopping: 4, Market: 4, Fun: 5, Nightlife: 5 },
+};
 
-    // System context
-    parts.push(`You are NaviiGo AI, an expert Indian travel planner. Generate a detailed, personalized travel itinerary for the user based on their preferences.`);
+/** Group → crowd & walking preferences */
+const GROUP_PREFS: Record<string, { crowdPref: CrowdLevel; walkPref: string }> = {
+    solo: { crowdPref: 'Low', walkPref: 'Medium' },
+    couple: { crowdPref: 'Low', walkPref: 'Easy' },
+    family: { crowdPref: 'Low', walkPref: 'Easy' },
+    friends: { crowdPref: 'Medium', walkPref: 'Medium' },
+    large: { crowdPref: 'Medium', walkPref: 'Easy' },
+};
 
-    // Core trip details
-    parts.push(`
-## Trip Details
-- **Destination:** ${ctx.destName} (${ctx.destination})
-- **Purpose:** ${ctx.purpose}
-- **Group:** ${ctx.group}
-- **Duration:** ${ctx.days} days
-- **Budget per person:** ₹${ctx.budget.toLocaleString('en-IN')}
-- **Start Date:** ${ctx.startDate}
-`);
-
-    // User preferences enrichment
-    if (ctx.preferences) {
-        const prefs = ctx.preferences;
-        const prefLines: string[] = [];
-        if (prefs.travelStyle) prefLines.push(`- Travel style: ${prefs.travelStyle}`);
-        if (prefs.interests?.length) prefLines.push(`- Interests: ${prefs.interests.join(', ')}`);
-        if (prefs.dietaryPreferences?.length) prefLines.push(`- Dietary: ${prefs.dietaryPreferences.join(', ')}`);
-        if (prefs.accessibilityNeeds?.length) prefLines.push(`- Accessibility: ${prefs.accessibilityNeeds.join(', ')}`);
-        if (prefLines.length) {
-            parts.push(`## User Preferences\n${prefLines.join('\n')}`);
-        }
-    }
-
-    // Past trip context
-    if (ctx.pastTrips?.length) {
-        parts.push(`## Past Trips (avoid repetition)\n${ctx.pastTrips.map(t => `- ${t.destName} (${t.purpose})`).join('\n')}`);
-    }
-
-    // Budget-aware guidance
-    const budgetPerDay = ctx.budget / ctx.days;
-    let budgetTier = 'budget';
-    if (budgetPerDay > 5000) budgetTier = 'mid-range';
-    if (budgetPerDay > 12000) budgetTier = 'luxury';
-
-    parts.push(`## Budget Tier: ${budgetTier.toUpperCase()} (₹${Math.round(budgetPerDay).toLocaleString('en-IN')}/day)`);
-
-    // Purpose-specific instructions
-    const purposeInstructions: Record<string, string> = {
-        spiritual: 'Focus on temples, ashrams, meditation centers, and spiritual experiences. Include darshan timings and dress code tips.',
-        leisure: 'Prioritize relaxation — spas, beach time, scenic spots, slow cultural walks. Avoid packed schedules.',
-        adventure: 'Include trekking, rafting, camping, paragliding, and outdoor activities. Mention difficulty levels and gear needed.',
-        cultural: 'Focus on museums, forts, local art, cuisine experiences, and craft workshops. Include historical context.',
-        honeymoon: 'Romantic settings — private dining, sunset spots, couples activities. Premium and intimate experiences.',
-        celebrate: 'Group-friendly activities — clubs, group tours, adventure sports, shared dining. Fun and social.',
-    };
-
-    if (purposeInstructions[ctx.purpose]) {
-        parts.push(`## Purpose-Specific Notes\n${purposeInstructions[ctx.purpose]}`);
-    }
-
-    // Output format
-    parts.push(`
-## Output Format
-Return a valid JSON object with this EXACT structure (no markdown, no comments, just JSON):
-{
-  "destName": "${ctx.destName}",
-  "description": "2-3 sentence description of the destination",
-  "avgCost": "daily cost range in INR",
-  "crowdLevel": "Low" | "Medium" | "High",
-  "crowdNote": "when to visit for fewer crowds",
-  "logistics": {
-    "flights": "nearest airport and avg cost",
-    "trains": "nearest major railway station"
-  },
-  "highlights": [
-    {
-      "name": "Place Name",
-      "desc": "1-2 sentence description",
-      "bestMonths": "e.g. Oct – Mar",
-      "duration": "e.g. 2–4 hrs",
-      "tags": ["Nature", "Culture"],
-      "lat": 12.3456,
-      "lng": 78.9012
-    }
-  ],
-  "restaurants": [
-    {
-      "name": "Restaurant Name",
-      "desc": "description",
-      "cuisine": "cuisine type",
-      "priceRange": "price range in INR",
-      "rating": 4.5,
-      "mustTry": "dish name",
-      "lat": 12.3456,
-      "lng": 78.9012
-    }
-  ],
-  "hotels": [
-    {
-      "name": "Hotel Name",
-      "desc": "description",
-      "type": "Hotel" | "Homestay" | "Resort" | "Hostel",
-      "priceRange": "price range in INR",
-      "rating": 4.5,
-      "amenities": ["Pool", "WiFi"],
-      "lat": 12.3456,
-      "lng": 78.9012
-    }
-  ],
-  "dayPlans": [
-    {
-      "day": 1,
-      "title": "Day title",
-      "weather": {
-        "temp": "temp range",
-        "condition": "condition",
-        "emoji": "weather emoji",
-        "rain": 10,
-        "tip": "weather tip"
-      },
-      "activities": [
-        {
-          "time": "06:30 AM",
-          "slot": "Morning" | "Afternoon" | "Evening",
-          "name": "Activity Name",
-          "desc": "1-2 sentence description",
-          "crowd": "Low" | "Medium" | "High",
-          "crowdTip": "timing advice",
-          "travelFromPrev": "e.g. 10 min walk",
-          "lat": 12.3456,
-          "lng": 78.9012,
-          "type": "attraction" | "restaurant" | "hotel"
-        }
-      ]
-    }
-  ],
-  "mapCenter": { "lat": 12.3456, "lng": 78.9012 }
+interface ScoredAttraction extends Attraction {
+    score: number;
+    originalIndex: number;
 }
 
-CRITICAL RULES:
-- Generate EXACTLY ${ctx.days} day plans
-- Include 5-7 activities per day
-- All lat/lng must be REAL coordinates for ${ctx.destName}
-- Include at least 2 restaurant activities per day (lunch + dinner)
-- Prices must be in INR and realistic for the ${budgetTier} tier
-- Include 4-6 highlights, 3-4 restaurants, 2-3 hotels
-- Each activity needs real coordinates — DO NOT make up coordinates
-- Return ONLY valid JSON, no other text
-`);
+function scoreAttraction(
+    attr: Attraction,
+    index: number,
+    ctx: UserContext,
+    budgetTier: string,
+): ScoredAttraction {
+    let score = 50; // baseline
 
-    return parts.join('\n\n');
-}
-
-// ─── Generation Engine ────────────────────────────────────────────────────────
-
-const MAX_RETRIES = 2;
-
-function extractJSON(text: string): string {
-    // Try to find JSON block in markdown code fence
-    const fenceMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
-    if (fenceMatch) return fenceMatch[1].trim();
-
-    // Try to find raw JSON object
-    const start = text.indexOf('{');
-    const end = text.lastIndexOf('}');
-    if (start !== -1 && end > start) return text.substring(start, end + 1);
-
-    return text.trim();
-}
-
-function validateItinerary(data: any, expectedDays: number): { valid: boolean; errors: string[] } {
-    const errors: string[] = [];
-
-    if (!data.destName) errors.push('Missing destName');
-    if (!data.description) errors.push('Missing description');
-    if (!data.mapCenter?.lat || !data.mapCenter?.lng) errors.push('Missing mapCenter');
-    if (!Array.isArray(data.dayPlans)) errors.push('dayPlans is not an array');
-    else if (data.dayPlans.length !== expectedDays) {
-        // Allow close matches for flexibility
-        if (Math.abs(data.dayPlans.length - expectedDays) > 1) {
-            errors.push(`Expected ${expectedDays} day plans, got ${data.dayPlans.length}`);
-        }
+    // 1. Purpose-tag alignment (most important signal)
+    const tagWeights = PURPOSE_TAG_MAP[ctx.purpose] || {};
+    for (const tag of attr.tags) {
+        score += (tagWeights[tag] || 0) * 8;
     }
-    if (!Array.isArray(data.highlights) || data.highlights.length === 0) errors.push('No highlights');
 
-    // Validate each day plan has activities
-    if (Array.isArray(data.dayPlans)) {
-        data.dayPlans.forEach((day: any, i: number) => {
-            if (!Array.isArray(day.activities) || day.activities.length < 3) {
-                errors.push(`Day ${i + 1} has too few activities`);
+    // 2. Group-walk fit
+    const groupPref = GROUP_PREFS[ctx.group] || GROUP_PREFS.solo;
+    if (attr.walking === 'Easy' && groupPref.walkPref === 'Easy') score += 15;
+    if (attr.walking === 'High' && groupPref.walkPref === 'Easy') score -= 20;
+
+    // 3. Value alignment with budget tier
+    if (budgetTier === 'budget' && attr.value === 'High') score += 10;
+    if (budgetTier === 'luxury' && attr.value === 'Low') score -= 10;
+
+    // 4. Browsing signals boost
+    if (ctx.browsingSignals) {
+        const signals = ctx.browsingSignals;
+        // Boost if user spent time on this city
+        const cityTime = signals.timeOnCity[ctx.destName] || 0;
+        if (cityTime > 30) score += 5;
+        if (cityTime > 120) score += 10;
+
+        // Category click alignment
+        for (const cat of signals.clickedCategories) {
+            if (attr.tags.some(t => t.toLowerCase().includes(cat.toLowerCase()))) {
+                score += 12;
             }
-        });
+        }
+
+        // Deep-dive vibe alignment
+        const vibeEntry = signals.deepDiveVibes.find(v => v.dest === ctx.destName);
+        if (vibeEntry) {
+            const vibeMap: Record<string, string[]> = {
+                'Authentic Exploration': ['Culture', 'History', 'Heritage', 'Walk'],
+                'Food & Culinary': ['Food', 'Market', 'Shopping'],
+                'Relaxation & Luxury': ['Beach', 'Nature', 'Sunset', 'Spa'],
+                'Budget Backpacking': ['Trekking', 'Hostel', 'Walk', 'Market'],
+            };
+            const vibeTargets = vibeMap[vibeEntry.vibe] || [];
+            for (const tag of attr.tags) {
+                if (vibeTargets.some(v => tag.toLowerCase().includes(v.toLowerCase()))) {
+                    score += 10;
+                }
+            }
+        }
     }
 
-    return { valid: errors.length === 0, errors };
+    // 5. User preference boost
+    if (ctx.preferences?.interests) {
+        for (const interest of ctx.preferences.interests) {
+            if (attr.tags.some(t => t.toLowerCase().includes(interest.toLowerCase()))) {
+                score += 15;
+            }
+        }
+    }
+
+    // 6. Past trip penalty — lower score for repeat city types
+    if (ctx.pastTrips?.length) {
+        const visitedPurposes = new Set(ctx.pastTrips.map(t => t.purpose));
+        if (visitedPurposes.has(ctx.purpose)) {
+            // Slightly deprioritize generic items for returning users
+            score -= 5;
+        }
+    }
+
+    // 7. Date/month fit bonus
+    if (ctx.startDate && attr.bestMonths) {
+        const month = new Date(ctx.startDate).toLocaleString('en-US', { month: 'short' });
+        if (attr.bestMonths.includes(month)) {
+            score += 10;
+        }
+    }
+
+    return { ...attr, score, originalIndex: index };
 }
+
+// ─── Haversine distance (meters) ──────────────────────────────────────────────
+
+function haversineM(lat1: number, lng1: number, lat2: number, lng2: number): number {
+    const R = 6371000;
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lng2 - lng1) * Math.PI / 180;
+    const a =
+        Math.sin(dLat / 2) ** 2 +
+        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+        Math.sin(dLon / 2) ** 2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+// ─── Time slot helpers ────────────────────────────────────────────────────────
+
+const SLOT_TIMES: Record<TimeOfDay, string[]> = {
+    Morning: ['06:30 AM', '08:00 AM', '09:30 AM'],
+    Afternoon: ['12:00 PM', '01:30 PM', '03:00 PM'],
+    Evening: ['05:00 PM', '06:30 PM', '08:00 PM'],
+};
+
+const WEATHER_CONDITIONS = [
+    { condition: 'Clear Skies', emoji: '☀️', rain: 0, tip: 'Great day for sightseeing — carry sunscreen' },
+    { condition: 'Partly Cloudy', emoji: '⛅', rain: 15, tip: 'Light & breezy — carry sunglasses' },
+    { condition: 'Hazy Morning', emoji: '🌤️', rain: 5, tip: 'Cool morning — good for early starts' },
+    { condition: 'Misty Morning', emoji: '🌫️', rain: 30, tip: 'Carry a light jacket and umbrella' },
+    { condition: 'Sunny', emoji: '☀️', rain: 0, tip: 'Stay hydrated and use sunscreen' },
+];
+
+const DAY_TITLES_MAP: Record<string, string[]> = {
+    spiritual: ['Sacred Beginnings', 'Temple Trail', 'Divine Detours', 'Pilgrimage Path', 'Spiritual Heights'],
+    leisure: ['Arriving in Paradise', 'Slow & Scenic', 'Hidden Havens', 'Lazy Luxury', 'Golden Hour'],
+    adventure: ['Gear Up & Go', 'Into the Wild', 'Peak Thrills', 'Off the Grid', 'Summit Day'],
+    cultural: ['Heritage Walk', 'Arts & Crafts', 'Living History', 'Bazaar Trail', 'Cultural Immersion'],
+    honeymoon: ['Love at First Sight', 'Romantic Escapes', 'Sunset Together', 'Private Paradise', 'Memory Lane'],
+    celebrate: ['Party Starts Here', 'Group Adventures', 'Festival Vibes', 'Night Out', 'Grand Finale'],
+};
+
+function estimateTravelTime(distM: number): string {
+    if (distM < 500) return '5 min walk';
+    if (distM < 2000) return `${Math.round(distM / 80)} min walk`;
+    if (distM < 5000) return `${Math.round(distM / 400)} min auto`;
+    return `${Math.round(distM / 500)} min drive`;
+}
+
+// ─── Main Generation Function ─────────────────────────────────────────────────
 
 export async function generateItinerary(ctx: UserContext): Promise<GeneratedItinerary | null> {
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-        console.error('GEMINI_API_KEY not set');
+    // Strictly resolve destination — never fall back to Kerala
+    let destKey = ctx.destination;
+    // Try to match destName to a known destination
+    const match = DESTINATIONS.find(d =>
+        d.name.toLowerCase() === ctx.destName.toLowerCase() ||
+        d.id === destKey
+    );
+    if (match) destKey = match.id;
+
+    const destData = DEST_DATA[destKey];
+    if (!destData) {
+        console.error(`[ItineraryModel] No data for destination: ${destKey} (${ctx.destName})`);
         return null;
     }
 
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({
-        model: 'gemini-1.5-flash',
-        safetySettings: [
-            { category: HarmCategory.HARM_CATEGORY_HARASSMENT, threshold: HarmBlockThreshold.BLOCK_NONE },
-            { category: HarmCategory.HARM_CATEGORY_HATE_SPEECH, threshold: HarmBlockThreshold.BLOCK_NONE },
-            { category: HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT, threshold: HarmBlockThreshold.BLOCK_NONE },
-            { category: HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT, threshold: HarmBlockThreshold.BLOCK_NONE },
-        ],
-        generationConfig: {
-            temperature: 0.7,
-            topP: 0.9,
-            maxOutputTokens: 8192,
-            responseMimeType: 'application/json',
-        },
+    console.log(`[ItineraryModel] Building personalized itinerary for ${ctx.destName} (${ctx.days} days)`);
+
+    const budgetPerDay = ctx.budget / ctx.days;
+    const budgetTier = budgetPerDay > 12000 ? 'luxury' : budgetPerDay > 5000 ? 'mid-range' : 'budget';
+
+    // Score all attractions
+    const scoredAttractions = destData.highlights.map((a, i) =>
+        scoreAttraction(a, i, ctx, budgetTier)
+    ).sort((a, b) => b.score - a.score);
+
+    // Score restaurants
+    const scoredRestaurants = [...destData.restaurants].sort((a, b) => {
+        let scoreA = a.rating * 10;
+        let scoreB = b.rating * 10;
+        // Dietary preference boost
+        if (ctx.preferences?.dietaryPreferences?.length) {
+            for (const pref of ctx.preferences.dietaryPreferences) {
+                if (a.tags?.some(t => t.toLowerCase().includes(pref.toLowerCase()))) scoreA += 20;
+                if (b.tags?.some(t => t.toLowerCase().includes(pref.toLowerCase()))) scoreB += 20;
+            }
+        }
+        // Purpose alignment
+        if (ctx.purpose === 'celebrate' && a.tags?.includes('Experience')) scoreA += 15;
+        if (ctx.purpose === 'celebrate' && b.tags?.includes('Experience')) scoreB += 15;
+        return scoreB - scoreA;
     });
 
-    const prompt = buildPrompt(ctx);
+    // Score hotels by budget fit
+    const scoredHotels = [...destData.hotels].sort((a, b) => {
+        let scoreA = a.rating * 10;
+        let scoreB = b.rating * 10;
+        // Budget tier alignment
+        if (budgetTier === 'budget') {
+            if (a.type === 'Hostel') scoreA += 20;
+            if (b.type === 'Hostel') scoreB += 20;
+            if (a.type === 'Homestay') scoreA += 15;
+            if (b.type === 'Homestay') scoreB += 15;
+        } else if (budgetTier === 'luxury') {
+            if (a.type === 'Resort') scoreA += 20;
+            if (b.type === 'Resort') scoreB += 20;
+            if (a.type === 'Hotel') scoreA += 15;
+            if (b.type === 'Hotel') scoreB += 15;
+        }
+        // Group size preference
+        if (ctx.group === 'solo' || ctx.group === 'friends') {
+            if (a.type === 'Hostel') scoreA += 10;
+            if (b.type === 'Hostel') scoreB += 10;
+        }
+        if (ctx.group === 'couple' || ctx.group === 'honeymoon') {
+            if (a.type === 'Resort' || a.type === 'Hotel') scoreA += 10;
+            if (b.type === 'Resort' || b.type === 'Hotel') scoreB += 10;
+        }
+        return scoreB - scoreA;
+    });
 
-    for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
-        try {
-            console.log(`[ItineraryModel] Attempt ${attempt + 1}/${MAX_RETRIES + 1} for ${ctx.destName}`);
+    // Get month-based weather data
+    const startMonth = ctx.startDate
+        ? new Date(ctx.startDate).toLocaleString('en-US', { month: 'short' })
+        : 'Jan';
+    const tempForMonth = destData.weather?.[startMonth] || '20–30°C';
 
-            const result = await model.generateContent(prompt);
-            const text = result.response.text();
-            const jsonStr = extractJSON(text);
-            const parsed = JSON.parse(jsonStr);
+    // ── Build Day Plans ───────────────────────────────────────────────────────
 
-            const validation = validateItinerary(parsed, ctx.days);
-            if (validation.valid) {
-                console.log('[ItineraryModel] Valid itinerary generated');
-                return parsed as GeneratedItinerary;
+    // If static day plans exist and match duration, use them as base and re-score
+    const dayPlans: GeneratedDayPlan[] = [];
+    const usedAttractions = new Set<string>();
+    const usedRestaurants = new Set<string>();
+
+    // Slot assignment: try to distribute evenly
+    const attractionsPerDay = Math.ceil(scoredAttractions.length / ctx.days);
+
+    for (let dayIndex = 0; dayIndex < ctx.days; dayIndex++) {
+        // Check if we have a static day plan we can adapt
+        const staticPlan = destData.dayPlans[dayIndex % destData.dayPlans.length];
+
+        const dayActivities: GeneratedActivity[] = [];
+
+        // Morning activities (2–3)
+        const morningAttractions = scoredAttractions
+            .filter(a => !usedAttractions.has(a.name))
+            .slice(0, 2);
+
+        morningAttractions.forEach((attr, slotIdx) => {
+            usedAttractions.add(attr.name);
+            const prevAct = dayActivities[dayActivities.length - 1];
+            const travel = prevAct && attr.lat && prevAct.lat
+                ? estimateTravelTime(haversineM(prevAct.lat, prevAct.lng, attr.lat!, attr.lng!))
+                : undefined;
+
+            dayActivities.push({
+                time: SLOT_TIMES.Morning[slotIdx] || '09:00 AM',
+                slot: 'Morning',
+                name: attr.name,
+                desc: attr.desc,
+                crowd: attr.walking === 'Easy' ? 'Low' : 'Medium',
+                crowdTip: slotIdx === 0 ? 'Early morning means fewer tourists' : 'Arrive before 10 for smaller groups',
+                travelFromPrev: travel,
+                lat: attr.lat || destData.mapCenter.lat,
+                lng: attr.lng || destData.mapCenter.lng,
+                type: 'attraction',
+                durationMins: 90,
+            });
+        });
+
+        // Lunch (1 restaurant)
+        const lunchRestaurant = scoredRestaurants.find(r => !usedRestaurants.has(r.name));
+        if (lunchRestaurant) {
+            usedRestaurants.add(lunchRestaurant.name);
+            const prevAct = dayActivities[dayActivities.length - 1];
+            const travel = prevAct ? estimateTravelTime(
+                haversineM(prevAct.lat, prevAct.lng, lunchRestaurant.lat, lunchRestaurant.lng)
+            ) : undefined;
+
+            dayActivities.push({
+                time: '12:30 PM',
+                slot: 'Afternoon',
+                name: `Lunch at ${lunchRestaurant.name}`,
+                desc: `${lunchRestaurant.desc} Must try: ${lunchRestaurant.mustTry}`,
+                crowd: 'Medium',
+                crowdTip: 'Peak lunch hour — arrive early to avoid wait',
+                travelFromPrev: travel,
+                lat: lunchRestaurant.lat,
+                lng: lunchRestaurant.lng,
+                type: 'restaurant',
+                durationMins: 60,
+            });
+        }
+
+        // Afternoon activities (1–2)
+        const afternoonAttractions = scoredAttractions
+            .filter(a => !usedAttractions.has(a.name))
+            .slice(0, 2);
+
+        afternoonAttractions.forEach((attr, slotIdx) => {
+            usedAttractions.add(attr.name);
+            const prevAct = dayActivities[dayActivities.length - 1];
+            const travel = prevAct && attr.lat
+                ? estimateTravelTime(haversineM(prevAct.lat, prevAct.lng, attr.lat!, attr.lng!))
+                : undefined;
+
+            dayActivities.push({
+                time: SLOT_TIMES.Afternoon[slotIdx + 1] || '02:30 PM',
+                slot: 'Afternoon',
+                name: attr.name,
+                desc: attr.desc,
+                crowd: attr.walking === 'High' ? 'High' : 'Medium',
+                crowdTip: attr.walking === 'High' ? 'Book entry online — slots fill fast' : 'Afternoon is pleasant for exploring',
+                travelFromPrev: travel,
+                lat: attr.lat || destData.mapCenter.lat,
+                lng: attr.lng || destData.mapCenter.lng,
+                type: 'attraction',
+                durationMins: 120,
+            });
+        });
+
+        // Evening activity (1)
+        const eveningAttraction = scoredAttractions.find(a => !usedAttractions.has(a.name));
+        if (eveningAttraction) {
+            usedAttractions.add(eveningAttraction.name);
+            const prevAct = dayActivities[dayActivities.length - 1];
+            const travel = prevAct && eveningAttraction.lat
+                ? estimateTravelTime(haversineM(prevAct.lat, prevAct.lng, eveningAttraction.lat!, eveningAttraction.lng!))
+                : undefined;
+
+            dayActivities.push({
+                time: '05:30 PM',
+                slot: 'Evening',
+                name: eveningAttraction.name,
+                desc: eveningAttraction.desc,
+                crowd: 'Medium',
+                crowdTip: 'Golden hour — beautiful lighting for photos',
+                travelFromPrev: travel,
+                lat: eveningAttraction.lat || destData.mapCenter.lat,
+                lng: eveningAttraction.lng || destData.mapCenter.lng,
+                type: 'attraction',
+                durationMins: 90,
+            });
+        }
+
+        // Dinner (1 restaurant)
+        const dinnerRestaurant = scoredRestaurants.find(r => !usedRestaurants.has(r.name))
+            || scoredRestaurants[0]; // Reuse if we've exhausted options
+        if (dinnerRestaurant) {
+            const prevAct = dayActivities[dayActivities.length - 1];
+            const travel = prevAct ? estimateTravelTime(
+                haversineM(prevAct.lat, prevAct.lng, dinnerRestaurant.lat, dinnerRestaurant.lng)
+            ) : undefined;
+
+            dayActivities.push({
+                time: '08:00 PM',
+                slot: 'Evening',
+                name: `Dinner at ${dinnerRestaurant.name}`,
+                desc: `${dinnerRestaurant.desc}`,
+                crowd: 'Low',
+                crowdTip: 'Evening dining is typically relaxed',
+                travelFromPrev: travel,
+                lat: dinnerRestaurant.lat,
+                lng: dinnerRestaurant.lng,
+                type: 'restaurant',
+                durationMins: 60,
+            });
+        }
+
+        // Use static plan activities as fallback/supplement if we ran out of scored ones
+        if (dayActivities.length < 4 && staticPlan) {
+            for (const act of staticPlan.activities) {
+                if (!usedAttractions.has(act.name) && dayActivities.length < 6) {
+                    usedAttractions.add(act.name);
+                    dayActivities.push({ ...act });
+                }
             }
+        }
 
-            console.warn('[ItineraryModel] Validation errors:', validation.errors);
-            // If mostly valid (minor issues), still return it
-            if (validation.errors.length <= 2 && parsed.dayPlans?.length > 0) {
-                console.log('[ItineraryModel] Returning with minor issues');
-                return parsed as GeneratedItinerary;
-            }
+        // Day title
+        const purposeTitles = DAY_TITLES_MAP[ctx.purpose] || DAY_TITLES_MAP.cultural;
+        const dayTitle = staticPlan?.title || purposeTitles[dayIndex % purposeTitles.length] || `Day ${dayIndex + 1}`;
 
-        } catch (err) {
-            console.error(`[ItineraryModel] Attempt ${attempt + 1} failed:`, err);
+        // Weather
+        const weatherIdx = dayIndex % WEATHER_CONDITIONS.length;
+        const weather = staticPlan?.weather || {
+            temp: tempForMonth,
+            ...WEATHER_CONDITIONS[weatherIdx],
+        };
+
+        dayPlans.push({
+            day: dayIndex + 1,
+            title: dayTitle,
+            weather,
+            activities: dayActivities,
+        });
+
+        // Reset used restaurants if we need more days than restaurants available
+        if (usedRestaurants.size >= scoredRestaurants.length) {
+            usedRestaurants.clear();
         }
     }
 
-    console.error('[ItineraryModel] All attempts failed, returning null (will use fallback)');
-    return null;
+    // Build the complete itinerary
+    const itinerary: GeneratedItinerary = {
+        destName: ctx.destName,
+        description: destData.description,
+        avgCost: destData.avgCost,
+        crowdLevel: destData.crowdLevel,
+        crowdNote: destData.crowdNote,
+        logistics: destData.logistics || { flights: 'Check airline websites for latest fares', trains: 'Check IRCTC for trains' },
+        highlights: destData.highlights.map(h => ({
+            name: h.name,
+            img: h.img,
+            desc: h.desc,
+            bestMonths: h.bestMonths,
+            duration: h.duration,
+            tags: h.tags,
+            lat: h.lat || destData.mapCenter.lat,
+            lng: h.lng || destData.mapCenter.lng,
+        })),
+        restaurants: destData.restaurants.map(r => ({
+            ...r,
+        })),
+        hotels: destData.hotels.map(h => ({
+            ...h,
+        })),
+        dayPlans,
+        mapCenter: destData.mapCenter,
+    };
+
+    console.log(`[ItineraryModel] Personalized itinerary built: ${dayPlans.length} days, ${dayPlans.reduce((s, d) => s + d.activities.length, 0)} activities`);
+    return itinerary;
 }
 
 // ─── Temperature Mapping ──────────────────────────────────────────────────────
-// Different trip types benefit from different creativity levels
-
 export function getTemperatureForPurpose(purpose: string): number {
     const map: Record<string, number> = {
-        spiritual: 0.5,    // more structured, reliable info
-        leisure: 0.7,      // balanced creativity
-        adventure: 0.8,    // more creative suggestions
-        cultural: 0.6,     // factual but interesting
-        honeymoon: 0.7,    // romantic creativity
-        celebrate: 0.8,    // fun and varied
+        spiritual: 0.5,
+        leisure: 0.7,
+        adventure: 0.8,
+        cultural: 0.6,
+        honeymoon: 0.7,
+        celebrate: 0.8,
     };
     return map[purpose] ?? 0.7;
 }

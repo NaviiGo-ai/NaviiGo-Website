@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
         }
 
         const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-        const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' }, { apiClient: 'naviigo-ai', customHeaders: { 'Referer': 'http://localhost:3000' } });
 
         const systemContext = `You are NaviiGo's AI travel assistant. You help users edit their travel itinerary.
 The current itinerary plans are: ${JSON.stringify(currentPlans, null, 2)}

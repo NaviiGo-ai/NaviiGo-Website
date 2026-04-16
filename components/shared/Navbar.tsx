@@ -79,6 +79,7 @@ export default function Navbar() {
     <>
       <motion.nav
         ref={navRef}
+        data-lenis-prevent
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled
             ? 'bg-white/90 dark:bg-slate-950/90 backdrop-blur-xl border-b border-black/5 dark:border-white/10 shadow-sm'
             : 'bg-slate-950/30 backdrop-blur-md border-b border-white/5'

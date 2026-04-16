@@ -355,4 +355,112 @@ export function listenToItinerary(
     );
 }
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// DIGITAL PASSPORT — users/{uid}/passport/stats + stamps
+// ═══════════════════════════════════════════════════════════════════════════════
+
+import type {
+    PassportStatsDoc,
+    PassportStampDoc,
+    DestinationReview,
+} from './firestoreSchema';
+
+export async function getPassportStats(uid: string): Promise<PassportStatsDoc | null> {
+    const snap = await getDoc(doc(db, 'users', uid, 'passport', 'stats'));
+    return snap.exists() ? (snap.data() as PassportStatsDoc) : null;
+}
+
+export async function updatePassportStats(uid: string, stats: Partial<PassportStatsDoc>) {
+    const ref = doc(db, 'users', uid, 'passport', 'stats');
+    const snap = await getDoc(ref);
+    if (snap.exists()) {
+        await updateDoc(ref, { ...stats, updatedAt: serverTimestamp() });
+    } else {
+        await setDoc(ref, {
+            totalStamps: 0,
+            totalXP: 0,
+            level: 0,
+            streak: 0,
+            lastTripDate: null,
+            achievements: [],
+            statesVisited: [],
+            citiesVisited: [],
+            categoryCounts: {},
+            ...stats,
+            updatedAt: serverTimestamp(),
+        });
+    }
+}
+
+export async function addPassportStamp(uid: string, stamp: Omit<PassportStampDoc, 'createdAt'>): Promise<string> {
+    const colRef = collection(db, 'users', uid, 'passport', 'stamps', 'entries');
+    const docRef = await addDoc(colRef, {
+        ...stamp,
+        createdAt: serverTimestamp(),
+    });
+    return docRef.id;
+}
+
+export async function getPassportStamps(uid: string): Promise<PassportStampDoc[]> {
+    try {
+        const q = query(
+            collection(db, 'users', uid, 'passport', 'stamps', 'entries'),
+            orderBy('createdAt', 'desc'),
+            limit(100)
+        );
+        const snap = await getDocs(q);
+        return snap.docs.map(d => ({ ...d.data() } as PassportStampDoc));
+    } catch {
+        return [];
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// DESTINATION REVIEWS — reviews/{destId}/entries/{reviewId}
+// ═══════════════════════════════════════════════════════════════════════════════
+
+export async function submitReview(destId: string, review: Omit<DestinationReview, 'id' | 'helpfulCount' | 'createdAt'>): Promise<string> {
+    const colRef = collection(db, 'reviews', destId, 'entries');
+    const docRef = await addDoc(colRef, {
+        ...review,
+        helpfulCount: 0,
+        createdAt: serverTimestamp(),
+    });
+    return docRef.id;
+}
+
+export async function getReviews(destId: string, maxResults: number = 20): Promise<DestinationReview[]> {
+    try {
+        const q = query(
+            collection(db, 'reviews', destId, 'entries'),
+            orderBy('createdAt', 'desc'),
+            limit(maxResults)
+        );
+        const snap = await getDocs(q);
+        return snap.docs.map(d => ({ id: d.id, ...d.data() } as DestinationReview));
+    } catch {
+        return [];
+    }
+}
+
+export async function markReviewHelpful(destId: string, reviewId: string) {
+    try {
+        await updateDoc(doc(db, 'reviews', destId, 'entries', reviewId), {
+            helpfulCount: increment(1),
+        });
+    } catch { /* silently fail */ }
+}
+
+export async function getAverageRating(destId: string): Promise<{ avg: number; count: number }> {
+    try {
+        const reviews = await getReviews(destId, 100);
+        if (reviews.length === 0) return { avg: 0, count: 0 };
+        const sum = reviews.reduce((s, r) => s + r.rating, 0);
+        return { avg: Math.round((sum / reviews.length) * 10) / 10, count: reviews.length };
+    } catch {
+        return { avg: 0, count: 0 };
+    }
+}
+
 export { db };
+

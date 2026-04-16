@@ -14,25 +14,25 @@ const panels = [
     id: "panel-1",
     title: "AI Itineraries",
     subtitle: "Customized travel plans based on your vibe and duration.",
-    image: "https://images.unsplash.com/photo-1570168007204-dfb528c6958f?auto=format&fit=crop&w=1200&q=80"
+    image: "https://images.unsplash.com/photo-1561361513-2d000a50f0dc?auto=format&fit=crop&w=1280&q=80"
   },
   {
     id: "panel-2",
     title: "Temple Circuits",
     subtitle: "Complete spiritual routes intelligently mapped for you.",
-    image: "https://images.unsplash.com/photo-1590050752117-238cb0fb12b1?auto=format&fit=crop&w=1200&q=80"
+    image: "https://images.unsplash.com/photo-1561361513-2d000a50f0dc?auto=format&fit=crop&w=800&q=80"
   },
   {
     id: "panel-3",
     title: "Hidden Gems",
     subtitle: "Discover India's lesser-known cultural spots and off-beat escapes.",
-    image: "https://images.unsplash.com/photo-1524492412937-b28074a5d7da?auto=format&fit=crop&w=1200&q=80"
+    image: "https://images.unsplash.com/photo-1564507592333-c60657eea523?auto=format&fit=crop&w=1280&q=80"
   },
   {
     id: "panel-4",
     title: "Digital Pilgrim Passport",
     subtitle: "Mark your journey and curate a digital log of all your visits.",
-    image: "https://images.unsplash.com/photo-1515091943-9d5c0ad2084c?auto=format&fit=crop&w=1200&q=80"
+    image: "https://images.unsplash.com/photo-1599661046289-e31897846e41?auto=format&fit=crop&w=1280&q=80"
   }
 ];
 

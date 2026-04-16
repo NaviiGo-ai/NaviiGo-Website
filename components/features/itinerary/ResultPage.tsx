@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { saveSharedItinerary, listenToItinerary, saveItineraryToFirestore } from '@/lib/firestore';
 import { useAuth } from '@/lib/AuthContext';
+import { resolveImgSrc } from '@/lib/imageService';
 import {
     PURPOSES, DESTINATIONS, GROUP_SIZES,
     DEST_DATA, FALLBACK_DEST, CROWD_COLOR, WALK_COLOR,
@@ -37,7 +38,7 @@ export default function ResultPage({ form, generatedData, onDayView, onReset }: 
     const purpose = form.purpose as string, group = form.group as string;
     const displayMonth = form.startDate ? new Date(form.startDate as string).toLocaleString('en-US', { month: 'short' }) : 'Jan';
     const staticData = DEST_DATA[destId] ?? FALLBACK_DEST;
-    const data: any = generatedData ? { ...staticData, ...generatedData } : staticData;
+    const data: any = useMemo(() => generatedData ? { ...staticData, ...generatedData } : staticData, [staticData, generatedData]);
     const destInfo = DESTINATIONS.find(d => d.id === destId);
     const purposeLabel = PURPOSES.find(p => p.id === purpose)?.label ?? purpose;
     const groupLabel = GROUP_SIZES.find(g => g.id === group)?.label ?? group;
@@ -115,6 +116,7 @@ export default function ResultPage({ form, generatedData, onDayView, onReset }: 
                             await saveItineraryToFirestore(user.uid, { destId, destName, form, generatedData: generatedData || null });
                         }
                         setIsSaved(true);
+                        alert('📍 Itinerary successfully saved to your Passport!');
                     }} disabled={isSaved}
                         className={`flex px-4 py-1.5 rounded-full text-xs font-semibold items-center gap-1.5 transition-colors ${isSaved ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 cursor-default' : 'bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 hover:bg-zinc-800 dark:hover:bg-zinc-200'}`}>
                         {isSaved ? '✓ Saved' : '💾 Save'}
@@ -126,7 +128,7 @@ export default function ResultPage({ form, generatedData, onDayView, onReset }: 
                 {/* Hero */}
                 <div className="bg-white dark:bg-zinc-900 rounded-[2rem] border border-zinc-100 dark:border-zinc-800 shadow-sm overflow-hidden mb-8 relative">
                     <div className="relative h-64 md:h-80 flex flex-col justify-end p-6 md:p-10">
-                        <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(https://images.unsplash.com/photo-${destInfo?.img}?auto=format&fit=crop&w=1400&q=80)` }} />
+                        <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${resolveImgSrc(destInfo?.img || '', 1400)})` }} />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
                         <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
                             <div>
@@ -203,12 +205,10 @@ export default function ResultPage({ form, generatedData, onDayView, onReset }: 
                                             <h4 className="font-bold text-sm text-zinc-900 dark:text-white mb-1">Flights</h4>
                                             <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed mb-3">{data.logistics.flights}</p>
                                             <a
-                                                href={`https://www.makemytrip.com/flights/results/?from=DEL&to=${data.logistics.airportCode || 'BOM'}&date=${form.startDate || ''}&adults=1&children=0&infants=0&cabinClass=E`}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
+                                                href={`/bookings?transport=flight&to=${data.logistics.airportCode || 'BOM'}`}
                                                 className="inline-flex items-center gap-1.5 text-[10px] font-bold bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 px-3 py-1.5 rounded-lg hover:scale-105 transition-transform"
                                             >
-                                                Book on MMT ↗
+                                                Book Flights ↗
                                             </a>
                                         </div>
                                     </div>
@@ -218,12 +218,10 @@ export default function ResultPage({ form, generatedData, onDayView, onReset }: 
                                             <h4 className="font-bold text-sm text-zinc-900 dark:text-white mb-1">Trains</h4>
                                             <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed mb-3">{data.logistics.trains}</p>
                                             <a
-                                                href={`https://www.cleartrip.com/trains/results?fromSTN=NDLS&toSTN=${data.logistics.stationCode || 'BSB'}&date=${form.startDate ? new Date(form.startDate as string).toLocaleDateString('en-IN').replace(/\//g, '-') : ''}&adults=1&children=0&male_seniors=0&female_seniors=0`}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
+                                                href={`/bookings?transport=train&to=${data.logistics.stationCode || 'BSB'}`}
                                                 className="inline-flex items-center gap-1.5 text-[10px] font-bold bg-[#f77728] text-white px-3 py-1.5 rounded-lg hover:scale-105 transition-transform"
                                             >
-                                                Book on Cleartrip ↗
+                                                Book Trains ↗
                                             </a>
                                         </div>
                                     </div>
@@ -240,7 +238,7 @@ export default function ResultPage({ form, generatedData, onDayView, onReset }: 
                                         onClick={() => router.push(`/itinerary/detail?type=attraction&dest=${destId}&name=${encodeURIComponent(a.name)}`)}
                                         className="bg-white dark:bg-zinc-900 rounded-2xl overflow-hidden border border-zinc-100 dark:border-zinc-800 shadow-sm hover:shadow-md transition-all cursor-pointer hover:-translate-y-1">
                                         <div className="relative h-36">
-                                            <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(https://images.unsplash.com/photo-${a.img}?auto=format&fit=crop&w=500&q=70)` }} />
+                                            <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${resolveImgSrc(a.img, 500)})` }} />
                                             <div className="absolute top-2 left-2 w-7 h-7 rounded-full bg-emerald-500 text-white text-xs font-bold flex items-center justify-center shadow-md">{i + 1}</div>
                                             <div className="absolute bottom-2 left-2 flex gap-1">{a.tags.slice(0, 2).map((t: string) => <span key={t} className="text-[10px] bg-black/50 text-white backdrop-blur px-2 py-0.5 rounded-full font-medium">{t}</span>)}</div>
                                         </div>
@@ -273,7 +271,7 @@ export default function ResultPage({ form, generatedData, onDayView, onReset }: 
                                             onClick={() => router.push(`/itinerary/detail?type=restaurant&dest=${destId}&name=${encodeURIComponent(r.name)}`)}
                                             className="bg-white dark:bg-zinc-900 rounded-2xl overflow-hidden border border-zinc-100 dark:border-zinc-800 shadow-sm hover:shadow-md transition-all cursor-pointer hover:-translate-y-1">
                                             <div className="relative h-32">
-                                                <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(https://images.unsplash.com/photo-${r.img}?auto=format&fit=crop&w=500&q=70)` }} />
+                                                <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${resolveImgSrc(r.img, 500)})` }} />
                                                 <div className="absolute bottom-2 left-2 flex gap-1"><span className="text-[10px] bg-black/60 text-white backdrop-blur px-2 py-0.5 rounded-full font-medium">{r.cuisine}</span></div>
                                             </div>
                                             <div className="p-3">
@@ -300,7 +298,7 @@ export default function ResultPage({ form, generatedData, onDayView, onReset }: 
                                             onClick={() => router.push(`/itinerary/detail?type=hotel&dest=${destId}&name=${encodeURIComponent(h.name)}`)}
                                             className="bg-white dark:bg-zinc-900 rounded-2xl overflow-hidden border border-zinc-100 dark:border-zinc-800 shadow-sm hover:shadow-md transition-all cursor-pointer hover:-translate-y-1">
                                             <div className="relative h-32">
-                                                <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(https://images.unsplash.com/photo-${h.img}?auto=format&fit=crop&w=500&q=70)` }} />
+                                                <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${resolveImgSrc(h.img, 500)})` }} />
                                                 <div className="absolute bottom-2 left-2 flex gap-1"><span className="text-[10px] bg-black/60 text-white backdrop-blur px-2 py-0.5 rounded-full font-medium">{h.type}</span></div>
                                                 <div className="absolute top-2 right-2 text-[10px] font-bold text-white bg-black/50 backdrop-blur px-1.5 py-0.5 rounded">{h.priceRange}</div>
                                             </div>
@@ -360,7 +358,7 @@ export default function ResultPage({ form, generatedData, onDayView, onReset }: 
                         {generatedData && (
                             <div className="flex items-center gap-2 text-xs text-zinc-400 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl px-4 py-3 border border-zinc-100 dark:border-zinc-800">
                                 <span>✨</span>
-                                <span>This itinerary was generated by <strong className="text-emerald-500">Google Gemini AI</strong> based on your preferences and real traveler data.</span>
+                                <span>This itinerary was crafted by the <strong className="text-emerald-500">NaviiGo Personalization Engine</strong> based on your preferences, browsing behavior, and real traveler data.</span>
                             </div>
                         )}
                     </div>

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateItinerary, type UserContext } from '@/lib/ai/itineraryModel';
-import { DEST_DATA, FALLBACK_DEST } from '@/app/itinerary/data';
+import { generateWithGemini, buildMinimalFallback } from '@/lib/ai/geminiItinerary';
+import { DEST_DATA, DESTINATIONS } from '@/app/itinerary/data';
 
 export async function POST(req: NextRequest) {
     try {
@@ -15,6 +16,7 @@ export async function POST(req: NextRequest) {
             startDate,
             userId,
             preferences,
+            browsingSignals,
         } = body;
 
         // Validate required fields
@@ -25,89 +27,69 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        // Build user context for the AI model
-        const userContext: UserContext = {
-            destination: destination || destName.toLowerCase(),
-            destName,
-            purpose,
-            group: group || 'solo',
-            days: Number(days) || 3,
-            budget: Number(budget) || 15000,
-            startDate: startDate || new Date().toISOString().split('T')[0],
-            preferences: preferences || null,
-            pastTrips: [], // TODO: pull from Firestore if userId is provided
-        };
+        // Resolve destination key — match against known destinations
+        let resolvedDest = destination || destName.toLowerCase().replace(/\s+/g, '');
+        const match = DESTINATIONS.find(d =>
+            d.name.toLowerCase() === (destName || '').toLowerCase() ||
+            d.id === resolvedDest
+        );
+        if (match) resolvedDest = match.id;
 
-        // Try AI generation first
-        console.log(`[Itinerary] Generating for ${destName} (${days} days, ${purpose}, ₹${budget})`);
-        const aiResult = await generateItinerary(userContext);
+        // ── Path A: Deterministic engine (has DEST_DATA) ─────────────────────
+        if (DEST_DATA[resolvedDest]) {
+            console.log(`[Itinerary] Using deterministic engine for ${destName}`);
 
-        if (aiResult) {
-            console.log('[Itinerary] AI generation succeeded');
+            const userContext: UserContext = {
+                destination: resolvedDest,
+                destName: match?.name || destName,
+                purpose,
+                group: group || 'solo',
+                days: Number(days) || 3,
+                budget: Number(budget) || 15000,
+                startDate: startDate || new Date().toISOString().split('T')[0],
+                preferences: preferences || null,
+                pastTrips: [],
+                browsingSignals: browsingSignals || null,
+            };
 
-            // Merge AI result with static data images (Unsplash IDs for highlights)
-            const staticData = DEST_DATA[destination] || null;
-            if (staticData) {
-                // Enrich AI highlights with images from static data
-                aiResult.highlights = aiResult.highlights.map((h, i) => {
-                    const staticHighlight = staticData.highlights[i];
-                    return {
-                        ...h,
-                        img: staticHighlight?.img || '',
-                    };
-                });
-
-                // Enrich restaurants with images
-                aiResult.restaurants = aiResult.restaurants.map((r, i) => {
-                    const staticRestaurant = staticData.restaurants[i];
-                    return {
-                        ...r,
-                        img: staticRestaurant?.img || '',
-                    };
-                });
-
-                // Enrich hotels with images
-                aiResult.hotels = aiResult.hotels.map((h, i) => {
-                    const staticHotel = staticData.hotels[i];
-                    return {
-                        ...h,
-                        img: staticHotel?.img || '',
-                    };
+            const result = await generateItinerary(userContext);
+            if (result) {
+                return NextResponse.json({
+                    success: true,
+                    itinerary: result,
+                    source: 'personalized',
                 });
             }
+        }
 
+        // ── Path B: Gemini AI generation (no DEST_DATA) ──────────────────────
+        console.log(`[Itinerary] No DEST_DATA for "${resolvedDest}", using Gemini AI`);
+
+        const geminiResult = await generateWithGemini({
+            destName: match?.name || destName,
+            days: Number(days) || 3,
+            purpose,
+            group: group || 'solo',
+            budget: Number(budget) || 15000,
+            startDate: startDate || new Date().toISOString().split('T')[0],
+        });
+
+        if (geminiResult) {
             return NextResponse.json({
                 success: true,
-                itinerary: aiResult,
+                itinerary: geminiResult,
                 source: 'ai',
             });
         }
 
-        // Fallback to static data if AI fails
-        console.log('[Itinerary] AI failed, falling back to static data');
-        const fallbackData = DEST_DATA[destination] || FALLBACK_DEST;
-
-        // Adjust day plans to match requested days
-        const adjustedDayPlans = [];
-        for (let i = 0; i < Number(days); i++) {
-            const basePlan = fallbackData.dayPlans[i % fallbackData.dayPlans.length];
-            adjustedDayPlans.push({
-                ...basePlan,
-                day: i + 1,
-                title: i < fallbackData.dayPlans.length
-                    ? basePlan.title
-                    : `Day ${i + 1} — Explore ${destName}`,
-            });
-        }
+        // ── Path C: Minimal fallback (Gemini also failed) ────────────────────
+        console.warn(`[Itinerary] Gemini failed for "${destName}", using minimal fallback`);
+        const fallback = buildMinimalFallback(match?.name || destName, Number(days) || 3);
 
         return NextResponse.json({
             success: true,
-            itinerary: {
-                ...fallbackData,
-                destName,
-                dayPlans: adjustedDayPlans,
-            },
-            source: 'static',
+            itinerary: fallback,
+            source: 'fallback',
         });
 
     } catch (error: any) {
