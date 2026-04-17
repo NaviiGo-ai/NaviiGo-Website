@@ -31,57 +31,9 @@ export const VERIFIED_SRC = {
 // ─── Smart Category Resolver ──────────────────────────────────────────────────
 // Maps destination keys directly to the best curated photo.
 export const DEST_IMAGES: Record<string, string> = {
-    // Heritage/Rajasthan
-    jaipur:         unsplash(VERIFIED_SRC.rajasthan_fort),
-    udaipur:        unsplash(VERIFIED_SRC.rajasthan_fort),
-    jodhpur:        unsplash(VERIFIED_SRC.rajasthan_fort),
-    jaisalmer:      unsplash(VERIFIED_SRC.rajasthan_fort),
-    pushkar:        unsplash(VERIFIED_SRC.rajasthan_fort),
-    bikaner:        unsplash(VERIFIED_SRC.rajasthan_fort),
-    lucknow:        unsplash(VERIFIED_SRC.india_generic),
-    mumbai:         unsplash(VERIFIED_SRC.india_generic),
-    kolkata:        unsplash(VERIFIED_SRC.india_generic),
-    chandigarh:     unsplash(VERIFIED_SRC.city_gate),
-    delhi:          unsplash(VERIFIED_SRC.city_gate),
-    agra:           unsplash(VERIFIED_SRC.taj_mahal),
-    mysuru:         unsplash(VERIFIED_SRC.india_generic),
-    hyderabad:      unsplash(VERIFIED_SRC.india_generic),
-    hampi:          unsplash(VERIFIED_SRC.india_generic),
-
-    // Spiritual
-    varanasi:       unsplash(VERIFIED_SRC.varanasi_ghats),
-    amritsar:       unsplash(VERIFIED_SRC.golden_temple),
-    haridwar:       unsplash(VERIFIED_SRC.varanasi_ghats),
-    rishikesh:      unsplash(VERIFIED_SRC.varanasi_ghats),
-    mathura:        unsplash(VERIFIED_SRC.varanasi_ghats),
-    ayodhya:        unsplash(VERIFIED_SRC.south_temple),
-    prayagraj:      unsplash(VERIFIED_SRC.varanasi_ghats),
-    madurai:        unsplash(VERIFIED_SRC.south_temple),
-    rameshwaram:    unsplash(VERIFIED_SRC.south_temple),
-    tirupati:       unsplash(VERIFIED_SRC.south_temple),
-
-    // Mountains
-    manali:         unsplash(VERIFIED_SRC.himalayas),
-    shimla:         unsplash(VERIFIED_SRC.himalayas),
-    dharamshala:    unsplash(VERIFIED_SRC.himalayas),
-    srinagar:       unsplash(VERIFIED_SRC.himalayas),
-    gulmarg:        unsplash(VERIFIED_SRC.himalayas),
-    ladakh:         unsplash(VERIFIED_SRC.himalayas),
-    nainital:       unsplash(VERIFIED_SRC.himalayas),
-    mussoorie:      unsplash(VERIFIED_SRC.himalayas),
-    darjeeling:     unsplash(VERIFIED_SRC.tea_gardens),
-    gangtok:        unsplash(VERIFIED_SRC.himalayas),
-
-    // Nature & South
+    // Fallbacks for any missing scrape:
     kerala:         unsplash(VERIFIED_SRC.kerala_boats),
-    ooty:           unsplash(VERIFIED_SRC.tea_gardens),
-    coorg:          unsplash(VERIFIED_SRC.tea_gardens),
-    munnar:         unsplash(VERIFIED_SRC.tea_gardens),
-    goa:            unsplash(VERIFIED_SRC.goa_beach),
-    pondicherry:    unsplash(VERIFIED_SRC.goa_beach),
-    andaman:        unsplash(VERIFIED_SRC.goa_beach),
     lakshadweep:    unsplash(VERIFIED_SRC.goa_beach),
-    ranthambore:    unsplash(VERIFIED_SRC.jungle_tiger),
     kaziranga:      unsplash(VERIFIED_SRC.jungle_tiger),
 };
 
