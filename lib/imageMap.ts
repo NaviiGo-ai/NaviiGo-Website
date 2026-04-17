@@ -1,54 +1,127 @@
 // ─── Centralized Image Map ────────────────────────────────────────────────────
-// Single source of truth for ALL destination & landmark images across NaviiGo.
+// Single source of truth for ALL destination images across NaviiGo.
 //
-// Strategy: Since Unsplash requires strict verified photo IDs, we map
-// destinations to a curated set of 12 highly-verified, beautiful Indian
-// context photos based on their region and category. This prevents 
-// rate-limiting (429s) and prevents hallucinated irrelevant IDs.
+// Strategy: ALL images are served locally from /public/destinations/.
+// No external URLs. No hotlinking. No rate limits. No 404s.
+// Each destination has its own unique image file.
 
-function unsplash(photoId: string, w: number = 1000): string {
-    return `https://images.unsplash.com/photo-${photoId}?auto=format&fit=crop&w=${w}&q=80`;
+// ─── Helper: Resolve file extension ──────────────────────────────────────────
+// Generated images are .png, Wikipedia downloads are .jpg
+function img(name: string): string {
+    // Check if we have a .png (AI-generated, higher quality)
+    // At build time these are all known, so we hardcode the extension
+    return `/destinations/${name}`;
 }
 
-// ─── Verified Unsplash Source IDs for India ──────────────────────────────────
-// These have been strictly verified to be beautiful, correct Indian photography.
-export const VERIFIED_SRC = {
-    // Regions
-    rajasthan_fort: '1599661502283-a44ea24dfc74',  // Grand Rajasthani fort
-    himalayas:      '1585409677983-0f6c41ca9c3b',  // Snow capped peaks
-    kerala_boats:   '1602216056096-3b40cc0c9944',  // Backwaters
-    goa_beach:      '1512343779784-a1d53b98b8ef',  // Beach sunset
-    varanasi_ghats: '1590132840509-3286380695c0',  // Spiritual river ghats
-    taj_mahal:      '1564507592333-c60657eea523',  // Taj Mahal
-    city_gate:      '1587474260584-136574528ed5',  // India Gate/Metro look
-    golden_temple:  '1514222134-b57cbb8ce073',  // Golden temple
-    south_temple:   '1582283925565-d053709d3bdf',  // Dravidian temple
-    tea_gardens:    '1626621341517-bbf3d9990a23',  // Hills and tea
-    jungle_tiger:   '1615824996195-f780bba7cfab',  // Wildlife/Nature
-    india_generic:  '1524492412937-b28074a5d7da',  // General heritage structure
-};
+// ─── DESTINATION IMAGES ──────────────────────────────────────────────────────
+// Every single destination has its own unique, distinct local image.
 
-// ─── Smart Category Resolver ──────────────────────────────────────────────────
-// Maps destination keys directly to the best curated photo.
 export const DEST_IMAGES: Record<string, string> = {
-    // Fallbacks for any missing scrape:
-    kerala:         unsplash(VERIFIED_SRC.kerala_boats),
-    lakshadweep:    unsplash(VERIFIED_SRC.goa_beach),
-    kaziranga:      unsplash(VERIFIED_SRC.jungle_tiger),
+    // ── North India ──────────────────────────────────────────────
+    jaipur:         img('jaipur.png'),       // Hawa Mahal
+    delhi:          img('delhi.png'),        // India Gate
+    agra:           img('agra.png'),         // Taj Mahal
+    varanasi:       img('varanasi.png'),     // Ghats & Ganga Aarti
+    amritsar:       img('amritsar.png'),     // Golden Temple
+    lucknow:        img('lucknow.png'),      // Bara Imambara
+    chandigarh:     img('chandigarh.jpg'),   // Open Hand Monument
+    mathura:        img('mathura.jpg'),      // Krishna Temple
+    ayodhya:        img('ayodhya.jpg'),      // Ram Mandir
+    prayagraj:      img('prayagraj.jpg'),    // Triveni Sangam
+
+    // ── Rajasthan ────────────────────────────────────────────────
+    udaipur:        img('udaipur.png'),      // Lake Palace
+    jodhpur:        img('jodhpur.png'),      // Blue City & Mehrangarh
+    jaisalmer:      img('jaisalmer.png'),    // Golden Fort & Dunes
+    pushkar:        img('pushkar.png'),      // Pushkar Lake
+    ranthambore:    img('ranthambore.jpg'),  // Tiger Safari
+    bikaner:        img('bikaner.jpg'),      // Junagarh Fort
+
+    // ── Himalayan Region ─────────────────────────────────────────
+    manali:         img('manali.png'),       // Snow peaks & pines
+    shimla:         img('shimla.png'),       // Colonial hill station
+    dharamshala:    img('dharamshala.png'),  // Prayer flags & peaks
+    rishikesh:      img('rishikesh.png'),    // Lakshman Jhula & Ganges
+    mussoorie:      img('mussoorie.png'),    // Misty green mountains
+    nainital:       img('nainital.png'),     // Lake & mountains
+    haridwar:       img('haridwar.jpg'),     // Ganga Aarti
+    kasol:          img('kasol.jpg'),        // Parvati Valley
+
+    // ── Kashmir & Ladakh ─────────────────────────────────────────
+    srinagar:       img('srinagar.jpg'),     // Dal Lake
+    gulmarg:        img('gulmarg.jpg'),      // Meadow of Flowers
+    ladakh:         img('ladakh.jpg'),       // High passes
+    pahalgam:       img('pahalgam.jpg'),     // Valley of Shepherds
+
+    // ── South India ──────────────────────────────────────────────
+    kerala:         img('kerala.jpg'),       // Backwaters houseboat
+    mysuru:         img('mysuru.jpg'),       // Mysore Palace
+    hampi:          img('hampi.jpg'),        // Virupaksha Temple
+    pondicherry:    img('pondicherry.jpg'),  // French Quarter
+    ooty:           img('ooty.jpg'),         // Nilgiri hills
+    kodaikanal:     img('kodaikanal.jpg'),   // Princess of Hills
+    coorg:          img('coorg.jpg'),        // Coffee plantations
+    madurai:        img('madurai.jpg'),      // Meenakshi Temple
+    hyderabad:      img('hyderabad.jpg'),    // Charminar
+    chennai:        img('chennai.jpg'),      // Kapaleeshwarar Temple
+    rameshwaram:    img('rameshwaram.jpg'),  // Pamban Bridge
+    kanyakumari:    img('kanyakumari.jpg'),  // Land's End
+    tirupati:       img('tirupati.jpg'),     // Tirumala Temple
+
+    // ── West India ────────────────────────────────────────────────
+    goa:            img('goa.jpg'),          // Beach paradise
+    mumbai:         img('mumbai.jpg'),       // Gateway of India
+    lonavala:       img('lonavala.jpg'),     // Sahyadri hills
+    ajanta:         img('ajanta.jpg'),       // Ajanta Caves
+    dwarka:         img('dwarka.jpg'),       // Dwarkadhish Temple
+    kutch:          img('kutch.jpg'),        // Rann of Kutch
+    shirdi:         img('shirdi.jpg'),       // Sai Baba Temple
+    somnath:        img('somnath.jpg'),      // Somnath Temple
+
+    // ── East India ────────────────────────────────────────────────
+    kolkata:        img('kolkata.jpg'),      // Victoria Memorial
+    darjeeling:     img('darjeeling.jpg'),   // Toy Train & Tea
+    gangtok:        img('gangtok.jpg'),      // MG Marg
+    puri:           img('puri.jpg'),         // Jagannath Temple
+    bodhgaya:       img('bodhgaya.jpg'),     // Mahabodhi Temple
+
+    // ── Northeast India ──────────────────────────────────────────
+    shillong:       img('shillong.jpg'),     // Scotland of East
+    kaziranga:      img('kaziranga.jpg'),    // Rhino Safari
+    tawang:         img('tawang.jpg'),       // Tawang Monastery
+
+    // ── Central India ────────────────────────────────────────────
+    khajuraho:      img('khajuraho.jpg'),    // Temple sculptures
+    ujjain:         img('ujjain.jpg'),       // Mahakaleshwar
+
+    // ── Islands ──────────────────────────────────────────────────
+    andaman:        img('andaman.png'),      // Tropical paradise
+    lakshadweep:    img('lakshadweep.jpg'),  // Coral islands
+
+    // ── Hidden Gems & Trending ───────────────────────────────────
+    spiti:          img('spiti.jpg'),        // Spiti Valley
+    gokarna:        img('goa.jpg'),         // Beach vibe
+    majuli:         img('kaziranga.jpg'),    // NE India
+    chopta:         img('chopta.jpg'),       // Mini Switzerland
+    auli:           img('auli.jpg'),         // Skiing paradise
+    ziro:           img('ziro.jpg'),         // Ziro Valley
+    mandu:          img('mandu.jpg'),        // Ruined city of romance
+    orchha:         img('orchha.jpg'),       // Bundela capital
+    birBilling:     img('birbilling.jpg'),   // Paragliding capital
+    cherrapunji:    img('cherrapunji.jpg'),  // Wettest place on Earth
 };
 
 // ─── Generic Fallbacks ────────────────────────────────────────────────────────
-
-export const FALLBACK_IMAGES = {
-    attraction: unsplash(VERIFIED_SRC.taj_mahal),
-    restaurant: unsplash('1567521464027-f127ff144326'), // Indian food
-    hotel:      unsplash('1571896349842-33c89424de2d'), // Resort
-    nature:     unsplash(VERIFIED_SRC.tea_gardens),
-    beach:      unsplash(VERIFIED_SRC.goa_beach),
-    mountain:   unsplash(VERIFIED_SRC.himalayas),
-    spiritual:  unsplash(VERIFIED_SRC.south_temple),
-    heritage:   unsplash(VERIFIED_SRC.india_generic),
-    default:    unsplash(VERIFIED_SRC.india_generic),
+export const FALLBACK_IMAGES: Record<string, string> = {
+    attraction: img('agra.png'),
+    restaurant: img('delhi.png'),
+    hotel:      img('udaipur.png'),
+    nature:     img('coorg.jpg'),
+    beach:      img('goa.jpg'),
+    mountain:   img('manali.png'),
+    spiritual:  img('varanasi.png'),
+    heritage:   img('jaipur.png'),
+    default:    img('delhi.png'),
 };
 
 export const GRADIENT_FALLBACKS: Record<string, string> = {
@@ -64,7 +137,7 @@ export const GRADIENT_FALLBACKS: Record<string, string> = {
 
 // ─── Resolver Function ────────────────────────────────────────────────────────
 export function getPlaceImage(name: string, category?: string): string {
-    const key = name.toLowerCase().replace(/\s+/g, '');
+    const key = name.toLowerCase().replace(/[\s\-]+/g, '');
     for (const [k, v] of Object.entries(DEST_IMAGES)) {
         if (key.includes(k) || k.includes(key)) return v;
     }
@@ -77,6 +150,11 @@ export function getPlaceImage(name: string, category?: string): string {
 export function handleImgError(e: React.SyntheticEvent<HTMLImageElement | HTMLDivElement>, category?: string): void {
     const el = e.currentTarget;
     const gradient = GRADIENT_FALLBACKS[category || 'default'] || GRADIENT_FALLBACKS.default;
-    if (el instanceof HTMLImageElement) { el.style.display = 'none'; if (el.parentElement) el.parentElement.style.background = gradient; }
-    else { el.style.backgroundImage = 'none'; el.style.background = gradient; }
+    if (el instanceof HTMLImageElement) {
+        el.style.display = 'none';
+        if (el.parentElement) el.parentElement.style.background = gradient;
+    } else {
+        el.style.backgroundImage = 'none';
+        el.style.background = gradient;
+    }
 }

@@ -106,11 +106,61 @@ export const HIDDEN_GEMS = [
 ];
 
 export const CUISINES = [
-    { region: 'South India', dishes: [{ name: 'Dosa & Sambar', note: 'Crispy fermented crepe with lentil stew' }, { name: 'Hyderabadi Biryani', note: 'Dum-cooked layers of basmati and spiced meat' }, { name: 'Chettinad Chicken', note: 'Fiery pepper-based gravy' }, { name: 'Appam & Stew', note: 'Lacy rice pancake with coconut curry' }], icon: '🫕', gradient: 'from-orange-500 via-red-500 to-rose-600', image: FALLBACK_IMAGES.restaurant, states: 'Tamil Nadu, Kerala, Karnataka, AP' },
-    { region: 'North India', dishes: [{ name: 'Butter Chicken', note: 'Creamy tomato gravy, smoky tandoori chicken' }, { name: 'Chole Bhature', note: 'Spiced chickpeas with fried bread' }, { name: 'Rogan Josh', note: 'Kashmiri slow-cooked lamb' }, { name: 'Lucknowi Kebab', note: 'Melt-in-mouth galouti and seekh' }], icon: '🍛', gradient: 'from-amber-500 via-orange-500 to-red-500', image: FALLBACK_IMAGES.restaurant, states: 'Punjab, Delhi, UP, Kashmir' },
-    { region: 'West India', dishes: [{ name: 'Pav Bhaji', note: "Mumbai's buttery street classic" }, { name: 'Dal Baati Churma', note: "Rajasthan's desert feast" }, { name: 'Goan Vindaloo', note: 'Portuguese-inspired spicy pork' }, { name: 'Dhokla', note: 'Steamed savory chickpea cake' }], icon: '🌶️', gradient: 'from-red-500 via-pink-500 to-fuchsia-500', image: FALLBACK_IMAGES.restaurant, states: 'Maharashtra, Rajasthan, Gujarat, Goa' },
-    { region: 'East India', dishes: [{ name: 'Macher Jhol', note: 'Bengali mustard fish curry' }, { name: 'Momos', note: 'Himalayan steamed dumplings' }, { name: 'Litti Chokha', note: "Bihar's roasted wheat balls" }, { name: 'Bamboo Shoot Curry', note: 'Northeast tribal specialty' }], icon: '🥘', gradient: 'from-emerald-500 via-teal-500 to-cyan-500', image: FALLBACK_IMAGES.restaurant, states: 'Bengal, Sikkim, Bihar, Assam' },
-    { region: 'Street Food Trail', dishes: [{ name: 'Pani Puri', note: 'Crispy shell, spiced water explosion' }, { name: 'Vada Pav', note: "Mumbai's ₹20 burger" }, { name: 'Kathi Roll', note: "Kolkata's stuffed paratha wrap" }, { name: 'Jalebi Fafda', note: "Ahmedabad's sweet-savory duo" }], icon: '🍢', gradient: 'from-violet-500 via-purple-500 to-indigo-500', image: FALLBACK_IMAGES.restaurant, states: 'Mumbai, Delhi, Kolkata, Ahmedabad' },
+    { 
+        region: 'South India', 
+        dishes: [
+            { name: 'Hyderabadi Biryani', city: 'Hyderabad', note: 'Dum-cooked basmati layered with saffron-spiced meat — the Nizam\'s kitchen legacy since the 1600s.' },
+            { name: 'Dosa & Sambar', city: 'Chennai', note: 'Crispy fermented rice crepe with tangy lentil stew — a 2,000-year-old Dravidian staple.' },
+            { name: 'Chettinad Chicken', city: 'Karaikudi', note: 'Fiery pepper-and-star-anise gravy from Tamil Nadu\'s merchant princes, traded spice routes shaped this cuisine.' },
+            { name: 'Appam & Stew', city: 'Kochi', note: 'Lacy coconut rice pancake with mild curry — a Syrian-Christian specialty blending Kerala and Portuguese flavors.' }
+        ], 
+        icon: '🫕', gradient: 'from-orange-500 via-red-500 to-rose-600', 
+        image: DEST_IMAGES.hyderabad, states: 'Tamil Nadu, Kerala, Karnataka, Telangana' 
+    },
+    { 
+        region: 'North India', 
+        dishes: [
+            { name: 'Butter Chicken', city: 'Delhi', note: 'Creamy tomato-cashew gravy with tandoori chicken — invented at Moti Mahal, Old Delhi, in 1947.' },
+            { name: 'Chole Bhature', city: 'Delhi', note: 'Spiced chickpeas with puffed fried bread — Punjabi migrants made this Delhi\'s unofficial breakfast.' },
+            { name: 'Lucknowi Galouti Kebab', city: 'Lucknow', note: 'Melt-on-tongue minced meat patty — created for a toothless Nawab in the 18th century.' },
+            { name: 'Rogan Josh', city: 'Srinagar', note: 'Slow-braised lamb in Kashmiri red chili — a Wazwan feast centerpiece from Mughal courts.' }
+        ], 
+        icon: '🍛', gradient: 'from-amber-500 via-orange-500 to-red-500', 
+        image: DEST_IMAGES.delhi, states: 'Punjab, Delhi, Uttar Pradesh, Kashmir' 
+    },
+    { 
+        region: 'West India', 
+        dishes: [
+            { name: 'Pav Bhaji', city: 'Mumbai', note: 'Buttery mashed vegetable curry with soft bread — born on Mumbai\'s textile mill floors in the 1850s.' },
+            { name: 'Dal Baati Churma', city: 'Jaipur', note: 'Baked wheat balls with lentils and sweet crumble — Rajasthan\'s desert warriors\' portable feast.' },
+            { name: 'Goan Vindaloo', city: 'Goa', note: 'Tangy, fiery pork in vinegar-garlic paste — Portuguese "carne de vinha d\'alhos" reimagined with Indian spices.' },
+            { name: 'Dabeli', city: 'Kutch', note: 'Sweet-spicy potato slider with pomegranate — a Gujarati street food gem from the Kutch region.' }
+        ], 
+        icon: '🌶️', gradient: 'from-red-500 via-pink-500 to-fuchsia-500', 
+        image: DEST_IMAGES.mumbai, states: 'Maharashtra, Rajasthan, Gujarat, Goa' 
+    },
+    { 
+        region: 'East India', 
+        dishes: [
+            { name: 'Macher Jhol', city: 'Kolkata', note: 'Mustard-spiced fish curry in light broth — Bengal\'s daily comfort food, inseparable from river culture.' },
+            { name: 'Momos', city: 'Gangtok', note: 'Steamed Himalayan dumplings with fiery chutney — Tibetan refugees brought this to Sikkim in the 1960s.' },
+            { name: 'Litti Chokha', city: 'Patna', note: 'Roasted wheat balls stuffed with sattu, with smoky vegetable mash — Bihar\'s ancient warrior fuel.' },
+            { name: 'Bamboo Shoot Curry', city: 'Shillong', note: 'Fermented bamboo in pork gravy — Northeast tribal specialty using centuries-old preservation techniques.' }
+        ], 
+        icon: '🥘', gradient: 'from-emerald-500 via-teal-500 to-cyan-500', 
+        image: DEST_IMAGES.kolkata, states: 'Bengal, Sikkim, Bihar, Meghalaya' 
+    },
+    { 
+        region: 'Street Food Trail', 
+        dishes: [
+            { name: 'Pani Puri', city: 'Mumbai', note: 'Crispy shell filled with spiced water explosion — every Indian city has its own version, debates are fierce.' },
+            { name: 'Vada Pav', city: 'Mumbai', note: 'Mumbai\'s ₹20 spicy potato burger in a bun — Ashok Vada Pav started the revolution in 1966.' },
+            { name: 'Kathi Roll', city: 'Kolkata', note: 'Paratha-wrapped kebab on the go — Nizam\'s restaurant, Kolkata, invented it for British officers in 1932.' },
+            { name: 'Jalebi-Fafda', city: 'Ahmedabad', note: 'Spiral-fried sweet with savory chickpea strips — Gujarat\'s Sunday morning ritual for centuries.' }
+        ], 
+        icon: '🍢', gradient: 'from-violet-500 via-purple-500 to-indigo-500', 
+        image: DEST_IMAGES.varanasi, states: 'Mumbai, Delhi, Kolkata, Ahmedabad' 
+    },
 ];
 
 export const TRENDING = [

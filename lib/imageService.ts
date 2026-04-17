@@ -108,13 +108,15 @@ export function handleImageError(
 }
 
 // ─── Universal Image Source Resolver ──────────────────────────────────────────
-// Handles both full URLs (Wikimedia, any https) and legacy Unsplash IDs.
+// Handles full URLs, local paths, and legacy Unsplash IDs.
 // Use this everywhere: resolveImgSrc(item.img, 800)
 
 export function resolveImgSrc(src: string, width: number = 800): string {
-    if (!src) return unsplashUrl(VERIFIED_IMAGES.india_generic, { width });
+    if (!src) return '/destinations/delhi.png';
     // Already a full URL
     if (src.startsWith('http://') || src.startsWith('https://')) return src;
+    // Local path (e.g. /destinations/jaipur.png)
+    if (src.startsWith('/')) return src;
     // Legacy Unsplash ID format
     return unsplashUrl(src, { width });
 }
