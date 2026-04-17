@@ -96,7 +96,7 @@ export const DESTINATIONS = [
     { id: 'gulmarg', name: 'Gulmarg', sub: 'Meadow of Flowers', state: 'J&K', img: DEST_IMAGES['gulmarg'] || DEST_IMAGES.mumbai },
 
     // ── South India ──────────────────────────────────────────────
-    { id: 'kerala', name: 'Kerala', sub: "God's Own Country", state: 'Kerala', img: 'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?auto=format&fit=crop&w=800&q=80' },
+    { id: 'kerala', name: 'Kerala', sub: "God's Own Country", state: 'Kerala', img: DEST_IMAGES['kerala'] || DEST_IMAGES.mumbai },
     { id: 'goa', name: 'Goa', sub: 'Sun, Sand & Soul', state: 'Goa', img: DEST_IMAGES['goa'] || DEST_IMAGES.mumbai },
     { id: 'mysuru', name: 'Mysuru', sub: 'Palace City', state: 'Karnataka', img: DEST_IMAGES['mysuru'] || DEST_IMAGES.mumbai },
     { id: 'hampi', name: 'Hampi', sub: 'Boulder Kingdom', state: 'Karnataka', img: DEST_IMAGES['hampi'] || DEST_IMAGES.mumbai },

@@ -25,6 +25,7 @@ function ExplorePageContent() {
   const searchParams = useSearchParams();
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
   const [activeCategory, setActiveCategory] = useState('All');
+  const [showCount, setShowCount] = useState(12);
   const [visibleSections, setVisibleSections] = useState(3);
   const [loadingMore, setLoadingMore] = useState(false);
   const [liked, setLiked] = useState<Set<number>>(new Set());
@@ -70,7 +71,7 @@ function ExplorePageContent() {
       <section ref={heroRef} className="relative h-[85vh] min-h-[620px] flex items-center justify-center overflow-hidden pt-28">
         {/* Parallax background */}
         <motion.div style={{ scale: heroScale, y: heroY }} className="absolute inset-0">
-          <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1564507592333-c60657eea523?auto=format&fit=crop&w=1280&q=80')] bg-cover bg-center" />
+          <div className="absolute inset-0 bg-[url('/destinations/agra.png')] bg-cover bg-center" />
           <div className="absolute inset-0 bg-black/40" />
           <div className="absolute inset-0 bg-gradient-to-t from-[#f5f5f7] dark:from-black via-transparent to-black/30" />
         </motion.div>
@@ -125,14 +126,14 @@ function ExplorePageContent() {
 
         <div className="grid grid-cols-2 md:grid-cols-4 auto-rows-[180px] md:auto-rows-[200px] gap-3 md:gap-4">
           <AnimatePresence mode="popLayout">
-            {filtered.map((d, i) => {
+            {filtered.slice(0, showCount).map((d, i) => {
               const bentoClass = BENTO_DEST[i % BENTO_DEST.length] || '';
               const isLarge = bentoClass.includes('col-span-2') && bentoClass.includes('row-span-2');
               const isTall = !isLarge && bentoClass.includes('row-span-2');
               return (
                 <motion.div key={d.id} layout
                   initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ delay: i * 0.03, duration: 0.35, ease: 'easeOut' }}
+                  transition={{ delay: Math.min(i, 12) * 0.03, duration: 0.35, ease: 'easeOut' }}
                   onClick={() => go(d.name)}
                   className={`${bentoClass} group relative rounded-xl overflow-hidden cursor-pointer bg-black shadow-sm ring-1 ring-black/5 dark:ring-white/10 hover:shadow-lg transition-shadow duration-300`}
                 >
@@ -173,6 +174,20 @@ function ExplorePageContent() {
             })}
           </AnimatePresence>
         </div>
+
+        {/* Load More button */}
+        {showCount < filtered.length && (
+          <div className="flex justify-center mt-8">
+            <button
+              onClick={() => setShowCount(prev => Math.min(prev + 12, filtered.length))}
+              className="group flex items-center gap-2 px-8 py-3 rounded-xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-sm font-bold hover:scale-[1.02] active:scale-[0.98] transition-transform shadow-sm"
+            >
+              <MapPin className="w-4 h-4" />
+              Load More ({filtered.length - showCount} remaining)
+              <ChevronRight className="w-4 h-4 rotate-90 group-hover:translate-y-0.5 transition-transform" />
+            </button>
+          </div>
+        )}
 
         {filtered.length === 0 && (
           <div className="text-center py-20">
@@ -301,8 +316,13 @@ function ExplorePageContent() {
                           {di + 1}
                         </div>
                         <div>
-                          <h5 className="font-bold text-zinc-900 dark:text-white text-base">{dish.name}</h5>
-                          <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-0.5">{dish.note}</p>
+                          <div className="flex items-center gap-2 mb-0.5">
+                            <h5 className="font-bold text-zinc-900 dark:text-white text-base">{dish.name}</h5>
+                            {'city' in dish && (dish as any).city && (
+                              <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 px-1.5 py-0.5 rounded">{(dish as any).city}</span>
+                            )}
+                          </div>
+                          <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-0.5 leading-relaxed">{dish.note}</p>
                         </div>
                       </div>
                     ))}
