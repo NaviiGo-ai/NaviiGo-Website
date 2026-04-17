@@ -3,7 +3,7 @@
 import { ThemeProvider } from 'next-themes';
 import { AuthProvider } from '@/lib/AuthContext';
 import { AIProvider } from '@/context/AIContext';
-import { ReactLenis } from '@studio-freight/react-lenis';
+import { ReactLenis } from 'lenis/react';
 
 export default function Providers({
   children,
