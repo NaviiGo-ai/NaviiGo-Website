@@ -29,9 +29,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setUser(user);
       setLoading(false);
+
+      // Upsert user profile to Firestore on sign-in
+      if (user) {
+        try {
+          const { upsertUserProfile } = await import('./firestore');
+          await upsertUserProfile(user.uid, {
+            displayName: user.displayName,
+            email: user.email,
+            photoURL: user.photoURL,
+          });
+        } catch (err) {
+          console.error('Failed to upsert user profile:', err);
+        }
+      }
     });
 
     return () => unsubscribe();

@@ -41,7 +41,7 @@ export default function AboutPage() {
           className="w-full h-[60vh] rounded-[2rem] overflow-hidden relative mb-24"
         >
           <img 
-            src="https://images.unsplash.com/photo-1436491865332-7a61a109cc05?q=80&w=2000&auto=format&fit=crop" 
+            src="https://images.unsplash.com/photo-1564507592333-c60657eea523?auto=format&fit=crop&w=1280&q=80" 
             alt="Aircraft wing in flight"
             className="w-full h-full object-cover"
           />

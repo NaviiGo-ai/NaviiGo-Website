@@ -1,13 +1,14 @@
 'use client';
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, Suspense } from 'react';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Search, MapPin, Star, Utensils, Gem, ChevronRight, Compass, Heart, ArrowRight, Loader2, Users, Calendar, Flame, X, Globe, Sparkles, Sun, Waves, Mountain, Footprints } from 'lucide-react';
 import {
   ALL_DESTINATIONS, HIDDEN_GEMS, CUISINES, TRENDING, SEASONAL,
   CATEGORIES, BENTO_DEST, type Destination,
 } from '@/components/features/explore/exploreData';
+import { startCityView, trackCategoryClick } from '@/lib/browsingSignals';
 
 const CATEGORY_ICONS: Record<string, React.ReactNode> = {
   'All': <Globe className="w-3.5 h-3.5" />,
@@ -19,10 +20,12 @@ const CATEGORY_ICONS: Record<string, React.ReactNode> = {
   'Spiritual': <Compass className="w-3.5 h-3.5" />,
 };
 
-export default function ExplorePage() {
+function ExplorePageContent() {
   const router = useRouter();
-  const [searchQuery, setSearchQuery] = useState('');
+  const searchParams = useSearchParams();
+  const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
   const [activeCategory, setActiveCategory] = useState('All');
+  const [showCount, setShowCount] = useState(12);
   const [visibleSections, setVisibleSections] = useState(3);
   const [loadingMore, setLoadingMore] = useState(false);
   const [liked, setLiked] = useState<Set<number>>(new Set());
@@ -59,7 +62,7 @@ export default function ExplorePage() {
     setLiked(p => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n; });
   }, []);
 
-  const go = (name: string) => router.push(`/itinerary?destination=${encodeURIComponent(name)}`);
+  const go = (name: string) => { startCityView(name); router.push(`/explore/${encodeURIComponent(name)}`); };
 
   return (
     <div className="min-h-screen bg-[#f5f5f7] dark:bg-[#000000] overflow-x-hidden">
@@ -68,7 +71,7 @@ export default function ExplorePage() {
       <section ref={heroRef} className="relative h-[85vh] min-h-[620px] flex items-center justify-center overflow-hidden pt-28">
         {/* Parallax background */}
         <motion.div style={{ scale: heroScale, y: heroY }} className="absolute inset-0">
-          <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1524492412937-b28074a5d7da?auto=format&fit=crop&w=1920&q=60')] bg-cover bg-center" />
+          <div className="absolute inset-0 bg-[url('/destinations/agra.png')] bg-cover bg-center" />
           <div className="absolute inset-0 bg-black/40" />
           <div className="absolute inset-0 bg-gradient-to-t from-[#f5f5f7] dark:from-black via-transparent to-black/30" />
         </motion.div>
@@ -103,7 +106,7 @@ export default function ExplorePage() {
             {/* Category pills */}
             <div className="flex flex-wrap justify-center gap-2 mt-6">
               {CATEGORIES.map(c => (
-                <button key={c} onClick={() => setActiveCategory(c)}
+                <button key={c} onClick={() => { setActiveCategory(c); trackCategoryClick(c); }}
                   className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-semibold tracking-wide transition-colors duration-200 ${activeCategory === c
                     ? 'bg-white text-black'
                     : 'bg-transparent text-white/60 hover:text-white hover:bg-white/10 border border-transparent hover:border-white/20'
@@ -123,14 +126,14 @@ export default function ExplorePage() {
 
         <div className="grid grid-cols-2 md:grid-cols-4 auto-rows-[180px] md:auto-rows-[200px] gap-3 md:gap-4">
           <AnimatePresence mode="popLayout">
-            {filtered.map((d, i) => {
+            {filtered.slice(0, showCount).map((d, i) => {
               const bentoClass = BENTO_DEST[i % BENTO_DEST.length] || '';
               const isLarge = bentoClass.includes('col-span-2') && bentoClass.includes('row-span-2');
               const isTall = !isLarge && bentoClass.includes('row-span-2');
               return (
                 <motion.div key={d.id} layout
                   initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ delay: i * 0.03, duration: 0.35, ease: 'easeOut' }}
+                  transition={{ delay: Math.min(i, 12) * 0.03, duration: 0.35, ease: 'easeOut' }}
                   onClick={() => go(d.name)}
                   className={`${bentoClass} group relative rounded-xl overflow-hidden cursor-pointer bg-black shadow-sm ring-1 ring-black/5 dark:ring-white/10 hover:shadow-lg transition-shadow duration-300`}
                 >
@@ -171,6 +174,20 @@ export default function ExplorePage() {
             })}
           </AnimatePresence>
         </div>
+
+        {/* Load More button */}
+        {showCount < filtered.length && (
+          <div className="flex justify-center mt-8">
+            <button
+              onClick={() => setShowCount(prev => Math.min(prev + 12, filtered.length))}
+              className="group flex items-center gap-2 px-8 py-3 rounded-xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 text-sm font-bold hover:scale-[1.02] active:scale-[0.98] transition-transform shadow-sm"
+            >
+              <MapPin className="w-4 h-4" />
+              Load More ({filtered.length - showCount} remaining)
+              <ChevronRight className="w-4 h-4 rotate-90 group-hover:translate-y-0.5 transition-transform" />
+            </button>
+          </div>
+        )}
 
         {filtered.length === 0 && (
           <div className="text-center py-20">
@@ -299,8 +316,13 @@ export default function ExplorePage() {
                           {di + 1}
                         </div>
                         <div>
-                          <h5 className="font-bold text-zinc-900 dark:text-white text-base">{dish.name}</h5>
-                          <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-0.5">{dish.note}</p>
+                          <div className="flex items-center gap-2 mb-0.5">
+                            <h5 className="font-bold text-zinc-900 dark:text-white text-base">{dish.name}</h5>
+                            {'city' in dish && (dish as any).city && (
+                              <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/30 px-1.5 py-0.5 rounded">{(dish as any).city}</span>
+                            )}
+                          </div>
+                          <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-0.5 leading-relaxed">{dish.note}</p>
                         </div>
                       </div>
                     ))}
@@ -413,5 +435,13 @@ export default function ExplorePage() {
         </section>
       )}
     </div>
+  );
+}
+
+export default function ExplorePage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-[#f5f5f7] dark:bg-[#000000] flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-zinc-500" /></div>}>
+      <ExplorePageContent />
+    </Suspense>
   );
 }

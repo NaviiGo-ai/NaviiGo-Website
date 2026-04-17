@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
@@ -14,12 +14,8 @@ export async function POST(req: NextRequest) {
             });
         }
 
-        /* ── LIVE MODE ──────────────────────────────────────────────
-           Uncomment this block and import GoogleGenerativeAI when you have an API key 
-           and have run `npm install @google/generative-ai`
-        
-        const genAI = new GoogleGenerativeAI(GEMINI_API_KEY as string);
-        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+        const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' }, { apiClient: 'naviigo-ai', customHeaders: { 'Referer': 'http://localhost:3000' } });
 
         const systemContext = `You are NaviiGo's AI travel assistant. You help users edit their travel itinerary.
 The current itinerary plans are: ${JSON.stringify(currentPlans, null, 2)}
@@ -53,13 +49,6 @@ Respond with ONLY valid JSON in this format:
 
         const parsed = JSON.parse(jsonMatch[0]);
         return NextResponse.json(parsed);
-        */
-
-        // Fallback for when live mode is commented out but API Key is present
-        return NextResponse.json({
-            reply: "AI Chat Live Mode is currently disabled in the code.",
-            action: null,
-        });
 
     } catch (err: unknown) {
         console.error('[AI Chat Error]', err);

@@ -3,33 +3,46 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
-import { saveItinerary } from '@/lib/savedItineraries';
-import { saveSharedItinerary, listenToItinerary } from '@/lib/firestore';
+import { saveSharedItinerary, listenToItinerary, saveItineraryToFirestore } from '@/lib/firestore';
+import { useAuth } from '@/lib/AuthContext';
+import { resolveImgSrc } from '@/lib/imageService';
 import {
     DEST_DATA, FALLBACK_DEST, CROWD_COLOR, CROWD_DOT,
     type DayPlan, type CrowdLevel,
 } from '@/app/itinerary/data';
 import { genShareId, CrowdDot } from './helpers';
 import ShareDropdown from './ShareDropdown';
+import TransportCompare from './TransportCompare';
 
 const ItineraryMap = dynamic(() => import('@/components/shared/ItineraryMap'), { ssr: false });
-const AIChat = dynamic(() => import('@/components/shared/AIChat'), { ssr: false });
+import { useAI } from '@/context/AIContext';
+import { useEffect } from 'react';
 
 interface DayViewPageProps {
     form: Record<string, unknown>;
+    generatedData?: any;
     onBack: () => void;
 }
 
-export default function DayViewPage({ form, onBack }: DayViewPageProps) {
+export default function DayViewPage({ form, generatedData, onBack }: DayViewPageProps) {
     const router = useRouter();
+    const { user } = useAuth();
+    const { registerItinerary } = useAI();
     const [isSaved, setIsSaved] = useState(false);
     const destId = form.destination as string, destName = form.destName as string;
-    const data = DEST_DATA[destId] ?? FALLBACK_DEST;
+    const staticData = DEST_DATA[destId] ?? FALLBACK_DEST;
+    const data: any = generatedData ? { ...staticData, ...generatedData } : staticData;
     const [activeDay, setActiveDay] = useState(0);
     const [activeActivity, setActiveActivity] = useState(-1);
     const [dayRouteInfo, setDayRouteInfo] = useState<{ distance: string, time: string } | null>(null);
     const [customPlans, setCustomPlans] = useState<DayPlan[]>(() => (form.customPlans as DayPlan[]) || JSON.parse(JSON.stringify(data.dayPlans)));
     const plan: DayPlan = customPlans[activeDay] ?? customPlans[0];
+
+    useEffect(() => {
+        registerItinerary({ ...data, dayPlans: customPlans }, (newData) => {
+            if (newData.dayPlans) setCustomPlans(newData.dayPlans);
+        });
+    }, [data, customPlans, registerItinerary]);
 
     const [isSharing, setIsSharing] = useState(false);
     const [collaborators, setCollaborators] = useState(1);
@@ -147,7 +160,13 @@ export default function DayViewPage({ form, onBack }: DayViewPageProps) {
                     <p className="text-xs text-zinc-400 hidden sm:block">Full plan with crowd & weather alerts</p>
                 </div>
                 <ShareDropdown onCopyLink={handleShare} destName={destName} isSharing={isSharing} collaborators={collaborators} />
-                <button onClick={() => { saveItinerary(destId, destName, { ...form, customPlans }); setIsSaved(true); }} disabled={isSaved}
+                <button onClick={async () => {
+                    if (user?.uid) {
+                        await saveItineraryToFirestore(user.uid, { destId, destName, form: { ...form, customPlans }, generatedData: generatedData || null });
+                    }
+                    setIsSaved(true);
+                    alert('📍 Itinerary successfully saved to your Passport!');
+                }} disabled={isSaved}
                     className={`px-4 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-colors ${isSaved ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 cursor-default' : 'bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 hover:bg-zinc-800 dark:hover:bg-zinc-200'}`}>
                     {isSaved ? '✓ Saved' : '💾 Save'}
                 </button>
@@ -156,7 +175,7 @@ export default function DayViewPage({ form, onBack }: DayViewPageProps) {
             {/* Day tabs */}
             <div className="sticky top-[120px] z-10 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-lg border-b border-zinc-100 dark:border-white/5 px-4 py-2 overflow-x-auto no-scrollbar">
                 <div className="flex gap-2">
-                    {data.dayPlans.map((dp, i) => (
+                    {data.dayPlans.map((dp: DayPlan, i: number) => (
                         <button key={dp.day} onClick={() => { setActiveDay(i); setActiveActivity(-1); }}
                             className={`flex-shrink-0 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all
                 ${activeDay === i ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/25' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'}`}>
@@ -167,11 +186,14 @@ export default function DayViewPage({ form, onBack }: DayViewPageProps) {
             </div>
 
             <div className="max-w-[1400px] mx-auto px-4 lg:px-8 py-6">
-                <AnimatePresence mode="wait">
-                    <motion.div key={activeDay} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
-
-                        {/* DAY DASHBOARD */}
-                        <div className="mb-8">
+                {/* 2-Col Layout at page level */}
+                <div className="flex flex-col lg:flex-row gap-8">
+                    {/* Left Column: Animating Day Dashboard + Timeline */}
+                    <div className="flex-1 min-w-0">
+                        <AnimatePresence mode="wait">
+                            <motion.div key={activeDay} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+                                {/* DAY DASHBOARD */}
+                                <div className="mb-8">
                             <div className="flex items-center justify-between mb-4">
                                 <h2 className="text-3xl md:text-4xl font-bold text-zinc-900 dark:text-white">Day {plan.day}: {plan.title}</h2>
                                 <button onClick={() => {
@@ -288,11 +310,9 @@ export default function DayViewPage({ form, onBack }: DayViewPageProps) {
                             )}
                         </div>
 
-                        {/* 2-Col Layout: Timeline + Map */}
-                        <div className="flex flex-col lg:flex-row gap-8">
-                            {/* Left Column: Activities Timeline */}
-                            <div className="flex-1 space-y-6">
-                                {/* Action Bar */}
+                        {/* Timeline */}
+                        <div className="space-y-6">
+                            {/* Action Bar */}
                                 <div className="flex gap-3 flex-wrap bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl p-2 shadow-sm">
                                     <button onClick={(e) => {
                                         e.stopPropagation();
@@ -342,15 +362,26 @@ export default function DayViewPage({ form, onBack }: DayViewPageProps) {
                                                         <div className="flex-1 h-px bg-zinc-200 dark:bg-zinc-800" />
                                                     </div>
                                                 )}
-                                                {act.travelFromPrev && (
+                                                {act.travelFromPrev && i > 0 && plan.activities[i-1]?.lat && act.lat && (
+                                                    <TransportCompare
+                                                        fromLat={plan.activities[i-1].lat}
+                                                        fromLng={plan.activities[i-1].lng}
+                                                        toLat={act.lat}
+                                                        toLng={act.lng}
+                                                        fromName={plan.activities[i-1].name}
+                                                        toName={act.name}
+                                                    />
+                                                )}
+                                                {act.travelFromPrev && (!act.lat || i === 0 || !plan.activities[i-1]?.lat) && (
                                                     <div className="flex items-center gap-3 ml-[38px] mb-4">
-                                                        <div className="w-1.5 flex flex-col gap-1 items-center justify-center h-8">
-                                                            <div className="w-1 h-1 bg-indigo-300 dark:bg-indigo-700 rounded-full" />
-                                                            <div className="w-1 h-1 bg-indigo-300 dark:bg-indigo-700 rounded-full" />
-                                                            <div className="w-1 h-1 bg-indigo-300 dark:bg-indigo-700 rounded-full" />
+                                                        <div className="w-1.5 flex flex-col gap-1.5 items-center justify-center h-10">
+                                                            <div className="w-[3px] h-[3px] bg-zinc-300 dark:bg-zinc-700 rounded-full" />
+                                                            <div className="w-[3px] h-[3px] bg-zinc-300 dark:bg-zinc-700 rounded-full" />
+                                                            <div className="w-[3px] h-[3px] bg-zinc-300 dark:bg-zinc-700 rounded-full" />
                                                         </div>
-                                                        <span className="text-[11px] font-bold text-indigo-700 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100 dark:border-indigo-500/20 rounded-full px-3 py-1 flex items-center gap-1.5 shadow-sm">
-                                                            🚘 {act.travelFromPrev} drive
+                                                        <span className="text-[10px] font-black tracking-tight text-zinc-500 dark:text-zinc-400 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg px-2.5 py-1.5 flex items-center gap-2 shadow-sm">
+                                                            <span className="text-sm opacity-100 group-hover:scale-125 transition-transform">🚗</span>
+                                                            {act.travelFromPrev}
                                                         </span>
                                                     </div>
                                                 )}
@@ -414,7 +445,7 @@ export default function DayViewPage({ form, onBack }: DayViewPageProps) {
                                                     onClick={() => router.push(`/itinerary/detail?type=hotel&dest=${destId}&name=${encodeURIComponent(data.hotels[0].name)}`)}>
                                                     <div className="flex items-center gap-3 mb-2 text-xs font-bold text-zinc-400 uppercase tracking-widest"><span className="text-base leading-none">🏨</span> Place to stay</div>
                                                     <div className="flex gap-4">
-                                                        <div className="w-16 h-16 rounded-xl shrink-0 bg-cover bg-center" style={{ backgroundImage: `url(https://images.unsplash.com/photo-${data.hotels[0].img}?auto=format&fit=crop&w=150&q=70)` }} />
+                                                        <div className="w-16 h-16 rounded-xl shrink-0 bg-cover bg-center" style={{ backgroundImage: `url(${resolveImgSrc(data.hotels[0].img, 150)})` }} />
                                                         <div className="flex flex-col justify-center">
                                                             <div className="font-bold text-base text-zinc-900 dark:text-white line-clamp-1 group-hover:text-emerald-500 transition-colors">{data.hotels[0].name}</div>
                                                             <div className="text-xs text-zinc-500 mt-0.5">{data.hotels[0].type} • {data.hotels[0].priceRange}</div>
@@ -428,7 +459,7 @@ export default function DayViewPage({ form, onBack }: DayViewPageProps) {
                                                     onClick={() => router.push(`/itinerary/detail?type=restaurant&dest=${destId}&name=${encodeURIComponent(data.restaurants[0].name)}`)}>
                                                     <div className="flex items-center gap-3 mb-2 text-xs font-bold text-zinc-400 uppercase tracking-widest"><span className="text-base leading-none">🍽️</span> Where to eat</div>
                                                     <div className="flex gap-4">
-                                                        <div className="w-16 h-16 rounded-xl shrink-0 bg-cover bg-center" style={{ backgroundImage: `url(https://images.unsplash.com/photo-${data.restaurants[0].img}?auto=format&fit=crop&w=150&q=70)` }} />
+                                                        <div className="w-16 h-16 rounded-xl shrink-0 bg-cover bg-center" style={{ backgroundImage: `url(${resolveImgSrc(data.restaurants[0].img, 150)})` }} />
                                                         <div className="flex flex-col justify-center">
                                                             <div className="font-bold text-base text-zinc-900 dark:text-white line-clamp-1 group-hover:text-amber-500 transition-colors">{data.restaurants[0].name}</div>
                                                             <div className="text-xs text-zinc-500 mt-0.5">{data.restaurants[0].cuisine}</div>
@@ -470,10 +501,10 @@ export default function DayViewPage({ form, onBack }: DayViewPageProps) {
                                     <div className="mt-6 pt-6 border-t border-zinc-200 dark:border-zinc-800/80">
                                         <h4 className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3">Or Pick a Top Highlight</h4>
                                         <div className="grid grid-cols-2 gap-3">
-                                            {data.highlights?.filter(a => !plan.activities.find(pa => pa.name === a.name)).slice(0, 4).map(sug => (
+                                            {data.highlights?.filter((a: any) => !plan.activities.find((pa: any) => pa.name === a.name)).slice(0, 4).map((sug: any) => (
                                                 <div key={sug.name} className="bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl p-2.5 flex gap-3 group cursor-pointer hover:border-emerald-400 hover:shadow-md transition-all"
                                                     onClick={() => addCustomActivity({ name: sug.name, display_name: sug.desc, lat: sug.lat || data.mapCenter.lat, lon: sug.lng || data.mapCenter.lng })}>
-                                                    <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 bg-cover bg-center" style={{ backgroundImage: `url(https://images.unsplash.com/photo-${sug.img}?auto=format&fit=crop&w=150&q=70)` }} />
+                                                    <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 bg-cover bg-center" style={{ backgroundImage: `url(${resolveImgSrc(sug.img, 150)})` }} />
                                                     <div className="min-w-0 flex flex-col justify-center">
                                                         <div className="text-[11px] font-bold text-zinc-900 dark:text-white truncate group-hover:text-emerald-600 transition-colors">{sug.name}</div>
                                                         <div className="text-[9px] text-zinc-500 truncate mt-0.5">{sug.desc}</div>
@@ -484,28 +515,26 @@ export default function DayViewPage({ form, onBack }: DayViewPageProps) {
                                     </div>
                                 </div>
                             </div>
+                        </motion.div>
+                    </AnimatePresence>
+                </div>
 
-                            {/* Right Column: Sticky Map */}
-                            <div className="hidden lg:block lg:w-[460px] xl:w-[500px] shrink-0 self-start sticky top-[100px] z-10 pb-4">
-                                <div className="h-[calc(100vh-140px)] min-h-[500px] rounded-[2rem] overflow-hidden border-4 border-white dark:border-zinc-800 shadow-xl bg-zinc-100 dark:bg-zinc-900">
-                                    <ItineraryMap
-                                        pins={mapPins}
-                                        center={data.mapCenter}
-                                        zoom={12}
-                                        showRoute={true}
-                                        activePin={activeActivity >= 0 ? activeActivity : undefined}
-                                        onRouteCalculated={(legs: { distance: string, time: string }[]) => { if (legs && legs.length > 0) setDayRouteInfo(legs[0]); }}
-                                        className="w-full h-full"
-                                    />
-                                </div>
-                            </div>
-                        </div>
-                    </motion.div>
-                </AnimatePresence>
+                {/* Right Column: Sticky Map */}
+                <div className="hidden lg:block lg:w-[460px] xl:w-[500px] shrink-0 self-start sticky top-[100px] z-10 pb-4">
+                    <div className="h-[calc(100vh-140px)] min-h-[500px] rounded-[2rem] overflow-hidden border-4 border-white dark:border-zinc-800 shadow-xl bg-zinc-100 dark:bg-zinc-900">
+                        <ItineraryMap
+                            pins={mapPins}
+                            center={data.mapCenter}
+                            zoom={12}
+                            showRoute={true}
+                            activePin={activeActivity >= 0 ? activeActivity : undefined}
+                            onRouteCalculated={(legs: { distance: string, time: string }[]) => { if (legs && legs.length > 0) setDayRouteInfo(legs[0]); }}
+                            className="w-full h-full"
+                        />
+                    </div>
+                </div>
             </div>
-
-            {/* AI Chat Assistant */}
-            <AIChat currentPlans={customPlans} onPlanUpdate={setCustomPlans} />
+        </div>
         </div>
     );
 }

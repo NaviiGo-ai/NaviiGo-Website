@@ -21,29 +21,28 @@ const slides: Slide[] = [
     name: 'VARANASI',
     blurb:
       'Experience the spiritual heart of India. Varanasi, one of the oldest living cities, offers deep cultural roots, ancient ghats, and mesmerizing Ganga Aarti ceremonies.',
-    background:
-      'https://images.unsplash.com/photo-1561361513-2d000a50f0dc?auto=format&fit=crop&w=2200&q=80',
+    background: '/assets/varanasi-bg.jpg',
   },
   {
     name: 'RAJASTHAN',
     blurb:
       'Step into the land of Kings. Rajasthan features golden deserts, majestic forts, opulent palaces, and a vibrant culture that echoes tales of historic grandeur.',
     background:
-      'https://images.unsplash.com/photo-1477587458883-47145ed94245?auto=format&fit=crop&w=2200&q=80',
+      'https://images.unsplash.com/photo-1599661046289-e31897846e41?auto=format&fit=crop&w=1280&q=80',
   },
   {
     name: 'HIMALAYAS',
     blurb:
       'Ascend to the breathtaking peaks. The Indian Himalayas offer snow-clad mountains, spiritual retreats, and thrilling adventures in a landscape of pristine beauty.',
     background:
-      'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?auto=format&fit=crop&w=2200&q=80',
+      'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?auto=format&fit=crop&w=1280&q=80',
   },
   {
     name: 'KERALA',
     blurb:
       'Kerala offers serene backwaters, lush tea-covered hills, heritage architecture, and tropical beaches, creating a slower and deeply scenic travel experience along India’s southwestern coast.',
     background:
-      'https://images.unsplash.com/photo-1593693411515-c20261bcad6e?auto=format&fit=crop&w=2200&q=80',
+      'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?auto=format&fit=crop&w=1280&q=80',
   },
 ];
 
@@ -51,29 +50,28 @@ const fallbackSlide: Slide = {
   name: 'INDIA',
   blurb: 'Discover the diverse, deeply spiritual, and culturally rich landscapes of India.',
   background:
-    'https://images.unsplash.com/photo-1524492412937-b28074a5d7da?auto=format&fit=crop&w=2200&q=80',
+    'https://images.unsplash.com/photo-1564507592333-c60657eea523?auto=format&fit=crop&w=1280&q=80',
 };
 
 const spotCards: SpotCard[] = [
   {
-    title: 'Ganga Aarti, Varanasi',
-    image:
-      'https://images.unsplash.com/photo-1582283925565-d053709d3bdf?auto=format&fit=crop&w=900&q=80',
+    title: 'Ganges Boat Ride, Varanasi',
+    image: '/assets/varanasi-spot-card.jpg',
   },
   {
-    title: 'Amer Fort, Jaipur',
+    title: 'Hawa Mahal, Jaipur',
     image:
-      'https://images.unsplash.com/photo-1599661502283-a44ea24dfc74?auto=format&fit=crop&w=900&q=80',
+      'https://images.unsplash.com/photo-1599661046289-e31897846e41?auto=format&fit=crop&w=1280&q=80',
   },
   {
-    title: 'Tea Gardens, Munnar',
+    title: 'Himalayan Peaks',
     image:
-      'https://images.unsplash.com/photo-1593693411515-c20261bcad6e?auto=format&fit=crop&w=900&q=80',
+      'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?auto=format&fit=crop&w=1280&q=80',
   },
   {
-    title: 'Spiti Valley, Himalayas',
+    title: 'Backwaters, Kerala',
     image:
-      'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?auto=format&fit=crop&w=900&q=80',
+      'https://images.unsplash.com/photo-1593693397690-362cb9666fc2?auto=format&fit=crop&w=800&q=80',
   },
 ];
 
@@ -90,10 +88,11 @@ export default function HeroSlider() {
   }, []);
 
   const visibleCards = useMemo(() => {
-    const first = spotCards[activeSlide % spotCards.length] ?? spotCards[0];
-    const second = spotCards[(activeSlide + 1) % spotCards.length] ?? spotCards[1] ?? spotCards[0];
-    const third = spotCards[(activeSlide + 2) % spotCards.length] ?? spotCards[2] ?? spotCards[0];
-    const fourth = spotCards[(activeSlide + 3) % spotCards.length] ?? spotCards[3] ?? spotCards[0];
+    // Show cards starting from the NEXT slide to emphasize what's coming
+    const first = spotCards[(activeSlide + 1) % spotCards.length];
+    const second = spotCards[(activeSlide + 2) % spotCards.length];
+    const third = spotCards[(activeSlide + 3) % spotCards.length];
+    const fourth = spotCards[(activeSlide + 4) % spotCards.length];
 
     return [first, second, third, fourth].filter(Boolean) as SpotCard[];
   }, [activeSlide]);
@@ -112,10 +111,10 @@ export default function HeroSlider() {
         <motion.div
           key={currentSlide.name}
           className="absolute inset-0"
-          initial={{ opacity: 0.25, scale: 1.04 }}
+          initial={{ opacity: 0, scale: 1.05 }}
           animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0.2, scale: 1.02 }}
-          transition={{ duration: 0.8, ease: 'easeInOut' }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 1.2, ease: 'easeInOut' }}
         >
           <Image
             src={currentSlide.background}
@@ -131,18 +130,17 @@ export default function HeroSlider() {
       <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/50 to-slate-950/20 backdrop-blur-[2px]" />
 
       <div className="relative z-10 mx-auto flex min-h-dvh w-full max-w-[1500px] items-center px-6 py-10 lg:px-10">
-        
+
         {/* Left Pagination Sidebar */}
         <div className="mr-6 hidden h-[78vh] items-center gap-4 lg:flex">
           <div className="flex h-full flex-col items-center justify-between py-4">
             {slides.map((slide, index) => (
               <span
                 key={slide.name}
-                className={`rounded-full transition ${
-                  index === activeSlide
-                    ? 'h-5 w-5 border border-white/70 bg-white/30'
-                    : 'h-2 w-2 bg-white/60'
-                }`}
+                className={`rounded-full transition ${index === activeSlide
+                  ? 'h-5 w-5 border border-white/70 bg-white/30'
+                  : 'h-2 w-2 bg-white/60'
+                  }`}
               />
             ))}
           </div>
@@ -152,8 +150,8 @@ export default function HeroSlider() {
           </span>
         </div>
 
-        <div className="grid w-full grid-cols-1 items-center gap-8 xl:grid-cols-[1.1fr_1fr]">
-          
+        <div className="grid w-full grid-cols-1 items-center gap-16 xl:grid-cols-[1.1fr_1fr]">
+
           <div className="max-w-2xl">
             {/* Heading: Simultaneous Box Roll Effect */}
             <div className="relative h-[72px] w-full sm:h-[84px] lg:h-[108px] overflow-hidden">
@@ -166,9 +164,9 @@ export default function HeroSlider() {
                   initial={{ y: "100%", opacity: 0 }}
                   animate={{ y: "0%", opacity: 1 }}
                   exit={{ y: "-100%", opacity: 0 }}
-                  transition={{ 
-                    duration: 0.5, // Perfect speed for a mechanical 'roll'
-                    ease: [0.22, 1, 0.36, 1] 
+                  transition={{
+                    duration: 0.8, // Perfect speed for a mechanical 'roll'
+                    ease: [0.16, 1, 0.3, 1]
                   }}
                 >
                   {currentSlide.name}
@@ -176,63 +174,88 @@ export default function HeroSlider() {
               </AnimatePresence>
             </div>
 
-            {/* Subtext blurb */}
-            <AnimatePresence mode="wait">
-              <motion.p
-                key={`blurb-${currentSlide.name}`}
-                className="mt-5 max-w-xl text-sm leading-relaxed text-white/90 drop-shadow-md sm:text-base font-medium"
-                initial={{ y: 16, opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                exit={{ y: -16, opacity: 0 }}
-                transition={{ duration: 0.4, ease: 'easeOut' }}
-              >
-                {currentSlide.blurb}
-              </motion.p>
-            </AnimatePresence>
-
-            <Link href="/explore" className="mt-8 inline-flex items-center gap-3 rounded-2xl bg-[#0066cc] px-7 py-4 text-lg font-semibold text-white shadow-lg transition hover:scale-[1.02] hover:bg-[#0066cc]/90">
+            <motion.p
+              key={`blurb-${activeSlide}`}
+              initial={{ y: 20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="mt-6 max-w-lg text-sm leading-relaxed text-white/60 sm:text-base font-light"
+            >
+              {currentSlide.blurb}
+            </motion.p>
+            <Link
+              href={`/explore?q=${currentSlide.name === 'VARANASI' ? 'Varanasi' : currentSlide.name === 'RAJASTHAN' ? 'Rajasthan' : currentSlide.name === 'HIMALAYAS' ? 'Himachal' : 'Kerala'}`}
+              className="mt-10 inline-flex items-center gap-4 rounded-xl bg-blue-600/90 px-10 py-4 text-sm font-bold text-white shadow-xl transition-all hover:scale-[1.05] hover:bg-blue-600"
+            >
               Explore
-              <span aria-hidden>→</span>
+              <span className="text-xl">→</span>
             </Link>
           </div>
 
           {/* Right Column: Masked Card Rail */}
-          <div 
-            className="relative min-w-0 overflow-visible -mr-[50vw]"
+          <div
+            className="relative min-w-0"
             style={{
-              WebkitMaskImage: 'linear-gradient(to right, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 45%, rgba(0,0,0,0) 75%)',
-              maskImage: 'linear-gradient(to right, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 45%, rgba(0,0,0,0) 75%)',
+              WebkitMaskImage: 'linear-gradient(to right, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 75%, rgba(0,0,0,0) 100%)',
+              maskImage: 'linear-gradient(to right, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 75%, rgba(0,0,0,0) 100%)',
             }}
           >
             <motion.div
               key={`cards-${activeSlide}`}
-              initial={{ x: 56, opacity: 0 }}
+              initial={{ x: 80, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
-              transition={{ duration: 0.6, ease: 'easeOut' }}
-              className="flex w-max items-start gap-6"
+              transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+              className="flex w-max items-start gap-12"
             >
               {visibleCards.map((card, idx) => (
-                <article key={`${activeSlide}-${card.title}-${idx}`} className="flex shrink-0 flex-col gap-3">
-                  
-                  <div className="flex items-center justify-between px-1 text-[14px] font-semibold tracking-wide text-white/95">
-                    <span>{card.title}</span>
-                    <div className="flex gap-1.5">
-                      <span className="h-1.5 w-1.5 rounded-full bg-white" />
-                      <span className="h-1.5 w-1.5 rounded-full bg-white/40" />
-                      <span className="h-1.5 w-1.5 rounded-full bg-white/40" />
-                      <span className="h-1.5 w-1.5 rounded-full bg-white/40" />
+                <article
+                  key={`${activeSlide}-${card.title}-${idx}`}
+                  className="flex shrink-0 flex-col gap-6 transition-all duration-1000"
+                  style={{
+                    filter: `blur(${idx * 4}px)`,
+                    transform: `scale(${1 - idx * 0.1})`,
+                    opacity: 1 - idx * 0.3,
+                    zIndex: 20 - idx,
+                  }}
+                >
+                  <div className={`flex flex-col gap-3 transition-all duration-700 ${idx === 0 ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'}`}>
+                    <span className="text-sm font-semibold tracking-wide text-white/95">
+                      {card.title}
+                    </span>
+                    <div className="flex gap-2">
+                      {[...Array(5)].map((_, i) => (
+                        <span
+                          key={i}
+                          className={`h-1.5 w-1.5 rounded-full transition-colors ${
+                            i === 0 ? 'bg-white' : 'bg-white/30'
+                          }`}
+                        />
+                      ))}
                     </div>
                   </div>
-                  
-                  <div className="relative h-[380px] w-[280px] overflow-hidden rounded-[20px] bg-slate-800 shadow-[0_20px_40px_rgba(0,0,0,0.3)]">
-                    <Image src={card.image} alt={card.title} fill className="object-cover" sizes="280px" />
+
+                  {/* Card Main Body */}
+                  <div className={`relative h-[380px] w-[280px] overflow-hidden rounded-[28px] bg-slate-800 transition-shadow duration-1000 ${
+                    idx === 0 ? 'shadow-[0_40px_100px_rgba(0,0,0,0.6)]' : 'shadow-none'
+                  }`}>
+                    <Image
+                      src={card.image}
+                      alt={card.title}
+                      fill
+                      className="object-cover"
+                      sizes="280px"
+                    />
                     
-                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/40" />
-                    
-                    <button type="button" className="absolute right-3 top-3 z-10 flex h-[38px] w-[38px] items-center justify-center rounded-full bg-white/90 shadow-md backdrop-blur transition hover:scale-105 hover:bg-white">
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="#ef4444" className="rotate-45">
-                        <path d="M2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82l-7.17 7.17a2 2 0 0 1-2.83 0L2 12z" />
-                        <circle cx="7" cy="7" r="2.5" fill="white" />
+                    {/* Shadow Overlay */}
+                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/5 via-transparent to-black/60" />
+
+                    {/* Bookmark Icon */}
+                    <button
+                      type="button"
+                      className="absolute right-6 top-6 flex h-11 w-11 items-center justify-center rounded-full bg-white/20 shadow-lg backdrop-blur-md transition hover:bg-white/30"
+                    >
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+                        <path d="M17 3H7c-1.1 0-1.99.9-1.99 2L5 21l7-3 7 3V5c0-1.1-.9-2-2-2z" />
                       </svg>
                     </button>
                   </div>

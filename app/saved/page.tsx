@@ -3,28 +3,45 @@
 import { useState, useEffect } from 'react';
 import { motion } from "framer-motion";
 import { useRouter } from 'next/navigation';
-import { getSavedItineraries, deleteItinerary, SavedItinerary } from '@/lib/savedItineraries';
+import { useAuth } from '@/lib/AuthContext';
+import { getUserItineraries, deleteItineraryFromFirestore } from '@/lib/firestore';
+import type { SavedItineraryDoc } from '@/lib/firestoreSchema';
 import { DESTINATIONS } from '@/app/itinerary/data';
+import { resolveImgSrc } from '@/lib/imageService';
+import { Plane, LogIn } from 'lucide-react';
 
 export default function SavedPage() {
   const router = useRouter();
-  const [savedItems, setSavedItems] = useState<SavedItinerary[]>([]);
-  const [mounted, setMounted] = useState(false);
+  const { user, signInWithGoogle } = useAuth();
+  const [savedItems, setSavedItems] = useState<SavedItineraryDoc[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setSavedItems(getSavedItineraries());
-    setMounted(true);
-  }, []);
+    if (!user?.uid) {
+      setLoading(false);
+      return;
+    }
+    getUserItineraries(user.uid)
+      .then((items) => {
+        setSavedItems(items);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, [user?.uid]);
 
-  const handleClearAll = () => {
-    savedItems.forEach(i => deleteItinerary(i.id));
-    setSavedItems([]);
+  const handleDelete = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    if (!user?.uid) return;
+    await deleteItineraryFromFirestore(user.uid, id);
+    setSavedItems(prev => prev.filter(i => i.id !== id));
   };
 
-  const handleDelete = (e: React.MouseEvent, id: string) => {
-    e.stopPropagation();
-    deleteItinerary(id);
-    setSavedItems(getSavedItineraries());
+  const handleClearAll = async () => {
+    if (!user?.uid) return;
+    for (const item of savedItems) {
+      await deleteItineraryFromFirestore(user.uid, item.id);
+    }
+    setSavedItems([]);
   };
 
   const container = {
@@ -36,8 +53,6 @@ export default function SavedPage() {
     hidden: { opacity: 0, y: 30 },
     show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } }
   };
-
-  if (!mounted) return null; // Avoid hydration mismatch
 
   return (
     <div className="min-h-screen bg-[#f7f8fc] dark:bg-[#0a0a0f] pt-32 px-6 md:px-12 pb-24">
@@ -57,20 +72,39 @@ export default function SavedPage() {
           )}
         </motion.div>
 
-        {savedItems.length === 0 ? (
+        {/* Not logged in */}
+        {!user && (
+          <div className="text-center py-20">
+            <LogIn className="w-12 h-12 text-zinc-300 dark:text-zinc-600 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-zinc-800 dark:text-zinc-200 mb-2">Sign in to see your saved trips</h3>
+            <p className="text-zinc-500 mb-6">Your itineraries are saved to the cloud and sync across devices.</p>
+            <button onClick={signInWithGoogle} className="px-6 py-3 bg-emerald-600 text-white rounded-full font-semibold hover:bg-emerald-500 transition-colors">Sign In with Google</button>
+          </div>
+        )}
+
+        {/* Loading */}
+        {user && loading && (
+          <div className="flex items-center justify-center py-20">
+            <div className="w-8 h-8 border-3 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+          </div>
+        )}
+
+        {/* Empty state */}
+        {user && !loading && savedItems.length === 0 && (
           <div className="text-center py-20">
             <div className="text-6xl mb-4">🧳</div>
             <h3 className="text-xl font-semibold text-zinc-800 dark:text-zinc-200 mb-2">No saved trips yet</h3>
             <p className="text-zinc-500 mb-6">Start planning your next adventure to save it here.</p>
             <button onClick={() => router.push('/itinerary')} className="px-6 py-3 bg-emerald-600 text-white rounded-full font-semibold hover:bg-emerald-500 transition-colors">Start Planning</button>
           </div>
-        ) : (
+        )}
+
+        {/* Trip cards */}
+        {user && !loading && savedItems.length > 0 && (
           <motion.div variants={container} initial="hidden" animate="show" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {savedItems.map((saved) => {
               const destInfo = DESTINATIONS.find(d => d.id === saved.destId);
-              const imgUrl = destInfo ? `https://images.unsplash.com/photo-${destInfo.img}?auto=format&fit=crop&w=800&q=80` : '';
-
-              // format dates
+              const imgUrl = destInfo ? resolveImgSrc(destInfo.img, 800) : '';
               const form = saved.form as any;
               const title = saved.destName;
               let dates = `${form.days} Days`;
@@ -87,7 +121,13 @@ export default function SavedPage() {
                   className="group cursor-pointer bg-white dark:bg-zinc-900 rounded-3xl p-3 border border-zinc-100 dark:border-white/5 shadow-sm hover:shadow-xl transition-all"
                 >
                   <div className="relative h-48 rounded-2xl overflow-hidden mb-4">
-                    <img src={imgUrl} alt={title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" />
+                    {imgUrl ? (
+                      <img src={imgUrl} alt={title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out" />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
+                        <Plane className="w-12 h-12 text-white/40" />
+                      </div>
+                    )}
                     <div className="absolute top-3 left-3 bg-white/90 dark:bg-black/80 backdrop-blur-sm px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider text-zinc-800 dark:text-zinc-200 shadow-sm">
                       {typeLabel}
                     </div>
@@ -97,7 +137,7 @@ export default function SavedPage() {
                     <h3 className="text-xl font-bold mb-1 text-zinc-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">{title}</h3>
                     <div className="flex justify-between items-center mt-2">
                       <p className="text-zinc-500 font-medium text-sm">{dates}</p>
-                      <p className="text-emerald-600 dark:text-emerald-400 font-bold text-sm">₹{Number(form.budget).toLocaleString('en-IN')}</p>
+                      {form.budget && <p className="text-emerald-600 dark:text-emerald-400 font-bold text-sm">₹{Number(form.budget).toLocaleString('en-IN')}</p>}
                     </div>
                   </div>
                 </motion.div>

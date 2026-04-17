@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     siteName: 'NaviiGo',
     images: [
       {
-        url: 'https://images.unsplash.com/photo-1524492412937-b28074a5d7da?auto=format&fit=crop&w=1200&q=80',
+        url: 'https://images.unsplash.com/photo-1564507592333-c60657eea523?auto=format&fit=crop&w=1280&q=80',
         width: 1200,
         height: 630,
       }
@@ -34,7 +34,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'NaviiGO Spiritual Travel Planner',
     description: 'Start your ultimate Indian journey with an AI agent specifically built for Darshan timings and seamless cabs.',
-    images: ['https://images.unsplash.com/photo-1524492412937-b28074a5d7da?auto=format&fit=crop&w=1200&q=80'],
+    images: ['https://images.unsplash.com/photo-1564507592333-c60657eea523?auto=format&fit=crop&w=1280&q=80'],
   }
 };
 
@@ -55,6 +55,25 @@ export default function RootLayout({
           <main>{children}</main>
           <LazyMorphSurface />
         </Providers>
+
+        {/* TravelPayouts White Label Script */}
+        <script 
+          data-noptimize="1" 
+          data-cfasync="false" 
+          data-wpfc-render="false" 
+          suppressHydrationWarning
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function () {
+                var script = document.createElement("script");
+                script.async = 1;
+                script.type = "module";
+                script.src = "https://tpwgts.com/wl_web/main.js?wl_id=16321";
+                document.head.appendChild(script);
+              })();
+            `
+          }}
+        />
       </body>
     </html>
   );

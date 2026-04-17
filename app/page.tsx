@@ -97,10 +97,10 @@ export default function Home() {
 
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {[
-              { name: 'Varanasi', img: '1582283925565-d053709d3bdf' },
-              { name: 'Rajasthan', img: '1599661502283-a44ea24dfc74' },
-              { name: 'Himalayas', img: '1626621341517-bbf3d9990a23' },
-              { name: 'Kerala', img: '1593693397690-362cb9666fc2' }
+              { name: 'Varanasi', img: 'https://images.unsplash.com/photo-1561361513-2d000a50f0dc?auto=format&fit=crop&w=1280&q=80' },
+              { name: 'Rajasthan', img: 'https://images.unsplash.com/photo-1599661046289-e31897846e41?auto=format&fit=crop&w=1280&q=80' },
+              { name: 'Himalayas', img: 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?auto=format&fit=crop&w=1280&q=80' },
+              { name: 'Kerala', img: 'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?auto=format&fit=crop&w=1280&q=80' }
             ].map((place, i) => (
               <Link href="/explore" key={place.name} className="block">
                 <motion.div
@@ -113,7 +113,7 @@ export default function Home() {
                   <div className="absolute inset-0 bg-slate-200 dark:bg-slate-800" />
                   <div
                     className="absolute inset-0 w-full h-full bg-cover bg-center transition-transform duration-500 group-hover:scale-110"
-                    style={{ backgroundImage: 'url(https://images.unsplash.com/photo-' + place.img + '?auto=format&fit=crop&q=80&w=400&h=600)' }}
+                    style={{ backgroundImage: `url(${place.img})` }}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent z-10" />
                   <div className="absolute bottom-0 left-0 p-6 z-20">
@@ -129,7 +129,7 @@ export default function Home() {
 
       {/* Saved Section */}
       <section id="saved" className="relative z-10 py-24 px-4 sm:px-6 lg:px-8 bg-slate-900 text-white overflow-hidden">
-        <div className="absolute inset-0 opacity-30 bg-[url('https://images.unsplash.com/photo-1514222134-b57cbb8ce073?auto=format&fit=crop&q=80')] bg-cover bg-center" />
+        <div className="absolute inset-0 opacity-30 bg-[url('https://images.unsplash.com/photo-1564507592333-c60657eea523?auto=format&fit=crop&w=1280&q=80')] bg-cover bg-center" />
         <div className="relative max-w-7xl mx-auto text-center">
             <h2 className="text-3xl font-bold tracking-tight sm:text-4xl">
               Save Your Sacred Journeys

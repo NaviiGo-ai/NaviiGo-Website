@@ -13,7 +13,6 @@ const ITINERARY_DROPDOWN = [
   { name: 'Create New', href: '/itinerary', icon: PlusCircle, desc: 'AI-powered trip planner', accent: 'text-emerald-500' },
   { name: 'Ongoing Trips', href: '/itinerary/ongoing', icon: Navigation, desc: 'Currently active journeys', accent: 'text-blue-500' },
   { name: 'Upcoming Trips', href: '/itinerary/upcoming', icon: Clock, desc: 'Planned future adventures', accent: 'text-purple-500' },
-  { name: 'Live Tracking', href: '/itinerary/tracking', icon: MapPin, desc: 'Real-time trip tracker', accent: 'text-red-500' },
   { name: 'Trip History', href: '/itinerary/history', icon: History, desc: 'Past trips & memories', accent: 'text-amber-500' },
 ];
 
@@ -80,6 +79,7 @@ export default function Navbar() {
     <>
       <motion.nav
         ref={navRef}
+        data-lenis-prevent
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled
             ? 'bg-white/90 dark:bg-slate-950/90 backdrop-blur-xl border-b border-black/5 dark:border-white/10 shadow-sm'
             : 'bg-slate-950/30 backdrop-blur-md border-b border-white/5'

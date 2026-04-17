@@ -15,7 +15,7 @@
   --ring-rgb: 15 23 42;
 
   /* Glass tuning */
-  --glass-alpha: 0.70;
+  --glass-alpha: 0.7;
   --glass-strong-alpha: 0.85;
   --ring-alpha: 0.08;
 
@@ -35,7 +35,8 @@
   --ring-alpha: 0.12;
 }
 
-html.lenis, html.lenis body {
+html.lenis,
+html.lenis body {
   height: auto;
 }
 
@@ -63,6 +64,7 @@ body {
 }
 
 @layer utilities {
+
   /*
     Hides native scrollbars while maintaining scroll functionality.
     Used for the cinematic card rail.
@@ -101,5 +103,354 @@ body {
   -ms-overflow-style: none !important;
   scrollbar-width: none !important;
   /* Aggressively forces clipping to stop native scroll UI */
-  overflow-x: clip !important; 
+  overflow-x: clip !important;
+}
+
+/* ─── TravelPayouts Widget Dark Theme Overrides ──────────────────────────── */
+
+/* Widget root containers - CSS Variable Native Overrides */
+.dark #tpwl-search,
+.dark #tpwl-search *,
+.dark #tpwl-tickets,
+.dark #tpwl-tickets * {
+  color-scheme: dark;
+}
+
+.dark #tpwl-search,
+.dark #tpwl-tickets {
+  /* Override TravelPayouts' inline CSS variables directly */
+  --font-color: #808080 !important;
+  --font-color-light: #e4e4e7 !important;
+  --ticket-cards-background: #18181b !important;
+  --border-color: #27272a !important;
+  --main-accent-contrast-color: #18181b !important;
+  --search-form-icon-color: #a1a1aa !important;
+  --search-form-link-color: #f97316 !important;
+  --link-color: #f97316 !important;
+  --link-color-darken: #ea580c !important;
+  --main-accent: #f97316 !important;
+  --main-accent-darken: #e11d48 !important;
+  --main-accent-opacified: rgba(249, 115, 22, 0.1) !important;
+  --main-accent-contrast-opacified: rgba(255, 255, 255, 0.3) !important;
+}
+
+/* Force ALL top-level functional containers to transparent/dark */
+.dark #tpwl-search>div,
+.dark #tpwl-search form,
+.dark #tpwl-search [class*="SearchEdit-module"],
+.dark #tpwl-search [class*="DefaultSearch-module"] {
+  background-color: transparent !important;
+}
+
+/* Inputs & Main Button Wrappers */
+.dark #tpwl-search input,
+.dark #tpwl-search input:not([type="submit"]),
+.dark #tpwl-search [class*="Input-module__input"] input,
+.dark #tpwl-search [class*="Input-module__input"] span,
+.dark #tpwl-search [class*="Input-module__input"] div {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+.dark #tpwl-search [class*="Input-module__input"] {
+  background-color: #18181b !important;
+  border-color: #27272a !important;
+  color: #ffffff !important;
+}
+
+/* Universal Pseudo-Element Killer (Separators/Dividers/Fake Backgrounds) */
+[id="tpwl-search"] *::before,
+[id="tpwl-search"] *::after {
+  background-color: #18181b !important;
+  background-image: none !important;
+  border-color: #27272a !important;
+  box-shadow: none !important;
+}
+
+div[class*="__divider"],
+div[class*="Separator"],
+div[class*="Delimiter"] {
+  background-color: transparent !important;
+  background: transparent !important;
+  border-color: transparent !important;
+  width: 0 !important;
+}
+
+[id="tpwl-search"] div,
+[id="tpwl-search"] input,
+[id="tpwl-search"] span {
+  border-color: #27272a !important;
+  box-shadow: none !important;
+}
+
+/* ─── PASSENGER & CLASS PICKER (Pseudo-Element Aware) ─── */
+/* Travelpayouts often uses ::before to paint the background. Clear it out and enforce dark. */
+div[class*="Passengers-module"],
+div[class*="PassengersBase-module"],
+div[class*="passengers" i] {
+  background-color: #18181b !important;
+  background: #18181b !important;
+  border-color: #27272a !important;
+  color: #ffffff !important;
+}
+
+div[class*="Passengers-module"]::before,
+div[class*="PassengersBase-module"]::before,
+div[class*="passengers" i]::before {
+  background-color: #18181b !important;
+  background: #18181b !important;
+}
+
+div[class*="Passengers-module"] *:not(svg):not(path) {
+  background-color: #18181b !important;
+  background: #18181b !important;
+  color: #ffffff !important;
+  border-color: #27272a !important;
+}
+
+div[class*="Passengers-module"] input {
+  background-color: transparent !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+div[class*="Passengers-module__passengersLabel"],
+div[class*="Passengers-module__passengersDescription"] {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+.dark #tpwl-search [class*="Input-module__input"]:focus,
+.dark #tpwl-search [class*="Input-module__input"]:focus-within {
+  border-color: #f97316 !important;
+  background-color: #000 !important;
+}
+
+/* Forcing all passenger and general control values to white */
+.dark #tpwl-search [class*="Passengers"] span,
+.dark #tpwl-search [class*="Control"] span,
+.dark #tpwl-search [class*="value"],
+.dark #tpwl-search [class*="text"] {
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+/* Muted Text & Labels (specifically target labels so we don't accidentally dim main input values) */
+.dark #tpwl-search [class*="Input-module"] label,
+.dark #tpwl-search label,
+.dark #tpwl-search [class*="label"],
+.dark #tpwl-search [class*="subtitle"] {
+  color: #a1a1aa !important;
+  -webkit-text-fill-color: #a1a1aa !important;
+}
+
+.dark #tpwl-search input::placeholder,
+.dark #tpwl-search [class*="placeholder"] {
+  color: #71717a !important;
+  -webkit-text-fill-color: #71717a !important;
+}
+
+.dark #tpwl-search [class*="Input-module"] svg {
+  color: #71717a !important;
+  fill: #71717a !important;
+}
+
+/* Clear/close and inline buttons */
+.dark #tpwl-search [class*="Input-module__clear"],
+.dark #tpwl-search [class*="Input-module"] button {
+  color: #71717a !important;
+}
+
+.dark #tpwl-search [class*="Input-module"] button:hover {
+  color: #f97316 !important;
+}
+
+/* The swap arrows */
+.dark #tpwl-search [class*="swapButton"] {
+  background-color: #27272a !important;
+  border-color: #3f3f46 !important;
+  color: #a1a1aa !important;
+}
+
+.dark #tpwl-search [class*="swapButton"]:hover {
+  background-color: #3f3f46 !important;
+  color: #f97316 !important;
+}
+
+/* Passenger popover / dropdown panel */
+.dark #tpwl-search [class*="PassengersPicker"],
+.dark #tpwl-search [class*="PassengersDropdown"],
+.dark #tpwl-search [class*="PassengersBase-module"] [class*="popover"],
+.dark #tpwl-search [class*="PassengersBase-module"] [class*="dropdown"] {
+  background-color: #111 !important;
+  border-color: #27272a !important;
+  color: #000000 !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
+}
+
+.dark #tpwl-search [class*="PassengerControl"] button,
+.dark #tpwl-search [class*="CountControl"] button {
+  background-color: #27272a !important;
+  border-color: #3f3f46 !important;
+  color: #e4e4e7 !important;
+}
+
+.dark #tpwl-search [class*="PassengerControl"] button:hover,
+.dark #tpwl-search [class*="CountControl"] button:hover {
+  background-color: #3f3f46 !important;
+  color: #f97316 !important;
+}
+
+/* ─── SEARCH BUTTON (THE DARK BOX FIX) ─── */
+.dark #tpwl-search button[type="submit"],
+.dark #tpwl-search [class*="submitBtn"],
+.dark #tpwl-search [class*="Button-module__primary"],
+.dark #tpwl-search [class*="Button-module__root"]:last-child {
+  background: linear-gradient(to right, #f97316, #e11d48) !important;
+  border: none !important;
+  color: #fff !important;
+  font-weight: 700 !important;
+  opacity: 1 !important;
+}
+
+.dark #tpwl-search button[type="submit"]:hover,
+.dark #tpwl-search [class*="submitBtn"]:hover {
+  opacity: 0.9 !important;
+  transform: translateY(-1px);
+}
+
+/* Popovers & Dropdowns */
+.dark #tpwl-search [class*="Dropdown-module__list"],
+.dark #tpwl-search [class*="Autocomplete"],
+.dark #tpwl-search [class*="suggestions"],
+.dark #tpwl-search ul[role="listbox"],
+.dark #tpwl-search [class*="Calendar"],
+.dark #tpwl-search [class*="DatePicker"],
+.dark #tpwl-search [class*="calendar"],
+.dark #tpwl-search [class*="Popover"] {
+  background-color: #111 !important;
+  border-color: #27272a !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
+}
+
+.dark #tpwl-search [class*="Dropdown-module__list"] li,
+.dark #tpwl-search [class*="Autocomplete"] li,
+.dark #tpwl-search ul[role="listbox"] li {
+  color: #e4e4e7 !important;
+}
+
+.dark #tpwl-search [class*="Dropdown-module__list"] li:hover,
+.dark #tpwl-search [class*="Autocomplete"] li:hover,
+.dark #tpwl-search ul[role="listbox"] li:hover {
+  background-color: #1c1917 !important;
+}
+
+.dark #tpwl-search [class*="Calendar"] button:hover,
+.dark #tpwl-search [class*="DatePicker"] button:hover {
+  background-color: #27272a !important;
+}
+
+/* ─── LINKS & TOGGLES (THE BLUE LINKS FIX) ─── */
+.dark #tpwl-search a,
+.dark #tpwl-search [class*="multiRouteBtn"],
+.dark #tpwl-search [class*="hotelsLabel"],
+.dark #tpwl-search span[class*="link"] {
+  color: #f97316 !important;
+}
+
+.dark #tpwl-search [class*="Toggle-module"],
+.dark #tpwl-search [class*="Checkbox"] {
+  color: #a1a1aa !important;
+}
+
+/* Powered by link */
+.dark #tpwl-search [class*="referralLink"],
+.dark #tpwl-tickets [class*="referralLink"] {
+  color: #71717a !important;
+  opacity: 0.8;
+}
+
+/* ─── SEARCH RESULTS / TICKETS ROOT ────────────────────────────────────────── */
+.dark #tpwl-tickets {
+  background-color: transparent !important;
+  color: #e4e4e7 !important;
+}
+
+/* ─── PROGRESS BAR (THE GRAY BOX FIX) ─── */
+.dark #tpwl-tickets [class*="SearchProgress-module"],
+.dark #tpwl-tickets [class*="progress"],
+.dark #tpwl-tickets [class*="Progress-module"],
+.dark #tpwl-tickets [class*="SearchingAtProviders"] {
+  background-color: #18181b !important;
+  border-color: #27272a !important;
+  color: #e4e4e7 !important;
+}
+
+.dark #tpwl-tickets [class*="ProgressBar"] [class*="fill"],
+.dark #tpwl-tickets [class*="progress"] [class*="bar"] {
+  background: linear-gradient(to right, #f97316, #e11d48) !important;
+}
+
+.dark #tpwl-tickets [class*="Progress-module"] svg path {
+  stroke: #f97316 !important;
+  fill: #f97316 !important;
+}
+
+/* Ticket Cards */
+.dark #tpwl-tickets [class*="Ticket-module"],
+.dark #tpwl-tickets [class*="ticket"],
+.dark #tpwl-tickets [class*="Card"] {
+  background-color: #111 !important;
+  border-color: rgba(255, 255, 255, 0.05) !important;
+  color: #e4e4e7 !important;
+}
+
+.dark #tpwl-tickets [class*="Ticket-module"]:hover,
+.dark #tpwl-tickets [class*="ticket"]:hover {
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Sidebar & Filters */
+.dark #tpwl-tickets [class*="Filter"],
+.dark #tpwl-tickets [class*="filter"],
+.dark #tpwl-tickets [class*="Sidebar"] {
+  background-color: #111 !important;
+  border-color: rgba(255, 255, 255, 0.05) !important;
+  color: #e4e4e7 !important;
+}
+
+/* Text elements */
+.dark #tpwl-tickets p,
+.dark #tpwl-tickets span,
+.dark #tpwl-tickets label,
+.dark #tpwl-tickets h1,
+.dark #tpwl-tickets h2,
+.dark #tpwl-tickets h3,
+.dark #tpwl-tickets h4 {
+  color: #e4e4e7 !important;
+}
+
+/* Muted secondary text */
+.dark #tpwl-tickets [class*="secondary"],
+.dark #tpwl-tickets [class*="muted"],
+.dark #tpwl-tickets [class*="light"] {
+  color: #a1a1aa !important;
+}
+
+.dark #tpwl-tickets [class*="price"],
+.dark #tpwl-tickets [class*="Price"] {
+  color: #fff !important;
+  font-weight: 800 !important;
+}
+
+/* Action Buttons inside Results */
+.dark #tpwl-tickets a[class*="buy"],
+.dark #tpwl-tickets a[class*="Buy"],
+.dark #tpwl-tickets button[class*="buy"],
+.dark #tpwl-tickets button[class*="Buy"],
+.dark #tpwl-tickets [class*="FlightCard-module__cardLeftButton"] {
+  background: linear-gradient(to right, #f97316, #e11d48) !important;
+  color: #fff !important;
+  border: none !important;
 }
