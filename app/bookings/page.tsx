@@ -350,7 +350,7 @@ function TrainCard({ t, onBook }: { t: any, onBook: (item: any) => void }) {
   );
 }
 
-function CabCard({ c }: { c: any }) {
+function CabCard({ c, onBook }: { c: any, onBook: (item: any) => void }) {
   return (
     <div className={`result-card bg-white dark:bg-[#111] border rounded-2xl p-5 hover:shadow-xl transition-all duration-300 ${c.badge === 'cheapest' ? 'border-emerald-200 dark:border-emerald-700/40 ring-1 ring-emerald-100 dark:ring-emerald-900/30'
       : c.badge === 'bestvalue' ? 'border-violet-200 dark:border-violet-700/40'
@@ -394,7 +394,7 @@ function CabCard({ c }: { c: any }) {
             <p className="text-3xl font-black text-slate-800 dark:text-white">{c.price}</p>
             <p className="text-xs text-zinc-400">{c.perKm}</p>
           </div>
-          <button onClick={() => c.deepLink ? window.open(c.deepLink, '_blank') : null} className="flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold text-sm hover:opacity-90 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 shadow-md shadow-emerald-500/20 whitespace-nowrap">
+          <button onClick={() => onBook(c)} className="flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold text-sm hover:opacity-90 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 shadow-md shadow-emerald-500/20 whitespace-nowrap">
             Book Cab <ChevronRight className="w-3.5 h-3.5" />
           </button>
         </div>
@@ -430,7 +430,7 @@ function HotelCard({ h, onBook }: { h: any, onBook: (item: any) => void }) {
                 <div className="flex items-center gap-1 bg-emerald-600 text-white text-xs font-bold px-2 py-0.5 rounded">
                   <ThumbsUp className="w-3 h-3" /> {h.rating}
                 </div>
-                <span className="text-xs text-zinc-400">{h.reviews.toLocaleString()} reviews</span>
+                <span className="text-xs text-zinc-400">{(h.reviews || 0).toLocaleString()} reviews</span>
                 {(h.tags || []).map((t: string) => (
                   <span key={t} className="text-xs px-2 py-0.5 rounded-full bg-violet-50 dark:bg-violet-900/20 text-violet-600 dark:text-violet-400 border border-violet-100 dark:border-violet-800/30 font-semibold">{t}</span>
                 ))}
@@ -473,6 +473,14 @@ const filtersByTab = { flights: flightFilters, trains: trainFilters, cabs: cabFi
 
 export default function BookingsPage() {
   const [activeTab, setActiveTab] = useState<TabType>('flights');
+
+  // Clear results when switching tabs so stale data doesn't show
+  useEffect(() => {
+    setSearchResults([]);
+    setHasSearched(false);
+    setFormError(null);
+    setLastQuery(null);
+  }, [activeTab]);
   const [isSearching, setIsSearching] = useState(false);
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
   const [searchResults, setSearchResults] = useState<any[]>([]);
@@ -491,65 +499,54 @@ export default function BookingsPage() {
   useEffect(() => {
     setMounted(true);
 
-    // BRUTE FORCE Widget Theming scrubber
-    // Due to TravelPayouts using CSS variables, highly specific inline dynamic styling, and potential Web Component Shadow DOMs!
-    const interval = setInterval(() => {
+    // Performance Fix: Avoid heavy querySelectorAll DOM polling. Inject CSS directly instead.
+    let attempts = 0;
+    const applyTheme = () => {
       const tpwl = document.getElementById('tpwl-search');
-      if (tpwl) {
-        // Only run overrides if the site is in dark mode
-        const isDark = document.documentElement.classList.contains('dark');
+      if (!tpwl) return false;
+      const isDark = document.documentElement.classList.contains('dark');
+      if (!isDark) return false;
 
-        if (isDark) {
-          // Overwrite Native TravelPayouts CSS Variables that leak the white highlights
-          tpwl.style.setProperty('--border-color', '#27272a', 'important');
-          tpwl.style.setProperty('--ticket-cards-background', '#18181b', 'important');
-          tpwl.style.setProperty('--main-accent-contrast-color', '#18181b', 'important');
+      // Overwrite Native TravelPayouts CSS Variables that leak the white highlights
+      tpwl.style.setProperty('--border-color', '#27272a', 'important');
+      tpwl.style.setProperty('--ticket-cards-background', '#18181b', 'important');
+      tpwl.style.setProperty('--main-accent-contrast-color', '#18181b', 'important');
 
-          // Check if the widget is protected by a Web Component Shadow Boundary
-          const sRoot = tpwl.shadowRoot || tpwl.children[0]?.shadowRoot;
-          if (sRoot) {
-            let styleTag = sRoot.getElementById('naviigo-shadow-override');
-            if (!styleTag) {
-              styleTag = document.createElement('style');
-              styleTag.id = 'naviigo-shadow-override';
-              styleTag.innerHTML = `
-                        div[class*="Passengers"], div[class*="passengers" i] { background: #18181b !important; color: white !important; }
-                        input { background: transparent !important; box-shadow: none !important; }
-                        div { border-color: #27272a !important; outline: none !important; gap: 0 !important; }
-                        div[class*="divider"], div[class*="separator"] { background: transparent !important; }
-                        *::before, *::after { background-color: #18181b !important; border-color: #27272a !important; box-shadow: none !important; }
-                    `;
-              sRoot.appendChild(styleTag);
-            }
-          }
-
-          // Enforce dark background on ALL passenger wrappers violently
-          tpwl.querySelectorAll('div[class*="passengers" i], div[class*="Passengers"]').forEach(el => {
-            const e = el as HTMLElement;
-            e.style.setProperty('background-color', '#18181b', 'important');
-            e.style.setProperty('background', '#18181b', 'important');
-            e.style.setProperty('color', '#ffffff', 'important');
-          });
-
-          // Kill the exact input that causes the highlight
-          tpwl.querySelectorAll('input').forEach(el => {
-            const e = el as HTMLElement;
-            e.style.setProperty('background-color', 'transparent', 'important');
-            e.style.setProperty('box-shadow', 'none', 'important');
-          });
-
-          // Nuke all white lines and borders globally across widget
-          tpwl.querySelectorAll('*').forEach(el => {
-            const e = el as HTMLElement;
-            e.style.setProperty('border-color', '#27272a', 'important');
-            e.style.setProperty('outline-color', 'transparent', 'important');
-            const cls = e.className;
-            if (typeof cls === 'string' && (cls.toLowerCase().includes('divider') || cls.toLowerCase().includes('separator'))) {
-              e.style.setProperty('background-color', 'transparent', 'important');
-            }
-          });
-        }
+      // 1. Inject into Shadow DOM if exists
+      const sRoot = tpwl.shadowRoot || tpwl.children[0]?.shadowRoot;
+      if (sRoot && !sRoot.getElementById('naviigo-shadow-override')) {
+        const styleTag = document.createElement('style');
+        styleTag.id = 'naviigo-shadow-override';
+        styleTag.innerHTML = `
+            div[class*="Passengers"], div[class*="passengers" i] { background: #18181b !important; color: white !important; }
+            input { background: transparent !important; box-shadow: none !important; }
+            div { border-color: #27272a !important; outline: none !important; gap: 0 !important; }
+            div[class*="divider"], div[class*="separator"] { background: transparent !important; }
+            *::before, *::after { background-color: #18181b !important; border-color: #27272a !important; box-shadow: none !important; }
+        `;
+        sRoot.appendChild(styleTag);
+        return true; // Successfully patched shadow DOM
       }
+
+      // 2. Inject global light DOM overrides once
+      if (!document.getElementById('naviigo-light-override')) {
+        const styleTag = document.createElement('style');
+        styleTag.id = 'naviigo-light-override';
+        styleTag.innerHTML = `
+            #tpwl-search div[class*="passengers" i], #tpwl-search div[class*="Passengers"] { background-color: #18181b !important; background: #18181b !important; color: #ffffff !important; }
+            #tpwl-search input { background-color: transparent !important; box-shadow: none !important; }
+            #tpwl-search * { border-color: #27272a !important; }
+            #tpwl-search [class*="divider"], #tpwl-search [class*="separator"] { background-color: transparent !important; }
+        `;
+        document.head.appendChild(styleTag);
+      }
+      return false; // Waiting for shadow dom
+    };
+
+    const interval = setInterval(() => {
+      const patched = applyTheme();
+      attempts++;
+      if (patched || attempts > 40) clearInterval(interval);
     }, 150);
 
     return () => clearInterval(interval);
@@ -557,7 +554,13 @@ export default function BookingsPage() {
 
   const handleOpenPortal = (item: any, type: any) => {
     console.log("--- OPENING BOOKING PORTAL ---", { item, type, travelers });
-    setSelectedBooking(item);
+    // Enrich item with search context for deep link pre-filling
+    const enrichedItem = {
+      ...item,
+      _travelers: travelers,
+      _date: item._date || lastQuery?.date || '',
+    };
+    setSelectedBooking(enrichedItem);
     setBookingType(type);
     setIsPortalOpen(true);
   };
@@ -575,13 +578,20 @@ export default function BookingsPage() {
 
     // Unify date for hotels (checkin -> date)
     const normalizedDate = formData.date || formData.checkin || "";
-    const from = formData.from as string;
-    const to = formData.to as string;
+    const from = (formData.from as string) || '';
+    const to = (formData.to as string) || '';
 
-    // Validation
-    if (!from || !to || !normalizedDate) {
-      setFormError("Please fill in from, destination and dates.");
-      return;
+    // Validation — hotels only need destination + date, others need from + to + date
+    if (activeTab === 'hotels') {
+      if (!to || !normalizedDate) {
+        setFormError("Please fill in destination and check-in date.");
+        return;
+      }
+    } else {
+      if (!from || !to || !normalizedDate) {
+        setFormError("Please fill in from, destination and dates.");
+        return;
+      }
     }
 
     setIsSearching(true);
@@ -590,7 +600,7 @@ export default function BookingsPage() {
 
     const query = {
       ...formData,
-      from,
+      from: from || to, // Hotels don't have 'from', use destination
       to,
       date: normalizedDate,
       type: activeTab,
@@ -675,7 +685,7 @@ export default function BookingsPage() {
     );
     if (activeTab === 'flights') return list.map((f, i) => <FlightCard key={f.id || i} f={f} onBook={(item) => handleOpenPortal(item, 'flights')} />);
     if (activeTab === 'trains') return list.map((t, i) => <TrainCard key={t.id || i} t={t} onBook={(item) => handleOpenPortal(item, 'trains')} />);
-    if (activeTab === 'cabs') return list.map((c, i) => <CabCard key={c.id || i} c={c} />);
+    if (activeTab === 'cabs') return list.map((c, i) => <CabCard key={c.id || i} c={c} onBook={(item) => handleOpenPortal(item, 'cabs')} />);
     return list.map((h, i) => <HotelCard key={h.id || i} h={h} onBook={(item) => handleOpenPortal(item, 'hotels')} />);
   };
 
@@ -777,7 +787,12 @@ export default function BookingsPage() {
         >
           {/* TravelPayouts Metasearch Widget (Always in DOM for Script, visually hidden if not flights) */}
           <div className={activeTab === 'flights' ? 'block' : 'hidden'}>
-            <div id="tpwl-search"></div>
+            <div id="tpwl-search">
+              <div className="w-full h-[300px] flex flex-col items-center justify-center text-zinc-500 bg-white/50 dark:bg-black/20 rounded-2xl animate-pulse">
+                <Plane className="w-8 h-8 mb-3 opacity-50" />
+                <p>Initializing Global Flight Search Engine...</p>
+              </div>
+            </div>
           </div>
 
           {/* Native NaviiGo Forms (For Trains, Cabs, Hotels) */}

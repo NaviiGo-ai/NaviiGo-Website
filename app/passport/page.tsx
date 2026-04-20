@@ -5,10 +5,10 @@ import { useRef, useLayoutEffect, useState, useEffect } from 'react';
 import gsap from 'gsap';
 import { X, MapPin, Calendar, CheckCircle2, Trophy, Flame, Star, Target, ChevronRight, Zap, Globe2, TrendingUp, Award } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
-import { getPassportStats, getPassportStamps } from '@/lib/firestore';
+import { getPassportStats, getPassportStamps, updatePassportStats, addPassportStamp } from '@/lib/firestore';
 import {
     xpProgress, getLevelTitle, ACHIEVEMENTS, getDefaultStats,
-    type PassportStats, type PassportStamp,
+    type PassportStats, type PassportStamp, applyStamp
 } from '@/lib/gamification';
 
 // ─── Indian States Map Data (simplified SVG coordinates) ─────────────────────
@@ -61,13 +61,17 @@ export default function PassportPage() {
             getPassportStats(user.uid),
             getPassportStamps(user.uid),
         ]).then(([fsStats, fsStamps]) => {
-            if (fsStats) {
+            if (fsStats && fsStats.totalStamps > 0) {
                 setStats({
                     ...fsStats,
                     lastTripDate: fsStats.lastTripDate?.toDate?.()?.toISOString() || null,
                 } as any);
             } else {
-                setStats(getDefaultStats());
+                // Seed Firebase with Demo Data on first Gmail Login
+                const seedStats = { ...DEMO_STATS };
+                updatePassportStats(user.uid, seedStats as any).catch(console.error);
+                DEMO_STAMPS.forEach(s => addPassportStamp(user.uid, { ...s, visitedDate: new Date(s.visitedDate) as any } as any).catch(console.error));
+                setStats(seedStats);
             }
             if (fsStamps.length > 0) {
                 setStamps(fsStamps.map(s => ({
@@ -75,7 +79,7 @@ export default function PassportPage() {
                     visitedDate: (s.visitedDate as any)?.toDate?.()?.toISOString?.() || '',
                 })) as any);
             } else {
-                setStamps([]);
+                setStamps(DEMO_STAMPS);
             }
         }).finally(() => setLoading(false));
     }, [user]);
@@ -156,21 +160,45 @@ export default function PassportPage() {
                         </div>
 
                         {/* Quick Stats */}
-                        <div className="flex gap-4 md:gap-6">
-                            {[
-                                { icon: <MapPin className="w-5 h-5" />, value: stats.totalStamps, label: 'Stamps' },
-                                { icon: <Flame className="w-5 h-5" />, value: stats.streak, label: 'Streak' },
-                                { icon: <Globe2 className="w-5 h-5" />, value: stats.statesVisited.length, label: 'States' },
-                                { icon: <Trophy className="w-5 h-5" />, value: stats.achievements.length, label: 'Badges' },
-                            ].map((stat, i) => (
-                                <div key={i} className="stat-card text-center">
-                                    <div className="w-12 h-12 mx-auto mb-1 rounded-xl bg-gradient-to-br from-orange-500/10 to-amber-500/10 flex items-center justify-center text-orange-500">
-                                        {stat.icon}
+                        <div className="flex flex-col gap-4">
+                            <div className="flex gap-4 md:gap-6">
+                                {[
+                                    { icon: <MapPin className="w-5 h-5" />, value: stats.totalStamps, label: 'Stamps' },
+                                    { icon: <Flame className="w-5 h-5" />, value: stats.streak, label: 'Streak' },
+                                    { icon: <Globe2 className="w-5 h-5" />, value: stats.statesVisited.length, label: 'States' },
+                                    { icon: <Trophy className="w-5 h-5" />, value: stats.achievements.length, label: 'Badges' },
+                                ].map((stat, i) => (
+                                    <div key={i} className="stat-card text-center">
+                                        <div className="w-12 h-12 mx-auto mb-1 rounded-xl bg-gradient-to-br from-orange-500/10 to-amber-500/10 flex items-center justify-center text-orange-500">
+                                            {stat.icon}
+                                        </div>
+                                        <div className="text-xl font-bold text-slate-900 dark:text-white">{stat.value}</div>
+                                        <div className="text-xs text-slate-500">{stat.label}</div>
                                     </div>
-                                    <div className="text-xl font-bold text-slate-900 dark:text-white">{stat.value}</div>
-                                    <div className="text-xs text-slate-500">{stat.label}</div>
-                                </div>
-                            ))}
+                                ))}
+                            </div>
+                            
+                            {/* Dynamic Gamification Connect Button */}
+                            {user && (
+                                <button 
+                                    onClick={async () => {
+                                        const newStamp = DEMO_STAMPS[Math.floor(Math.random() * DEMO_STAMPS.length)];
+                                        const stampToAdd = { ...newStamp, visitedDate: new Date().toISOString() };
+                                        const newStats = applyStamp(stats, stampToAdd);
+                                        
+                                        // Optimistic UI Update
+                                        setStats(newStats);
+                                        setStamps([stampToAdd, ...stamps]);
+                                        
+                                        // Dynamic Firebase Sync
+                                        await updatePassportStats(user.uid, newStats as any);
+                                        await addPassportStamp(user.uid, { ...stampToAdd, visitedDate: new Date() as any });
+                                    }}
+                                    className="stat-card mt-2 py-2.5 px-4 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold text-sm shadow-lg shadow-orange-500/20 hover:opacity-90 transition-all flex items-center justify-center gap-2"
+                                >
+                                    <MapPin className="w-4 h-4" /> Simulate Passport Scan
+                                </button>
+                            )}
                         </div>
                     </div>
                 </motion.div>

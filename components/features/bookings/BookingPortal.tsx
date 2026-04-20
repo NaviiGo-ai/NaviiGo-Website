@@ -104,31 +104,61 @@ const FLIGHT_OTAS: OTAOption[] = [
 const HOTEL_OTAS: OTAOption[] = [
   {
     name: 'Booking.com',
+    tag: 'Direct',
     logo: '🅱️',
     color: 'bg-blue-700',
     priceMultiplier: 1.0,
-    buildUrl: (item) => `https://www.booking.com/searchresults.html?ss=${encodeURIComponent(item.area || item.name || 'India')}`,
+    buildUrl: (item) => {
+      const dates = getOTADates(item);
+      const city = encodeURIComponent(item.area || item.to || item.name || 'India');
+      const [y, m, d] = dates.ymd.split('-');
+      const co = new Date(Number(y), Number(m) - 1, Number(d) + 1);
+      const checkout = `${co.getFullYear()}-${String(co.getMonth() + 1).padStart(2, '0')}-${String(co.getDate()).padStart(2, '0')}`;
+      return `https://www.booking.com/searchresults.html?ss=${city}&checkin=${dates.ymd}&checkout=${checkout}&group_adults=${item._travelers || 1}&no_rooms=1&selected_currency=INR`;
+    },
+  },
+  {
+    name: 'Hotellook',
+    tag: 'TravelPayouts',
+    logo: '🏨',
+    color: 'bg-teal-600',
+    priceMultiplier: 0.98,
+    buildUrl: (item) => {
+      const dates = getOTADates(item);
+      const city = encodeURIComponent(item.area || item.to || item.name || 'India');
+      const [y, m, d] = dates.ymd.split('-');
+      const co = new Date(Number(y), Number(m) - 1, Number(d) + 1);
+      const checkout = `${co.getFullYear()}-${String(co.getMonth() + 1).padStart(2, '0')}-${String(co.getDate()).padStart(2, '0')}`;
+      return `https://search.hotellook.com/hotels?destination=${city}&checkIn=${dates.ymd}&checkOut=${checkout}&adults=${item._travelers || 1}&currency=INR&language=en`;
+    },
+  },
+  {
+    name: 'Google Hotels',
+    logo: '🌐',
+    color: 'bg-blue-500',
+    priceMultiplier: 1.0,
+    buildUrl: (item) => {
+      const dates = getOTADates(item);
+      const city = encodeURIComponent(item.area || item.to || item.name || 'India');
+      const [y, m, d] = dates.ymd.split('-');
+      const co = new Date(Number(y), Number(m) - 1, Number(d) + 1);
+      const checkout = `${co.getFullYear()}-${String(co.getMonth() + 1).padStart(2, '0')}-${String(co.getDate()).padStart(2, '0')}`;
+      return `https://www.google.com/travel/hotels?q=hotels+in+${city}&dates=${dates.ymd},${checkout}&guests=${item._travelers || 1}&currency=INR`;
+    },
   },
   {
     name: 'Goibibo',
     logo: '🟠',
     color: 'bg-orange-600',
     priceMultiplier: 0.97,
-    buildUrl: (item) => `https://www.goibibo.com/hotels/search/?city=${encodeURIComponent(item.area || '')}`,
-  },
-  {
-    name: 'Agoda',
-    logo: '🔴',
-    color: 'bg-red-500',
-    priceMultiplier: 1.03,
-    buildUrl: (item) => `https://www.agoda.com/search?city=${encodeURIComponent(item.area || item.name || '')}`,
-  },
-  {
-    name: 'MakeMyTrip',
-    logo: '🔵',
-    color: 'bg-blue-500',
-    priceMultiplier: 1.06,
-    buildUrl: (item) => `https://www.makemytrip.com/hotels/hotel-listing/?city=${encodeURIComponent(item.area || '')}`,
+    buildUrl: (item) => {
+      const dates = getOTADates(item);
+      const city = encodeURIComponent(item.area || item.to || '');
+      const [y, m, d] = dates.ymd.split('-');
+      const co = new Date(Number(y), Number(m) - 1, Number(d) + 1);
+      const checkout = `${co.getFullYear()}-${String(co.getMonth() + 1).padStart(2, '0')}-${String(co.getDate()).padStart(2, '0')}`;
+      return `https://www.goibibo.com/hotels/search/?city=${city}&checkin=${dates.ymd}&checkout=${checkout}&adults=${item._travelers || 1}&children=0&rooms=1`;
+    },
   },
 ];
 
@@ -142,35 +172,64 @@ const TRAIN_OTAS: OTAOption[] = [
     buildUrl: () => `https://www.irctc.co.in/nget/train-search`,
   },
   {
-    name: 'Cleartrip',
-    logo: '🟢',
-    color: 'bg-emerald-600',
+    name: 'RailYatri',
+    tag: 'Pre-filled',
+    logo: '🔴',
+    color: 'bg-red-600',
     priceMultiplier: 1.0,
-    buildUrl: (item) => `https://www.cleartrip.com/trains/${item.from}/${item.to}`,
+    buildUrl: (item) => {
+      const dates = getOTADates(item);
+      // Exact RailYatri format: trains-between-stations with from_code, to_code, from_name, to_name
+      const fromCode = encodeURIComponent(item.from || 'NDLS');
+      const toCode = encodeURIComponent(item.to || 'BSB');
+      const fromName = encodeURIComponent(item.fromName || item.from || 'NEW DELHI');
+      const toName = encodeURIComponent(item.toName || item.to || 'VARANASI');
+      return `https://www.railyatri.in/booking/trains-between-stations?from_code=${fromCode}&from_name=${fromName}&to_code=${toCode}&to_name=${toName}&journey_date=${dates.ymd}&homequota=GN`;
+    },
   },
   {
-    name: 'Paytm',
-    logo: '🔵',
-    color: 'bg-blue-500',
-    priceMultiplier: 1.0,
-    buildUrl: () => `https://tickets.paytm.com/trains`,
+    name: '12Go',
+    tag: 'TravelPayouts',
+    logo: '🌏',
+    color: 'bg-green-700',
+    priceMultiplier: 1.05,
+    buildUrl: (item) => {
+      const dates = getOTADates(item);
+      const fromCity = encodeURIComponent(item.fromName || item.from || 'Delhi');
+      const toCity = encodeURIComponent(item.toName || item.to || 'Varanasi');
+      return `https://12go.co/en/travel/india/${fromCity.toLowerCase()}/india/${toCity.toLowerCase()}?date=${dates.ymd}&people=1&transport=train`;
+    },
   },
 ];
 
 const CAB_OTAS: OTAOption[] = [
   {
+    name: 'Uber',
+    tag: 'Pre-filled',
+    logo: '⚫',
+    color: 'bg-black',
+    priceMultiplier: 1.08,
+    // Uber documented deep link API — uses formatted_address to pre-fill locations
+    buildUrl: (item) => {
+      const pickup = encodeURIComponent(item.from || '');
+      const dropoff = encodeURIComponent(item.to || '');
+      return `https://m.uber.com/ul/?action=setPickup&pickup[formatted_address]=${pickup}&dropoff[formatted_address]=${dropoff}`;
+    },
+  },
+  {
     name: 'Ola',
     logo: '🟢',
     color: 'bg-green-600',
     priceMultiplier: 1.0,
+    // Ola web does not support URL-based prefilling
     buildUrl: () => `https://www.olacabs.com/`,
   },
   {
-    name: 'Uber',
-    logo: '⚫',
-    color: 'bg-black',
-    priceMultiplier: 1.08,
-    buildUrl: () => `https://m.uber.com/`,
+    name: 'InDrive',
+    logo: '🟣',
+    color: 'bg-purple-600',
+    priceMultiplier: 0.95,
+    buildUrl: () => `https://indrive.com/en/city-ride/`,
   },
 ];
 

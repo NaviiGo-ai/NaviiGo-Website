@@ -200,6 +200,8 @@ export async function searchTrains(params: SearchParams) {
       number: t.number,
       from: fromCode,
       to: toCode,
+      fromName: fromName,
+      toName: toName,
       dep: `${String(6 + i * 4).padStart(2, '0')}:30`,
       arr: `${String((6 + i * 4 + durationHours) % 24).padStart(2, '0')}:45`,
       duration: `${durationHours}h 15m`,
@@ -211,7 +213,7 @@ export async function searchTrains(params: SearchParams) {
       days: 'Daily',
       badge: i === 0 ? 'fastest' : (i === 2 ? 'bestvalue' : null),
       priceDiff: null,
-      deepLink: cleartripLink
+      deepLink: ''
     };
   });
 }
@@ -221,8 +223,8 @@ export async function searchCabs(params: SearchParams) {
   const dropEnc = encodeURIComponent(params.to || 'City');
 
   return [
-    { id: 'c1', provider: 'Ola Outstation', type: 'Innova Crysta', category: 'SUV', pax: '6+1', price: '₹3,200', priceNum: 3200, perKm: '₹14/km', eta: '8 mins away', features: ['AC', 'GPS', 'Free Cancellation'], tags: ['Top Rated'], rating: 4.8, trips: '12.4k', badge: 'bestvalue', deepLink: `https://book.olacabs.com/?pickup_name=${pickupEnc}&drop_name=${dropEnc}` },
-    { id: 'c2', provider: 'Uber', type: 'Toyota Etios', category: 'Sedan', pax: '4+1', price: '₹2,800', priceNum: 2800, perKm: '₹12/km', eta: '5 mins away', features: ['AC', 'GPS'], tags: [], rating: 4.5, trips: '8.9k', badge: 'cheapest', deepLink: `https://m.uber.com/ul/?action=setPickup&pickup[nickname]=${pickupEnc}&dropoff[nickname]=${dropEnc}` },
+    { id: 'c1', provider: 'Ola Outstation', type: 'Innova Crysta', category: 'SUV', pax: '6+1', price: '₹3,200', priceNum: 3200, perKm: '₹14/km', eta: '8 mins away', features: ['AC', 'GPS', 'Free Cancellation'], tags: ['Top Rated'], rating: 4.8, trips: '12.4k', badge: 'bestvalue', from: params.from, to: params.to, deepLink: `https://www.olacabs.com/` },
+    { id: 'c2', provider: 'Uber', type: 'Toyota Etios', category: 'Sedan', pax: '4+1', price: '₹2,800', priceNum: 2800, perKm: '₹12/km', eta: '5 mins away', features: ['AC', 'GPS'], tags: [], rating: 4.5, trips: '8.9k', badge: 'cheapest', from: params.from, to: params.to, deepLink: `https://www.uber.com/in/en/ride/` },
   ];
 }
 
