@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateItinerary, type UserContext } from '@/lib/ai/itineraryModel';
-import { generateWithGemini, buildMinimalFallback } from '@/lib/ai/geminiItinerary';
+import { fetchDestinationDataWithGemini, buildMinimalDestInfo } from '@/lib/ai/geminiItinerary';
 import { DEST_DATA, DESTINATIONS } from '@/app/itinerary/data';
 
 export async function POST(req: NextRequest) {
@@ -35,22 +35,23 @@ export async function POST(req: NextRequest) {
         );
         if (match) resolvedDest = match.id;
 
-        // ── Path A: Deterministic engine (has DEST_DATA) ─────────────────────
-        if (DEST_DATA[resolvedDest]) {
-            console.log(`[Itinerary] Using deterministic engine for ${destName}`);
+        // Build user context (used by the deterministic engine in ALL paths)
+        const userContext: UserContext = {
+            destination: resolvedDest,
+            destName: match?.name || destName,
+            purpose,
+            group: group || 'solo',
+            days: Number(days) || 3,
+            budget: Number(budget) || 15000,
+            startDate: startDate || new Date().toISOString().split('T')[0],
+            preferences: preferences || null,
+            pastTrips: [],
+            browsingSignals: browsingSignals || null,
+        };
 
-            const userContext: UserContext = {
-                destination: resolvedDest,
-                destName: match?.name || destName,
-                purpose,
-                group: group || 'solo',
-                days: Number(days) || 3,
-                budget: Number(budget) || 15000,
-                startDate: startDate || new Date().toISOString().split('T')[0],
-                preferences: preferences || null,
-                pastTrips: [],
-                browsingSignals: browsingSignals || null,
-            };
+        // ── Path A: Deterministic engine with hardcoded DEST_DATA ─────────────
+        if (DEST_DATA[resolvedDest]) {
+            console.log(`[Itinerary] Using deterministic engine with hardcoded data for ${destName}`);
 
             const result = await generateItinerary(userContext);
             if (result) {
@@ -62,34 +63,58 @@ export async function POST(req: NextRequest) {
             }
         }
 
-        // ── Path B: Gemini AI generation (no DEST_DATA) ──────────────────────
-        console.log(`[Itinerary] No DEST_DATA for "${resolvedDest}", using Gemini AI`);
+        // ── Path B: Fetch data with Gemini, then personalize with deterministic engine
+        console.log(`[Itinerary] No hardcoded data for "${resolvedDest}", fetching via Gemini...`);
 
-        const geminiResult = await generateWithGemini({
+        const geminiData = await fetchDestinationDataWithGemini({
             destName: match?.name || destName,
-            days: Number(days) || 3,
             purpose,
-            group: group || 'solo',
             budget: Number(budget) || 15000,
-            startDate: startDate || new Date().toISOString().split('T')[0],
+            days: Number(days) || 3,
         });
 
-        if (geminiResult) {
+        if (geminiData) {
+            console.log(`[Itinerary] Got Gemini data, running deterministic personalization...`);
+            const result = await generateItinerary(userContext, geminiData);
+            if (result) {
+                return NextResponse.json({
+                    success: true,
+                    itinerary: result,
+                    source: 'ai-personalized',
+                });
+            }
+        }
+
+        // ── Path C: Minimal fallback data + deterministic engine ──────────────
+        console.warn(`[Itinerary] Gemini failed for "${destName}", using minimal data + deterministic engine`);
+        const fallbackData = buildMinimalDestInfo(match?.name || destName);
+        const fallbackResult = await generateItinerary(userContext, fallbackData);
+
+        if (fallbackResult) {
             return NextResponse.json({
                 success: true,
-                itinerary: geminiResult,
-                source: 'ai',
+                itinerary: fallbackResult,
+                source: 'fallback-personalized',
             });
         }
 
-        // ── Path C: Minimal fallback (Gemini also failed) ────────────────────
-        console.warn(`[Itinerary] Gemini failed for "${destName}", using minimal fallback`);
-        const fallback = buildMinimalFallback(match?.name || destName, Number(days) || 3);
-
+        // Should never reach here, but just in case
         return NextResponse.json({
             success: true,
-            itinerary: fallback,
-            source: 'fallback',
+            itinerary: {
+                destName: match?.name || destName,
+                description: `${destName} is a wonderful destination. Plan your trip with NaviiGo!`,
+                avgCost: '₹2,000 – ₹8,000',
+                crowdLevel: 'Medium',
+                crowdNote: 'Check seasonal crowd levels',
+                logistics: { flights: 'Check airline websites', trains: 'Check IRCTC' },
+                mapCenter: { lat: 20.5937, lng: 78.9629 },
+                highlights: [],
+                restaurants: [],
+                hotels: [],
+                dayPlans: [],
+            },
+            source: 'empty-fallback',
         });
 
     } catch (error: any) {

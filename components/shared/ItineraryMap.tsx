@@ -139,7 +139,7 @@ export default function ItineraryMap({
             });
 
             const marker = L.marker([pin.lat, pin.lng], { icon }).addTo(map);
-            const imgSrc = pin.img ? (pin.img.startsWith('http') ? pin.img : `https://images.unsplash.com/photo-${pin.img}?auto=format&fit=crop&w=200&q=60`) : '';
+            const imgSrc = pin.img ? (pin.img.startsWith('http') ? pin.img : pin.img.startsWith('/') ? pin.img : `/destinations/delhi.png`) : '';
             const imgHtml = imgSrc ? `<img src="${imgSrc}" style="width:100%;height:80px;object-fit:cover;border-radius:8px;margin-bottom:6px;" onerror="this.style.display='none'" />` : '';
             marker.bindPopup(`
         <div style="min-width:180px;font-family:system-ui,sans-serif;">

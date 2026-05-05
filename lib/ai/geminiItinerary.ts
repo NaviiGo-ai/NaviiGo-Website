@@ -1,222 +1,192 @@
-// ─── Gemini-Powered Itinerary Generation ──────────────────────────────────────
-// Fallback engine for destinations WITHOUT hardcoded DEST_DATA.
-// Uses Google's Gemini AI to generate full itinerary data matching our schema.
+// ─── Gemini-Powered Destination Enrichment ────────────────────────────────────
+// Uses Gemini AI to ENRICH live Google Places data with cultural context,
+// temple info, heritage significance, logistics, and travel tips.
+// The actual itinerary personalization is ALWAYS done by the deterministic engine.
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import type { GeneratedItinerary } from './itineraryModel';
+import type { DestInfo } from '@/app/itinerary/data';
+import { fetchLiveDestinationData, liveDataToDestInfo } from '@/lib/api/googlePlaces';
+import { getPlaceImage, FALLBACK_IMAGES } from '@/lib/imageMap';
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
 
 /**
- * Generate a complete itinerary for ANY destination using Gemini AI.
- * Returns the same GeneratedItinerary interface as the deterministic engine.
+ * Fetch live destination data from Google Places + enrich with Gemini.
+ * Returns DestInfo ready for the deterministic personalization engine.
  */
-export async function generateWithGemini(params: {
+export async function fetchDestinationDataWithGemini(params: {
     destName: string;
-    days: number;
     purpose: string;
-    group: string;
     budget: number;
-    startDate: string;
-}): Promise<GeneratedItinerary | null> {
+    days: number;
+}): Promise<DestInfo | null> {
+    // Step 1: Try Google Places API for live data
+    const liveData = await fetchLiveDestinationData(params.destName);
+
+    if (liveData && liveData.attractions.length > 0) {
+        console.log(`[GeminiEnrich] Got ${liveData.attractions.length} live attractions, enriching with Gemini...`);
+
+        // Step 2: Use Gemini to add cultural context & logistics
+        const enrichment = await getGeminiEnrichment(params.destName);
+
+        // Step 3: Merge live data + Gemini enrichment into DestInfo
+        return liveDataToDestInfo(params.destName, liveData, enrichment || undefined);
+    }
+
+    // Fallback: If Google Places fails, use Gemini for everything
+    console.log(`[GeminiEnrich] Google Places failed, using full Gemini fallback...`);
+    return await getFullGeminiData(params);
+}
+
+/**
+ * Get cultural enrichment from Gemini (description, logistics, weather, crowd info).
+ * This is lightweight — just context, not the full place data.
+ */
+async function getGeminiEnrichment(destName: string): Promise<{
+    description: string;
+    crowdLevel: string;
+    crowdNote: string;
+    logistics: { flights: string; trains: string };
+    weather: Record<string, string>;
+} | null> {
+    if (!GEMINI_API_KEY) return null;
+
+    const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+
+    const prompt = `For the Indian destination "${destName}", provide ONLY this JSON (no markdown):
+{
+  "description": "2-3 vivid sentences describing what makes this place special — mention heritage, temples, culture, food",
+  "crowdLevel": "Low" or "Medium" or "High",
+  "crowdNote": "Brief seasonal crowd info with best time to visit",
+  "logistics": {
+    "flights": "Nearest airport with code and approx fare from Delhi",
+    "trains": "Nearest major railway station with code"
+  },
+  "weather": { "Jan": "temp range", "Feb": "temp range", "Mar": "temp range", "Apr": "temp range", "May": "temp range", "Jun": "temp range", "Jul": "temp range", "Aug": "temp range", "Sep": "temp range", "Oct": "temp range", "Nov": "temp range", "Dec": "temp range" }
+}`;
+
+    try {
+        const result = await model.generateContent(prompt);
+        const text = result.response.text();
+        let jsonStr = text;
+        const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+        if (jsonMatch) jsonStr = jsonMatch[1];
+        const braceMatch = jsonStr.match(/\{[\s\S]*\}/);
+        if (braceMatch) jsonStr = braceMatch[0];
+        return JSON.parse(jsonStr);
+    } catch (e: any) {
+        console.error('[GeminiEnrich] Enrichment failed:', e.message);
+        return null;
+    }
+}
+
+/**
+ * Full Gemini fallback — generates complete destination data when Google Places fails.
+ */
+async function getFullGeminiData(params: {
+    destName: string;
+    purpose: string;
+    budget: number;
+    days: number;
+}): Promise<DestInfo | null> {
     if (!GEMINI_API_KEY) {
-        console.error('[GeminiItinerary] No GEMINI_API_KEY configured');
+        console.error('[GeminiData] No GEMINI_API_KEY configured');
         return null;
     }
 
     const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
     const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
 
-    const budgetPerDay = Math.round(params.budget / params.days);
-    const budgetTier = budgetPerDay > 12000 ? 'luxury' : budgetPerDay > 5000 ? 'mid-range' : 'budget';
-
-    const prompt = `You are an expert Indian travel planner. Generate a complete travel itinerary for ${params.destName}, India.
-
-TRIP DETAILS:
-- Destination: ${params.destName}
-- Duration: ${params.days} days
-- Purpose: ${params.purpose}
-- Group: ${params.group}
-- Budget: ₹${params.budget.toLocaleString('en-IN')} total (${budgetTier} tier, ~₹${budgetPerDay.toLocaleString('en-IN')}/day)
-- Start Date: ${params.startDate}
-
-Generate a COMPLETE JSON response with this EXACT structure. Every field is required:
-
+    const prompt = `You are an expert Indian travel data provider. Return ONLY raw destination data for ${params.destName}, India as JSON (no markdown):
 {
-  "destName": "${params.destName}",
-  "description": "2-3 sentence vivid description of the destination",
-  "avgCost": "daily cost range like ₹2,000 – ₹8,000",
-  "crowdLevel": "Low" or "Medium" or "High",
-  "crowdNote": "brief crowd info",
-  "logistics": {
-    "flights": "Nearest airport with code and avg fare",
-    "trains": "Nearest major railway station with code"
-  },
+  "description": "2-3 vivid sentences",
+  "avgCost": "₹X – ₹Y per day",
+  "crowdLevel": "Low/Medium/High",
+  "crowdNote": "seasonal info",
+  "logistics": { "flights": "airport info", "trains": "station info" },
+  "weather": { "Jan": "range", ... "Dec": "range" },
   "mapCenter": { "lat": number, "lng": number },
-  "highlights": [
-    {
-      "name": "Attraction Name",
-      "img": "placeholder",
-      "desc": "1-2 sentence description",
-      "bestMonths": "Oct – Mar",
-      "duration": "2–3 hrs",
-      "tags": ["Heritage", "UNESCO"],
-      "lat": number,
-      "lng": number
-    }
-  ],
-  "restaurants": [
-    {
-      "id": "r1",
-      "name": "Restaurant Name",
-      "img": "placeholder",
-      "desc": "1-2 sentence description",
-      "cuisine": "Cuisine Type",
-      "priceRange": "₹200–₹600",
-      "rating": 4.5,
-      "mustTry": "Signature dish",
-      "lat": number,
-      "lng": number,
-      "tags": ["Local", "Famous"]
-    }
-  ],
-  "hotels": [
-    {
-      "id": "h1",
-      "name": "Hotel Name",
-      "img": "placeholder",
-      "desc": "1-2 sentence description",
-      "type": "Hotel" or "Hostel" or "Resort" or "Homestay",
-      "priceRange": "₹2,000–₹5,000/night",
-      "rating": 4.3,
-      "amenities": ["WiFi", "Pool"],
-      "lat": number,
-      "lng": number
-    }
-  ],
-  "dayPlans": [
-    {
-      "day": 1,
-      "title": "Catchy Day Title",
-      "weather": {
-        "temp": "22–30°C",
-        "condition": "Partly Cloudy",
-        "emoji": "⛅",
-        "rain": 15,
-        "tip": "Weather tip"
-      },
-      "activities": [
-        {
-          "time": "07:00 AM",
-          "slot": "Morning",
-          "name": "Activity Name",
-          "desc": "1-2 sentence description",
-          "crowd": "Low" or "Medium" or "High",
-          "crowdTip": "Crowd avoidance tip",
-          "travelFromPrev": "10 min auto",
-          "lat": number,
-          "lng": number
-        }
-      ]
-    }
-  ]
+  "highlights": [{ "name": "Real Name", "desc": "1-2 sentences with entry fees, timings for temples", "tags": ["Heritage"], "lat": number, "lng": number }],
+  "restaurants": [{ "name": "Real Name", "desc": "1-2 sentences", "cuisine": "type", "priceRange": "₹X–₹Y", "rating": 4.5, "mustTry": "dish", "lat": number, "lng": number, "tags": ["Local"] }],
+  "hotels": [{ "name": "Real Name", "desc": "1-2 sentences", "type": "Hotel/Resort/Hostel/Homestay", "priceRange": "₹X/night", "rating": 4.3, "amenities": ["WiFi"], "lat": number, "lng": number }]
 }
-
-IMPORTANT RULES:
-1. Include exactly 6 highlights (top attractions)
-2. Include exactly 4 restaurants (famous local ones, real places)
-3. Include exactly 3 hotels (one ${budgetTier} option, mix of types)
-4. Include exactly ${params.days} day plans
-5. Each day plan must have exactly 6 activities (2 morning, 1 lunch, 1 afternoon, 1 evening attraction, 1 dinner)
-6. Use REAL place names, REAL coordinates (lat/lng), REAL restaurant names
-7. All image fields should be "placeholder" — we'll resolve them later
-8. Activities should match the "${params.purpose}" purpose and "${params.group}" group type
-9. For ${budgetTier} budget, recommend appropriate restaurants and hotels
-10. Make day plans flow geographically — nearby activities grouped together
-11. Return ONLY valid JSON — no markdown, no backticks, no explanation`;
+Rules: 6-8 highlights, 4 restaurants, 3-4 hotels. Use REAL names and coordinates.`;
 
     try {
-        console.log(`[GeminiItinerary] Generating for ${params.destName} (${params.days} days, ${params.purpose})`);
-
         const result = await model.generateContent(prompt);
         const text = result.response.text();
-        
-        // Extract JSON from response (handle markdown code blocks)
         let jsonStr = text;
         const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
-        if (jsonMatch) {
-            jsonStr = jsonMatch[1];
-        }
-        // Also try to find raw JSON object
+        if (jsonMatch) jsonStr = jsonMatch[1];
         const braceMatch = jsonStr.match(/\{[\s\S]*\}/);
-        if (braceMatch) {
-            jsonStr = braceMatch[0];
-        }
+        if (braceMatch) jsonStr = braceMatch[0];
+        const parsed = JSON.parse(jsonStr);
+        if (!parsed.highlights || !parsed.mapCenter) return null;
 
-        const parsed = JSON.parse(jsonStr) as GeneratedItinerary;
-
-        // Validate critical fields
-        if (!parsed.destName || !parsed.dayPlans || parsed.dayPlans.length === 0) {
-            console.error('[GeminiItinerary] Invalid response structure');
-            return null;
-        }
-
-        // Ensure mapCenter exists
-        if (!parsed.mapCenter && parsed.highlights?.length > 0) {
-            parsed.mapCenter = {
-                lat: parsed.highlights[0].lat,
-                lng: parsed.highlights[0].lng,
-            };
-        }
-
-        console.log(`[GeminiItinerary] Success: ${parsed.dayPlans.length} days, ${parsed.highlights?.length} highlights`);
-        return parsed;
-
-    } catch (error: any) {
-        console.error('[GeminiItinerary] Generation failed:', error.message || error);
+        const destImg = getPlaceImage(params.destName);
+        return {
+            description: parsed.description,
+            avgCost: parsed.avgCost || '₹2,000 – ₹8,000',
+            crowdLevel: parsed.crowdLevel || 'Medium',
+            crowdNote: parsed.crowdNote || 'Check seasonal levels',
+            logistics: parsed.logistics,
+            weather: parsed.weather || {},
+            mapCenter: parsed.mapCenter,
+            highlights: (parsed.highlights || []).map((h: any) => ({
+                name: h.name, img: destImg, desc: h.desc,
+                bestMonths: h.bestMonths || 'Oct – Mar', duration: h.duration || '1–3 hrs',
+                walking: 'Medium' as const, value: 'High' as const,
+                tags: h.tags || ['Attraction'], lat: h.lat, lng: h.lng,
+            })),
+            restaurants: (parsed.restaurants || []).map((r: any, i: number) => ({
+                id: `gr${i + 1}`, name: r.name, img: FALLBACK_IMAGES.restaurant, desc: r.desc,
+                cuisine: r.cuisine || 'Local', priceRange: r.priceRange || '₹200–₹600',
+                rating: r.rating || 4.0, mustTry: r.mustTry || 'House specialty',
+                timing: '10:00 AM – 10:00 PM', lat: r.lat, lng: r.lng,
+                tags: r.tags || ['Local'],
+            })),
+            hotels: (parsed.hotels || []).map((h: any, i: number) => ({
+                id: `gh${i + 1}`, name: h.name, img: FALLBACK_IMAGES.hotel, desc: h.desc,
+                type: h.type || 'Hotel', priceRange: h.priceRange || '₹3,000–₹8,000/night',
+                rating: h.rating || 4.0, amenities: h.amenities || ['WiFi'],
+                checkIn: '2:00 PM', lat: h.lat, lng: h.lng,
+            })),
+            dayPlans: [],
+        };
+    } catch (e: any) {
+        console.error('[GeminiData] Full fallback failed:', e.message);
         return null;
     }
 }
 
 /**
- * Build a minimal fallback itinerary when Gemini also fails.
- * Uses generic data so the UI doesn't break.
+ * Build a minimal fallback DestInfo when everything fails.
  */
-export function buildMinimalFallback(destName: string, days: number): GeneratedItinerary {
-    const dayPlans = Array.from({ length: days }, (_, i) => ({
-        day: i + 1,
-        title: `Day ${i + 1} in ${destName}`,
-        weather: {
-            temp: '22–32°C',
-            condition: 'Partly Cloudy',
-            emoji: '⛅',
-            rain: 15,
-            tip: 'Check local weather for latest updates',
-        },
-        activities: [
-            { time: '08:00 AM', slot: 'Morning' as const, name: `Explore ${destName} - Morning`, desc: `Start your day exploring the local attractions of ${destName}.`, crowd: 'Medium' as const, crowdTip: 'Visit early for fewer crowds', lat: 20.5937, lng: 78.9629 },
-            { time: '10:00 AM', slot: 'Morning' as const, name: 'Local Market Walk', desc: 'Discover local handicrafts, spices and souvenirs.', crowd: 'Medium' as const, crowdTip: 'Morning hours are quieter', travelFromPrev: '15 min walk', lat: 20.5937, lng: 78.9629 },
-            { time: '12:30 PM', slot: 'Afternoon' as const, name: 'Lunch at Local Restaurant', desc: `Try authentic local cuisine — ask your hotel for recommendations.`, crowd: 'Medium' as const, crowdTip: 'Reserve ahead for popular spots', travelFromPrev: '10 min auto', lat: 20.5937, lng: 78.9629, type: 'restaurant' as const },
-            { time: '02:30 PM', slot: 'Afternoon' as const, name: `${destName} Heritage Walk`, desc: 'Explore the historical sites and architectural marvels.', crowd: 'Medium' as const, crowdTip: 'Afternoon sun can be strong — carry water', travelFromPrev: '15 min auto', lat: 20.5937, lng: 78.9629 },
-            { time: '05:30 PM', slot: 'Evening' as const, name: 'Sunset Viewpoint', desc: 'Find the best sunset spot and watch the sky transform.', crowd: 'Low' as const, crowdTip: 'Golden hour — perfect for photography', travelFromPrev: '20 min drive', lat: 20.5937, lng: 78.9629 },
-            { time: '08:00 PM', slot: 'Evening' as const, name: 'Dinner & Night Walk', desc: 'End the day with local dinner and an evening stroll.', crowd: 'Low' as const, crowdTip: 'Evening dining is relaxed', travelFromPrev: '15 min auto', lat: 20.5937, lng: 78.9629, type: 'restaurant' as const },
-        ],
-    }));
-
+export function buildMinimalDestInfo(destName: string): DestInfo {
+    const img = getPlaceImage(destName);
     return {
-        destName,
-        description: `${destName} is a vibrant Indian destination waiting to be explored. Plan your trip with NaviiGo for personalized recommendations.`,
+        description: `${destName} — explore this beautiful Indian destination with NaviiGo.`,
         avgCost: '₹2,000 – ₹8,000',
         crowdLevel: 'Medium',
-        crowdNote: 'Check seasonal crowd levels for the best experience',
-        logistics: {
-            flights: `Check airline websites for flights to ${destName}`,
-            trains: `Check IRCTC for trains to ${destName}`,
-        },
+        crowdNote: 'Check seasonal crowd levels',
+        logistics: { flights: `Search flights to ${destName}`, trains: `Search trains to ${destName}` },
+        weather: { Jan: '10–25°C', Feb: '12–28°C', Mar: '16–32°C', Apr: '22–36°C', May: '25–40°C', Jun: '25–35°C', Jul: '23–30°C', Aug: '22–30°C', Sep: '22–32°C', Oct: '18–32°C', Nov: '12–28°C', Dec: '8–24°C' },
         mapCenter: { lat: 20.5937, lng: 78.9629 },
-        highlights: [],
-        restaurants: [],
-        hotels: [],
-        dayPlans,
+        highlights: [
+            { name: `${destName} Heritage Walk`, img, desc: `Explore the historical heart of ${destName}.`, bestMonths: 'Oct – Mar', duration: '2–4 hrs', walking: 'Medium' as const, value: 'High' as const, tags: ['Heritage'], lat: 20.5937, lng: 78.9629 },
+            { name: `${destName} Temple`, img, desc: `Visit the sacred temples and experience the spiritual atmosphere.`, bestMonths: 'All year', duration: '1–2 hrs', walking: 'Easy' as const, value: 'High' as const, tags: ['Temple', 'Spiritual'], lat: 20.5937, lng: 78.9629 },
+            { name: `${destName} Market`, img, desc: `Discover local handicrafts and souvenirs.`, bestMonths: 'Oct – Mar', duration: '2–3 hrs', walking: 'Medium' as const, value: 'Medium' as const, tags: ['Shopping'], lat: 20.5937, lng: 78.9629 },
+            { name: `Scenic Viewpoint`, img, desc: `Find the best panoramic view of ${destName}.`, bestMonths: 'Oct – Mar', duration: '1–2 hrs', walking: 'Easy' as const, value: 'High' as const, tags: ['Nature'], lat: 20.5937, lng: 78.9629 },
+        ],
+        restaurants: [
+            { id: 'fr1', name: `${destName} Local Kitchen`, img: FALLBACK_IMAGES.restaurant, desc: 'Authentic local cuisine.', cuisine: 'Local', priceRange: '₹150–₹500', rating: 4.2, mustTry: 'Local Thali', timing: '10 AM – 10 PM', lat: 20.5937, lng: 78.9629, tags: ['Local'] },
+            { id: 'fr2', name: 'Street Food Corner', img: FALLBACK_IMAGES.restaurant, desc: 'Best street food in town.', cuisine: 'Street Food', priceRange: '₹50–₹200', rating: 4.4, mustTry: 'Local Snacks', timing: '8 AM – 9 PM', lat: 20.5937, lng: 78.9629, tags: ['Street Food'] },
+        ],
+        hotels: [
+            { id: 'fh1', name: `${destName} Heritage Hotel`, img: FALLBACK_IMAGES.hotel, desc: 'Comfortable heritage hotel.', type: 'Hotel', priceRange: '₹3,000–₹8,000/night', rating: 4.2, amenities: ['WiFi', 'Restaurant'], checkIn: '2:00 PM', lat: 20.5937, lng: 78.9629 },
+            { id: 'fh2', name: `Budget Stay`, img: FALLBACK_IMAGES.hotel, desc: 'Clean and affordable.', type: 'Hostel', priceRange: '₹500–₹2,000/night', rating: 4.0, amenities: ['WiFi'], checkIn: '1:00 PM', lat: 20.5937, lng: 78.9629 },
+        ],
+        dayPlans: [],
     };
 }

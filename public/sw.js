@@ -1,4 +1,4 @@
-const CACHE_NAME = 'naviigo-v1';
+const CACHE_NAME = 'naviigo-v2';
 const STATIC_ASSETS = [
     '/',
     '/itinerary',

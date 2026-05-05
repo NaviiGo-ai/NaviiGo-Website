@@ -1,6 +1,6 @@
 'use client';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { saveSharedItinerary, listenToItinerary, saveItineraryToFirestore } from '@/lib/firestore';
@@ -38,11 +38,16 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
     const [customPlans, setCustomPlans] = useState<DayPlan[]>(() => (form.customPlans as DayPlan[]) || JSON.parse(JSON.stringify(data.dayPlans)));
     const plan: DayPlan = customPlans[activeDay] ?? customPlans[0];
 
+    // Register itinerary with AI context once on mount (avoids infinite re-render loop)
+    const registeredRef = useRef(false);
     useEffect(() => {
-        registerItinerary({ ...data, dayPlans: customPlans }, (newData) => {
+        if (registeredRef.current) return;
+        registeredRef.current = true;
+        registerItinerary({ ...data, dayPlans: customPlans }, (newData: any) => {
             if (newData.dayPlans) setCustomPlans(newData.dayPlans);
         });
-    }, [data, customPlans, registerItinerary]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     const [isSharing, setIsSharing] = useState(false);
     const [collaborators, setCollaborators] = useState(1);

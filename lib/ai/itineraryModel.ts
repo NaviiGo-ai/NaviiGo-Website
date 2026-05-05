@@ -281,7 +281,7 @@ function estimateTravelTime(distM: number): string {
 
 // ─── Main Generation Function ─────────────────────────────────────────────────
 
-export async function generateItinerary(ctx: UserContext): Promise<GeneratedItinerary | null> {
+export async function generateItinerary(ctx: UserContext, externalData?: DestInfo): Promise<GeneratedItinerary | null> {
     // Strictly resolve destination — never fall back to Kerala
     let destKey = ctx.destination;
     // Try to match destName to a known destination
@@ -291,13 +291,14 @@ export async function generateItinerary(ctx: UserContext): Promise<GeneratedItin
     );
     if (match) destKey = match.id;
 
-    const destData = DEST_DATA[destKey];
+    // Use hardcoded DEST_DATA if available, otherwise use externally provided data (e.g. from Gemini)
+    const destData = DEST_DATA[destKey] || externalData;
     if (!destData) {
         console.error(`[ItineraryModel] No data for destination: ${destKey} (${ctx.destName})`);
         return null;
     }
 
-    console.log(`[ItineraryModel] Building personalized itinerary for ${ctx.destName} (${ctx.days} days)`);
+    console.log(`[ItineraryModel] Building personalized itinerary for ${ctx.destName} (${ctx.days} days, source: ${DEST_DATA[destKey] ? 'hardcoded' : 'external'})`);
 
     const budgetPerDay = ctx.budget / ctx.days;
     const budgetTier = budgetPerDay > 12000 ? 'luxury' : budgetPerDay > 5000 ? 'mid-range' : 'budget';

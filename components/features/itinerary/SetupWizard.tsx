@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import CalendarPicker from '@/components/shared/CalendarPicker';
 import { PURPOSES, DESTINATIONS, GROUP_SIZES } from '@/app/itinerary/data';
+import { resolveImgSrc } from '@/lib/imageService';
 import { StepBar } from './helpers';
 
 /** Resolve a city name to its DEST_DATA key (e.g. 'Jaipur' → 'jaipur') */
@@ -151,7 +152,7 @@ function CitySearch({ value, destName, onSelect }: { value: string; destName: st
                     {DESTINATIONS.map(d => (
                         <button key={d.id} onClick={() => { onSelect(d.id, d.name); setQuery(d.name); }}
                             className={`group relative h-40 rounded-3xl overflow-hidden border-2 transition-all duration-300 text-left ${value === d.id ? 'border-emerald-500 shadow-xl shadow-emerald-500/20 scale-[1.02]' : 'border-transparent hover:border-zinc-300 dark:hover:border-zinc-700'}`}>
-                            <div className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110" style={{ backgroundImage: `url(${d.img.startsWith('http') ? d.img : `https://images.unsplash.com/photo-${d.img}?auto=format&fit=crop&w=400&q=70`})` }} />
+                            <div className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110" style={{ backgroundImage: `url(${resolveImgSrc(d.img, 400)})` }} />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                             {value === d.id && (
                                 <div className="absolute top-3 right-3 w-7 h-7 bg-emerald-500 rounded-full flex items-center justify-center shadow-lg">
