@@ -245,6 +245,20 @@ export default function SetupWizard({ onDone }: SetupWizardProps) {
                             <VibeMatch
                                 onSelect={(destId, destName, purpose) => {
                                     setForm(p => ({ ...p, destination: destId, destName, purpose: purpose || p.purpose || 'leisure' }));
+                                    
+                                    // Update taste vector in background
+                                    fetch('/api/taste/update', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({
+                                            currentVector: JSON.parse(localStorage.getItem('naviigo_taste_vector') || '[]'),
+                                            selectedDestId: destId,
+                                            purpose: purpose || 'leisure'
+                                        })
+                                    }).then(r => r.json()).then(d => {
+                                        if (d.success) localStorage.setItem('naviigo_taste_vector', JSON.stringify(d.newVector));
+                                    }).catch(console.error);
+
                                     setVibeMatchMode(false);
                                     setStep(3);
                                 }}

@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
-import { saveSharedItinerary, listenToItinerary, saveItineraryToFirestore } from '@/lib/firestore';
+import { saveSharedItinerary, listenToItinerary, saveItineraryToFirestore, updateSharedPlans } from '@/lib/firestore';
 import { useAuth } from '@/lib/AuthContext';
 import { resolveImgSrc } from '@/lib/imageService';
 import {
@@ -21,13 +21,14 @@ const VideoCard = dynamic(() => import('@/components/shared/VideoCard'), { ssr: 
 interface ResultPageProps {
     form: Record<string, unknown>;
     generatedData?: any;
+    shareId?: string | null;
     onDayView: () => void;
     onReset: () => void;
 }
 
-export default function ResultPage({ form, generatedData, onDayView, onReset }: ResultPageProps) {
+export default function ResultPage({ form, generatedData, shareId, onDayView, onReset }: ResultPageProps) {
     const router = useRouter();
-    const { user } = useAuth();
+    const { user, signInWithGoogle } = useAuth();
     const { registerItinerary, applyAction, isEditPanelOpen, openEditPanel, closeEditPanel,
         editMessages, sendEditMessage, lastAction, clearLastAction } = useAI();
     const [isSaved, setIsSaved] = useState(false);
@@ -35,6 +36,7 @@ export default function ResultPage({ form, generatedData, onDayView, onReset }: 
     const [isSharing, setIsSharing] = useState(false);
     const [hiddenGems, setHiddenGems] = useState<any[]>([]);
     const [insiderTips, setInsiderTips] = useState<string[]>([]);
+    const [packingList, setPackingList] = useState<string[]>([]);
     const [editInput, setEditInput] = useState('');
     const [editLoading, setEditLoading] = useState(false);
     const [localData, setLocalData] = useState<any>(null);
@@ -57,8 +59,36 @@ export default function ResultPage({ form, generatedData, onDayView, onReset }: 
     useEffect(() => {
         registerItinerary(data, (newData) => {
             setLocalData(newData);
+            if (!autoSaveRef.current) {
+                autoSaveRef.current = true;
+                setTimeout(() => {
+                    if (user?.uid) {
+                        saveItineraryToFirestore(user.uid, { form, generatedData: newData }).catch(console.error);
+                    }
+                    if (shareId) {
+                        updateSharedPlans(shareId, newData.dayPlans).catch(console.error);
+                    }
+                    autoSaveRef.current = false;
+                }, 2000);
+            }
         });
-    }, [generatedData]); // Only re-register when source data changes, not on every localData update
+    }, [data, registerItinerary, form, user, shareId]);
+
+    // Live Sync Listener
+    useEffect(() => {
+        if (shareId) {
+            const unsub = listenToItinerary(shareId, (liveData) => {
+                setCollaborators(liveData.collaborators ?? 1);
+                if (liveData.customPlans && liveData.customPlans.length > 0) {
+                    setLocalData((prev: any) => ({
+                        ...prev,
+                        dayPlans: liveData.customPlans,
+                    }));
+                }
+            });
+            return () => unsub();
+        }
+    }, [shareId]);
 
     // ── Auto-save itinerary to Firestore on generation ─────────
     useEffect(() => {
@@ -112,6 +142,30 @@ export default function ResultPage({ form, generatedData, onDayView, onReset }: 
             .catch(() => { });
     }, [destName]);
 
+    // Fetch AI Packing List
+    useEffect(() => {
+        if (!destName || !displayMonth) return;
+        fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                message: `Give me a smart 4-item packing list for visiting ${destName}, India in ${displayMonth} (consider weather). Format as a JSON array of strings, each starting with an emoji. No markdown.`,
+                itineraryContext: null,
+                context: [],
+            }),
+        })
+            .then(r => r.json())
+            .then(d => {
+                const txt = d.reply || '';
+                const match = txt.match(/\[[\s\S]*\]/);
+                if (match) {
+                    const items = JSON.parse(match[0]);
+                    if (Array.isArray(items)) setPackingList(items.slice(0, 4));
+                }
+            })
+            .catch(() => { });
+    }, [destName, displayMonth]);
+
     // Auto-scroll edit chat
     useEffect(() => {
         if (editChatRef.current) {
@@ -127,18 +181,25 @@ export default function ResultPage({ form, generatedData, onDayView, onReset }: 
         setIsSharing(true);
         try {
             const id = genShareId();
-            await saveSharedItinerary(id, { form, customPlans: [], destName });
+            await saveSharedItinerary(id, { 
+                form, 
+                customPlans: localData?.dayPlans || data.dayPlans, 
+                generatedData, 
+                destName 
+            }, user?.uid, user?.email || undefined);
+            
             const url = `${window.location.origin}/itinerary?shareId=${id}`;
             await navigator.clipboard.writeText(url);
-            listenToItinerary(id, (data) => setCollaborators(data.collaborators ?? 1), () => { });
+            listenToItinerary(id, (liveData) => setCollaborators(liveData.collaborators ?? 1), () => { });
             alert(`✅ Share link copied to clipboard!\n\nAnyone with this link can view your live itinerary.`);
         } catch (e) {
+            console.error(e);
             const url = `${window.location.origin}/itinerary?load=${destId}`;
             navigator.clipboard.writeText(url);
             alert('Link copied! (Offline mode — link works only for you)');
         }
         setIsSharing(false);
-    }, [form, destName, destId]);
+    }, [form, destName, destId, localData, data, generatedData, user]);
 
     const handleSendEdit = useCallback(async () => {
         if (!editInput.trim() || editLoading) return;
@@ -209,6 +270,15 @@ export default function ResultPage({ form, generatedData, onDayView, onReset }: 
                                 <p className="text-white/90 text-sm md:text-base max-w-2xl">{data.description}</p>
                             </div>
                             <div className="flex flex-col sm:flex-row gap-3 shrink-0">
+                                {!user ? (
+                                    <button onClick={signInWithGoogle} className="bg-white/10 hover:bg-white/20 text-white transition-all px-8 py-4 rounded-2xl font-bold text-sm backdrop-blur-md border border-white/20 flex items-center justify-center gap-2 active:scale-95">
+                                        <span className="text-lg">💾</span> Save to Profile
+                                    </button>
+                                ) : (
+                                    <button disabled className="bg-emerald-500/20 text-emerald-300 px-8 py-4 rounded-2xl font-bold text-sm backdrop-blur-md border border-emerald-500/30 flex items-center justify-center gap-2 cursor-default">
+                                        <span className="text-lg">✓</span> {isSaved ? "Saved to Profile" : "Saving..."}
+                                    </button>
+                                )}
                                 <button onClick={onDayView} className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white transition-all px-8 py-4 rounded-2xl font-bold text-sm shadow-xl shadow-emerald-500/20 flex items-center justify-center gap-2 active:scale-95">
                                     <span className="text-lg">✨</span> View Full Day-by-Day Itinerary
                                 </button>
@@ -261,6 +331,27 @@ export default function ResultPage({ form, generatedData, onDayView, onReset }: 
                                 </div>
                             </div>
                         </div>
+
+                        {/* Smart Packing List */}
+                        {packingList.length > 0 && (
+                            <div>
+                                <div className="flex items-center justify-between mb-2">
+                                    <h2 className="text-lg font-bold text-zinc-900 dark:text-white flex items-center gap-2"><span>🎒</span> Smart Packing List</h2>
+                                    <div className="text-xs font-bold text-amber-600 bg-amber-50 dark:bg-amber-500/10 px-2 py-1 rounded">Weather: {weatherForMonth}</div>
+                                </div>
+                                <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-100 dark:border-zinc-800 p-5 shadow-sm">
+                                    <ul className="space-y-3">
+                                        {packingList.map((item, idx) => (
+                                            <li key={idx} className="flex items-start gap-3 group cursor-pointer">
+                                                <div className="w-5 h-5 rounded-full border border-zinc-300 dark:border-zinc-700 flex shrink-0 items-center justify-center mt-0.5 group-hover:border-emerald-500 group-hover:bg-emerald-500/10 transition-colors">
+                                                </div>
+                                                <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300 group-hover:text-zinc-900 dark:group-hover:text-white transition-colors">{item}</span>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                            </div>
+                        )}
 
                         {/* Transport Logistics */}
                         {data.logistics && (

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { searchDestinationsByVibe, DestinationVectorMatch } from '@/lib/ai/pinecone';
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
 const GEMINI_MODEL = 'gemini-1.5-flash';
@@ -25,10 +26,16 @@ const DEST_META: Record<string, { lat: number; lng: number; state: string; types
 
 export async function POST(req: NextRequest) {
     try {
-        const { uid, budget, month, group, purpose, preferences, pastDestinations } = await req.json();
+        const { uid, budget, month, group, purpose, preferences, pastDestinations, tasteVector } = await req.json();
 
         const currentMonth = month || new Date().getMonth() + 1; // 1-12
         const budgetNum = Number(budget) || 15000;
+
+        // Fetch semantic matches from Pinecone if tasteVector exists
+        let semanticMatches: DestinationVectorMatch[] = [];
+        if (tasteVector && tasteVector.length > 0) {
+            semanticMatches = await searchDestinationsByVibe(tasteVector, 15);
+        }
 
         // Score each destination
         const scored: Array<{ id: string; name: string; score: number; reasons: string[]; monthScore: number }> = [];
@@ -116,6 +123,19 @@ export async function POST(req: NextRequest) {
                 andaman: 'Andaman', darjeeling: 'Darjeeling', udaipur: 'Udaipur',
                 coorg: 'Coorg', hampi: 'Hampi', shimla: 'Shimla', amritsar: 'Amritsar', gangtok: 'Gangtok',
             };
+
+            // 7. Vector Database Semantic Match (The Netflix-style personalization)
+            if (semanticMatches.length > 0) {
+                const vectorMatch = semanticMatches.find(m => m.id === id);
+                if (vectorMatch) {
+                    // vectorMatch.score is between 0 and 1. We scale it heavily to boost its impact.
+                    const vectorBoost = Math.round(vectorMatch.score * 40);
+                    score += vectorBoost;
+                    if (vectorBoost > 25) {
+                        reasons.unshift(`🔮 Perfect match for your unique travel taste!`);
+                    }
+                }
+            }
 
             scored.push({ id, name: prettyNames[id] || id, score, reasons: reasons.slice(0, 3), monthScore });
         }

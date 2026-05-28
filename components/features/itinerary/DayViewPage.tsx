@@ -1,5 +1,5 @@
 'use client';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, Reorder } from 'framer-motion';
 import { useState, useMemo, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
@@ -366,13 +366,17 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                                 </div>
 
                                 {/* Timeline */}
-                                <div className="space-y-0 pt-4">
+                                <Reorder.Group axis="y" values={plan.activities} onReorder={(newOrder) => {
+                                    const currentPlans = customPlans.length > 0 ? [...customPlans] : [...data.dayPlans];
+                                    currentPlans[activeDay] = { ...plan, activities: newOrder };
+                                    setCustomPlans(currentPlans);
+                                }} className="space-y-0 pt-4 list-none">
                                     {plan.activities.map((act, i) => {
                                         const isLast = i === plan.activities.length - 1;
                                         const slotChanged = i === 0 || plan.activities[i - 1].slot !== act.slot;
                                         const isActive = activeActivity === i;
                                         return (
-                                            <div key={act.name + i}>
+                                            <Reorder.Item key={act.name} value={act}>
                                                 {slotChanged && (
                                                     <div className="flex items-center gap-3 mb-6 mt-8 first:mt-0">
                                                         <span className="text-xl bg-white dark:bg-zinc-800 rounded-full w-8 h-8 flex items-center justify-center shadow-sm border border-zinc-200 dark:border-zinc-700">{slotEmoji[act.slot]}</span>
@@ -403,8 +407,8 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                                                         </span>
                                                     </div>
                                                 )}
-                                                <motion.div initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}
-                                                    className="flex gap-4 mb-4 cursor-pointer group" onClick={() => setActiveActivity(isActive ? -1 : i)}>
+                                                <div 
+                                                    className="flex gap-4 mb-4 cursor-grab active:cursor-grabbing group" onClick={() => setActiveActivity(isActive ? -1 : i)}>
                                                     <div className="flex flex-col items-center pt-2">
                                                         <div className={`w-10 h-10 rounded-full text-white text-sm font-bold flex items-center justify-center shadow-lg shrink-0 transition-transform duration-300
                               ${isActive ? 'bg-zinc-900 dark:bg-emerald-500 scale-110' : 'bg-emerald-500 dark:bg-zinc-800'}`}>{i + 1}</div>
@@ -422,9 +426,10 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                                                                 </div>
                                                                 <h4 className="font-bold text-zinc-900 dark:text-white text-lg leading-tight">{act.name}</h4>
                                                             </div>
-                                                            <div className="opacity-0 group-hover:opacity-100 transition-opacity flex bg-zinc-100 dark:bg-zinc-800 rounded-xl text-zinc-500 overflow-hidden shrink-0 border border-zinc-200 dark:border-zinc-700 shadow-sm">
-                                                                <button onClick={(e) => { e.stopPropagation(); moveActivity(i, Math.max(0, i - 1)); }} disabled={i === 0} className="w-8 h-8 flex items-center justify-center hover:bg-zinc-200 dark:hover:bg-zinc-700 disabled:opacity-30">↑</button>
-                                                                <button onClick={(e) => { e.stopPropagation(); moveActivity(i, Math.min(plan.activities.length - 1, i + 1)); }} disabled={isLast} className="w-8 h-8 flex items-center justify-center hover:bg-zinc-200 dark:hover:bg-zinc-700 border-l border-zinc-200 dark:border-zinc-700 disabled:opacity-30">↓</button>
+                                                            <div className="opacity-0 group-hover:opacity-100 transition-opacity flex bg-zinc-100 dark:bg-zinc-800 rounded-xl text-zinc-500 overflow-hidden shrink-0 border border-zinc-200 dark:border-zinc-700 shadow-sm items-center">
+                                                                <div className="px-2 cursor-grab active:cursor-grabbing text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200">
+                                                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" y1="8" x2="20" y2="8"></line><line x1="4" y1="16" x2="20" y2="16"></line></svg>
+                                                                </div>
                                                                 <button onClick={(e) => { e.stopPropagation(); removeActivity(i); }} className="w-8 h-8 flex items-center justify-center hover:bg-red-500 hover:text-white transition-colors border-l border-zinc-200 dark:border-zinc-700">✕</button>
                                                             </div>
                                                         </div>
@@ -447,11 +452,11 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                                                             </button>
                                                         </div>
                                                     </div>
-                                                </motion.div>
-                                            </div>
+                                                </div>
+                                            </Reorder.Item>
                                         );
                                     })}
-                                </div>
+                                </Reorder.Group>
 
                                 {/* Nearby Recommendations */}
                                 {(data.hotels?.length > 0 || data.restaurants?.length > 0) && (

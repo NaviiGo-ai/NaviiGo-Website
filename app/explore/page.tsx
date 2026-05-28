@@ -9,6 +9,8 @@ import {
   CATEGORIES, BENTO_DEST, type Destination,
 } from '@/components/features/explore/exploreData';
 import { startCityView, trackCategoryClick } from '@/lib/browsingSignals';
+import { useAuth } from '@/lib/AuthContext';
+import { toggleBucketListItem, getUserBucketList } from '@/lib/firestore';
 
 const CATEGORY_ICONS: Record<string, React.ReactNode> = {
   'All': <Globe className="w-3.5 h-3.5" />,
@@ -28,8 +30,9 @@ function ExplorePageContent() {
   const [showCount, setShowCount] = useState(12);
   const [visibleSections, setVisibleSections] = useState(3);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [liked, setLiked] = useState<Set<number>>(new Set());
+  const [liked, setLiked] = useState<Set<number | string>>(new Set());
   const [expandedGem, setExpandedGem] = useState<string | null>(null);
+  const { user, signInWithGoogle } = useAuth();
   const [selectedCuisine, setSelectedCuisine] = useState(0);
   const loadRef = useRef<HTMLDivElement>(null);
   const heroRef = useRef<HTMLDivElement>(null);
@@ -51,6 +54,16 @@ function ExplorePageContent() {
     return () => obs.disconnect();
   }, [visibleSections]);
 
+  useEffect(() => {
+    if (user?.uid) {
+      getUserBucketList(user.uid).then(list => {
+        setLiked(new Set(list.map(item => item.id)));
+      });
+    } else {
+      setLiked(new Set());
+    }
+  }, [user?.uid]);
+
   const filtered = ALL_DESTINATIONS.filter(d => {
     const q = searchQuery.toLowerCase();
     const ms = !searchQuery || d.name.toLowerCase().includes(q) || d.state.toLowerCase().includes(q) || d.tagline.toLowerCase().includes(q);
@@ -58,9 +71,19 @@ function ExplorePageContent() {
     return ms && mc;
   });
 
-  const toggleLike = useCallback((id: number) => {
+  const toggleLike = useCallback(async (d: any) => {
+    if (!user) {
+      signInWithGoogle();
+      return;
+    }
+    const id = d.id ?? d.name; // Use ID or name
     setLiked(p => { const n = new Set(p); n.has(id) ? n.delete(id) : n.add(id); return n; });
-  }, []);
+    try {
+      await toggleBucketListItem(user.uid, { id: String(id), name: d.name, type: 'destination', image: d.image, location: d.state });
+    } catch (e) {
+      console.error(e);
+    }
+  }, [user, signInWithGoogle]);
 
   const go = (name: string) => { startCityView(name); router.push(`/explore/${encodeURIComponent(name)}`); };
 
@@ -141,9 +164,9 @@ function ExplorePageContent() {
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/10 transition-opacity duration-300 group-hover:opacity-90" />
 
                   {/* Like btn */}
-                  <button onClick={e => { e.stopPropagation(); toggleLike(d.id); }}
+                  <button onClick={e => { e.stopPropagation(); toggleLike(d); }}
                     className="absolute top-3 right-3 w-8 h-8 bg-black/30 hover:bg-black/50 backdrop-blur-md border border-white/20 rounded-full flex items-center justify-center z-10 transition-colors">
-                    <Heart className={`w-4 h-4 transition-all ${liked.has(d.id) ? 'fill-rose-500 text-rose-500' : 'text-white/90'}`} />
+                    <Heart className={`w-4 h-4 transition-all ${liked.has(d.id) || liked.has(String(d.id)) ? 'fill-rose-500 text-rose-500' : 'text-white/90'}`} />
                   </button>
 
                   {/* Category */}
@@ -225,6 +248,10 @@ function ExplorePageContent() {
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                         <div className="absolute top-3 right-3 flex gap-2">
                           <span className="bg-white/90 text-zinc-900 text-[10px] px-2.5 py-1 rounded-sm font-bold shadow-sm">{gem.crowdLevel} crowd</span>
+                          <button onClick={e => { e.stopPropagation(); toggleLike({ id: gem.name, name: gem.name, state: gem.state, image: gem.image }); }}
+                            className="w-7 h-7 bg-black/30 hover:bg-black/50 backdrop-blur-md border border-white/20 rounded-full flex items-center justify-center z-10 transition-colors">
+                            <Heart className={`w-3.5 h-3.5 transition-all ${liked.has(gem.name) ? 'fill-rose-500 text-rose-500' : 'text-white/90'}`} />
+                          </button>
                         </div>
                         <div className="absolute bottom-4 left-4 right-4">
                           <h3 className="text-xl font-bold text-white tracking-tight">{gem.name}</h3>

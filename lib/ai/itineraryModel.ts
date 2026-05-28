@@ -103,6 +103,7 @@ export interface UserContext {
     budget: number;
     startDate: string;
     travelerType?: string; // backpacker | comfort | luxury | family | flash | slow
+    taste_vector?: number[]; // Vector embedding of user's semantic taste profile
 
     preferences?: {
         travelStyle: string | null;

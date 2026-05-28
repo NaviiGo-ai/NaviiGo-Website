@@ -5,7 +5,7 @@ import { useRef, useLayoutEffect, useState, useEffect } from 'react';
 import gsap from 'gsap';
 import { X, MapPin, Calendar, CheckCircle2, Trophy, Flame, Star, Target, ChevronRight, Zap, Globe2, TrendingUp, Award } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
-import { getPassportStats, getPassportStamps, updatePassportStats, addPassportStamp } from '@/lib/firestore';
+import { getPassportStats, getPassportStamps, updatePassportStats, addPassportStamp, getUserBucketList } from '@/lib/firestore';
 import {
     xpProgress, getLevelTitle, ACHIEVEMENTS, getDefaultStats,
     type PassportStats, type PassportStamp, applyStamp
@@ -42,7 +42,8 @@ const DEMO_STATS: PassportStats = {
 export default function PassportPage() {
     const containerRef = useRef<HTMLDivElement>(null);
     const [selectedStamp, setSelectedStamp] = useState<PassportStamp | null>(null);
-    const [activeTab, setActiveTab] = useState<'stamps' | 'achievements' | 'stats'>('stamps');
+    const [activeTab, setActiveTab] = useState<'stamps' | 'achievements' | 'stats' | 'bucketlist'>('stamps');
+    const [bucketList, setBucketList] = useState<any[]>([]);
     const { user } = useAuth();
 
     // Use demo data when not logged in, Firestore data when logged in
@@ -60,7 +61,9 @@ export default function PassportPage() {
         Promise.all([
             getPassportStats(user.uid),
             getPassportStamps(user.uid),
-        ]).then(([fsStats, fsStamps]) => {
+            getUserBucketList(user.uid),
+        ]).then(([fsStats, fsStamps, fsBucketList]) => {
+            setBucketList(fsBucketList);
             if (fsStats && fsStats.totalStamps > 0) {
                 setStats({
                     ...fsStats,
@@ -205,7 +208,7 @@ export default function PassportPage() {
 
                 {/* ── TAB NAVIGATION ───────────────────────────────────────── */}
                 <div className="flex justify-center gap-2 mb-8">
-                    {(['stamps', 'achievements', 'stats'] as const).map(tab => (
+                    {(['stamps', 'achievements', 'stats', 'bucketlist'] as const).map(tab => (
                         <button
                             key={tab}
                             onClick={() => setActiveTab(tab)}
@@ -215,8 +218,8 @@ export default function PassportPage() {
                                     : 'bg-white/50 dark:bg-white/5 text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-white/10'
                             }`}
                         >
-                            {tab === 'stamps' && '🗺️ '}{tab === 'achievements' && '🏆 '}{tab === 'stats' && '📊 '}
-                            {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                            {tab === 'stamps' && '🗺️ '}{tab === 'achievements' && '🏆 '}{tab === 'stats' && '📊 '}{tab === 'bucketlist' && '❤️ '}
+                            {tab === 'bucketlist' ? 'Bucket List' : tab.charAt(0).toUpperCase() + tab.slice(1)}
                         </button>
                     ))}
                 </div>
@@ -368,6 +371,45 @@ export default function PassportPage() {
                             <h3 className="font-bold text-lg text-slate-900 dark:text-white mb-1">You&apos;re in the top 15% of travelers!</h3>
                             <p className="text-sm text-slate-500">Keep exploring to climb the leaderboard. {33 - stats.statesVisited.length} states to go for All-India!</p>
                         </div>
+                    </motion.div>
+                )}
+
+                {/* ── BUCKET LIST TAB ─────────────────────────────────────────── */}
+                {activeTab === 'bucketlist' && (
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+                        {bucketList.length === 0 ? (
+                            <div className="text-center py-20">
+                                <Heart className="w-16 h-16 text-slate-200 dark:text-slate-800 mx-auto mb-4" />
+                                <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Your bucket list is empty</h3>
+                                <p className="text-slate-500 max-w-md mx-auto">Explore destinations and tap the heart icon to save places you want to visit.</p>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {bucketList.map((item, i) => (
+                                    <motion.div
+                                        key={item.id}
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: i * 0.05 }}
+                                        className="group relative rounded-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800 shadow-sm"
+                                    >
+                                        <div className="relative h-48 bg-slate-100 dark:bg-slate-800">
+                                            {item.image && (
+                                                <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${item.image})` }} />
+                                            )}
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                                            <div className="absolute top-3 right-3 text-rose-500 bg-white/90 p-1.5 rounded-full">
+                                                <Heart className="w-4 h-4 fill-rose-500" />
+                                            </div>
+                                            <div className="absolute bottom-4 left-4">
+                                                <h3 className="font-bold text-white text-lg">{item.name}</h3>
+                                                {item.location && <p className="text-white/80 text-sm">{item.location}</p>}
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                ))}
+                            </div>
+                        )}
                     </motion.div>
                 )}
             </div>

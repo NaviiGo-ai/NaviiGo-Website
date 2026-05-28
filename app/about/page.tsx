@@ -72,6 +72,90 @@ export default function AboutPage() {
           </div>
         </div>
 
+        {/* Team Section */}
+        <div className="mt-40 reveal-text">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-6xl font-semibold tracking-tight">
+              Meet the <span className="text-blue-600 dark:text-blue-500 italic font-serif">Visionaries.</span>
+            </h2>
+            <p className="mt-6 text-lg md:text-xl text-zinc-600 dark:text-zinc-400 font-light max-w-2xl mx-auto">
+              We are a team of passionate engineers, designers, and travelers dedicated to building the future of travel tech in India.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {/* Team Member 1 */}
+            <div className="group relative rounded-[2rem] overflow-hidden bg-white dark:bg-[#0a0a0a] border border-zinc-200 dark:border-zinc-800/50 p-6 transition-all hover:-translate-y-2 hover:shadow-2xl dark:hover:shadow-blue-900/20">
+              <div className="aspect-square w-full rounded-3xl overflow-hidden mb-6 relative">
+                <div className="absolute inset-0 bg-zinc-200 dark:bg-zinc-800" />
+                <img 
+                  src="/team/param.png" 
+                  alt="Param Nainani"
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 relative z-10"
+                />
+              </div>
+              <h3 className="text-2xl font-bold tracking-tight">Param Nainani</h3>
+              <p className="text-blue-600 dark:text-blue-400 font-medium mb-3">CEO</p>
+            </div>
+
+            {/* Team Member 2 */}
+            <div className="group relative rounded-[2rem] overflow-hidden bg-white dark:bg-[#0a0a0a] border border-zinc-200 dark:border-zinc-800/50 p-6 transition-all hover:-translate-y-2 hover:shadow-2xl dark:hover:shadow-blue-900/20">
+              <div className="aspect-square w-full rounded-3xl overflow-hidden mb-6 relative">
+                <div className="absolute inset-0 bg-zinc-200 dark:bg-zinc-800" />
+                <img 
+                  src="/team/manpreet.png" 
+                  alt="Manpreet Singh"
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 relative z-10"
+                />
+              </div>
+              <h3 className="text-2xl font-bold tracking-tight">Manpreet Singh</h3>
+              <p className="text-blue-600 dark:text-blue-400 font-medium mb-3">COO</p>
+            </div>
+
+            {/* Team Member 3 */}
+            <div className="group relative rounded-[2rem] overflow-hidden bg-white dark:bg-[#0a0a0a] border border-zinc-200 dark:border-zinc-800/50 p-6 transition-all hover:-translate-y-2 hover:shadow-2xl dark:hover:shadow-blue-900/20">
+              <div className="aspect-square w-full rounded-3xl overflow-hidden mb-6 relative">
+                <div className="absolute inset-0 bg-zinc-200 dark:bg-zinc-800" />
+                <img 
+                  src="/team/ojaswee.png" 
+                  alt="Ojaswee Upadhyay"
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 relative z-10"
+                />
+              </div>
+              <h3 className="text-2xl font-bold tracking-tight">Ojaswee Upadhyay</h3>
+              <p className="text-blue-600 dark:text-blue-400 font-medium mb-3">CTO</p>
+            </div>
+
+            {/* Team Member 4 */}
+            <div className="group relative rounded-[2rem] overflow-hidden bg-white dark:bg-[#0a0a0a] border border-zinc-200 dark:border-zinc-800/50 p-6 transition-all hover:-translate-y-2 hover:shadow-2xl dark:hover:shadow-blue-900/20">
+              <div className="aspect-square w-full rounded-3xl overflow-hidden mb-6 relative">
+                <div className="absolute inset-0 bg-zinc-200 dark:bg-zinc-800" />
+                <img 
+                  src="/team/lavish.png" 
+                  alt="Lavish Sharma"
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 relative z-10"
+                />
+              </div>
+              <h3 className="text-2xl font-bold tracking-tight">Lavish Sharma</h3>
+              <p className="text-blue-600 dark:text-blue-400 font-medium mb-3">CFO</p>
+            </div>
+
+            {/* Team Member 5 */}
+            <div className="group relative rounded-[2rem] overflow-hidden bg-white dark:bg-[#0a0a0a] border border-zinc-200 dark:border-zinc-800/50 p-6 transition-all hover:-translate-y-2 hover:shadow-2xl dark:hover:shadow-blue-900/20">
+              <div className="aspect-square w-full rounded-3xl overflow-hidden mb-6 relative">
+                <div className="absolute inset-0 bg-zinc-200 dark:bg-zinc-800" />
+                <img 
+                  src="/team/nikhil.png" 
+                  alt="Nikhil Bhatt"
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 relative z-10"
+                />
+              </div>
+              <h3 className="text-2xl font-bold tracking-tight">Nikhil Bhatt</h3>
+              <p className="text-blue-600 dark:text-blue-400 font-medium mb-3">CMO</p>
+            </div>
+          </div>
+        </div>
+
       </div>
     </div>
   );
