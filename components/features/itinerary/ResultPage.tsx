@@ -1,5 +1,5 @@
 'use client';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
@@ -28,17 +28,27 @@ interface ResultPageProps {
 export default function ResultPage({ form, generatedData, onDayView, onReset }: ResultPageProps) {
     const router = useRouter();
     const { user } = useAuth();
-    const { registerItinerary } = useAI();
+    const { registerItinerary, applyAction, isEditPanelOpen, openEditPanel, closeEditPanel,
+        editMessages, sendEditMessage, lastAction, clearLastAction } = useAI();
     const [isSaved, setIsSaved] = useState(false);
     const [collaborators, setCollaborators] = useState(1);
     const [isSharing, setIsSharing] = useState(false);
     const [hiddenGems, setHiddenGems] = useState<any[]>([]);
+    const [insiderTips, setInsiderTips] = useState<string[]>([]);
+    const [editInput, setEditInput] = useState('');
+    const [editLoading, setEditLoading] = useState(false);
+    const [localData, setLocalData] = useState<any>(null);
+    const editChatRef = useRef<HTMLDivElement>(null);
     const autoSaveRef = useRef(false);
+
     const destId = form.destination as string, destName = form.destName as string;
     const purpose = form.purpose as string, group = form.group as string;
     const displayMonth = form.startDate ? new Date(form.startDate as string).toLocaleString('en-US', { month: 'short' }) : 'Jan';
     const staticData = DEST_DATA[destId] ?? FALLBACK_DEST;
-    const data: any = useMemo(() => generatedData ? { ...staticData, ...generatedData } : staticData, [staticData, generatedData]);
+    const data: any = useMemo(() => {
+        const base = generatedData ? { ...staticData, ...generatedData } : staticData;
+        return localData ? { ...base, ...localData } : base;
+    }, [staticData, generatedData, localData]);
     const destInfo = DESTINATIONS.find(d => d.id === destId);
     const purposeLabel = PURPOSES.find(p => p.id === purpose)?.label ?? purpose;
     const groupLabel = GROUP_SIZES.find(g => g.id === group)?.label ?? group;
@@ -46,9 +56,9 @@ export default function ResultPage({ form, generatedData, onDayView, onReset }: 
 
     useEffect(() => {
         registerItinerary(data, (newData) => {
-            console.log("AI modified itinerary data:", newData);
+            setLocalData(newData);
         });
-    }, [data, registerItinerary]);
+    }, [generatedData]); // Only re-register when source data changes, not on every localData update
 
     // ── Auto-save itinerary to Firestore on generation ─────────
     useEffect(() => {
@@ -77,6 +87,38 @@ export default function ResultPage({ form, generatedData, onDayView, onReset }: 
         }
     }, [destId, data.mapCenter]);
 
+    // Fetch AI insider tips
+    useEffect(() => {
+        if (!destName) return;
+        fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                message: `Give me 4 ultra-specific LOCAL INSIDER TIPS for visiting ${destName}, India — things only locals know. Format as a JSON array of strings, each starting with an emoji. No markdown.`,
+                itineraryContext: null,
+                context: [],
+            }),
+        })
+            .then(r => r.json())
+            .then(d => {
+                const txt = d.reply || '';
+                // Try parsing as JSON array
+                const match = txt.match(/\[[\s\S]*\]/);
+                if (match) {
+                    const tips = JSON.parse(match[0]);
+                    if (Array.isArray(tips)) setInsiderTips(tips.slice(0, 4));
+                }
+            })
+            .catch(() => { });
+    }, [destName]);
+
+    // Auto-scroll edit chat
+    useEffect(() => {
+        if (editChatRef.current) {
+            editChatRef.current.scrollTop = editChatRef.current.scrollHeight;
+        }
+    }, [editMessages]);
+
     const mapPins = useMemo(() => data.highlights.filter((h: any) => h.lat).map((h: any, i: number) => ({
         lat: h.lat!, lng: h.lng!, label: h.name, number: i + 1, img: h.img,
     })), [data]);
@@ -98,8 +140,29 @@ export default function ResultPage({ form, generatedData, onDayView, onReset }: 
         setIsSharing(false);
     }, [form, destName, destId]);
 
+    const handleSendEdit = useCallback(async () => {
+        if (!editInput.trim() || editLoading) return;
+        const msg = editInput;
+        setEditInput('');
+        setEditLoading(true);
+        await sendEditMessage(msg);
+        setEditLoading(false);
+    }, [editInput, editLoading, sendEditMessage]);
+
+    const handleAcceptAction = useCallback(() => {
+        if (!lastAction) return;
+        applyAction({ type: lastAction.type, payload: lastAction.payload });
+        clearLastAction();
+    }, [lastAction, applyAction, clearLastAction]);
+
+    const handleSurpriseMe = useCallback(async () => {
+        const dayIndex = Math.floor(Math.random() * (data.dayPlans?.length || 1));
+        applyAction({ type: 'surpriseActivity', payload: { dayIndex } });
+    }, [data, applyAction]);
+
     return (
         <div className="min-h-screen bg-[#f7f8fc] dark:bg-[#0a0a0f] pt-20">
+            {/* Top bar */}
             <div className="sticky top-20 z-40 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-lg border-b border-zinc-100 dark:border-white/5 px-4 py-3 flex items-center gap-4">
                 <button onClick={onReset} className="w-9 h-9 rounded-full border border-zinc-200 dark:border-zinc-700 flex items-center justify-center hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors text-sm text-zinc-600 dark:text-zinc-300">←</button>
                 <div className="flex-1 flex items-center gap-4 overflow-x-auto no-scrollbar text-xs text-zinc-500">
@@ -110,6 +173,11 @@ export default function ResultPage({ form, generatedData, onDayView, onReset }: 
                     <div><div className="text-[10px] font-bold text-zinc-400 uppercase tracking-wide">Preferences</div><div className="font-semibold text-zinc-900 dark:text-white truncate max-w-[160px]">{groupLabel} · {purposeLabel}</div></div>
                 </div>
                 <div className="flex items-center gap-2">
+                    {/* Surprise Me button */}
+                    <button onClick={handleSurpriseMe}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border border-amber-200 dark:border-amber-500/30 text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-colors">
+                        🎲 Surprise Me
+                    </button>
                     <ShareDropdown onCopyLink={handleShare} destName={destName} isSharing={isSharing} collaborators={collaborators} />
                     <button onClick={async () => {
                         if (user?.uid) {
@@ -204,10 +272,8 @@ export default function ResultPage({ form, generatedData, onDayView, onReset }: 
                                         <div className="flex-1 min-w-0">
                                             <h4 className="font-bold text-sm text-zinc-900 dark:text-white mb-1">Flights</h4>
                                             <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed mb-3">{data.logistics.flights}</p>
-                                            <a
-                                                href={`/bookings?transport=flight&to=${data.logistics.airportCode || 'BOM'}`}
-                                                className="inline-flex items-center gap-1.5 text-[10px] font-bold bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 px-3 py-1.5 rounded-lg hover:scale-105 transition-transform"
-                                            >
+                                            <a href={`/bookings?transport=flight&to=${data.logistics.airportCode || 'BOM'}`}
+                                                className="inline-flex items-center gap-1.5 text-[10px] font-bold bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 px-3 py-1.5 rounded-lg hover:scale-105 transition-transform">
                                                 Book Flights ↗
                                             </a>
                                         </div>
@@ -217,10 +283,8 @@ export default function ResultPage({ form, generatedData, onDayView, onReset }: 
                                         <div className="flex-1 min-w-0">
                                             <h4 className="font-bold text-sm text-zinc-900 dark:text-white mb-1">Trains</h4>
                                             <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed mb-3">{data.logistics.trains}</p>
-                                            <a
-                                                href={`/bookings?transport=train&to=${data.logistics.stationCode || 'BSB'}`}
-                                                className="inline-flex items-center gap-1.5 text-[10px] font-bold bg-[#f77728] text-white px-3 py-1.5 rounded-lg hover:scale-105 transition-transform"
-                                            >
+                                            <a href={`/bookings?transport=train&to=${data.logistics.stationCode || 'BSB'}`}
+                                                className="inline-flex items-center gap-1.5 text-[10px] font-bold bg-[#f77728] text-white px-3 py-1.5 rounded-lg hover:scale-105 transition-transform">
                                                 Book Trains ↗
                                             </a>
                                         </div>
@@ -257,7 +321,7 @@ export default function ResultPage({ form, generatedData, onDayView, onReset }: 
 
                         {/* Video Guide */}
                         <div>
-                            <h2 className="text-lg font-bold text-zinc-900 dark:text-white mb-4">🎬 Video Guide</h2>
+                            <h2 className="text-lg font-bold text-zinc-900 dark:text-white mb-4">🎤 Video Guide</h2>
                             <VideoCard destId={destId} destName={destName} />
                         </div>
 
@@ -340,6 +404,22 @@ export default function ResultPage({ form, generatedData, onDayView, onReset }: 
                             </div>
                         )}
 
+                        {/* Local Insider Tips */}
+                        {insiderTips.length > 0 && (
+                            <div>
+                                <h2 className="text-lg font-bold text-zinc-900 dark:text-white mb-4">🧠 Local Insider Tips</h2>
+                                <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/10 dark:to-orange-900/10 border border-amber-100 dark:border-amber-500/20 rounded-2xl p-5 space-y-3">
+                                    {insiderTips.map((tip, i) => (
+                                        <motion.div key={i} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.08 }}
+                                            className="flex gap-3 items-start">
+                                            <div className="w-6 h-6 rounded-full bg-amber-100 dark:bg-amber-500/20 flex items-center justify-center flex-shrink-0 mt-0.5 text-xs">{i + 1}</div>
+                                            <p className="text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed">{tip}</p>
+                                        </motion.div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
                         {/* Travel Tips from AI */}
                         {data.travelTips && data.travelTips.length > 0 && (
                             <div>
@@ -371,6 +451,128 @@ export default function ResultPage({ form, generatedData, onDayView, onReset }: 
                     </div>
                 </div>
             </div>
+
+            {/* Floating AI Edit Button */}
+            <motion.button
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 1.5, type: 'spring' }}
+                onClick={openEditPanel}
+                className="fixed bottom-6 right-6 z-50 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white rounded-2xl px-5 py-3.5 shadow-2xl shadow-purple-500/30 flex items-center gap-2.5 font-bold text-sm transition-all hover:scale-105 active:scale-95"
+            >
+                <span className="text-lg">✏️</span>
+                <span>Edit with AI</span>
+                <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
+            </motion.button>
+
+            {/* AI Edit Panel (Slide-in) */}
+            <AnimatePresence>
+                {isEditPanelOpen && (
+                    <>
+                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50"
+                            onClick={closeEditPanel} />
+                        <motion.div
+                            initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
+                            transition={{ type: 'spring', damping: 28, stiffness: 280 }}
+                            className="fixed right-0 top-0 h-full w-full max-w-md z-50 bg-white dark:bg-zinc-900 shadow-2xl flex flex-col"
+                        >
+                            {/* Panel Header */}
+                            <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-100 dark:border-zinc-800 bg-gradient-to-r from-violet-50 to-purple-50 dark:from-violet-900/20 dark:to-purple-900/10">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-lg shadow-lg shadow-purple-500/20">✨</div>
+                                    <div>
+                                        <div className="font-bold text-zinc-900 dark:text-white text-sm">Edit with AI</div>
+                                        <div className="text-[10px] text-zinc-400">Tell me how to change {destName}</div>
+                                    </div>
+                                </div>
+                                <button onClick={closeEditPanel} className="w-8 h-8 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-center text-zinc-500 text-lg transition-colors">×</button>
+                            </div>
+
+                            {/* Quick Prompt Chips */}
+                            <div className="px-4 py-3 border-b border-zinc-100 dark:border-zinc-800">
+                                <div className="flex flex-wrap gap-2">
+                                    {[
+                                        '🍽️ More food stops',
+                                        '🚶 Less walking',
+                                        '💰 Make it cheaper',
+                                        '✨ Add hidden gem',
+                                        '🌅 More morning time',
+                                    ].map(chip => (
+                                        <button key={chip} onClick={() => { setEditInput(chip.slice(2).trim()); }}
+                                            className="text-xs bg-zinc-100 dark:bg-zinc-800 hover:bg-violet-100 dark:hover:bg-violet-500/20 hover:text-violet-700 dark:hover:text-violet-300 text-zinc-600 dark:text-zinc-400 rounded-full px-3 py-1.5 font-medium transition-all">
+                                            {chip}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Chat Messages */}
+                            <div ref={editChatRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
+                                {editMessages.map((msg, i) => (
+                                    <motion.div key={i} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+                                        className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                                        <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
+                                            msg.role === 'user'
+                                                ? 'bg-gradient-to-br from-violet-500 to-purple-600 text-white rounded-br-sm'
+                                                : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 rounded-bl-sm'
+                                        }`}>
+                                            {msg.text}
+                                        </div>
+                                    </motion.div>
+                                ))}
+                                {editLoading && (
+                                    <div className="flex justify-start">
+                                        <div className="bg-zinc-100 dark:bg-zinc-800 rounded-2xl rounded-bl-sm px-4 py-3 flex items-center gap-1.5">
+                                            {[0, 1, 2].map(i => (
+                                                <div key={i} className="w-1.5 h-1.5 bg-zinc-400 rounded-full animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Pending Action Banner */}
+                            <AnimatePresence>
+                                {lastAction && (
+                                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
+                                        className="mx-4 mb-2 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/10 border border-emerald-100 dark:border-emerald-500/20 rounded-2xl p-3">
+                                        <p className="text-xs text-zinc-600 dark:text-zinc-400 mb-2">🧠 AI wants to make a change:</p>
+                                        <p className="text-xs font-semibold text-zinc-900 dark:text-white mb-3">{lastAction.description}</p>
+                                        <div className="flex gap-2">
+                                            <button onClick={handleAcceptAction}
+                                                className="flex-1 bg-emerald-500 hover:bg-emerald-400 text-white text-xs font-bold rounded-xl py-2 transition-colors">
+                                                ✓ Apply Change
+                                            </button>
+                                            <button onClick={clearLastAction}
+                                                className="flex-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs font-bold rounded-xl py-2 transition-colors">
+                                                ✕ Skip
+                                            </button>
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+
+                            {/* Input */}
+                            <div className="px-4 py-4 border-t border-zinc-100 dark:border-zinc-800">
+                                <div className="flex gap-2">
+                                    <input
+                                        value={editInput}
+                                        onChange={e => setEditInput(e.target.value)}
+                                        onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSendEdit()}
+                                        placeholder={`e.g. Remove the temple on day 2...`}
+                                        className="flex-1 bg-zinc-100 dark:bg-zinc-800 rounded-2xl px-4 py-3 text-sm text-zinc-900 dark:text-white placeholder-zinc-400 outline-none focus:ring-2 focus:ring-violet-500/20 transition-all"
+                                    />
+                                    <button onClick={handleSendEdit} disabled={editLoading || !editInput.trim()}
+                                        className="w-11 h-11 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 text-white flex items-center justify-center text-lg disabled:opacity-50 hover:scale-105 transition-all active:scale-95 shadow-lg shadow-purple-500/20">
+                                        →
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </>
+                )}
+            </AnimatePresence>
         </div>
     );
 }

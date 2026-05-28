@@ -490,6 +490,72 @@ export const DEST_DATA: Record<string, DestInfo> = {
             },
         ],
     },
+    srinagar: {
+        logistics: { flights: 'Nearest Airport: Sheikh ul-Alam (SXR) — ~₹6,000 avg from Delhi', trains: 'Nearest Station: Jammu Tawi (JAT) — then 8 hr drive to Srinagar' },
+        description: 'Srinagar, the summer capital of Jammu & Kashmir, enchants with its shimmering Dal Lake, centuries-old Mughal gardens, floating markets, and snow-dusted peaks — a paradise that has inspired poets for millennia.',
+        avgCost: '₹3,000 – ₹10,000',
+        weather: { Jan: '-2–4°C', Feb: '0–7°C', Mar: '4–14°C', Apr: '8–19°C', May: '12–25°C', Jun: '15–30°C', Jul: '18–31°C', Aug: '18–30°C', Sep: '13–27°C', Oct: '7–21°C', Nov: '2–13°C', Dec: '-1–6°C' },
+        crowdLevel: 'High', crowdNote: 'Apr–Oct peak season; houseboats book out months ahead in summer',
+        mapCenter: { lat: 34.0837, lng: 74.7973 },
+        highlights: [
+            { name: 'Dal Lake Shikara Ride', img: '/destinations/srinagar.jpg', desc: 'Glide on a hand-carved shikara across the mirror-still waters of Dal Lake, passing floating gardens, lotus blooms and centuries-old houseboats.', bestMonths: 'Apr – Oct', duration: '2–4 hrs', walking: 'Easy', value: 'High', tags: ['Lake', 'Iconic', 'Romance'], lat: 34.0860, lng: 74.8370 },
+            { name: 'Mughal Gardens – Nishat Bagh', img: '/destinations/srinagar.jpg', desc: 'The "Garden of Joy" built by Nur Jahan\'s brother in 1633 with 12 terraces representing zodiac signs, set against the Zabarwan Range. Entry: ₹25. Open 9 AM – 7 PM.', bestMonths: 'Mar – Nov', duration: '1–2 hrs', walking: 'Easy', value: 'High', tags: ['Heritage', 'Mughal', 'Garden'], lat: 34.1173, lng: 74.8808 },
+            { name: 'Shalimar Bagh', img: '/destinations/srinagar.jpg', desc: 'Emperor Jahangir\'s "Abode of Love" — a stunning Mughal garden with cascading fountains, black marble pavilion and chinar-shaded walkways. Entry: ₹25. Open 9 AM – 7 PM.', bestMonths: 'Mar – Nov', duration: '1–2 hrs', walking: 'Easy', value: 'High', tags: ['Heritage', 'Mughal', 'UNESCO'], lat: 34.1382, lng: 74.8851 },
+            { name: 'Shankaracharya Temple', img: '/destinations/srinagar.jpg', desc: 'Ancient hilltop Shiva temple dating to 200 BC perched at 1,000 ft above Srinagar. Panoramic 360° views of the valley. Open sunrise–sunset. Modest dress required.', bestMonths: 'All year', duration: '1–2 hrs', walking: 'High', value: 'High', tags: ['Temple', 'Spiritual', 'Viewpoint'], lat: 34.0710, lng: 74.8557 },
+            { name: 'Hazratbal Shrine', img: '/destinations/srinagar.jpg', desc: 'Kashmir\'s most revered shrine on the western shore of Dal Lake, housing a relic believed to be the Prophet\'s hair. Stunning white marble architecture.', bestMonths: 'All year', duration: '1 hr', walking: 'Easy', value: 'High', tags: ['Spiritual', 'Shrine', 'Architecture'], lat: 34.1283, lng: 74.8384 },
+            { name: 'Old City & Jama Masjid', img: '/destinations/srinagar.jpg', desc: 'Wander the atmospheric lanes of Srinagar\'s old town and visit the 600-year-old Jama Masjid with its 370 wooden pillars and serene inner courtyard.', bestMonths: 'All year', duration: '2–3 hrs', walking: 'Medium', value: 'High', tags: ['Heritage', 'Culture', 'Walk'], lat: 34.0765, lng: 74.8116 },
+        ],
+        restaurants: [
+            { id: 'sr1', name: 'Ahdoos Restaurant', img: '/destinations/srinagar.jpg', desc: 'Iconic 1918-est. restaurant on Residency Road, famous for its Wazwan feasts and Rogan Josh. A Srinagar institution.', cuisine: 'Kashmiri Wazwan', priceRange: '₹400–₹1,200', rating: 4.6, mustTry: 'Rogan Josh & Gushtaba', timing: '11:00 AM – 11:00 PM', lat: 34.0837, lng: 74.7973, tags: ['Iconic', 'Wazwan', 'Famous'] },
+            { id: 'sr2', name: 'Mughal Darbar', img: '/destinations/srinagar.jpg', desc: 'Popular family restaurant known for massive portions of authentic Kashmiri cuisine. Try their 36-course Wazwan platter.', cuisine: 'Kashmiri', priceRange: '₹300–₹900', rating: 4.5, mustTry: 'Tabak Maaz & Dum Aloo', timing: '10:30 AM – 10:30 PM', lat: 34.0770, lng: 74.8040, tags: ['Local', 'Family', 'Wazwan'] },
+            { id: 'sr3', name: 'Chai Jaai', img: '/destinations/srinagar.jpg', desc: 'Cozy café by Dal Lake specializing in Kashmiri Noon Chai (pink salt tea), breads and light bites. Perfect for cold mornings.', cuisine: 'Café & Kashmiri Tea', priceRange: '₹100–₹400', rating: 4.4, mustTry: 'Noon Chai with Sheermal bread', timing: '7:00 AM – 8:00 PM', lat: 34.0900, lng: 74.8280, tags: ['Café', 'Tea', 'Breakfast'] },
+            { id: 'sr4', name: 'Shamyana Restaurant', img: '/destinations/srinagar.jpg', desc: 'Upscale restaurant on Boulevard Road serving Kashmiri, North Indian and Continental fare with Dal Lake views.', cuisine: 'Multi-cuisine', priceRange: '₹500–₹1,500', rating: 4.3, mustTry: 'Kashmiri Pulao & Seekh Kebab', timing: '12:00 PM – 11:00 PM', lat: 34.0880, lng: 74.8200, tags: ['Fine Dining', 'Lake View'] },
+        ],
+        hotels: [
+            { id: 'sh1', name: 'The Lalit Grand Palace', img: '/destinations/srinagar.jpg', desc: 'Restored 1910 royal palace overlooking Dal Lake with sprawling gardens, heritage rooms and world-class spa.', type: 'Resort', priceRange: '₹12,000–₹35,000/night', rating: 4.7, amenities: ['Spa', 'Pool', 'Lake View', 'Heritage'], checkIn: '2:00 PM', lat: 34.0920, lng: 74.8430 },
+            { id: 'sh2', name: 'Young Bombay Houseboats', img: '/destinations/srinagar.jpg', desc: 'Traditional carved-wood houseboat on Dal Lake. Stay on the water with full board, shikaras and lake views.', type: 'Homestay', priceRange: '₹3,500–₹8,000/night', rating: 4.5, amenities: ['Lake Stay', 'Full Board', 'Shikara'], checkIn: '1:00 PM', lat: 34.0850, lng: 74.8380 },
+            { id: 'sh3', name: 'Hotel Swiss', img: '/destinations/srinagar.jpg', desc: 'Clean mid-range hotel on Boulevard Road with Dal Lake views, modern rooms and friendly staff.', type: 'Hotel', priceRange: '₹2,500–₹5,000/night', rating: 4.2, amenities: ['WiFi', 'Restaurant', 'Room Service'], checkIn: '12:00 PM', lat: 34.0870, lng: 74.8250 },
+            { id: 'sh4', name: 'Zostel Srinagar', img: '/destinations/srinagar.jpg', desc: 'Backpacker-friendly hostel near Dal Gate with dorms, common areas, and organized group activities.', type: 'Hostel', priceRange: '₹600–₹2,000/night', rating: 4.1, amenities: ['WiFi', 'Common Kitchen', 'Activities'], checkIn: '1:00 PM', lat: 34.0830, lng: 74.8100 },
+        ],
+        dayPlans: [
+            {
+                day: 1, title: 'Dal Lake & Mughal Grandeur',
+                weather: { temp: '12–25°C', condition: 'Clear Skies', emoji: '☀️', rain: 5, tip: 'Layer up for chilly mornings on the lake' },
+                activities: [
+                    { time: '06:30 AM', slot: 'Morning', name: 'Dal Lake Sunrise Shikara', desc: 'Board a shikara at dawn and glide through the floating vegetable market where farmers trade from boats.', crowd: 'Low', crowdTip: 'Early morning = misty, magical, empty', lat: 34.0860, lng: 74.8370 },
+                    { time: '09:30 AM', slot: 'Morning', name: 'Nishat Bagh (Mughal Gardens)', desc: 'Explore the "Garden of Joy" with 12 terraces, fountains and Zabarwan mountain backdrop.', crowd: 'Medium', crowdTip: 'Arrive before 10 AM for peaceful strolls', travelFromPrev: '20 min shikara + auto', lat: 34.1173, lng: 74.8808 },
+                    { time: '12:00 PM', slot: 'Afternoon', name: 'Lunch at Mughal Darbar', desc: 'Feast on Tabak Maaz (fried ribs) and Kashmiri Dum Aloo at this famous local spot.', crowd: 'Medium', crowdTip: 'Go at noon to beat the 1 PM rush', travelFromPrev: '15 min auto', lat: 34.0770, lng: 74.8040, type: 'restaurant' },
+                    { time: '02:00 PM', slot: 'Afternoon', name: 'Shalimar Bagh', desc: 'Emperor Jahangir\'s "Abode of Love" — cascading fountains, black marble pavilion, chinar-lined paths.', crowd: 'Medium', crowdTip: 'Afternoon light is best for photos', travelFromPrev: '10 min auto', lat: 34.1382, lng: 74.8851 },
+                    { time: '05:00 PM', slot: 'Evening', name: 'Boulevard Road Sunset Walk', desc: 'Stroll along the famous Boulevard Road as the sun sets over Dal Lake, painting the water gold.', crowd: 'Medium', crowdTip: 'Golden hour — perfect for photography', travelFromPrev: '15 min auto', lat: 34.0880, lng: 74.8200 },
+                    { time: '08:00 PM', slot: 'Evening', name: 'Wazwan Dinner at Ahdoos', desc: 'Experience the legendary multi-course Kashmiri Wazwan feast — Rogan Josh, Gushtaba, Tabak Maaz.', crowd: 'Medium', crowdTip: 'Reserve ahead — iconic spot fills fast', travelFromPrev: '10 min walk', lat: 34.0837, lng: 74.7973, type: 'restaurant' },
+                ],
+            },
+            {
+                day: 2, title: 'Temples, Old City & Heritage',
+                weather: { temp: '12–25°C', condition: 'Partly Cloudy', emoji: '⛅', rain: 10, tip: 'Comfortable walking weather — carry a light jacket' },
+                activities: [
+                    { time: '07:00 AM', slot: 'Morning', name: 'Shankaracharya Temple Sunrise', desc: 'Climb the 243 steps to this 2,200-year-old Shiva temple for a breathtaking 360° panorama of the Kashmir Valley.', crowd: 'Low', crowdTip: 'Security check at base — carry ID, no bags', lat: 34.0710, lng: 74.8557 },
+                    { time: '09:30 AM', slot: 'Morning', name: 'Hazratbal Shrine', desc: 'Visit Kashmir\'s most revered shrine on Dal Lake\'s western shore. The white marble dome gleams against blue water.', crowd: 'Medium', crowdTip: 'Friday prayers draw large crowds — visit other days', travelFromPrev: '20 min auto', lat: 34.1283, lng: 74.8384 },
+                    { time: '12:00 PM', slot: 'Afternoon', name: 'Noon Chai at Chai Jaai', desc: 'Warm up with traditional pink Kashmiri Noon Chai paired with fresh Sheermal bread and Lavasa.', crowd: 'Low', crowdTip: 'Cozy spot — perfect on chilly days', travelFromPrev: '15 min auto', lat: 34.0900, lng: 74.8280, type: 'restaurant' },
+                    { time: '01:30 PM', slot: 'Afternoon', name: 'Old City & Jama Masjid Walk', desc: 'Wander through 700-year-old lanes, visit the massive Jama Masjid with 370 deodar pillars, and browse paper-mache artisan shops.', crowd: 'Medium', crowdTip: 'Narrow lanes — walk slowly and soak it in', travelFromPrev: '10 min auto', lat: 34.0765, lng: 74.8116 },
+                    { time: '04:30 PM', slot: 'Evening', name: 'Pari Mahal (Palace of Fairies)', desc: 'Explore the ruined terraced garden-palace on a hilltop with stunning sunset views over Dal Lake.', crowd: 'Low', crowdTip: 'Less touristy than Mughal gardens — hidden gem', travelFromPrev: '15 min auto', lat: 34.0680, lng: 74.8560 },
+                    { time: '08:00 PM', slot: 'Evening', name: 'Dinner at Shamyana', desc: 'Upscale dinner with Dal Lake views — try the Kashmiri Pulao and end with Phirni (rose-water pudding).', crowd: 'Low', crowdTip: 'Request a window table for lake views', travelFromPrev: '15 min auto', lat: 34.0880, lng: 74.8200, type: 'restaurant' },
+                ],
+            },
+            {
+                day: 3, title: 'Gulmarg Day Trip & Mountain Magic',
+                weather: { temp: '5–18°C', condition: 'Mountain Clear', emoji: '🏔️', rain: 10, tip: 'Gulmarg is 2,650m — pack warm layers even in summer' },
+                activities: [
+                    { time: '07:00 AM', slot: 'Morning', name: 'Drive to Gulmarg', desc: 'Scenic 2-hour drive through pine forests, rice paddies and the dramatic Pir Panjal range to reach Gulmarg at 8,694 ft.', crowd: 'Low', crowdTip: 'Leave early to avoid tourist buses', lat: 34.0484, lng: 74.3805 },
+                    { time: '09:30 AM', slot: 'Morning', name: 'Gulmarg Gondola (Phase 1 & 2)', desc: 'Asia\'s highest and longest cable car to Kongdoori (3,747m) and Apharwat Peak (4,200m). Jaw-dropping Himalayan views.', crowd: 'High', crowdTip: 'Book Phase 2 tickets online — sells out by 10 AM', travelFromPrev: '10 min walk', lat: 34.0490, lng: 74.3802 },
+                    { time: '12:30 PM', slot: 'Afternoon', name: 'Lunch at Gulmarg Meadow', desc: 'Hot Maggi noodles, Kahwa tea and kebabs at one of the meadow-side dhabas with mountain views.', crowd: 'Medium', crowdTip: 'Simple but satisfying — the views make it special', travelFromPrev: '10 min walk', lat: 34.0470, lng: 74.3810, type: 'restaurant' },
+                    { time: '02:00 PM', slot: 'Afternoon', name: 'Maharani Temple & Meadow Walk', desc: 'Visit the hilltop Shiva temple and walk through the wildflower-covered meadows. In winter, this is India\'s premier ski resort.', crowd: 'Medium', crowdTip: 'Carry water and sunscreen at altitude', travelFromPrev: '15 min walk', lat: 34.0500, lng: 74.3780 },
+                    { time: '04:00 PM', slot: 'Evening', name: 'Return Drive via Tangmarg', desc: 'Scenic drive back to Srinagar through apple orchards and walnut groves — stop for fresh fruit.', crowd: 'Low', crowdTip: 'Buy local walnuts and saffron from roadside vendors', travelFromPrev: '5 min walk', lat: 34.0600, lng: 74.4200 },
+                    { time: '08:00 PM', slot: 'Evening', name: 'Houseboat Dinner on Dal Lake', desc: 'End the day with a traditional Kashmiri dinner served on a houseboat — Rista, Gushtaba, and Kahwa under the stars.', crowd: 'Low', crowdTip: 'Book through your houseboat host for best experience', travelFromPrev: '2 hr drive', lat: 34.0850, lng: 74.8380, type: 'restaurant' },
+                ],
+            },
+        ],
+    },
 };
 
 export const FALLBACK_DEST: DestInfo = {

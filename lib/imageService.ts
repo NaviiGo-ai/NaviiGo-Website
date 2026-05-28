@@ -1,6 +1,7 @@
 // ─── Image Service ────────────────────────────────────────────────────────────
 // Utilities for resolving images across the app.
-// - Unsplash ID → full URL
+// - Local destination images (primary)
+// - Unsplash ID → full URL (legacy fallback)
 // - Google Places photo reference → URL
 // - Fallback gradient for broken images
 
@@ -41,37 +42,42 @@ export function getFallbackGradient(category?: string): string {
     return FALLBACK_GRADIENTS[category || 'default'] || FALLBACK_GRADIENTS.default;
 }
 
-// ─── Verified Unsplash IDs for Indian Destinations ────────────────────────────
-// These have been verified to load correctly.
+// ─── Local Image Fallback Map ─────────────────────────────────────────────────
+// Maps legacy Unsplash IDs to local destination images for reliability.
+// This ensures all itinerary images render even without Unsplash.
 
-export const VERIFIED_IMAGES = {
-    // Backgrounds
-    varanasi_bg: '1590132840509-3286380695c0',
-    rajasthan_bg: '1477587458883-47145ed94245',
-    himalayas_bg: '1585409677983-0f6c41ca9c3b',
-    kerala_bg: '1602216056096-3b40cc0c9944',
-    goa_bg: '1512343779784-a1d53b98b8ef',
-    india_generic: '1524492412937-b28074a5d7da',
-
-    // Attractions
-    houseboat: '1593693397690-362cb9666fc2',
-    tea_gardens: '1626621341517-bbf3d9990a23',
-    fort_palace: '1599661502283-a44ea24dfc74',
-    beach: '1507525428034-b723cf961d3e',
-    temple: '1582283925565-d053709d3bdf',
-    waterfall: '1549366021-d6d0bdb29a8b',
-
+const UNSPLASH_TO_LOCAL: Record<string, string> = {
+    // Nature / Backwaters
+    '1593693397690-362cb9666fc2': '/destinations/kerala.jpg',
+    '1602216056096-3b40cc0c9944': '/destinations/kerala.jpg',
+    // Tea / Hills
+    '1626621341517-bbf3d9990a23': '/destinations/ooty.jpg',
+    // Heritage / Forts
+    '1524492412937-b28074a5d7da': '/destinations/agra.png',
+    '1599661502283-a44ea24dfc74': '/destinations/jaipur.png',
+    // Beaches
+    '1512343779784-a1d53b98b8ef': '/destinations/goa.jpg',
+    '1507525428034-b723cf961d3e': '/destinations/goa.jpg',
+    // Temples / Spiritual
+    '1582283925565-d053709d3bdf': '/destinations/varanasi.png',
+    '1585409677983-0f6c41ca9c3b': '/destinations/rishikesh.png',
+    '1590132840509-3286380695c0': '/destinations/varanasi.png',
+    // Waterfall / Wildlife
+    '1549366021-d6d0bdb29a8b': '/destinations/coorg.jpg',
     // Food
-    food_indian: '1567521464027-f127ff144326',
-    biryani: '1631515243349-e0cb75fb8d4a',
-    seafood: '1555396273-367ea4eb4db5',
-    cafe: '1517248135467-4c7edcad34c4',
-
+    '1567521464027-f127ff144326': '/destinations/delhi.png',
+    '1631515243349-e0cb75fb8d4a': '/destinations/hyderabad.jpg',
+    '1555396273-367ea4eb4db5': '/destinations/goa.jpg',
+    '1517248135467-4c7edcad34c4': '/destinations/manali.png',
     // Hotels
-    resort: '1571896349842-33c89424de2d',
-    hostel: '1564501049412-61c2a3083791',
-    homestay: '1582719508461-905c673c825d',
-    hotel_modern: '1566073771259-6a6300d73351',
+    '1571896349842-33c89424de2d': '/destinations/udaipur.png',
+    '1564501049412-61c2a3083791': '/destinations/rishikesh.png',
+    '1582719508461-905c673c825d': '/destinations/coorg.jpg',
+    '1566073771259-6a6300d73351': '/destinations/mumbai.jpg',
+    // Mountains
+    '1477587458883-47145ed94245': '/destinations/jaisalmer.png',
+    // Agra
+    '1564507592333-c60657eea523': '/destinations/agra.png',
 };
 
 // ─── Smart Image Resolver ─────────────────────────────────────────────────────
@@ -83,15 +89,17 @@ export function resolveImage(
     category?: string
 ): { url: string; type: 'unsplash' | 'places' | 'fallback' } {
     if (unsplashId) {
+        // Check local mapping first
+        if (UNSPLASH_TO_LOCAL[unsplashId]) {
+            return { url: UNSPLASH_TO_LOCAL[unsplashId], type: 'fallback' };
+        }
         return { url: unsplashUrl(unsplashId), type: 'unsplash' };
     }
     if (placesPhotoRef) {
         const url = placesPhotoUrl(placesPhotoRef);
         if (url) return { url, type: 'places' };
     }
-    // Return a placeholder unsplash image as fallback
-    const fallbackId = VERIFIED_IMAGES[category as keyof typeof VERIFIED_IMAGES] || VERIFIED_IMAGES.india_generic;
-    return { url: unsplashUrl(fallbackId), type: 'fallback' };
+    return { url: '/destinations/delhi.png', type: 'fallback' };
 }
 
 // ─── Image Error Handler ──────────────────────────────────────────────────────
@@ -102,8 +110,7 @@ export function handleImageError(
     fallbackCategory?: string
 ): void {
     const img = event.currentTarget;
-    const fallbackId = VERIFIED_IMAGES[fallbackCategory as keyof typeof VERIFIED_IMAGES] || VERIFIED_IMAGES.india_generic;
-    img.src = unsplashUrl(fallbackId, { width: 600 });
+    img.src = '/destinations/delhi.png';
     img.onerror = null; // prevent infinite loop
 }
 
@@ -113,10 +120,47 @@ export function handleImageError(
 
 export function resolveImgSrc(src: string, width: number = 800): string {
     if (!src) return '/destinations/delhi.png';
-    // Already a full URL
+    // Already a full URL — use it
     if (src.startsWith('http://') || src.startsWith('https://')) return src;
     // Local path (e.g. /destinations/jaipur.png)
     if (src.startsWith('/')) return src;
-    // Legacy Unsplash ID format
-    return unsplashUrl(src, { width });
+    // "placeholder" from Gemini — use generic fallback
+    if (src === 'placeholder') return '/destinations/delhi.png';
+    // Check if it's a known Unsplash ID we can map to local
+    if (UNSPLASH_TO_LOCAL[src]) return UNSPLASH_TO_LOCAL[src];
+    // If it looks like just a filename, try destinations folder
+    if (!src.includes('/') && (src.endsWith('.png') || src.endsWith('.jpg') || src.endsWith('.jpeg') || src.endsWith('.webp'))) {
+        return `/destinations/${src}`;
+    }
+    // Legacy Unsplash ID format — use local fallback for reliability
+    if (/^\d+-[a-f0-9]+$/.test(src)) {
+        return '/destinations/delhi.png';
+    }
+    // Final fallback
+    return '/destinations/delhi.png';
 }
+
+// ─── Verified Unsplash IDs for Indian Destinations ────────────────────────────
+// DEPRECATED: Use local images instead. Kept for backward compatibility.
+export const VERIFIED_IMAGES = {
+    varanasi_bg: '1590132840509-3286380695c0',
+    rajasthan_bg: '1477587458883-47145ed94245',
+    himalayas_bg: '1585409677983-0f6c41ca9c3b',
+    kerala_bg: '1602216056096-3b40cc0c9944',
+    goa_bg: '1512343779784-a1d53b98b8ef',
+    india_generic: '1524492412937-b28074a5d7da',
+    houseboat: '1593693397690-362cb9666fc2',
+    tea_gardens: '1626621341517-bbf3d9990a23',
+    fort_palace: '1599661502283-a44ea24dfc74',
+    beach: '1507525428034-b723cf961d3e',
+    temple: '1582283925565-d053709d3bdf',
+    waterfall: '1549366021-d6d0bdb29a8b',
+    food_indian: '1567521464027-f127ff144326',
+    biryani: '1631515243349-e0cb75fb8d4a',
+    seafood: '1555396273-367ea4eb4db5',
+    cafe: '1517248135467-4c7edcad34c4',
+    resort: '1571896349842-33c89424de2d',
+    hostel: '1564501049412-61c2a3083791',
+    homestay: '1582719508461-905c673c825d',
+    hotel_modern: '1566073771259-6a6300d73351',
+};

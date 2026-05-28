@@ -4,7 +4,12 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import CalendarPicker from '@/components/shared/CalendarPicker';
 import { PURPOSES, DESTINATIONS, GROUP_SIZES } from '@/app/itinerary/data';
+import { resolveImgSrc } from '@/lib/imageService';
 import { StepBar } from './helpers';
+import BuildFromLink from './BuildFromLink';
+import SmartRecommendations from './SmartRecommendations';
+import VibeMatch from './VibeMatch';
+import { useAuth } from '@/lib/AuthContext';
 
 /** Resolve a city name to its DEST_DATA key (e.g. 'Jaipur' → 'jaipur') */
 function resolveDestKey(name: string): { id: string; name: string } | null {
@@ -151,7 +156,7 @@ function CitySearch({ value, destName, onSelect }: { value: string; destName: st
                     {DESTINATIONS.map(d => (
                         <button key={d.id} onClick={() => { onSelect(d.id, d.name); setQuery(d.name); }}
                             className={`group relative h-40 rounded-3xl overflow-hidden border-2 transition-all duration-300 text-left ${value === d.id ? 'border-emerald-500 shadow-xl shadow-emerald-500/20 scale-[1.02]' : 'border-transparent hover:border-zinc-300 dark:hover:border-zinc-700'}`}>
-                            <div className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110" style={{ backgroundImage: `url(${d.img.startsWith('http') ? d.img : `https://images.unsplash.com/photo-${d.img}?auto=format&fit=crop&w=400&q=70`})` }} />
+                            <div className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110" style={{ backgroundImage: `url(${resolveImgSrc(d.img, 400)})` }} />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                             {value === d.id && (
                                 <div className="absolute top-3 right-3 w-7 h-7 bg-emerald-500 rounded-full flex items-center justify-center shadow-lg">
@@ -172,8 +177,11 @@ function CitySearch({ value, destName, onSelect }: { value: string; destName: st
 
 export default function SetupWizard({ onDone }: SetupWizardProps) {
     const searchParams = useSearchParams();
+    const { user } = useAuth();
     const [step, setStep] = useState(1);
     const [dir, setDir] = useState(1);
+    const [buildFromReel, setBuildFromReel] = useState(false);
+    const [vibeMatchMode, setVibeMatchMode] = useState(false);
     const [form, setForm] = useState({ purpose: '', destination: '', destName: '', startDate: '', endDate: '', days: 0, group: '', budget: 15000 });
     const set = (k: string, v: string | number) => setForm(p => ({ ...p, [k]: v }));
     const next = () => { setDir(1); setStep(s => s + 1); };
@@ -198,18 +206,76 @@ export default function SetupWizard({ onDone }: SetupWizardProps) {
     return (
         <div className="min-h-screen bg-[#f7f8fc] dark:bg-[#0a0a0f] pt-20">
             <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-lg border-b border-zinc-100 dark:border-white/5 px-6 py-3 flex items-center gap-4">
-                {step > 1 && <button onClick={back} className="w-9 h-9 rounded-full border border-zinc-200 dark:border-zinc-700 flex items-center justify-center hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors text-zinc-600 dark:text-zinc-300 text-sm">←</button>}
-                <div>
+                {step > 1 && !buildFromReel && !vibeMatchMode && <button onClick={back} className="w-9 h-9 rounded-full border border-zinc-200 dark:border-zinc-700 flex items-center justify-center hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors text-zinc-600 dark:text-zinc-300 text-sm">←</button>}
+                <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1"><span className="text-lg">🗺️</span><span className="text-xs font-bold tracking-widest text-zinc-500 uppercase">Setting Up Your Trip</span></div>
-                    <StepBar step={step} total={4} />
+                    {!buildFromReel && !vibeMatchMode && <StepBar step={step} total={4} />}
+                </div>
+                {/* Mode toggles */}
+                <div className="flex items-center gap-2">
+                    <button
+                        onClick={() => { setVibeMatchMode(v => !v); setBuildFromReel(false); }}
+                        className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold transition-all border ${
+                            vibeMatchMode
+                                ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white border-transparent shadow-lg shadow-emerald-500/20'
+                                : 'border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 hover:border-emerald-400 hover:text-emerald-600'
+                        }`}
+                    >
+                        <span>🎯</span>
+                        <span className="hidden sm:block">{vibeMatchMode ? 'Back to Wizard' : 'Vibe Match'}</span>
+                    </button>
+                    <button
+                        onClick={() => { setBuildFromReel(r => !r); setVibeMatchMode(false); }}
+                        className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold transition-all border ${
+                            buildFromReel
+                                ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white border-transparent shadow-lg shadow-purple-500/20'
+                                : 'border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 hover:border-purple-400 hover:text-purple-600'
+                        }`}
+                    >
+                        <span>📸</span>
+                        <span className="hidden sm:block">{buildFromReel ? 'Back to Wizard' : 'Build from Reel'}</span>
+                    </button>
                 </div>
             </div>
             <div className="flex flex-col lg:flex-row min-h-[calc(100vh-140px)]">
-                <div className="flex-1 px-6 md:px-12 lg:px-16 py-10 lg:py-16 flex flex-col justify-center">
-                    <AnimatePresence mode="wait" custom={dir}>
+                <div className="flex-1 px-6 md:px-12 lg:px-16 py-8 lg:py-12 flex flex-col">
+                    {/* Mode-specific panels */}
+                    {vibeMatchMode ? (
+                        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="max-w-xl">
+                            <VibeMatch
+                                onSelect={(destId, destName, purpose) => {
+                                    setForm(p => ({ ...p, destination: destId, destName, purpose: purpose || p.purpose || 'leisure' }));
+                                    setVibeMatchMode(false);
+                                    setStep(3);
+                                }}
+                            />
+                        </motion.div>
+                    ) : buildFromReel ? (
+                        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
+                            <h1 className="text-3xl md:text-4xl font-bold text-zinc-900 dark:text-white mb-2 leading-tight">Build from a Reel 📸</h1>
+                            <p className="text-zinc-400 mb-8 text-sm">Paste an Instagram, YouTube or travel post — AI extracts the destination and vibe.</p>
+                            <BuildFromLink
+                                onExtracted={(destId, destName, purpose, days) => {
+                                    setForm(p => ({
+                                        ...p,
+                                        destination: destId,
+                                        destName,
+                                        purpose: purpose || p.purpose || 'leisure',
+                                        days: days || p.days,
+                                    }));
+                                    setBuildFromReel(false);
+                                    setStep(3);
+                                }}
+                            />
+                        </motion.div>
+                    ) : (
+                    <div className="flex flex-col h-full">
+                        {/* Scrollable step content */}
+                        <div className="flex-1 overflow-y-auto pr-1">
+                        <AnimatePresence mode="wait" custom={dir}>
                         <motion.div key={step} custom={dir} variants={variants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.22, ease: 'easeInOut' }}>
                             <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-zinc-900 dark:text-white mb-2 leading-tight">{STEP_TITLES[step - 1]}</h1>
-                            <p className="text-zinc-400 mb-10 text-sm md:text-base">{STEP_SUBS[step - 1]}</p>
+                            <p className="text-zinc-400 mb-8 text-sm md:text-base">{STEP_SUBS[step - 1]}</p>
 
                             {step === 1 && (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-2xl">
@@ -225,11 +291,31 @@ export default function SetupWizard({ onDone }: SetupWizardProps) {
                             )}
 
                             {step === 2 && (
-                                <CitySearch
-                                    value={form.destination}
-                                    destName={form.destName}
-                                    onSelect={(id, name) => { set('destination', id); set('destName', name); }}
-                                />
+                                <div>
+                                    {/* Smart AI Recommendations */}
+                                    {form.purpose && (
+                                        <SmartRecommendations
+                                            purpose={form.purpose}
+                                            group={form.group || 'solo'}
+                                            budget={form.budget}
+                                            userId={user?.uid}
+                                            onSelect={(destId, destName) => {
+                                                set('destination', destId);
+                                                set('destName', destName);
+                                            }}
+                                            onSelectAndNext={(destId, destName) => {
+                                                set('destination', destId);
+                                                set('destName', destName);
+                                                next();
+                                            }}
+                                        />
+                                    )}
+                                    <CitySearch
+                                        value={form.destination}
+                                        destName={form.destName}
+                                        onSelect={(id, name) => { set('destination', id); set('destName', name); }}
+                                    />
+                                </div>
                             )}
 
                             {step === 3 && (
@@ -269,21 +355,33 @@ export default function SetupWizard({ onDone }: SetupWizardProps) {
                                 </div>
                             )}
 
-                            <div className="flex gap-3 mt-10 max-w-2xl">
-                                {step > 1 && <button onClick={back} className="flex-1 py-3.5 rounded-2xl border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 font-medium hover:bg-zinc-50 dark:hover:bg-white/5 transition-colors">← Back</button>}
-                                <button onClick={step < 4 ? next : () => onDone(form)} disabled={!canNext}
-                                    className={`flex-[2] py-3.5 rounded-2xl font-bold text-base transition-all ${canNext ? 'bg-emerald-600 text-white hover:bg-emerald-500 shadow-lg shadow-emerald-500/25 active:scale-[0.98]' : 'bg-zinc-200 dark:bg-zinc-700 text-zinc-400 cursor-not-allowed'}`}>
-                                    {step < 4 ? 'Next →' : 'Build My Itinerary ✨'}
-                                </button>
-                            </div>
+                            <div className="h-8" />{/* bottom spacer inside scroll */}
                         </motion.div>
-                    </AnimatePresence>
+                        </AnimatePresence>
+                        </div>{/* end scrollable */}
+
+                        {/* Sticky Next/Back buttons — always visible */}
+                        <div className="flex gap-3 pt-4 border-t border-zinc-100 dark:border-zinc-800 mt-4 max-w-2xl">
+                            {step > 1 && <button onClick={back} className="flex-1 py-3.5 rounded-2xl border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 font-medium hover:bg-zinc-50 dark:hover:bg-white/5 transition-colors">← Back</button>}
+                            <button onClick={step < 4 ? next : () => onDone(form)} disabled={!canNext}
+                                className={`flex-[2] py-3.5 rounded-2xl font-bold text-base transition-all ${canNext ? 'bg-emerald-600 text-white hover:bg-emerald-500 shadow-lg shadow-emerald-500/25 active:scale-[0.98]' : 'bg-zinc-200 dark:bg-zinc-700 text-zinc-400 cursor-not-allowed'}`}>
+                                {step < 4 ? 'Next →' : 'Build My Itinerary ✨'}
+                            </button>
+                        </div>
+                    </div>
+                    )}
                 </div>
                 <div className="hidden lg:flex w-[420px] bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/10 items-center justify-center border-l border-zinc-100 dark:border-white/5">
-                    <motion.div key={step} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.4 }} className="text-center">
-                        <div className="text-8xl mb-6">{STEP_VISUALS[step - 1]}</div>
-                        <h3 className="text-lg font-bold text-zinc-700 dark:text-zinc-200">Step {step} of 4</h3>
-                        <p className="text-sm text-zinc-400 mt-1">{STEP_TITLES[step - 1]}</p>
+                    <motion.div key={`${step}-${vibeMatchMode}-${buildFromReel}`} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.4 }} className="text-center">
+                        <div className="text-8xl mb-6">
+                            {vibeMatchMode ? '🎯' : buildFromReel ? '📸' : STEP_VISUALS[step - 1]}
+                        </div>
+                        <h3 className="text-lg font-bold text-zinc-700 dark:text-zinc-200">
+                            {vibeMatchMode ? 'Vibe Match' : buildFromReel ? 'Build from Content' : `Step ${step} of 4`}
+                        </h3>
+                        <p className="text-sm text-zinc-400 mt-1">
+                            {vibeMatchMode ? 'Pick vibes → AI finds your destination' : buildFromReel ? 'AI extracts your trip from social media' : STEP_TITLES[step - 1]}
+                        </p>
                     </motion.div>
                 </div>
             </div>

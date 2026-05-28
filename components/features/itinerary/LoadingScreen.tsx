@@ -2,10 +2,14 @@
 import { motion } from 'framer-motion';
 import { useState, useEffect, useMemo, useRef } from 'react';
 import dynamic from 'next/dynamic';
-import { GEN_STEPS, DEST_DATA, FALLBACK_DEST, GROUP_SIZES, PURPOSES } from '@/app/itinerary/data';
+import { GEN_STEPS, DEST_DATA, GROUP_SIZES, PURPOSES } from '@/app/itinerary/data';
 
 const ItineraryMap = dynamic(() => import('@/components/shared/ItineraryMap'), { ssr: false });
 import { getBrowsingSignals } from '@/lib/browsingSignals';
+
+// Generic India center — used when destination has no hardcoded data
+// This prevents Kerala's data from bleeding into Ladakh / other new destinations
+const INDIA_CENTER = { lat: 22.5937, lng: 78.9629 };
 
 interface LoadingScreenProps {
     form: Record<string, unknown>;
@@ -17,7 +21,10 @@ export default function LoadingScreen({ form, onDone }: LoadingScreenProps) {
     const destName = form.destName as string;
     const groupLabel = GROUP_SIZES.find(g => g.id === form.group)?.label ?? '';
     const purposeLabel = PURPOSES.find(p => p.id === form.purpose)?.label ?? '';
-    const data = DEST_DATA[destId] ?? FALLBACK_DEST;
+    // Only use hardcoded data for THIS specific destination — never fall back to Kerala
+    const hardcodedData = DEST_DATA[destId] ?? null;
+    const mapCenter = hardcodedData?.mapCenter ?? INDIA_CENTER;
+    const loadingHighlights = hardcodedData?.highlights ?? [];
 
     const [currentStep, setCurrentStep] = useState(0);
     const [currentSub, setCurrentSub] = useState(0);
@@ -76,13 +83,13 @@ export default function LoadingScreen({ form, onDone }: LoadingScreenProps) {
         const step = GEN_STEPS[currentStep];
         const subInterval = step.duration / (step.sub.length + 1);
         if (currentSub < step.sub.length) {
-            const t = setTimeout(() => { setCurrentSub(s => s + 1); setRevealedPins(p => Math.min(p + 1, data.highlights.length)); }, subInterval);
+            const t = setTimeout(() => { setCurrentSub(s => s + 1); setRevealedPins(p => Math.min(p + 1, loadingHighlights.length)); }, subInterval);
             return () => clearTimeout(t);
         } else {
             const t = setTimeout(() => { setCurrentStep(s => s + 1); setCurrentSub(0); }, subInterval);
             return () => clearTimeout(t);
         }
-    }, [currentStep, currentSub, apiDone, apiData, onDone, data.highlights.length]);
+    }, [currentStep, currentSub, apiDone, apiData, onDone, loadingHighlights.length]);
 
     // If API finishes after animation, trigger onDone
     useEffect(() => {
@@ -94,11 +101,11 @@ export default function LoadingScreen({ form, onDone }: LoadingScreenProps) {
     const fmt = (s: number) => `${Math.floor(s / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`;
 
     const mapPins = useMemo(() =>
-        data.highlights.slice(0, revealedPins).map((h, i) => ({
-            lat: h.lat ?? data.mapCenter.lat, lng: h.lng ?? data.mapCenter.lng,
+        loadingHighlights.slice(0, revealedPins).map((h, i) => ({
+            lat: h.lat ?? mapCenter.lat, lng: h.lng ?? mapCenter.lng,
             label: h.name, number: i + 1, img: h.img,
         })),
-        [data, revealedPins]);
+        [loadingHighlights, mapCenter, revealedPins]);
 
     return (
         <div className="min-h-screen bg-[#f7f8fc] dark:bg-[#0a0a0f] pt-20">
@@ -174,9 +181,9 @@ export default function LoadingScreen({ form, onDone }: LoadingScreenProps) {
                     <div className="h-full min-h-[400px] lg:h-full rounded-3xl overflow-hidden border border-zinc-100 dark:border-zinc-800 shadow-sm">
                         <ItineraryMap
                             pins={mapPins}
-                            center={data.mapCenter}
-                            zoom={10}
-                            showRoute={true}
+                            center={mapCenter}
+                            zoom={loadingHighlights.length > 0 ? 10 : 5}
+                            showRoute={mapPins.length > 1}
                             className="w-full h-full min-h-[400px]"
                         />
                     </div>
