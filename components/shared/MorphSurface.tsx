@@ -193,7 +193,7 @@ function ChatPanel() {
             <p className="text-xs text-zinc-400">I noticed your itinerary has a tight gap. Should I optimize the travel route?</p>
             <div className="flex gap-2">
               <button 
-                onClick={() => applyAction('optimize')}
+                onClick={() => applyAction({ type: 'optimize', payload: {} })}
                 className="text-[10px] font-black uppercase tracking-widest bg-emerald-500 text-white px-3 py-1.5 rounded-lg hover:bg-emerald-400 transition-colors"
               >
                 Yes, Optimize

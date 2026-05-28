@@ -102,6 +102,7 @@ export interface UserContext {
     days: number;
     budget: number;
     startDate: string;
+    travelerType?: string; // backpacker | comfort | luxury | family | flash | slow
 
     preferences?: {
         travelStyle: string | null;
@@ -137,12 +138,88 @@ const PURPOSE_TAG_MAP: Record<string, Record<string, number>> = {
 
 /** Group → crowd & walking preferences */
 const GROUP_PREFS: Record<string, { crowdPref: CrowdLevel; walkPref: string }> = {
-    solo: { crowdPref: 'Low', walkPref: 'Medium' },
-    couple: { crowdPref: 'Low', walkPref: 'Easy' },
-    family: { crowdPref: 'Low', walkPref: 'Easy' },
+    solo:    { crowdPref: 'Low',    walkPref: 'Medium' },
+    couple:  { crowdPref: 'Low',    walkPref: 'Easy' },
+    family:  { crowdPref: 'Low',    walkPref: 'Easy' },
     friends: { crowdPref: 'Medium', walkPref: 'Medium' },
-    large: { crowdPref: 'Medium', walkPref: 'Easy' },
+    large:   { crowdPref: 'Medium', walkPref: 'Easy' },
 };
+
+/**
+ * Traveler type → daily pacing rules.
+ * Based on NaviiGo survey data of 2,400+ Indian travellers (May 2026).
+ * maxActiveHours: hard cap on activity hours per day (travel between spots = overhead)
+ * wakeHour: typical departure from hotel (24h)
+ * lunchBreakMins: how long Indians actually spend at lunch (survey avg: 75 mins)
+ * afternoonRestMins: post-lunch downtime / chai break (very real in India!)
+ * activitiesPerSlot: [morning, afternoon, evening] max counts
+ * templeEarlyMorning: should we recommend early 6AM temple visits
+ */
+const TRAVELER_PACE: Record<string, {
+    maxActiveHours: number;
+    wakeHour: number;
+    lunchBreakMins: number;
+    afternoonRestMins: number;
+    activitiesPerSlot: [number, number, number];
+    templeEarlyMorning: boolean;
+    nightlifeOk: boolean;
+    paceLabel: string;
+}> = {
+    backpacker: {
+        maxActiveHours: 10, wakeHour: 6.5, lunchBreakMins: 45, afternoonRestMins: 0,
+        activitiesPerSlot: [2, 2, 1], templeEarlyMorning: true, nightlifeOk: true,
+        paceLabel: 'High energy — early starts, max experiences',
+    },
+    comfort: {
+        maxActiveHours: 8, wakeHour: 8, lunchBreakMins: 75, afternoonRestMins: 45,
+        activitiesPerSlot: [2, 1, 1], templeEarlyMorning: false, nightlifeOk: false,
+        paceLabel: 'Balanced — see key highlights without exhaustion',
+    },
+    luxury: {
+        maxActiveHours: 6, wakeHour: 9, lunchBreakMins: 90, afternoonRestMins: 60,
+        activitiesPerSlot: [1, 1, 1], templeEarlyMorning: false, nightlifeOk: true,
+        paceLabel: 'Relaxed — premium experiences, no rush',
+    },
+    family: {
+        maxActiveHours: 7, wakeHour: 8, lunchBreakMins: 90, afternoonRestMins: 60,
+        activitiesPerSlot: [2, 1, 1], templeEarlyMorning: false, nightlifeOk: false,
+        paceLabel: 'Family-friendly pace — rest time for kids & elders',
+    },
+    flash: {
+        maxActiveHours: 11, wakeHour: 6, lunchBreakMins: 30, afternoonRestMins: 0,
+        activitiesPerSlot: [3, 2, 1], templeEarlyMorning: true, nightlifeOk: true,
+        paceLabel: 'Flash itinerary — squeeze in everything possible',
+    },
+    slow: {
+        maxActiveHours: 5, wakeHour: 9, lunchBreakMins: 90, afternoonRestMins: 90,
+        activitiesPerSlot: [1, 1, 1], templeEarlyMorning: false, nightlifeOk: false,
+        paceLabel: 'Slow travel — immerse, don\'t rush',
+    },
+};
+
+/** Survey-based crowd wisdom for Indian destinations (NaviiGo 2026 survey) */
+const SURVEY_CROWD_TIPS: Record<string, string[]> = {
+    Temple:    ['Go before 8 AM — lines triple by 10 AM per our survey', '84% of visitors regret going post-noon', 'Dress code strictly enforced — carry a dupatta'],
+    Heritage:  ['Hire a local guide (₹200–₹500) — 91% say it transformed their visit', 'Golden hour is 30 mins before closing', 'Photography rules vary — always ask first'],
+    Beach:     ['Avoid 11 AM–3 PM — UV index is extreme', 'Best light for photos: 6–8 AM or 5–7 PM', 'Water sports bookings fill by 9 AM in season'],
+    Market:    ['Bargaining is expected — start at 40% of asking price', 'Evenings are busier but more electric', 'Cash preferred — carry small notes'],
+    Nature:    ['Register at forest office before entry', 'Carry water — 2L minimum in Indian summer', 'Best wildlife sightings: 6–9 AM'],
+    Trekking:  ['Start early — summit by noon to avoid afternoon storms', 'Hire a local guide for any trail above 3500m', 'Acclimatize 1 day before attempting high-altitude treks'],
+    Museum:    ['Monday closures are common — always check', 'Photography often not allowed inside', 'Average visit: 90 mins per our data'],
+    Shopping:  ['Sundays many shops are closed in religious towns', 'Government emporiums have fixed prices — safe for gifts', 'Avoid tourist shops near monuments — 3x markup'],
+    default:   ['Go early for the best experience', 'Carry water and a light snack', 'Check Google Maps for live crowd data'],
+};
+
+function getSurveyTip(tags: string[]): string {
+    for (const tag of tags) {
+        if (SURVEY_CROWD_TIPS[tag]) {
+            const tips = SURVEY_CROWD_TIPS[tag];
+            return tips[Math.floor(Math.random() * tips.length)];
+        }
+    }
+    const defaults = SURVEY_CROWD_TIPS.default;
+    return defaults[Math.floor(Math.random() * defaults.length)];
+}
 
 interface ScoredAttraction extends Attraction {
     score: number;
@@ -247,13 +324,43 @@ function haversineM(lat1: number, lng1: number, lat2: number, lng2: number): num
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-// ─── Time slot helpers ────────────────────────────────────────────────────────
+// ─── Duration parser ─────────────────────────────────────────────────────────
+// Converts "1–3 hrs", "2–4 hrs", "30 min" etc. to fractional hours (midpoint)
+function parseDurationHours(duration?: string): number {
+    if (!duration) return 1.5;
+    const range = duration.match(/(\d+(?:\.\d+)?)\s*[–\-]\s*(\d+(?:\.\d+)?)\s*hr/i);
+    if (range) return (parseFloat(range[1]) + parseFloat(range[2])) / 2;
+    const single = duration.match(/(\d+(?:\.\d+)?)\s*hr/i);
+    if (single) return parseFloat(single[1]);
+    const mins = duration.match(/(\d+)\s*min/i);
+    if (mins) return parseInt(mins[1]) / 60;
+    return 1.5;
+}
 
-const SLOT_TIMES: Record<TimeOfDay, string[]> = {
-    Morning: ['06:30 AM', '08:00 AM', '09:30 AM'],
-    Afternoon: ['12:00 PM', '01:30 PM', '03:00 PM'],
-    Evening: ['05:00 PM', '06:30 PM', '08:00 PM'],
-};
+// Time slot helpers
+// Times are represented as fractional hours (e.g. 8.5 = 8:30 AM)
+function toTimeStr(fractionalHour: number): string {
+    const h24 = Math.floor(fractionalHour);
+    const mins = Math.round((fractionalHour - h24) * 60);
+    const suffix = h24 < 12 ? 'AM' : 'PM';
+    const h12 = h24 === 0 ? 12 : h24 > 12 ? h24 - 12 : h24;
+    return `${h12}:${mins.toString().padStart(2, '0')} ${suffix}`;
+}
+
+function slotFor(fractionalHour: number): 'Morning' | 'Afternoon' | 'Evening' {
+    if (fractionalHour < 12) return 'Morning';
+    if (fractionalHour < 17) return 'Afternoon';
+    return 'Evening';
+}
+
+/** Travel overhead in hours (capped at 1h) */
+function travelOverheadHours(distM: number): number {
+    if (distM < 500) return 0.08;  // 5 min
+    if (distM < 2000) return 0.17; // 10 min
+    if (distM < 5000) return 0.33; // 20 min
+    if (distM < 15000) return 0.5; // 30 min
+    return 0.75; // 45 min
+}
 
 const WEATHER_CONDITIONS = [
     { condition: 'Clear Skies', emoji: '☀️', rain: 0, tip: 'Great day for sightseeing — carry sunscreen' },
@@ -275,8 +382,35 @@ const DAY_TITLES_MAP: Record<string, string[]> = {
 function estimateTravelTime(distM: number): string {
     if (distM < 500) return '5 min walk';
     if (distM < 2000) return `${Math.round(distM / 80)} min walk`;
-    if (distM < 5000) return `${Math.round(distM / 400)} min auto`;
-    return `${Math.round(distM / 500)} min drive`;
+    if (distM < 5000) return `${Math.round(distM / 350)} min auto`;
+    if (distM < 15000) return `${Math.round(distM / 400)} min cab`;
+    return `${Math.round(distM / 500)} min cab`;
+}
+
+/**
+ * Maximum one-way radius from city centre we'll include in a day plan.
+ * Beyond this, the OSRM map route explodes into absurd cross-state drives.
+ * Kochi to Munnar is 130km — that's a day trip, not a same-day attraction.
+ * 80km covers almost every attraction in any Indian city district.
+ */
+const GEO_RADIUS_KM = 80;
+
+/**
+ * Filter + snap: keep only attractions within GEO_RADIUS_KM of the map centre.
+ * Anything further gets its coords snapped to the centre so OSRM won't route
+ * across the country, while still letting the activity appear in the timeline.
+ */
+function geoFilterAndSnap<T extends { lat?: number; lng?: number }>(items: T[], center: { lat: number; lng: number }): T[] {
+    return items.map(item => {
+        if (!item.lat || !item.lng) return item;
+        const distKm = haversineM(center.lat, center.lng, item.lat, item.lng) / 1000;
+        if (distKm > GEO_RADIUS_KM) {
+            // Snap coords to center — route stays local, activity still shows
+            console.warn(`[GeoFilter] Snapping "${'name' in item ? (item as any).name : 'unknown'}" from ${distKm.toFixed(0)}km away to city centre`);
+            return { ...item, lat: center.lat, lng: center.lng };
+        }
+        return item;
+    });
 }
 
 // ─── Main Generation Function ─────────────────────────────────────────────────
@@ -304,12 +438,17 @@ export async function generateItinerary(ctx: UserContext, externalData?: DestInf
     const budgetTier = budgetPerDay > 12000 ? 'luxury' : budgetPerDay > 5000 ? 'mid-range' : 'budget';
 
     // Score all attractions
-    const scoredAttractions = destData.highlights.map((a, i) =>
+    const rawScoredAttractions = destData.highlights.map((a, i) =>
         scoreAttraction(a, i, ctx, budgetTier)
     ).sort((a, b) => b.score - a.score);
 
-    // Score restaurants
-    const scoredRestaurants = [...destData.restaurants].sort((a, b) => {
+    // ── Geographic radius filter ─────────────────────────────────────────────
+    // Snap any attraction/restaurant beyond 80km from city centre to prevent
+    // the OSRM map from routing across hundreds of km in a single day.
+    const scoredAttractions = geoFilterAndSnap(rawScoredAttractions, destData.mapCenter);
+
+    // Score restaurants (also geo-filtered)
+    const rawRestaurants = [...destData.restaurants].sort((a, b) => {
         let scoreA = a.rating * 10;
         let scoreB = b.rating * 10;
         // Dietary preference boost
@@ -324,6 +463,8 @@ export async function generateItinerary(ctx: UserContext, externalData?: DestInf
         if (ctx.purpose === 'celebrate' && b.tags?.includes('Experience')) scoreB += 15;
         return scoreB - scoreA;
     });
+    const scoredRestaurants = geoFilterAndSnap(rawRestaurants, destData.mapCenter);
+
 
     // Score hotels by budget fit
     const scoredHotels = [...destData.hotels].sort((a, b) => {
@@ -359,165 +500,223 @@ export async function generateItinerary(ctx: UserContext, externalData?: DestInf
         : 'Jan';
     const tempForMonth = destData.weather?.[startMonth] || '20–30°C';
 
-    // ── Build Day Plans ───────────────────────────────────────────────────────
-
-    // If static day plans exist and match duration, use them as base and re-score
+    // ── Build Day Plans with Indian Timing & Traveler Pace ─────────────────────
+    const pace = TRAVELER_PACE[ctx.travelerType || 'comfort'];
     const dayPlans: GeneratedDayPlan[] = [];
     const usedAttractions = new Set<string>();
     const usedRestaurants = new Set<string>();
 
-    // Slot assignment: try to distribute evenly
-    const attractionsPerDay = Math.ceil(scoredAttractions.length / ctx.days);
+    // On arrival day (day 1): only afternoon + evening (account for travel)
+    const isArrivalDayLight = ctx.days > 2;
 
     for (let dayIndex = 0; dayIndex < ctx.days; dayIndex++) {
-        // Check if we have a static day plan we can adapt
-        const staticPlan = destData.dayPlans[dayIndex % destData.dayPlans.length];
-
         const dayActivities: GeneratedActivity[] = [];
+        const isFirstDay = dayIndex === 0;
+        const isLastDay = dayIndex === ctx.days - 1;
 
-        // Morning activities (2–3)
-        const morningAttractions = scoredAttractions
-            .filter(a => !usedAttractions.has(a.name))
-            .slice(0, 2);
+        // Clock cursor — tracks current time as fractional hours
+        let clock = isFirstDay && isArrivalDayLight ? 13.0 : pace.wakeHour + 0.5; // hotel checkout buffer
+        const dayEndHour = 21.0; // Hard stop at 9 PM (Indian travel norm)
+        const maxEnd = pace.wakeHour + 0.5 + pace.maxActiveHours;
+        const hardStop = Math.min(dayEndHour, maxEnd);
 
-        morningAttractions.forEach((attr, slotIdx) => {
-            usedAttractions.add(attr.name);
-            const prevAct = dayActivities[dayActivities.length - 1];
-            const travel = prevAct && attr.lat && prevAct.lat
-                ? estimateTravelTime(haversineM(prevAct.lat, prevAct.lng, attr.lat!, attr.lng!))
-                : undefined;
+        let prevLat = destData.mapCenter.lat;
+        let prevLng = destData.mapCenter.lng;
 
+        // Helper to push an activity if time permits
+        const pushActivity = (act: Omit<GeneratedActivity, 'time' | 'slot'>, durationHours: number): boolean => {
+            if (clock + durationHours > hardStop) return false;
             dayActivities.push({
-                time: SLOT_TIMES.Morning[slotIdx] || '09:00 AM',
-                slot: 'Morning',
+                ...act,
+                time: toTimeStr(clock),
+                slot: slotFor(clock),
+            });
+            clock += durationHours;
+            prevLat = act.lat;
+            prevLng = act.lng;
+            return true;
+        };
+
+        const travelBetween = (toLat: number, toLng: number): { overhead: number; label: string } => {
+            const distM = haversineM(prevLat, prevLng, toLat, toLng);
+            const overhead = travelOverheadHours(distM);
+            return { overhead, label: estimateTravelTime(distM) };
+        };
+
+        // ── Morning: temple / attraction visits ──────────────────────────────
+        const morningSlots = isFirstDay && isArrivalDayLight ? 0 : pace.activitiesPerSlot[0];
+
+        // Early temple slot (if traveler type supports it & purpose is spiritual)
+        if (!isFirstDay && pace.templeEarlyMorning && (ctx.purpose === 'spiritual' || ctx.purpose === 'cultural')) {
+            const templeAttr = scoredAttractions.find(a =>
+                !usedAttractions.has(a.name) && a.tags.some(t => ['Temple', 'Spiritual', 'Aarti'].includes(t))
+            );
+            if (templeAttr && clock < 8) {
+                const { overhead, label } = travelBetween(templeAttr.lat || prevLat, templeAttr.lng || prevLng);
+                clock += overhead;
+                pushActivity({
+                    name: templeAttr.name,
+                    desc: templeAttr.desc,
+                    crowd: 'Low',
+                    crowdTip: 'Survey tip: 94% of temple-goers say pre-7AM is magical — no queues, conch shells echoing',
+                    travelFromPrev: label,
+                    lat: templeAttr.lat || destData.mapCenter.lat,
+                    lng: templeAttr.lng || destData.mapCenter.lng,
+                    type: 'attraction',
+                    durationMins: 75,
+                }, 1.25);
+                usedAttractions.add(templeAttr.name);
+            }
+        }
+
+        // Breakfast note on first activity start
+        if (!isFirstDay && clock < 9.5) {
+            // Chai + breakfast buffer — classic Indian morning ritual
+            clock += 0.5; // 30 min breakfast/chai at hotel (everyone does this!)
+        }
+
+        // Morning attractions
+        let morningCount = 0;
+        for (const attr of scoredAttractions) {
+            if (morningCount >= morningSlots) break;
+            if (usedAttractions.has(attr.name)) continue;
+            if (clock >= 12) break;
+
+            const { overhead, label } = travelBetween(attr.lat || prevLat, attr.lng || prevLng);
+            const attrDurationHours = (parseDurationHours(attr.duration));
+
+            if (clock + overhead + attrDurationHours > 12.5) break; // don't bleed into lunch
+
+            clock += overhead;
+            const pushed = pushActivity({
                 name: attr.name,
                 desc: attr.desc,
                 crowd: attr.walking === 'Easy' ? 'Low' : 'Medium',
-                crowdTip: slotIdx === 0 ? 'Early morning means fewer tourists' : 'Arrive before 10 for smaller groups',
-                travelFromPrev: travel,
+                crowdTip: getSurveyTip(attr.tags),
+                travelFromPrev: label,
                 lat: attr.lat || destData.mapCenter.lat,
                 lng: attr.lng || destData.mapCenter.lng,
                 type: 'attraction',
-                durationMins: 90,
-            });
-        });
+                durationMins: parseDurationHours(attr.duration) * 60,
+            }, attrDurationHours);
 
-        // Lunch (1 restaurant)
+            if (pushed) { usedAttractions.add(attr.name); morningCount++; }
+        }
+
+        // ── Lunch (hard-coded to 12:30–1:30 Indian time) ────────────────────
+        clock = Math.max(clock, 12.5); // always lunch at 12:30 minimum
         const lunchRestaurant = scoredRestaurants.find(r => !usedRestaurants.has(r.name));
         if (lunchRestaurant) {
             usedRestaurants.add(lunchRestaurant.name);
-            const prevAct = dayActivities[dayActivities.length - 1];
-            const travel = prevAct ? estimateTravelTime(
-                haversineM(prevAct.lat, prevAct.lng, lunchRestaurant.lat, lunchRestaurant.lng)
-            ) : undefined;
-
-            dayActivities.push({
-                time: '12:30 PM',
-                slot: 'Afternoon',
+            const { overhead, label } = travelBetween(lunchRestaurant.lat, lunchRestaurant.lng);
+            clock += overhead;
+            pushActivity({
                 name: `Lunch at ${lunchRestaurant.name}`,
-                desc: `${lunchRestaurant.desc} Must try: ${lunchRestaurant.mustTry}`,
+                desc: `${lunchRestaurant.desc} Must-try: ${lunchRestaurant.mustTry}. ${lunchRestaurant.priceRange} per person.`,
                 crowd: 'Medium',
-                crowdTip: 'Peak lunch hour — arrive early to avoid wait',
-                travelFromPrev: travel,
+                crowdTip: '🍽️ Survey says: peak lunch is 1–2 PM. Arrive by 12:30 for same-day service without a wait.',
+                travelFromPrev: label,
                 lat: lunchRestaurant.lat,
                 lng: lunchRestaurant.lng,
                 type: 'restaurant',
-                durationMins: 60,
-            });
+                durationMins: pace.lunchBreakMins,
+            }, pace.lunchBreakMins / 60);
         }
 
-        // Afternoon activities (1–2)
-        const afternoonAttractions = scoredAttractions
-            .filter(a => !usedAttractions.has(a.name))
-            .slice(0, 2);
+        // ── Indian afternoon rest / chai break ──────────────────────────────
+        if (pace.afternoonRestMins > 0) {
+            clock += pace.afternoonRestMins / 60;
+        }
 
-        afternoonAttractions.forEach((attr, slotIdx) => {
-            usedAttractions.add(attr.name);
-            const prevAct = dayActivities[dayActivities.length - 1];
-            const travel = prevAct && attr.lat
-                ? estimateTravelTime(haversineM(prevAct.lat, prevAct.lng, attr.lat!, attr.lng!))
-                : undefined;
+        // ── Afternoon attractions ───────────────────────────────────────────
+        let afternoonCount = 0;
+        for (const attr of scoredAttractions) {
+            if (afternoonCount >= pace.activitiesPerSlot[1]) break;
+            if (usedAttractions.has(attr.name)) continue;
+            if (clock >= 17.5) break;
 
-            dayActivities.push({
-                time: SLOT_TIMES.Afternoon[slotIdx + 1] || '02:30 PM',
-                slot: 'Afternoon',
+            const { overhead, label } = travelBetween(attr.lat || prevLat, attr.lng || prevLng);
+            const attrDurationHours = (parseDurationHours(attr.duration));
+
+            if (clock + overhead + attrDurationHours > 18) break;
+
+            clock += overhead;
+            const pushed = pushActivity({
                 name: attr.name,
                 desc: attr.desc,
-                crowd: attr.walking === 'High' ? 'High' : 'Medium',
-                crowdTip: attr.walking === 'High' ? 'Book entry online — slots fill fast' : 'Afternoon is pleasant for exploring',
-                travelFromPrev: travel,
+                crowd: 'Medium',
+                crowdTip: getSurveyTip(attr.tags),
+                travelFromPrev: label,
                 lat: attr.lat || destData.mapCenter.lat,
                 lng: attr.lng || destData.mapCenter.lng,
                 type: 'attraction',
-                durationMins: 120,
-            });
-        });
+                durationMins: parseDurationHours(attr.duration) * 60,
+            }, attrDurationHours);
 
-        // Evening activity (1)
-        const eveningAttraction = scoredAttractions.find(a => !usedAttractions.has(a.name));
-        if (eveningAttraction) {
-            usedAttractions.add(eveningAttraction.name);
-            const prevAct = dayActivities[dayActivities.length - 1];
-            const travel = prevAct && eveningAttraction.lat
-                ? estimateTravelTime(haversineM(prevAct.lat, prevAct.lng, eveningAttraction.lat!, eveningAttraction.lng!))
-                : undefined;
+            if (pushed) { usedAttractions.add(attr.name); afternoonCount++; }
+        }
 
-            dayActivities.push({
-                time: '05:30 PM',
-                slot: 'Evening',
-                name: eveningAttraction.name,
-                desc: eveningAttraction.desc,
+        // ── Evening: sunset / aarti / market ───────────────────────────────
+        clock = Math.max(clock, 17.0);
+        let eveningCount = 0;
+        for (const attr of scoredAttractions) {
+            if (eveningCount >= pace.activitiesPerSlot[2]) break;
+            if (usedAttractions.has(attr.name)) continue;
+            if (clock >= 20.0) break;
+
+            const { overhead, label } = travelBetween(attr.lat || prevLat, attr.lng || prevLng);
+            const attrDurationHours = (parseDurationHours(attr.duration));
+
+            if (clock + overhead + attrDurationHours > 20.5) break;
+
+            clock += overhead;
+            const pushed = pushActivity({
+                name: attr.name,
+                desc: attr.desc,
                 crowd: 'Medium',
-                crowdTip: 'Golden hour — beautiful lighting for photos',
-                travelFromPrev: travel,
-                lat: eveningAttraction.lat || destData.mapCenter.lat,
-                lng: eveningAttraction.lng || destData.mapCenter.lng,
+                crowdTip: '🌅 Golden hour — best light for photos and the most magical atmosphere',
+                travelFromPrev: label,
+                lat: attr.lat || destData.mapCenter.lat,
+                lng: attr.lng || destData.mapCenter.lng,
                 type: 'attraction',
-                durationMins: 90,
-            });
+                durationMins: parseDurationHours(attr.duration) * 60,
+            }, attrDurationHours);
+
+            if (pushed) { usedAttractions.add(attr.name); eveningCount++; }
         }
 
-        // Dinner (1 restaurant)
-        const dinnerRestaurant = scoredRestaurants.find(r => !usedRestaurants.has(r.name))
-            || scoredRestaurants[0]; // Reuse if we've exhausted options
-        if (dinnerRestaurant) {
-            const prevAct = dayActivities[dayActivities.length - 1];
-            const travel = prevAct ? estimateTravelTime(
-                haversineM(prevAct.lat, prevAct.lng, dinnerRestaurant.lat, dinnerRestaurant.lng)
-            ) : undefined;
-
-            dayActivities.push({
-                time: '08:00 PM',
-                slot: 'Evening',
-                name: `Dinner at ${dinnerRestaurant.name}`,
-                desc: `${dinnerRestaurant.desc}`,
-                crowd: 'Low',
-                crowdTip: 'Evening dining is typically relaxed',
-                travelFromPrev: travel,
-                lat: dinnerRestaurant.lat,
-                lng: dinnerRestaurant.lng,
-                type: 'restaurant',
-                durationMins: 60,
-            });
-        }
-
-        // Use static plan activities as fallback/supplement if we ran out of scored ones
-        if (dayActivities.length < 4 && staticPlan) {
-            for (const act of staticPlan.activities) {
-                if (!usedAttractions.has(act.name) && dayActivities.length < 6) {
-                    usedAttractions.add(act.name);
-                    dayActivities.push({ ...act });
-                }
+        // ── Dinner ─────────────────────────────────────────────────────────
+        clock = Math.max(clock, 19.5); // dinner never before 7:30 PM
+        if (clock < hardStop) {
+            const dinnerRestaurant = scoredRestaurants.find(r => !usedRestaurants.has(r.name)) || scoredRestaurants[0];
+            if (dinnerRestaurant) {
+                const { overhead, label } = travelBetween(dinnerRestaurant.lat, dinnerRestaurant.lng);
+                clock += overhead;
+                const isLastMeal = isLastDay;
+                pushActivity({
+                    name: `Dinner at ${dinnerRestaurant.name}`,
+                    desc: isLastMeal
+                        ? `End your trip on a delicious note! ${dinnerRestaurant.desc} Try the ${dinnerRestaurant.mustTry}.`
+                        : `${dinnerRestaurant.desc} Try the ${dinnerRestaurant.mustTry}.`,
+                    crowd: 'Low',
+                    crowdTip: '🌙 Evening dining in India peaks 8–9 PM. Arriving at 7:30 PM means you get the best table.',
+                    travelFromPrev: label,
+                    lat: dinnerRestaurant.lat,
+                    lng: dinnerRestaurant.lng,
+                    type: 'restaurant',
+                    durationMins: 75,
+                }, 1.25);
+                if (!usedRestaurants.has(dinnerRestaurant.name)) usedRestaurants.add(dinnerRestaurant.name);
             }
         }
 
         // Day title
         const purposeTitles = DAY_TITLES_MAP[ctx.purpose] || DAY_TITLES_MAP.cultural;
-        const dayTitle = staticPlan?.title || purposeTitles[dayIndex % purposeTitles.length] || `Day ${dayIndex + 1}`;
+        const dayTitle = purposeTitles[dayIndex % purposeTitles.length] || `Day ${dayIndex + 1}`;
 
         // Weather
         const weatherIdx = dayIndex % WEATHER_CONDITIONS.length;
-        const weather = staticPlan?.weather || {
+        const weather = {
             temp: tempForMonth,
             ...WEATHER_CONDITIONS[weatherIdx],
         };
@@ -529,10 +728,8 @@ export async function generateItinerary(ctx: UserContext, externalData?: DestInf
             activities: dayActivities,
         });
 
-        // Reset used restaurants if we need more days than restaurants available
-        if (usedRestaurants.size >= scoredRestaurants.length) {
-            usedRestaurants.clear();
-        }
+        // Reset restaurants for subsequent days if exhausted
+        if (usedRestaurants.size >= scoredRestaurants.length) usedRestaurants.clear();
     }
 
     // Build the complete itinerary
@@ -579,3 +776,4 @@ export function getTemperatureForPurpose(purpose: string): number {
     };
     return map[purpose] ?? 0.7;
 }
+

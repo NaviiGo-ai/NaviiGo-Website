@@ -9,6 +9,29 @@ import { fetchLiveDestinationData, liveDataToDestInfo } from '@/lib/api/googlePl
 import { getPlaceImage, FALLBACK_IMAGES } from '@/lib/imageMap';
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
+// Use 1.5-flash: much higher free-tier quota than 2.0-flash
+const GEMINI_MODEL = 'gemini-1.5-flash';
+
+/** Retry a Gemini call up to maxRetries times with exponential backoff on 429 */
+async function withRetry<T>(fn: () => Promise<T>, maxRetries = 2): Promise<T | null> {
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+        try {
+            return await fn();
+        } catch (e: any) {
+            const is429 = e?.message?.includes('429') || e?.message?.includes('Too Many Requests') || e?.message?.includes('quota');
+            if (is429 && attempt < maxRetries) {
+                const delay = Math.pow(2, attempt) * 3000; // 3s, 6s
+                console.warn(`[Gemini] Rate limited. Retrying in ${delay / 1000}s... (attempt ${attempt + 1}/${maxRetries})`);
+                await new Promise(res => setTimeout(res, delay));
+                continue;
+            }
+            // On final attempt or non-429 error, log and return null
+            console.error('[Gemini] Failed after retries:', e.message?.slice(0, 120));
+            return null;
+        }
+    }
+    return null;
+}
 
 /**
  * Fetch live destination data from Google Places + enrich with Gemini.
@@ -26,8 +49,8 @@ export async function fetchDestinationDataWithGemini(params: {
     if (liveData && liveData.attractions.length > 0) {
         console.log(`[GeminiEnrich] Got ${liveData.attractions.length} live attractions, enriching with Gemini...`);
 
-        // Step 2: Use Gemini to add cultural context & logistics
-        const enrichment = await getGeminiEnrichment(params.destName);
+        // Step 2: Use Gemini to add cultural context & logistics (with retry)
+        const enrichment = await withRetry(() => getGeminiEnrichment(params.destName));
 
         // Step 3: Merge live data + Gemini enrichment into DestInfo
         return liveDataToDestInfo(params.destName, liveData, enrichment || undefined);
@@ -35,7 +58,7 @@ export async function fetchDestinationDataWithGemini(params: {
 
     // Fallback: If Google Places fails, use Gemini for everything
     console.log(`[GeminiEnrich] Google Places failed, using full Gemini fallback...`);
-    return await getFullGeminiData(params);
+    return await withRetry(() => getFullGeminiData(params));
 }
 
 /**
@@ -52,7 +75,7 @@ async function getGeminiEnrichment(destName: string): Promise<{
     if (!GEMINI_API_KEY) return null;
 
     const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+    const model = genAI.getGenerativeModel({ model: GEMINI_MODEL });
 
     const prompt = `For the Indian destination "${destName}", provide ONLY this JSON (no markdown):
 {
@@ -66,19 +89,14 @@ async function getGeminiEnrichment(destName: string): Promise<{
   "weather": { "Jan": "temp range", "Feb": "temp range", "Mar": "temp range", "Apr": "temp range", "May": "temp range", "Jun": "temp range", "Jul": "temp range", "Aug": "temp range", "Sep": "temp range", "Oct": "temp range", "Nov": "temp range", "Dec": "temp range" }
 }`;
 
-    try {
-        const result = await model.generateContent(prompt);
-        const text = result.response.text();
-        let jsonStr = text;
-        const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
-        if (jsonMatch) jsonStr = jsonMatch[1];
-        const braceMatch = jsonStr.match(/\{[\s\S]*\}/);
-        if (braceMatch) jsonStr = braceMatch[0];
-        return JSON.parse(jsonStr);
-    } catch (e: any) {
-        console.error('[GeminiEnrich] Enrichment failed:', e.message);
-        return null;
-    }
+    const result = await model.generateContent(prompt);
+    const text = result.response.text();
+    let jsonStr = text;
+    const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+    if (jsonMatch) jsonStr = jsonMatch[1];
+    const braceMatch = jsonStr.match(/\{[\s\S]*\}/);
+    if (braceMatch) jsonStr = braceMatch[0];
+    return JSON.parse(jsonStr);
 }
 
 /**
@@ -96,7 +114,7 @@ async function getFullGeminiData(params: {
     }
 
     const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+    const model = genAI.getGenerativeModel({ model: GEMINI_MODEL });
 
     const prompt = `You are an expert Indian travel data provider. Return ONLY raw destination data for ${params.destName}, India as JSON (no markdown):
 {

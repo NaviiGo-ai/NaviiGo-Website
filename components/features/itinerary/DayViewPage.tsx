@@ -152,7 +152,14 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
         if (a.travelFromPrev) totalHours += 0.5;
     });
 
-    const isExhausting = totalHours > 10 || plan.activities.length > 5;
+    // Sanity-check the OSRM route data — if coords were spread across cities,
+    // OSRM may return absurd distances. Cap display at 200km.
+    const routeDistanceKm = dayRouteInfo
+        ? parseFloat(dayRouteInfo.distance.replace(/[^\d.]/g, ''))
+        : 0;
+    const routeIsSane = routeDistanceKm > 0 && routeDistanceKm <= 200;
+
+    const isExhausting = plan.activities.length > 6;
     const isRaining = plan.weather.rain > 20;
 
     return (
@@ -273,16 +280,22 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                                 </div>
 
                                 {/* Route Info */}
-                                {dayRouteInfo ? (
+                                {dayRouteInfo && routeIsSane ? (
                                     <div className="bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-500/10 dark:to-blue-500/10 rounded-2xl border border-indigo-100 dark:border-indigo-500/20 p-4 shadow-sm flex flex-col justify-center hover:shadow-md transition-shadow">
-                                        <div className="flex items-center gap-2 mb-1"><span className="text-xl">🗺️</span><span className="font-bold text-xs text-indigo-900 dark:text-indigo-300 uppercase tracking-wide">Total Commute</span></div>
+                                        <div className="flex items-center gap-2 mb-1"><span className="text-xl">🗺️</span><span className="font-bold text-xs text-indigo-900 dark:text-indigo-300 uppercase tracking-wide">Today's Commute</span></div>
                                         <div className="font-bold text-indigo-700 dark:text-indigo-400 text-lg leading-tight">{dayRouteInfo.time}</div>
-                                        <div className="text-[11px] text-indigo-600/70 dark:text-indigo-400/70 font-medium">{dayRouteInfo.distance} driving distance</div>
+                                        <div className="text-[11px] text-indigo-600/70 dark:text-indigo-400/70 font-medium">{dayRouteInfo.distance} total travel</div>
+                                    </div>
+                                ) : dayRouteInfo && !routeIsSane ? (
+                                    <div className="bg-amber-50 dark:bg-amber-500/10 rounded-2xl border border-amber-200 dark:border-amber-500/20 p-4 shadow-sm flex flex-col justify-center">
+                                        <div className="flex items-center gap-2 mb-1"><span className="text-xl">🚶</span><span className="font-bold text-xs text-amber-800 dark:text-amber-300 uppercase tracking-wide">Within City</span></div>
+                                        <div className="font-bold text-amber-700 dark:text-amber-400 text-sm leading-tight">All spots are within the city</div>
+                                        <div className="text-[11px] text-amber-600/70 dark:text-amber-400/70 font-medium">Auto/cab between activities</div>
                                     </div>
                                 ) : (
                                     <div className="bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800 p-4 shadow-sm flex flex-col items-center justify-center text-center opacity-70">
                                         <div className="text-base mb-1">📍</div>
-                                        <div className="text-[10px] font-medium text-zinc-500">Route calculating...</div>
+                                        <div className="text-[10px] font-medium text-zinc-500">Calculating route...</div>
                                     </div>
                                 )}
                             </div>
