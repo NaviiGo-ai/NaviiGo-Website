@@ -17,6 +17,7 @@ export async function POST(req: NextRequest) {
             userId,
             preferences,
             browsingSignals,
+            travelerType,
         } = body;
 
         // Validate required fields
@@ -44,6 +45,7 @@ export async function POST(req: NextRequest) {
             days: Number(days) || 3,
             budget: Number(budget) || 15000,
             startDate: startDate || new Date().toISOString().split('T')[0],
+            travelerType: travelerType || 'comfort',
             preferences: preferences || null,
             pastTrips: [],
             browsingSignals: browsingSignals || null,

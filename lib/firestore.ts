@@ -466,6 +466,43 @@ export async function getAverageRating(destId: string): Promise<{ avg: number; c
         return { avg: 0, count: 0 };
     }
 }
+// ═══════════════════════════════════════════════════════════════════════════════
+// BUCKET LIST — users/{uid}/bucketList/{itemId}
+// ═══════════════════════════════════════════════════════════════════════════════
+
+export interface BucketListItem {
+    id: string;
+    name: string;
+    type: string;
+    image?: string;
+    location?: string;
+    createdAt?: any;
+}
+
+export async function toggleBucketListItem(uid: string, item: BucketListItem): Promise<void> {
+    const ref = doc(db, 'users', uid, 'bucketList', item.id);
+    const snap = await getDoc(ref);
+    if (snap.exists()) {
+        await deleteDoc(ref);
+    } else {
+        await setDoc(ref, {
+            ...item,
+            createdAt: serverTimestamp(),
+        });
+    }
+}
+
+export async function getUserBucketList(uid: string): Promise<BucketListItem[]> {
+    try {
+        const q = query(
+            collection(db, 'users', uid, 'bucketList'),
+            orderBy('createdAt', 'desc')
+        );
+        const snap = await getDocs(q);
+        return snap.docs.map(d => ({ ...d.data() } as BucketListItem));
+    } catch {
+        return [];
+    }
+}
 
 export { db };
-

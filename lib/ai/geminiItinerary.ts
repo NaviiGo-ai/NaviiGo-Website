@@ -9,8 +9,8 @@ import { fetchLiveDestinationData, liveDataToDestInfo } from '@/lib/api/googlePl
 import { getPlaceImage, FALLBACK_IMAGES } from '@/lib/imageMap';
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
-// Use 1.5-flash: much higher free-tier quota than 2.0-flash
-const GEMINI_MODEL = 'gemini-1.5-flash';
+// Use 2.5-flash: active quota, and 1.5-flash is retired
+const GEMINI_MODEL = 'gemini-2.5-flash';
 
 /** Retry a Gemini call up to maxRetries times with exponential backoff on 429 */
 async function withRetry<T>(fn: () => Promise<T>, maxRetries = 2): Promise<T | null> {

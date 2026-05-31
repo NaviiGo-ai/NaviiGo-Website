@@ -18,12 +18,27 @@ function DetailContent() {
     const destInfo = DESTINATIONS.find(d => d.id === destId);
 
     let itemData: any = null;
-    if (type === 'attraction') {
-        itemData = data.highlights.find(h => h.name === name);
-    } else if (type === 'restaurant') {
-        itemData = data.restaurants?.find(r => r.name === name);
-    } else if (type === 'hotel') {
-        itemData = data.hotels?.find(h => h.name === name);
+
+    // Check localStorage first if it's a dynamically generated item
+    const isFromLocal = searchParams.get('fromLocal') === 'true';
+    if (isFromLocal) {
+        try {
+            const localStr = localStorage.getItem('navii_detail_item');
+            if (localStr) itemData = JSON.parse(localStr);
+        } catch (e) {
+            console.error('Failed to parse local item data', e);
+        }
+    }
+
+    // Fallback to hardcoded DEST_DATA
+    if (!itemData) {
+        if (type === 'attraction') {
+            itemData = data.highlights?.find(h => h.name === name);
+        } else if (type === 'restaurant') {
+            itemData = data.restaurants?.find(r => r.name === name);
+        } else if (type === 'hotel') {
+            itemData = data.hotels?.find(h => h.name === name);
+        }
     }
 
     if (!itemData) {
