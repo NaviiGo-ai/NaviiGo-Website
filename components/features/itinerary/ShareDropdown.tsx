@@ -28,7 +28,7 @@ export default function ShareDropdown({ onCopyLink, destName, isSharing, collabo
                     className="absolute right-0 mt-2 w-48 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-xl py-2 z-50 overflow-hidden text-zinc-700 dark:text-zinc-300"
                 >
                     <button onClick={onCopyLink} className="w-full text-left px-4 py-2.5 text-[13px] font-semibold hover:bg-zinc-50 dark:hover:bg-zinc-800 flex items-center gap-2">
-                        🔗 Copy Link
+                        👥 Invite Friends (Copy Link)
                     </button>
                     <button onClick={() => {
                         const text = `Check out my NaviiGo itinerary for ${destName}! 🗺️ ${window.location.href}`;

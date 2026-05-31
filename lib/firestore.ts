@@ -15,6 +15,7 @@ import {
     limit,
     Timestamp,
     addDoc,
+    arrayUnion,
 } from 'firebase/firestore';
 import type {
     UserProfile,
@@ -310,12 +311,14 @@ export function listenToTracking(
 export async function saveSharedItinerary(shareId: string, data: {
     form: Record<string, unknown>;
     customPlans: unknown[];
+    generatedData?: any;
     destName: string;
-}, ownerUid?: string) {
+}, ownerUid?: string, ownerEmail?: string) {
     await setDoc(doc(db, 'itineraries', shareId), {
         ...data,
         ownerUid: ownerUid || null,
         collaborators: 1,
+        invitedUsers: ownerEmail ? [ownerEmail] : [],
         updatedAt: serverTimestamp(),
         createdAt: serverTimestamp(),
     });
@@ -329,11 +332,13 @@ export async function updateSharedPlans(shareId: string, customPlans: unknown[])
     });
 }
 
-export async function joinSharedItinerary(shareId: string) {
+export async function joinSharedItinerary(shareId: string, userEmail?: string) {
     try {
-        await updateDoc(doc(db, 'itineraries', shareId), {
-            collaborators: increment(1),
-        });
+        const updateData: any = { collaborators: increment(1) };
+        if (userEmail) {
+            updateData.invitedUsers = arrayUnion(userEmail);
+        }
+        await updateDoc(doc(db, 'itineraries', shareId), updateData);
     } catch {
         // Document may not exist yet
     }

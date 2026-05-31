@@ -43,6 +43,7 @@ export default function SmartRecommendations({
             body: JSON.stringify({
                 uid: userId, budget, month: new Date().getMonth() + 1,
                 group, purpose, pastDestinations: [],
+                tasteVector: JSON.parse(localStorage.getItem('naviigo_taste_vector') || '[]'),
             }),
         })
             .then(r => r.json())
@@ -55,6 +56,19 @@ export default function SmartRecommendations({
 
     const handleSelect = (id: string, name: string) => { onSelect(id, name); setSelected(id); };
     const handleGo = (id: string, name: string) => {
+        // Fire and forget taste vector update
+        fetch('/api/taste/update', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                currentVector: JSON.parse(localStorage.getItem('naviigo_taste_vector') || '[]'),
+                selectedDestId: id,
+                purpose
+            })
+        }).then(r => r.json()).then(d => {
+            if (d.success) localStorage.setItem('naviigo_taste_vector', JSON.stringify(d.newVector));
+        }).catch(console.error);
+
         if (onSelectAndNext) onSelectAndNext(id, name);
         else handleSelect(id, name);
     };

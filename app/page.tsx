@@ -191,6 +191,65 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Saved Section (Premium Redesign) */}
+      <section id="saved" className="relative z-10 py-28 px-6 bg-slate-950 overflow-hidden">
+        {/* Background glow & subtle pattern */}
+        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1564507592333-c60657eea523?auto=format&fit=crop&w=1280&q=80')] bg-cover bg-center opacity-[0.03] mix-blend-luminosity" />
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/80 to-slate-950" />
+        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-orange-500/5 rounded-full blur-[100px]" />
+
+        <motion.div 
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="relative max-w-4xl mx-auto text-center"
+        >
+          <span className="text-xs font-semibold uppercase tracking-[0.3em] text-orange-400 mb-4 block">Your Collection</span>
+          <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-white mb-6">
+            Save Your Sacred Journeys
+          </h2>
+          <p className="text-lg text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed">
+            Found a temple circuit you want to complete? Save it to your itinerary and we'll keep you updated on the best times, weather, and seamless transit options.
+          </p>
+          <Link href="/saved">
+            <button className="px-8 py-3.5 rounded-2xl bg-orange-500/10 border border-orange-500/30 text-orange-400 font-semibold hover:bg-orange-500 hover:text-white transition-all hover:scale-105 shadow-[0_0_20px_rgba(249,115,22,0.1)] hover:shadow-[0_0_30px_rgba(249,115,22,0.3)]">
+              View Saved Routes →
+            </button>
+          </Link>
+        </motion.div>
+      </section>
+
+      {/* Support Section (Premium Redesign) */}
+      <section id="support" className="relative z-10 py-28 px-6 bg-slate-900/50 border-y border-slate-800">
+        <div className="max-w-4xl mx-auto text-center">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+          >
+            <div className="inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-400 mb-8 text-2xl">
+              🤝
+            </div>
+            <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-white mb-6">
+              Guiding Your Path
+            </h2>
+            <p className="text-lg text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed">
+              Have questions about your spiritual journey or itinerary? Our AI Guide and expert support team are available 24/7 to assist you.
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Link href="/support">
+                <button className="px-8 py-3.5 rounded-2xl bg-slate-800 text-white font-semibold hover:bg-slate-700 transition-all border border-slate-700 hover:border-slate-600 w-full sm:w-auto">
+                  Help Center
+                </button>
+              </Link>
+              <button className="px-8 py-3.5 rounded-2xl bg-white text-slate-900 font-semibold hover:bg-slate-100 transition-all shadow-lg w-full sm:w-auto">
+                Contact Support
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      </section>
+
       {/* Testimonials */}
       <section className="relative z-10 py-28 px-6 bg-slate-950">
         <div className="max-w-7xl mx-auto">
