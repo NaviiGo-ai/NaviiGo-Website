@@ -3,7 +3,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRef, useLayoutEffect, useState, useEffect } from 'react';
 import gsap from 'gsap';
-import { X, MapPin, Calendar, CheckCircle2, Trophy, Flame, Star, Target, ChevronRight, Zap, Globe2, TrendingUp, Award } from 'lucide-react';
+import { X, MapPin, Calendar, CheckCircle2, Trophy, Flame, Star, Target, ChevronRight, Zap, Globe2, TrendingUp, Award, Heart } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
 import { getPassportStats, getPassportStamps, updatePassportStats, addPassportStamp, getUserBucketList } from '@/lib/firestore';
 import {

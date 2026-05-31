@@ -22,25 +22,22 @@ interface ResultPageProps {
     form: Record<string, unknown>;
     generatedData?: any;
     shareId?: string | null;
+    isLoaded?: boolean;
     onDayView: () => void;
     onReset: () => void;
 }
 
-export default function ResultPage({ form, generatedData, shareId, onDayView, onReset }: ResultPageProps) {
+export default function ResultPage({ form, generatedData, shareId, isLoaded, onDayView, onReset }: ResultPageProps) {
     const router = useRouter();
     const { user, signInWithGoogle } = useAuth();
-    const { registerItinerary, applyAction, isEditPanelOpen, openEditPanel, closeEditPanel,
-        editMessages, sendEditMessage, lastAction, clearLastAction } = useAI();
-    const [isSaved, setIsSaved] = useState(false);
+    const { registerItinerary, applyAction } = useAI();
+    const [isSaved, setIsSaved] = useState(isLoaded || false);
     const [collaborators, setCollaborators] = useState(1);
     const [isSharing, setIsSharing] = useState(false);
     const [hiddenGems, setHiddenGems] = useState<any[]>([]);
     const [insiderTips, setInsiderTips] = useState<string[]>([]);
     const [packingList, setPackingList] = useState<string[]>([]);
-    const [editInput, setEditInput] = useState('');
-    const [editLoading, setEditLoading] = useState(false);
     const [localData, setLocalData] = useState<any>(null);
-    const editChatRef = useRef<HTMLDivElement>(null);
     const autoSaveRef = useRef(false);
 
     const destId = form.destination as string, destName = form.destName as string;
@@ -63,7 +60,7 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                 autoSaveRef.current = true;
                 setTimeout(() => {
                     if (user?.uid) {
-                        saveItineraryToFirestore(user.uid, { form, generatedData: newData }).catch(console.error);
+                        saveItineraryToFirestore(user.uid, { destId, destName, form, generatedData: newData }).catch(console.error);
                     }
                     if (shareId) {
                         updateSharedPlans(shareId, newData.dayPlans).catch(console.error);
@@ -120,6 +117,12 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
     // Fetch AI insider tips
     useEffect(() => {
         if (!destName) return;
+        const cacheKey = `navii_tips_${destName}`;
+        const cached = sessionStorage.getItem(cacheKey);
+        if (cached) {
+            setInsiderTips(JSON.parse(cached));
+            return;
+        }
         fetch('/api/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -136,7 +139,11 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                 const match = txt.match(/\[[\s\S]*\]/);
                 if (match) {
                     const tips = JSON.parse(match[0]);
-                    if (Array.isArray(tips)) setInsiderTips(tips.slice(0, 4));
+                    if (Array.isArray(tips)) {
+                        const sliced = tips.slice(0, 4);
+                        setInsiderTips(sliced);
+                        sessionStorage.setItem(cacheKey, JSON.stringify(sliced));
+                    }
                 }
             })
             .catch(() => { });
@@ -145,6 +152,12 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
     // Fetch AI Packing List
     useEffect(() => {
         if (!destName || !displayMonth) return;
+        const cacheKey = `navii_packing_${destName}_${displayMonth}`;
+        const cached = sessionStorage.getItem(cacheKey);
+        if (cached) {
+            setPackingList(JSON.parse(cached));
+            return;
+        }
         fetch('/api/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -160,18 +173,17 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                 const match = txt.match(/\[[\s\S]*\]/);
                 if (match) {
                     const items = JSON.parse(match[0]);
-                    if (Array.isArray(items)) setPackingList(items.slice(0, 4));
+                    if (Array.isArray(items)) {
+                        const sliced = items.slice(0, 4);
+                        setPackingList(sliced);
+                        sessionStorage.setItem(cacheKey, JSON.stringify(sliced));
+                    }
                 }
             })
             .catch(() => { });
     }, [destName, displayMonth]);
 
-    // Auto-scroll edit chat
-    useEffect(() => {
-        if (editChatRef.current) {
-            editChatRef.current.scrollTop = editChatRef.current.scrollHeight;
-        }
-    }, [editMessages]);
+    // Removed edit chat scroll effect
 
     const mapPins = useMemo(() => data.highlights.filter((h: any) => h.lat).map((h: any, i: number) => ({
         lat: h.lat!, lng: h.lng!, label: h.name, number: i + 1, img: h.img,
@@ -201,20 +213,7 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
         setIsSharing(false);
     }, [form, destName, destId, localData, data, generatedData, user]);
 
-    const handleSendEdit = useCallback(async () => {
-        if (!editInput.trim() || editLoading) return;
-        const msg = editInput;
-        setEditInput('');
-        setEditLoading(true);
-        await sendEditMessage(msg);
-        setEditLoading(false);
-    }, [editInput, editLoading, sendEditMessage]);
-
-    const handleAcceptAction = useCallback(() => {
-        if (!lastAction) return;
-        applyAction({ type: lastAction.type, payload: lastAction.payload });
-        clearLastAction();
-    }, [lastAction, applyAction, clearLastAction]);
+    // Removed handleSendEdit and handleAcceptAction
 
     const handleSurpriseMe = useCallback(async () => {
         const dayIndex = Math.floor(Math.random() * (data.dayPlans?.length || 1));
@@ -390,7 +389,10 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 {data.highlights.map((a: any, i: number) => (
                                     <motion.div key={a.name} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}
-                                        onClick={() => router.push(`/itinerary/detail?type=attraction&dest=${destId}&name=${encodeURIComponent(a.name)}`)}
+                                        onClick={() => {
+                                            localStorage.setItem('navii_detail_item', JSON.stringify(a));
+                                            router.push(`/itinerary/detail?type=attraction&dest=${destId}&name=${encodeURIComponent(a.name)}&fromLocal=true`);
+                                        }}
                                         className="bg-white dark:bg-zinc-900 rounded-2xl overflow-hidden border border-zinc-100 dark:border-zinc-800 shadow-sm hover:shadow-md transition-all cursor-pointer hover:-translate-y-1">
                                         <div className="relative h-36">
                                             <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${resolveImgSrc(a.img, 500)})` }} />
@@ -423,7 +425,10 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     {data.restaurants.map((r: any, i: number) => (
                                         <motion.div key={r.id} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
-                                            onClick={() => router.push(`/itinerary/detail?type=restaurant&dest=${destId}&name=${encodeURIComponent(r.name)}`)}
+                                            onClick={() => {
+                                                localStorage.setItem('navii_detail_item', JSON.stringify(r));
+                                                router.push(`/itinerary/detail?type=restaurant&dest=${destId}&name=${encodeURIComponent(r.name)}&fromLocal=true`);
+                                            }}
                                             className="bg-white dark:bg-zinc-900 rounded-2xl overflow-hidden border border-zinc-100 dark:border-zinc-800 shadow-sm hover:shadow-md transition-all cursor-pointer hover:-translate-y-1">
                                             <div className="relative h-32">
                                                 <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${resolveImgSrc(r.img, 500)})` }} />
@@ -450,7 +455,10 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     {data.hotels.map((h: any, i: number) => (
                                         <motion.div key={h.id} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
-                                            onClick={() => router.push(`/itinerary/detail?type=hotel&dest=${destId}&name=${encodeURIComponent(h.name)}`)}
+                                            onClick={() => {
+                                                localStorage.setItem('navii_detail_item', JSON.stringify(h));
+                                                router.push(`/itinerary/detail?type=hotel&dest=${destId}&name=${encodeURIComponent(h.name)}&fromLocal=true`);
+                                            }}
                                             className="bg-white dark:bg-zinc-900 rounded-2xl overflow-hidden border border-zinc-100 dark:border-zinc-800 shadow-sm hover:shadow-md transition-all cursor-pointer hover:-translate-y-1">
                                             <div className="relative h-32">
                                                 <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${resolveImgSrc(h.img, 500)})` }} />
@@ -543,127 +551,6 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                 </div>
             </div>
 
-            {/* Floating AI Edit Button */}
-            <motion.button
-                initial={{ scale: 0, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ delay: 1.5, type: 'spring' }}
-                onClick={openEditPanel}
-                className="fixed bottom-6 right-6 z-50 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white rounded-2xl px-5 py-3.5 shadow-2xl shadow-purple-500/30 flex items-center gap-2.5 font-bold text-sm transition-all hover:scale-105 active:scale-95"
-            >
-                <span className="text-lg">✏️</span>
-                <span>Edit with AI</span>
-                <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-            </motion.button>
-
-            {/* AI Edit Panel (Slide-in) */}
-            <AnimatePresence>
-                {isEditPanelOpen && (
-                    <>
-                        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                            className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50"
-                            onClick={closeEditPanel} />
-                        <motion.div
-                            initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
-                            transition={{ type: 'spring', damping: 28, stiffness: 280 }}
-                            className="fixed right-0 top-0 h-full w-full max-w-md z-50 bg-white dark:bg-zinc-900 shadow-2xl flex flex-col"
-                        >
-                            {/* Panel Header */}
-                            <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-100 dark:border-zinc-800 bg-gradient-to-r from-violet-50 to-purple-50 dark:from-violet-900/20 dark:to-purple-900/10">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-lg shadow-lg shadow-purple-500/20">✨</div>
-                                    <div>
-                                        <div className="font-bold text-zinc-900 dark:text-white text-sm">Edit with AI</div>
-                                        <div className="text-[10px] text-zinc-400">Tell me how to change {destName}</div>
-                                    </div>
-                                </div>
-                                <button onClick={closeEditPanel} className="w-8 h-8 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-center text-zinc-500 text-lg transition-colors">×</button>
-                            </div>
-
-                            {/* Quick Prompt Chips */}
-                            <div className="px-4 py-3 border-b border-zinc-100 dark:border-zinc-800">
-                                <div className="flex flex-wrap gap-2">
-                                    {[
-                                        '🍽️ More food stops',
-                                        '🚶 Less walking',
-                                        '💰 Make it cheaper',
-                                        '✨ Add hidden gem',
-                                        '🌅 More morning time',
-                                    ].map(chip => (
-                                        <button key={chip} onClick={() => { setEditInput(chip.slice(2).trim()); }}
-                                            className="text-xs bg-zinc-100 dark:bg-zinc-800 hover:bg-violet-100 dark:hover:bg-violet-500/20 hover:text-violet-700 dark:hover:text-violet-300 text-zinc-600 dark:text-zinc-400 rounded-full px-3 py-1.5 font-medium transition-all">
-                                            {chip}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* Chat Messages */}
-                            <div ref={editChatRef} className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
-                                {editMessages.map((msg, i) => (
-                                    <motion.div key={i} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-                                        className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                                        <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
-                                            msg.role === 'user'
-                                                ? 'bg-gradient-to-br from-violet-500 to-purple-600 text-white rounded-br-sm'
-                                                : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 rounded-bl-sm'
-                                        }`}>
-                                            {msg.text}
-                                        </div>
-                                    </motion.div>
-                                ))}
-                                {editLoading && (
-                                    <div className="flex justify-start">
-                                        <div className="bg-zinc-100 dark:bg-zinc-800 rounded-2xl rounded-bl-sm px-4 py-3 flex items-center gap-1.5">
-                                            {[0, 1, 2].map(i => (
-                                                <div key={i} className="w-1.5 h-1.5 bg-zinc-400 rounded-full animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Pending Action Banner */}
-                            <AnimatePresence>
-                                {lastAction && (
-                                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
-                                        className="mx-4 mb-2 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/10 border border-emerald-100 dark:border-emerald-500/20 rounded-2xl p-3">
-                                        <p className="text-xs text-zinc-600 dark:text-zinc-400 mb-2">🧠 AI wants to make a change:</p>
-                                        <p className="text-xs font-semibold text-zinc-900 dark:text-white mb-3">{lastAction.description}</p>
-                                        <div className="flex gap-2">
-                                            <button onClick={handleAcceptAction}
-                                                className="flex-1 bg-emerald-500 hover:bg-emerald-400 text-white text-xs font-bold rounded-xl py-2 transition-colors">
-                                                ✓ Apply Change
-                                            </button>
-                                            <button onClick={clearLastAction}
-                                                className="flex-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs font-bold rounded-xl py-2 transition-colors">
-                                                ✕ Skip
-                                            </button>
-                                        </div>
-                                    </motion.div>
-                                )}
-                            </AnimatePresence>
-
-                            {/* Input */}
-                            <div className="px-4 py-4 border-t border-zinc-100 dark:border-zinc-800">
-                                <div className="flex gap-2">
-                                    <input
-                                        value={editInput}
-                                        onChange={e => setEditInput(e.target.value)}
-                                        onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSendEdit()}
-                                        placeholder={`e.g. Remove the temple on day 2...`}
-                                        className="flex-1 bg-zinc-100 dark:bg-zinc-800 rounded-2xl px-4 py-3 text-sm text-zinc-900 dark:text-white placeholder-zinc-400 outline-none focus:ring-2 focus:ring-violet-500/20 transition-all"
-                                    />
-                                    <button onClick={handleSendEdit} disabled={editLoading || !editInput.trim()}
-                                        className="w-11 h-11 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 text-white flex items-center justify-center text-lg disabled:opacity-50 hover:scale-105 transition-all active:scale-95 shadow-lg shadow-purple-500/20">
-                                        →
-                                    </button>
-                                </div>
-                            </div>
-                        </motion.div>
-                    </>
-                )}
-            </AnimatePresence>
         </div>
     );
 }
