@@ -9,8 +9,9 @@ export const contentType = 'image/png';
 
 export default async function Image({ params }: { params: { destId: string } }) {
   const destId = params.destId;
-  const dest = DESTINATIONS.find(d => d.id === destId);
-  const title = dest ? dest.name : 'Spiritual Destinations';
+  const normalizedId = destId.toLowerCase().replace(/[\s\-]+/g, '');
+  const dest = DESTINATIONS.find(d => d.id === normalizedId || d.name.toLowerCase().replace(/[\s\-]+/g, '') === normalizedId);
+  const title = dest ? dest.name : decodeURIComponent(destId);
   const state = dest ? dest.state : 'India';
 
   return new ImageResponse(
