@@ -183,6 +183,7 @@ export default function SetupWizard({ onDone }: SetupWizardProps) {
     const [buildFromReel, setBuildFromReel] = useState(false);
     const [vibeMatchMode, setVibeMatchMode] = useState(false);
     const [form, setForm] = useState({ purpose: '', destination: '', destName: '', startDate: '', endDate: '', days: 0, group: '', budget: 15000 });
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const set = (k: string, v: string | number) => setForm(p => ({ ...p, [k]: v }));
     const next = () => { setDir(1); setStep(s => s + 1); };
     const back = () => { setDir(-1); setStep(s => s - 1); };
@@ -377,9 +378,16 @@ export default function SetupWizard({ onDone }: SetupWizardProps) {
                         {/* Sticky Next/Back buttons — always visible */}
                         <div className="flex gap-3 pt-4 border-t border-zinc-100 dark:border-zinc-800 mt-4 max-w-2xl">
                             {step > 1 && <button onClick={back} className="flex-1 py-3.5 rounded-2xl border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 font-medium hover:bg-zinc-50 dark:hover:bg-white/5 transition-colors">← Back</button>}
-                            <button onClick={step < 4 ? next : () => onDone(form)} disabled={!canNext}
-                                className={`flex-[2] py-3.5 rounded-2xl font-bold text-base transition-all ${canNext ? 'bg-emerald-600 text-white hover:bg-emerald-500 shadow-lg shadow-emerald-500/25 active:scale-[0.98]' : 'bg-zinc-200 dark:bg-zinc-700 text-zinc-400 cursor-not-allowed'}`}>
-                                {step < 4 ? 'Next →' : 'Build My Itinerary ✨'}
+                            <button onClick={step < 4 ? next : () => { setIsSubmitting(true); onDone(form); }} disabled={!canNext || isSubmitting}
+                                className={`flex-[2] py-3.5 rounded-2xl font-bold text-base transition-all flex items-center justify-center gap-2 ${canNext && !isSubmitting ? 'bg-emerald-600 text-white hover:bg-emerald-500 shadow-lg shadow-emerald-500/25 active:scale-[0.98]' : 'bg-zinc-200 dark:bg-zinc-700 text-zinc-400 cursor-not-allowed'}`}>
+                                {isSubmitting ? (
+                                    <>
+                                        <div className="w-5 h-5 border-2 border-zinc-400 border-t-transparent rounded-full animate-spin" />
+                                        Preparing...
+                                    </>
+                                ) : (
+                                    step < 4 ? 'Next →' : 'Build My Itinerary ✨'
+                                )}
                             </button>
                         </div>
                     </div>

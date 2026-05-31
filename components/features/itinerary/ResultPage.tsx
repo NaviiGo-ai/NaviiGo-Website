@@ -63,7 +63,12 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                 autoSaveRef.current = true;
                 setTimeout(() => {
                     if (user?.uid) {
-                        saveItineraryToFirestore(user.uid, { form, generatedData: newData }).catch(console.error);
+                        saveItineraryToFirestore(user.uid, { 
+                            destId: (form.destId as string) || 'unknown',
+                            destName: destInfo?.name || 'Unknown',
+                            form, 
+                            generatedData: newData 
+                        }).catch(console.error);
                     }
                     if (shareId) {
                         updateSharedPlans(shareId, newData.dayPlans).catch(console.error);
@@ -239,7 +244,7 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                         className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border border-amber-200 dark:border-amber-500/30 text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-colors">
                         🎲 Surprise Me
                     </button>
-                    <ShareDropdown onCopyLink={handleShare} destName={destName} isSharing={isSharing} collaborators={collaborators} />
+                    <ShareDropdown onCopyLink={handleShare} destName={destName} isSharing={isSharing} collaborators={collaborators} planData={data} />
                     <button onClick={async () => {
                         if (user?.uid) {
                             await saveItineraryToFirestore(user.uid, { destId, destName, form, generatedData: generatedData || null });
@@ -535,7 +540,7 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                     </div>
 
                     {/* Sticky Map */}
-                    <div className="lg:w-[400px] lg:sticky lg:top-[140px] lg:self-start">
+                    <div className="w-full max-w-full lg:w-[400px] lg:sticky lg:top-[140px] lg:self-start">
                         <div className="h-[350px] lg:h-[500px] rounded-2xl overflow-hidden border border-zinc-100 dark:border-zinc-800 shadow-sm">
                             <ItineraryMap pins={mapPins} center={data.mapCenter} zoom={10} className="w-full h-full" />
                         </div>

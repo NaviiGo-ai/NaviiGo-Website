@@ -467,5 +467,55 @@ export async function getAverageRating(destId: string): Promise<{ avg: number; c
     }
 }
 
+// ─── TRIP PROGRESS & BUCKET LIST ─────────────────────────────────────────────
+
+export async function getStampByDestination(uid: string, destId: string): Promise<PassportStampDoc | null> {
+    const q = query(
+        collection(db, 'users', uid, 'passport', 'stamps', 'entries'),
+        orderBy('createdAt', 'desc')
+    );
+    const snap = await getDocs(q);
+    const stamps = snap.docs.map(d => d.data() as PassportStampDoc);
+    const match = stamps.find(s => s.location.toLowerCase() === destId.toLowerCase() || s.name.toLowerCase() === destId.toLowerCase());
+    return match || null;
+}
+
+export async function saveActiveTripProgress(uid: string, tripId: string, checkpointState: any) {
+    const ref = doc(db, 'users', uid, 'trips', tripId);
+    await setDoc(ref, {
+        checkpointState,
+        updatedAt: serverTimestamp(),
+    }, { merge: true });
+}
+
+export async function getActiveTripProgress(uid: string, tripId: string): Promise<any | null> {
+    const snap = await getDoc(doc(db, 'users', uid, 'trips', tripId));
+    return snap.exists() ? snap.data().checkpointState : null;
+}
+
+export async function getUserBucketList(uid: string): Promise<any[]> {
+    try {
+        const snap = await getDocs(collection(db, 'users', uid, 'bucketlist'));
+        return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    } catch {
+        return [];
+    }
+}
+
+export async function toggleBucketListItem(uid: string, destData: any): Promise<boolean> {
+    const ref = doc(db, 'users', uid, 'bucketlist', destData.id);
+    const snap = await getDoc(ref);
+    if (snap.exists()) {
+        await deleteDoc(ref);
+        return false;
+    } else {
+        await setDoc(ref, {
+            ...destData,
+            addedAt: serverTimestamp()
+        });
+        return true;
+    }
+}
+
 export { db };
 

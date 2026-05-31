@@ -1,7 +1,7 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAnalytics, isSupported } from "firebase/analytics";
 import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { getFirestore, enableMultiTabIndexedDbPersistence } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
 // NaviiGo Firebase Configuration — naviigo-firebase project
@@ -20,6 +20,16 @@ const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 const auth = getAuth(app);
 const db = getFirestore(app);
 const storage = getStorage(app);
+
+if (typeof window !== "undefined") {
+  enableMultiTabIndexedDbPersistence(db).catch((err) => {
+    if (err.code == 'failed-precondition') {
+      console.warn("Multiple tabs open, offline persistence enabled in the first tab only.");
+    } else if (err.code == 'unimplemented') {
+      console.warn("Offline persistence is not supported by this browser.");
+    }
+  });
+}
 
 let analytics: ReturnType<typeof getAnalytics> | null = null;
 

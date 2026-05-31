@@ -5,23 +5,33 @@ import { AuthProvider } from '@/lib/AuthContext';
 import { AIProvider } from '@/context/AIContext';
 import { ReactLenis } from 'lenis/react';
 
-export default function Providers({
-  children,
-}: Readonly<{ children: React.ReactNode }>) {
-  return (
-    <ReactLenis root>
-      <ThemeProvider
-        attribute="class"
-        defaultTheme="system"
-        enableSystem
-        disableTransitionOnChange={false}
-      >
-        <AuthProvider>
-          <AIProvider>
-            {children}
-          </AIProvider>
-        </AuthProvider>
-      </ThemeProvider>
-    </ReactLenis>
-  );
-}
+  import { useEffect } from 'react';
+
+  export default function Providers({
+    children,
+  }: Readonly<{ children: React.ReactNode }>) {
+    useEffect(() => {
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js').catch((err) => {
+          console.error('Service Worker registration failed:', err);
+        });
+      }
+    }, []);
+
+    return (
+      <ReactLenis root>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange={false}
+        >
+          <AuthProvider>
+            <AIProvider>
+              {children}
+            </AIProvider>
+          </AuthProvider>
+        </ThemeProvider>
+      </ReactLenis>
+    );
+  }

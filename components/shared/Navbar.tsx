@@ -91,7 +91,7 @@ export default function Navbar() {
             <motion.div className="flex items-center space-x-2 group" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <Link href="/" className="flex items-center space-x-3">
                 <div className="relative h-10 w-10 overflow-hidden rounded-full">
-                  <Image src="/content.png" alt="NaviiGo Logo" fill className="object-cover" />
+                  <Image src="/content.png" alt="NaviiGo Logo" fill sizes="40px" className="object-cover" />
                 </div>
                 <span className="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">NaviiGo</span>
               </Link>
@@ -221,7 +221,7 @@ export default function Navbar() {
             {/* Mobile Menu Button */}
             <motion.button
               onClick={toggleMenu}
-              className="md:hidden p-2 rounded-lg hover:bg-black/5 text-slate-700 dark:text-slate-200 dark:hover:bg-white/10"
+              className="md:hidden p-2 rounded-lg hover:bg-black/5 text-slate-700 dark:text-slate-200 dark:hover:bg-white/10 relative z-[60]"
               whileTap={{ scale: 0.9 }}
               aria-label="Toggle menu"
             >
@@ -349,7 +349,7 @@ export default function Navbar() {
               <div className="px-4 py-6 bg-slate-50/50 dark:bg-slate-800/50">
                 <h3 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">Quick Jump</h3>
                 <div className="flex flex-wrap gap-2">
-                  {['Paris', 'Tokyo', 'Summer Itinerary', 'My Bookings'].map((term) => (
+                  {['Goa', 'Manali', 'Honeymoon Itinerary', 'Spiritual Circuit'].map((term) => (
                     <button key={term} onClick={() => setSearchQuery(term)} className="px-3 py-1.5 rounded-full bg-white dark:bg-slate-900 text-sm text-slate-600 dark:text-slate-300 shadow-sm ring-1 ring-black/5 dark:ring-white/5 hover:text-primary transition-colors">{term}</button>
                   ))}
                 </div>

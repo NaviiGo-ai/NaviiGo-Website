@@ -163,6 +163,7 @@ export interface PassportStatsDoc {
   statesVisited: string[];
   citiesVisited: string[];
   categoryCounts: Record<string, number>;
+  totalActivitiesCompleted: number;
   updatedAt: Timestamp;
 }
 
@@ -183,6 +184,19 @@ export interface PassportStampDoc {
 
 // ─── Destination Reviews ──────────────────────────────────────────────────────
 // Path: reviews/{destId}/entries/{reviewId}
+// ─── Leaderboard ──────────────────────────────────────────────────────────────
+// Path: leaderboard/{uid}
+export interface LeaderboardEntryDoc {
+  uid: string;
+  displayName: string;
+  photoURL: string | null;
+  totalXP: number;
+  totalStamps: number;
+  level: number;
+  statesCount: number;
+  lastUpdated: Timestamp;
+}
+
 export interface DestinationReview {
   id?: string;
   userId: string;

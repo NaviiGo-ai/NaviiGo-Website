@@ -186,6 +186,31 @@ export default function ItineraryMap({
                     }]);
                 }
             });
+
+            polylineRef.current.on('routingerror', function (e: any) {
+                console.warn('[Map] OSRM routing failed, falling back to straight lines for remote area', e);
+                // Remove the failed routing control
+                if (polylineRef.current && map.hasLayer(polylineRef.current)) {
+                    try { map.removeControl(polylineRef.current); } catch(err) {}
+                }
+                // Fallback to straight dashed line
+                const latlngs = coords.map(([lat, lng]: [number, number]) => L.latLng(lat, lng));
+                polylineRef.current = L.polyline(latlngs, {
+                    color: '#10b981', weight: 4, opacity: 0.8, dashArray: '6, 6'
+                }).addTo(map);
+
+                // Estimate straight line distance
+                let totalDist = 0;
+                for(let i = 0; i < latlngs.length - 1; i++) {
+                    totalDist += latlngs[i].distanceTo(latlngs[i+1]);
+                }
+                if (typeof onRouteCalculated === 'function') {
+                    onRouteCalculated([{
+                        distance: totalDist > 1000 ? (totalDist / 1000).toFixed(1) + ' km (est)' : Math.round(totalDist) + ' m (est)',
+                        time: 'Off-road'
+                    }]);
+                }
+            });
         }
 
         if (coords.length > 0) {

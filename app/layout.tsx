@@ -35,7 +35,12 @@ export const metadata: Metadata = {
     title: 'NaviiGO Spiritual Travel Planner',
     description: 'Start your ultimate Indian journey with an AI agent specifically built for Darshan timings and seamless cabs.',
     images: ['https://images.unsplash.com/photo-1564507592333-c60657eea523?auto=format&fit=crop&w=1280&q=80'],
-  }
+  },
+  appleWebApp: {
+    title: 'NaviiGo',
+    statusBarStyle: 'black-translucent',
+    capable: true,
+  },
 };
 
 export default function RootLayout({

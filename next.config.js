@@ -46,4 +46,16 @@ const nextConfig = {
   },
 };
 
-module.exports = nextConfig;
+const { withSentryConfig } = require("@sentry/nextjs");
+
+module.exports = withSentryConfig(nextConfig, {
+  // For all available options, see:
+  // https://github.com/getsentry/sentry-webpack-plugin#options
+
+  org: "naviigo",
+  project: "naviigo-website",
+  silent: !process.env.CI, // Suppresses all logs
+  widenClientFileUpload: true,
+  hideSourceMaps: true,
+  disableLogger: true,
+});

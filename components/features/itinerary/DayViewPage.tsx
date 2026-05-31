@@ -17,6 +17,13 @@ import TransportCompare from './TransportCompare';
 const ItineraryMap = dynamic(() => import('@/components/shared/ItineraryMap'), { ssr: false });
 import { useAI } from '@/context/AIContext';
 import { useEffect } from 'react';
+import { useCheckpoints } from '@/lib/useCheckpoints';
+import { completeTripAndAwardStamp, type AwardResult } from '@/lib/passportService';
+import { updateLeaderboardEntry } from '@/lib/leaderboard';
+import CheckpointToast, { useCheckpointToast } from '@/components/features/passport/CheckpointToast';
+import StampCelebration from '@/components/features/passport/StampCelebration';
+import { DESTINATIONS } from '@/app/itinerary/data';
+import { CheckCircle2, Circle, Rocket } from 'lucide-react';
 
 interface DayViewPageProps {
     form: Record<string, unknown>;
@@ -37,6 +44,44 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
     const [dayRouteInfo, setDayRouteInfo] = useState<{ distance: string, time: string } | null>(null);
     const [customPlans, setCustomPlans] = useState<DayPlan[]>(() => (form.customPlans as DayPlan[]) || JSON.parse(JSON.stringify(data.dayPlans)));
     const plan: DayPlan = customPlans[activeDay] ?? customPlans[0];
+
+    const destState = DESTINATIONS.find(d => d.id === destId)?.state || '';
+    const purpose = (form.purpose as string) || 'cultural';
+
+    const {
+        isTripActive, checkpoint, startTrip, stopTrip,
+        toggleCheckpoint, isChecked, getProgress, getDayProgress,
+        justCompleted, clearJustCompleted,
+        dayJustCompleted, clearDayJustCompleted,
+        tripJustCompleted, clearTripJustCompleted,
+    } = useCheckpoints(destId, destName, destState, purpose, customPlans);
+
+    const { toasts, showToast } = useCheckpointToast();
+    const [celebrationResult, setCelebrationResult] = useState<AwardResult | null>(null);
+
+    const handleCheckpointToggle = useCallback((dayIdx: number, actName: string) => {
+        if (!isTripActive) return;
+        const wasChecked = isChecked(dayIdx, actName);
+        toggleCheckpoint(dayIdx, actName);
+        if (!wasChecked) {
+            showToast(actName, 25);
+        }
+    }, [isTripActive, isChecked, toggleCheckpoint, showToast]);
+
+    useEffect(() => {
+        if (tripJustCompleted && checkpoint && user?.uid) {
+            completeTripAndAwardStamp(user.uid, checkpoint).then(result => {
+                setCelebrationResult(result);
+                updateLeaderboardEntry(
+                    user.uid,
+                    user.displayName || 'Traveler',
+                    user.photoURL || null,
+                    result.stats
+                ).catch(console.error);
+            }).catch(console.error);
+            clearTripJustCompleted();
+        }
+    }, [tripJustCompleted, checkpoint, user, clearTripJustCompleted]);
 
     // Register itinerary with AI context once on mount (avoids infinite re-render loop)
     const registeredRef = useRef(false);
@@ -171,7 +216,20 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                     <h1 className="font-bold text-zinc-900 dark:text-white text-sm">{destName} — Day-by-Day Itinerary</h1>
                     <p className="text-xs text-zinc-400 hidden sm:block">Full plan with crowd & weather alerts</p>
                 </div>
-                <ShareDropdown onCopyLink={handleShare} destName={destName} isSharing={isSharing} collaborators={collaborators} />
+                <ShareDropdown onCopyLink={handleShare} destName={destName} isSharing={isSharing} collaborators={collaborators} planData={{ ...data, dayPlans: customPlans }} />
+                {user && (
+                    <button
+                        onClick={() => isTripActive ? stopTrip() : startTrip()}
+                        className={`px-4 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                            isTripActive
+                                ? 'bg-red-500/10 text-red-500 border border-red-500/30 hover:bg-red-500/20'
+                                : 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/40'
+                        }`}
+                    >
+                        <Rocket className="w-3.5 h-3.5" />
+                        {isTripActive ? 'End Trip' : 'Start Trip'}
+                    </button>
+                )}
                 <button onClick={async () => {
                     if (user?.uid) {
                         await saveItineraryToFirestore(user.uid, { destId, destName, form: { ...form, customPlans }, generatedData: generatedData || null });
@@ -195,6 +253,29 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                         </button>
                     ))}
                 </div>
+                {isTripActive && (() => {
+                    const progress = getProgress();
+                    const pColor = progress.percent < 34 ? 'from-blue-500 to-cyan-500' :
+                                progress.percent < 67 ? 'from-amber-500 to-orange-500' :
+                                progress.percent < 100 ? 'from-emerald-500 to-teal-500' :
+                                'from-amber-400 to-yellow-300';
+                    return (
+                        <div className="mt-2 pt-2 border-t border-zinc-100 dark:border-zinc-800">
+                            <div className="flex items-center justify-between text-[10px] font-bold mb-1">
+                                <span className="text-zinc-500">Trip Progress</span>
+                                <span className="text-zinc-700 dark:text-zinc-300">{progress.completed}/{progress.total} activities ({progress.percent}%)</span>
+                            </div>
+                            <div className="h-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+                                <motion.div
+                                    initial={{ width: 0 }}
+                                    animate={{ width: `${progress.percent}%` }}
+                                    transition={{ duration: 0.5, ease: 'easeOut' }}
+                                    className={`h-full rounded-full bg-gradient-to-r ${pColor}`}
+                                />
+                            </div>
+                        </div>
+                    );
+                })()}
             </div>
 
             <div className="max-w-[1400px] mx-auto px-4 lg:px-8 py-6">
@@ -410,12 +491,34 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                                                 <div 
                                                     className="flex gap-4 mb-4 cursor-grab active:cursor-grabbing group" onClick={() => setActiveActivity(isActive ? -1 : i)}>
                                                     <div className="flex flex-col items-center pt-2">
-                                                        <div className={`w-10 h-10 rounded-full text-white text-sm font-bold flex items-center justify-center shadow-lg shrink-0 transition-transform duration-300
-                              ${isActive ? 'bg-zinc-900 dark:bg-emerald-500 scale-110' : 'bg-emerald-500 dark:bg-zinc-800'}`}>{i + 1}</div>
+                                                        {isTripActive ? (
+                                                            <button
+                                                                onClick={(e) => { e.stopPropagation(); handleCheckpointToggle(activeDay, act.name); }}
+                                                                className="relative group/check z-10"
+                                                            >
+                                                                {isChecked(activeDay, act.name) ? (
+                                                                    <motion.div
+                                                                        initial={{ scale: 0 }}
+                                                                        animate={{ scale: 1 }}
+                                                                        transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+                                                                        className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-500/30"
+                                                                    >
+                                                                        <CheckCircle2 className="w-5 h-5 text-white" />
+                                                                    </motion.div>
+                                                                ) : (
+                                                                    <div className="w-10 h-10 rounded-full border-2 border-dashed border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 flex items-center justify-center text-zinc-400 group-hover/check:border-emerald-400 group-hover/check:text-emerald-400 transition-colors">
+                                                                        <Circle className="w-5 h-5" />
+                                                                    </div>
+                                                                )}
+                                                            </button>
+                                                        ) : (
+                                                            <div className={`w-10 h-10 rounded-full text-white text-sm font-bold flex items-center justify-center shadow-lg shrink-0 transition-transform duration-300
+                                                                ${isActive ? 'bg-zinc-900 dark:bg-emerald-500 scale-110' : 'bg-emerald-500 dark:bg-zinc-800'}`}>{i + 1}</div>
+                                                        )}
                                                         {!isLast && <div className={`w-0.5 flex-1 mt-3 rounded-full transition-colors ${isActive ? 'bg-zinc-900 dark:bg-emerald-500' : 'bg-emerald-100 dark:bg-zinc-800'}`} />}
                                                     </div>
                                                     <div className={`flex-1 bg-white dark:bg-zinc-900 rounded-[1.5rem] border p-5 transition-all relative overflow-hidden group-hover:shadow-md
-                            ${isActive ? 'border-zinc-500 dark:border-emerald-500/50 shadow-xl scale-[1.02]' : 'border-zinc-200 dark:border-zinc-800 shadow-sm'}`}>
+                            ${isActive ? 'border-zinc-500 dark:border-emerald-500/50 shadow-xl scale-[1.02]' : 'border-zinc-200 dark:border-zinc-800 shadow-sm'} ${isTripActive && isChecked(activeDay, act.name) ? 'opacity-60 grayscale-[30%]' : ''}`}>
                                                         <div className="flex items-start justify-between mb-3">
                                                             <div className="pr-4">
                                                                 <div className="inline-flex items-center gap-2 mb-2">
@@ -424,7 +527,7 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                                                                         <CrowdDot level={act.crowd} /> {act.crowd}
                                                                     </div>
                                                                 </div>
-                                                                <h4 className="font-bold text-zinc-900 dark:text-white text-lg leading-tight">{act.name}</h4>
+                                                                <h4 className={"font-bold text-zinc-900 dark:text-white text-lg leading-tight transition-all" + (isTripActive && isChecked(activeDay, act.name) ? ' line-through text-zinc-400 dark:text-zinc-500' : '')}>{act.name}</h4>
                                                             </div>
                                                             <div className="opacity-0 group-hover:opacity-100 transition-opacity flex bg-zinc-100 dark:bg-zinc-800 rounded-xl text-zinc-500 overflow-hidden shrink-0 border border-zinc-200 dark:border-zinc-700 shadow-sm items-center">
                                                                 <div className="px-2 cursor-grab active:cursor-grabbing text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200">
@@ -457,6 +560,24 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                                         );
                                     })}
                                 </Reorder.Group>
+
+                                <AnimatePresence>
+                                    {dayJustCompleted !== null && (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                                            exit={{ opacity: 0, y: -10 }}
+                                            className="mt-4 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/20 rounded-2xl p-4 flex items-center gap-4 shadow-sm"
+                                        >
+                                            <div className="w-12 h-12 rounded-full bg-emerald-500 flex items-center justify-center text-2xl shadow-lg shadow-emerald-500/30 shrink-0">🎉</div>
+                                            <div className="flex-1">
+                                                <div className="font-bold text-emerald-700 dark:text-emerald-400">Day {(dayJustCompleted || 0) + 1} Complete!</div>
+                                                <div className="text-xs font-semibold text-emerald-600 dark:text-emerald-500">+100 XP Day Bonus (saved on trip end)</div>
+                                            </div>
+                                            <button onClick={clearDayJustCompleted} className="text-xs text-emerald-600 hover:text-emerald-800 bg-emerald-500/20 px-3 py-1.5 rounded-lg font-bold transition-colors">Dismiss</button>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
 
                                 {/* Nearby Recommendations */}
                                 {(data.hotels?.length > 0 || data.restaurants?.length > 0) && (
@@ -556,8 +677,14 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                         />
                     </div>
                 </div>
+                </div>
             </div>
-        </div>
+            <CheckpointToast toasts={toasts} />
+            <StampCelebration
+                result={celebrationResult}
+                onClose={() => setCelebrationResult(null)}
+                onViewPassport={() => router.push('/passport')}
+            />
         </div>
     );
 }

@@ -657,7 +657,7 @@ export default function BookingsPage() {
     setActiveFilters(prev => prev.includes(f) ? prev.filter(x => x !== f) : [...prev, f]);
 
   useLayoutEffect(() => {
-    if (isSearching) return;
+    if (isSearching || searchResults.length === 0) return;
     const ctx = gsap.context(() => {
       gsap.fromTo('.result-card, .naviigo-deal',
         { opacity: 0, y: 24 },
@@ -665,7 +665,7 @@ export default function BookingsPage() {
       );
     }, listRef);
     return () => ctx.revert();
-  }, [activeTab, isSearching]);
+  }, [activeTab, isSearching, searchResults.length]);
 
   const tab = tabConfig.find(t => t.id === activeTab)!;
 

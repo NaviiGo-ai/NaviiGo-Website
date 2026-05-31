@@ -1,60 +1,85 @@
-const CACHE_NAME = 'naviigo-v2';
-const STATIC_ASSETS = [
+const CACHE_NAME = 'naviigo-v3-offline';
+const TILE_CACHE = 'naviigo-tiles-v1';
+
+// We explicitly cache critical static roots
+const PRECACHE_URLS = [
     '/',
+    '/explore',
     '/itinerary',
-    '/itinerary/packing',
-    '/itinerary/expenses',
-    '/itinerary/tracking',
-    '/itinerary/history',
-    '/itinerary/ongoing',
+    '/bookings',
+    '/passport',
+    '/offline', // Fallback page
 ];
 
-// Install — cache static pages
 self.addEventListener('install', (event) => {
     event.waitUntil(
-        caches.open(CACHE_NAME).then(cache => cache.addAll(STATIC_ASSETS)).then(() => self.skipWaiting())
+        caches.open(CACHE_NAME)
+            .then(cache => cache.addAll(PRECACHE_URLS))
+            .then(() => self.skipWaiting())
     );
 });
 
-// Activate — clean old caches
 self.addEventListener('activate', (event) => {
     event.waitUntil(
-        caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))))
-            .then(() => self.clients.claim())
+        caches.keys().then(keys => Promise.all(
+            keys.filter(k => k !== CACHE_NAME && k !== TILE_CACHE).map(k => caches.delete(k))
+        )).then(() => self.clients.claim())
     );
 });
 
-// Fetch — network first, fallback to cache
 self.addEventListener('fetch', (event) => {
     const { request } = event;
     const url = new URL(request.url);
 
-    // Skip non-GET and API routes (let them fail gracefully)
+    // Skip non-GET requests
     if (request.method !== 'GET') return;
+    
+    // Skip API routes so they fail gracefully if offline
     if (url.pathname.startsWith('/api/')) return;
 
-    // Cache-first for tile images (Leaflet/CartoDB)
+    // 1. Cache First for Map Tiles
     if (url.hostname.includes('carto') || url.hostname.includes('tile')) {
         event.respondWith(
             caches.match(request).then(cached => cached ?? fetch(request).then(res => {
                 const clone = res.clone();
-                caches.open(CACHE_NAME + '-tiles').then(c => c.put(request, clone));
+                caches.open(TILE_CACHE).then(c => c.put(request, clone));
                 return res;
             }).catch(() => new Response('', { status: 404 })))
         );
         return;
     }
 
-    // Network first for everything else
-    event.respondWith(
-        fetch(request)
-            .then(res => {
+    // 2. Cache First for Next.js Static Assets (JS, CSS, Images in /_next/static)
+    if (url.pathname.startsWith('/_next/static/') || url.pathname.startsWith('/assets/') || url.pathname.startsWith('/destinations/')) {
+        event.respondWith(
+            caches.match(request).then(cached => cached ?? fetch(request).then(res => {
                 if (res.ok) {
                     const clone = res.clone();
                     caches.open(CACHE_NAME).then(c => c.put(request, clone));
                 }
                 return res;
+            }).catch(() => new Response('', { status: 404 })))
+        );
+        return;
+    }
+
+    // 3. Network First for everything else (HTML pages, dynamic data)
+    event.respondWith(
+        fetch(request)
+            .then(res => {
+                if (res.ok && url.protocol.startsWith('http') && request.destination === 'document') {
+                    const clone = res.clone();
+                    caches.open(CACHE_NAME).then(c => c.put(request, clone));
+                }
+                return res;
             })
-            .catch(() => caches.match(request).then(cached => cached ?? new Response('Offline', { status: 503 })))
+            .catch(() => caches.match(request).then(cached => {
+                if (cached) return cached;
+                // If the user navigates to a completely uncached page while offline, return a generic offline page if it's a document
+                if (request.destination === 'document') {
+                    return caches.match('/offline') || new Response('<html><body><h1>You are offline</h1></body></html>', { headers: { 'Content-Type': 'text/html' }});
+                }
+                return new Response('Offline', { status: 503 });
+            }))
     );
 });

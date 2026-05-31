@@ -21,6 +21,7 @@ export interface PassportStats {
     statesVisited: string[];
     citiesVisited: string[];
     categoryCounts: Record<string, number>; // Spiritual: 3, Heritage: 5, etc.
+    totalActivitiesCompleted?: number;
 }
 
 export interface PassportStamp {
@@ -113,6 +114,16 @@ export const ACHIEVEMENTS: Achievement[] = [
         const hasSouth = s.statesVisited.some(st => southStates.includes(st));
         return hasNorth && hasSouth;
     }, xpReward: 300 },
+    { id: 'east_west', name: 'East to West', emoji: '🌅', description: 'Visit both East & West India', category: 'special', requirement: s => {
+        const eastStates = ['West Bengal', 'Odisha', 'Bihar', 'Jharkhand', 'Assam', 'Sikkim', 'Meghalaya', 'Manipur', 'Mizoram', 'Nagaland', 'Tripura', 'Arunachal Pradesh'];
+        const westStates = ['Gujarat', 'Maharashtra', 'Rajasthan', 'Goa'];
+        const hasEast = s.statesVisited.some(st => eastStates.includes(st));
+        const hasWest = s.statesVisited.some(st => westStates.includes(st));
+        return hasEast && hasWest;
+    }, xpReward: 300 },
+    { id: 'level_3', name: 'Getting Started', emoji: '🌟', description: 'Reach Level 3', category: 'mastery', requirement: s => s.level >= 3, xpReward: 100 },
+    { id: 'fifty_activities', name: 'Activity Machine', emoji: '⚡', description: 'Complete 50+ activities across all trips', category: 'mastery', requirement: s => (s.totalActivitiesCompleted || 0) >= 50, xpReward: 500 },
+    { id: 'completionist', name: 'Completionist', emoji: '💯', description: 'Complete 100% of activities on 3 trips', category: 'special', requirement: s => s.totalStamps >= 3, xpReward: 400 },
 ];
 
 /**
