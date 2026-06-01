@@ -42,21 +42,32 @@ export default function ItineraryMap({
     // Load Leaflet CSS + JS from CDN
     useEffect(() => {
         if (typeof window === 'undefined') return;
+        if ((window as any).L && (window as any).L.Routing) { setLeafletLoaded(true); return; }
+
         if (!document.querySelector('link[href*="leaflet@1.9.4"]')) {
             const link = document.createElement('link');
             link.rel = 'stylesheet';
             link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
             document.head.appendChild(link);
+            const link2 = document.createElement('link');
+            link2.rel = 'stylesheet';
+            link2.href = 'https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css';
+            document.head.appendChild(link2);
         }
 
         if (!document.querySelector('script[src*="leaflet@1.9.4"]')) {
             const script = document.createElement('script');
             script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-            script.onload = () => setLeafletLoaded(true);
+            script.onload = () => {
+                const script2 = document.createElement('script');
+                script2.src = 'https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js';
+                script2.onload = () => setLeafletLoaded(true);
+                document.head.appendChild(script2);
+            };
             document.head.appendChild(script);
         } else {
             const check = setInterval(() => {
-                if ((window as any).L) { clearInterval(check); setLeafletLoaded(true); }
+                if ((window as any).L && (window as any).L.Routing) { clearInterval(check); setLeafletLoaded(true); }
             }, 100);
             return () => clearInterval(check);
         }
@@ -100,7 +111,11 @@ export default function ItineraryMap({
 
         markersRef.current.forEach((m: any) => map.removeLayer(m));
         markersRef.current = [];
-        if (polylineRef.current) { map.removeLayer(polylineRef.current); polylineRef.current = null; }
+        if (polylineRef.current) {
+            try { map.removeControl(polylineRef.current); } catch(e) {}
+            try { map.removeLayer(polylineRef.current); } catch(e) {}
+            polylineRef.current = null;
+        }
 
         if (pins.length === 0) return;
 
@@ -143,12 +158,71 @@ export default function ItineraryMap({
         });
 
         if (showRoute && coords.length > 1) {
-            polylineRef.current = L.polyline(coords, {
-                color: '#10b981',
-                weight: 4,
-                opacity: 0.8,
-                dashArray: '6, 6'
+            polylineRef.current = L.Routing.control({
+                waypoints: coords.map(([lat, lng]: [number, number]) => L.latLng(lat, lng)),
+                lineOptions: {
+                    styles: [{ color: '#10b981', weight: 4, opacity: 0.8, dashArray: '6, 6' }]
+                },
+                createMarker: function () { return null; },
+                show: false,
+                addWaypoints: false,
+                routeWhileDragging: false,
+                fitSelectedRoutes: true,
+                showAlternatives: false,
             }).addTo(map);
+
+            const hideRoutingUi = () => {
+                const routeContainers = document.querySelectorAll('.leaflet-routing-container');
+                routeContainers.forEach(c => (c as any).style.display = 'none');
+            };
+            hideRoutingUi();
+            setTimeout(hideRoutingUi, 500);
+
+            const fallbackToStraightLines = () => {
+                if (polylineRef.current) {
+                    try { map.removeControl(polylineRef.current); } catch(err) {}
+                    try { map.removeLayer(polylineRef.current); } catch(err) {}
+                }
+                const latlngs = coords.map(([lat, lng]: [number, number]) => L.latLng(lat, lng));
+                polylineRef.current = L.polyline(latlngs, {
+                    color: '#10b981', weight: 4, opacity: 0.8, dashArray: '6, 6'
+                }).addTo(map);
+                if (coords.length > 1) {
+                    map.fitBounds(polylineRef.current.getBounds(), { padding: [40, 40] });
+                }
+                
+                let totalDist = 0;
+                for(let i = 0; i < latlngs.length - 1; i++) {
+                    totalDist += latlngs[i].distanceTo(latlngs[i+1]);
+                }
+                if (typeof onRouteCalculated === 'function') {
+                    onRouteCalculated([{
+                        distance: totalDist > 1000 ? (totalDist / 1000).toFixed(1) + ' km (est)' : Math.round(totalDist) + ' m (est)',
+                        time: 'Off-road'
+                    }]);
+                }
+            };
+
+            polylineRef.current.on('routesfound', function (e: any) {
+                const routes = e.routes;
+                if (routes && routes.length > 0) {
+                    if (typeof onRouteCalculated === 'function') {
+                        const summary = routes[0].summary;
+                        const t = summary.totalTime;
+                        const d = summary.totalDistance;
+                        onRouteCalculated([{
+                            distance: d > 1000 ? (d / 1000).toFixed(1) + ' km' : Math.round(d) + ' m',
+                            time: t > 3600 ? Math.floor(t / 3600) + ' hr ' + Math.round((t % 3600) / 60) + ' min' : Math.round(t / 60) + ' min'
+                        }]);
+                    }
+                } else {
+                    fallbackToStraightLines();
+                }
+            });
+
+            polylineRef.current.on('routingerror', function (e: any) {
+                fallbackToStraightLines();
+            });
         }
 
         if (coords.length > 0) {

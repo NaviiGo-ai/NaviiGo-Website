@@ -154,11 +154,11 @@ function ExplorePageContent() {
               const isLarge = bentoClass.includes('col-span-2') && bentoClass.includes('row-span-2');
               const isTall = !isLarge && bentoClass.includes('row-span-2');
               return (
-                <motion.div key={d.id} layout
+                <Link key={d.id} href={`/explore/${encodeURIComponent(d.name)}`} onClick={() => startCityView(d.name)} className="block">
+                <motion.div layout
                   initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ delay: Math.min(i, 12) * 0.03, duration: 0.35, ease: 'easeOut' }}
-                  onClick={() => go(d.name)}
-                  className={`${bentoClass} group relative rounded-xl overflow-hidden cursor-pointer bg-black shadow-sm ring-1 ring-black/5 dark:ring-white/10 hover:shadow-lg transition-shadow duration-300`}
+                  className={`${bentoClass} group relative h-full w-full rounded-xl overflow-hidden cursor-pointer bg-black shadow-sm ring-1 ring-black/5 dark:ring-white/10 hover:shadow-lg transition-shadow duration-300`}
                 >
                   <motion.div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${d.image})` }} whileHover={{ scale: 1.03 }} transition={{ duration: 0.8, ease: 'easeOut' }} />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/10 transition-opacity duration-300 group-hover:opacity-90" />
@@ -193,6 +193,7 @@ function ExplorePageContent() {
                     )}
                   </div>
                 </motion.div>
+                </Link>
               );
             })}
           </AnimatePresence>

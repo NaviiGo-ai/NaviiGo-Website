@@ -25,8 +25,8 @@ const features = [
   },
   {
     icon: '📜',
-    title: 'Digital Pilgrim Passport',
-    description: 'Collect stamps as you visit temples. Complete spiritual circuits to unlock badges and build a shareable travel logbook.',
+    title: 'Digital Travel Passport',
+    description: 'Collect digital stamps as you explore destinations. Complete bucket lists to unlock badges and build a shareable travel logbook.',
     color: 'from-orange-500/20 to-orange-600/5',
     borderColor: 'border-orange-500/20',
     link: '/passport',
@@ -206,10 +206,10 @@ export default function Home() {
         >
           <span className="text-xs font-semibold uppercase tracking-[0.3em] text-orange-400 mb-4 block">Your Collection</span>
           <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-white mb-6">
-            Save Your Sacred Journeys
+            Save Your Epic Journeys
           </h2>
           <p className="text-lg text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed">
-            Found a temple circuit you want to complete? Save it to your itinerary and we'll keep you updated on the best times, weather, and seamless transit options.
+            Found a bucket list trip you want to complete? Save it to your itinerary and we'll keep you updated on the best times, weather, and seamless transit options.
           </p>
           <Link href="/saved">
             <button className="px-8 py-3.5 rounded-2xl bg-orange-500/10 border border-orange-500/30 text-orange-400 font-semibold hover:bg-orange-500 hover:text-white transition-all hover:scale-105 shadow-[0_0_20px_rgba(249,115,22,0.1)] hover:shadow-[0_0_30px_rgba(249,115,22,0.3)]">

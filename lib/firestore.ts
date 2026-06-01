@@ -505,4 +505,30 @@ export async function getUserBucketList(uid: string): Promise<BucketListItem[]> 
     }
 }
 
+// ─── TRIP PROGRESS & BUCKET LIST ─────────────────────────────────────────────
+
+export async function getStampByDestination(uid: string, destId: string): Promise<PassportStampDoc | null> {
+    const q = query(
+        collection(db, 'users', uid, 'passport', 'stamps', 'entries'),
+        orderBy('createdAt', 'desc')
+    );
+    const snap = await getDocs(q);
+    const stamps = snap.docs.map(d => d.data() as PassportStampDoc);
+    const match = stamps.find(s => s.location.toLowerCase() === destId.toLowerCase() || s.name.toLowerCase() === destId.toLowerCase());
+    return match || null;
+}
+
+export async function saveActiveTripProgress(uid: string, tripId: string, checkpointState: any) {
+    const ref = doc(db, 'users', uid, 'trips', tripId);
+    await setDoc(ref, {
+        checkpointState,
+        updatedAt: serverTimestamp(),
+    }, { merge: true });
+}
+
+export async function getActiveTripProgress(uid: string, tripId: string): Promise<any | null> {
+    const snap = await getDoc(doc(db, 'users', uid, 'trips', tripId));
+    return snap.exists() ? snap.data().checkpointState : null;
+}
+
 export { db };

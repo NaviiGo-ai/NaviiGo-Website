@@ -118,6 +118,8 @@ export default function PlaceAutocomplete({
         </div>
         <input
           type="text"
+          name={`${name}_display`}
+          id={`autocomplete-${name}`}
           value={query}
           onChange={(e) => {
             setQuery(e.target.value);

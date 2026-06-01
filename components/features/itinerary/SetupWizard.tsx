@@ -19,18 +19,9 @@ function resolveDestKey(name: string): { id: string; name: string } | null {
     return null;
 }
 
-const STEP_VISUALS = ['🌍', '📍', '🗓️', '👥', '🏃'];
-const STEP_TITLES = ["What's the purpose of your trip?", "Where in India do you want to go?", "When & how long is your trip?", "Who's travelling & what's your budget?", "What type of traveler are you?"];
-const STEP_SUBS = ["This helps us find the right vibe for your journey.", "Search any Indian city or pick from popular destinations.", "Select your travel month and number of days.", "Details about your budget and travel party.", "Select a travel style and pace that matches you."];
-
-const TRAVELER_TYPES = [
-    { id: 'backpacker', emoji: '🎒', label: 'Backpacker', desc: 'High energy — early starts, maximum local experiences' },
-    { id: 'comfort', emoji: '🛋️', label: 'Comfort', desc: 'Balanced — key highlights at a comfortable pace' },
-    { id: 'luxury', emoji: '✨', label: 'Luxury', desc: 'Relaxed — premium stays, dining, and leisure' },
-    { id: 'family', emoji: '👨‍👩‍👧‍👦', label: 'Family', desc: 'Kid & elder-friendly pacing, frequent rest stops' },
-    { id: 'flash', emoji: '⚡', label: 'Flash', desc: 'Fast-paced — squeeze in everything possible in minimal time' },
-    { id: 'slow', emoji: '🐢', label: 'Slow Travel', desc: 'Deep immersion — slow down to absorb local culture' },
-];
+const STEP_VISUALS = ['🌍', '📍', '🗓️', '👥'];
+const STEP_TITLES = ["What's the purpose of your trip?", "Where in India do you want to go?", "When & how long is your trip?", "Who's travelling & what's your budget?"];
+const STEP_SUBS = ["This helps us find the right vibe for your journey.", "Search any Indian city or pick from popular destinations.", "Select your travel month and number of days.", "Final details before we build your itinerary."];
 
 interface SetupWizardProps {
     onDone: (f: Record<string, unknown>) => void;
@@ -191,11 +182,12 @@ export default function SetupWizard({ onDone }: SetupWizardProps) {
     const [dir, setDir] = useState(1);
     const [buildFromReel, setBuildFromReel] = useState(false);
     const [vibeMatchMode, setVibeMatchMode] = useState(false);
-    const [form, setForm] = useState({ purpose: '', destination: '', destName: '', startDate: '', endDate: '', days: 0, group: '', budget: 15000, travelerType: '' });
+    const [form, setForm] = useState({ purpose: '', destination: '', destName: '', startDate: '', endDate: '', days: 0, group: '', budget: 15000 });
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const set = (k: string, v: string | number) => setForm(p => ({ ...p, [k]: v }));
     const next = () => { setDir(1); setStep(s => s + 1); };
     const back = () => { setDir(-1); setStep(s => s - 1); };
-    const canNext = [form.purpose !== '', form.destination !== '', form.startDate !== '' && form.endDate !== '', form.group !== '', form.travelerType !== ''][step - 1] ?? false;
+    const canNext = [form.purpose !== '', form.destination !== '', form.startDate !== '' && form.endDate !== '', form.group !== ''][step - 1] ?? false;
 
     // Pre-fill destination from URL query params (e.g. from Explore deep-dive CTA)
     useEffect(() => {
@@ -218,7 +210,7 @@ export default function SetupWizard({ onDone }: SetupWizardProps) {
                 {step > 1 && !buildFromReel && !vibeMatchMode && <button onClick={back} className="w-9 h-9 rounded-full border border-zinc-200 dark:border-zinc-700 flex items-center justify-center hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors text-zinc-600 dark:text-zinc-300 text-sm">←</button>}
                 <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1"><span className="text-lg">🗺️</span><span className="text-xs font-bold tracking-widest text-zinc-500 uppercase">Setting Up Your Trip</span></div>
-                    {!buildFromReel && !vibeMatchMode && <StepBar step={step} total={5} />}
+                    {!buildFromReel && !vibeMatchMode && <StepBar step={step} total={4} />}
                 </div>
                 {/* Mode toggles */}
                 <div className="flex items-center gap-2">
@@ -378,26 +370,6 @@ export default function SetupWizard({ onDone }: SetupWizardProps) {
                                 </div>
                             )}
 
-                            {step === 5 && (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-2xl">
-                                    {TRAVELER_TYPES.map(t => (
-                                        <button key={t.id} onClick={() => set('travelerType', t.id)}
-                                            className={`flex items-center gap-4 bg-white dark:bg-zinc-800/50 rounded-2xl p-4 border-2 text-left transition-all duration-200 ${form.travelerType === t.id ? 'border-emerald-500 shadow-lg shadow-emerald-500/10 scale-[1.01]' : 'border-zinc-100 dark:border-zinc-700 hover:border-zinc-200 dark:hover:border-zinc-600 hover:shadow-sm'}`}>
-                                            <span className="text-3xl">{t.emoji}</span>
-                                            <div className="flex-1 min-w-0">
-                                                <div className="font-semibold text-zinc-900 dark:text-white text-sm">{t.label}</div>
-                                                <div className="text-xs text-zinc-400 mt-0.5 whitespace-normal break-words leading-relaxed">{t.desc}</div>
-                                            </div>
-                                            {form.travelerType === t.id && (
-                                                <div className="w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center flex-shrink-0">
-                                                    <span className="text-white text-[10px]">✓</span>
-                                                </div>
-                                            )}
-                                        </button>
-                                    ))}
-                                </div>
-                            )}
-
                             <div className="h-8" />{/* bottom spacer inside scroll */}
                         </motion.div>
                         </AnimatePresence>
@@ -406,9 +378,16 @@ export default function SetupWizard({ onDone }: SetupWizardProps) {
                         {/* Sticky Next/Back buttons — always visible */}
                         <div className="flex gap-3 pt-4 border-t border-zinc-100 dark:border-zinc-800 mt-4 max-w-2xl">
                             {step > 1 && <button onClick={back} className="flex-1 py-3.5 rounded-2xl border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 font-medium hover:bg-zinc-50 dark:hover:bg-white/5 transition-colors">← Back</button>}
-                            <button onClick={step < 5 ? next : () => onDone(form)} disabled={!canNext}
-                                className={`flex-[2] py-3.5 rounded-2xl font-bold text-base transition-all ${canNext ? 'bg-emerald-600 text-white hover:bg-emerald-500 shadow-lg shadow-emerald-500/25 active:scale-[0.98]' : 'bg-zinc-200 dark:bg-zinc-700 text-zinc-400 cursor-not-allowed'}`}>
-                                {step < 5 ? 'Next →' : 'Build My Itinerary ✨'}
+                            <button onClick={step < 4 ? next : () => { setIsSubmitting(true); onDone(form); }} disabled={!canNext || isSubmitting}
+                                className={`flex-[2] py-3.5 rounded-2xl font-bold text-base transition-all flex items-center justify-center gap-2 ${canNext && !isSubmitting ? 'bg-emerald-600 text-white hover:bg-emerald-500 shadow-lg shadow-emerald-500/25 active:scale-[0.98]' : 'bg-zinc-200 dark:bg-zinc-700 text-zinc-400 cursor-not-allowed'}`}>
+                                {isSubmitting ? (
+                                    <>
+                                        <div className="w-5 h-5 border-2 border-zinc-400 border-t-transparent rounded-full animate-spin" />
+                                        Preparing...
+                                    </>
+                                ) : (
+                                    step < 4 ? 'Next →' : 'Build My Itinerary ✨'
+                                )}
                             </button>
                         </div>
                     </div>
@@ -420,7 +399,7 @@ export default function SetupWizard({ onDone }: SetupWizardProps) {
                             {vibeMatchMode ? '🎯' : buildFromReel ? '📸' : STEP_VISUALS[step - 1]}
                         </div>
                         <h3 className="text-lg font-bold text-zinc-700 dark:text-zinc-200">
-                            {vibeMatchMode ? 'Vibe Match' : buildFromReel ? 'Build from Content' : `Step ${step} of 5`}
+                            {vibeMatchMode ? 'Vibe Match' : buildFromReel ? 'Build from Content' : `Step ${step} of 4`}
                         </h3>
                         <p className="text-sm text-zinc-400 mt-1">
                             {vibeMatchMode ? 'Pick vibes → AI finds your destination' : buildFromReel ? 'AI extracts your trip from social media' : STEP_TITLES[step - 1]}
