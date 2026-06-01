@@ -549,7 +549,11 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                                                                     <span>💳</span> ₹{act.priceBase || [250, 400, 800, 1500][i % 4]}
                                                                 </div>
                                                             </div>
-                                                            <button onClick={(e) => { e.stopPropagation(); router.push(`/itinerary/detail?type=attraction&dest=${destId}&name=${encodeURIComponent(act.name)}`); }}
+                                                            <button onClick={(e) => { 
+                                                                e.stopPropagation(); 
+                                                                localStorage.setItem('navii_detail_item', JSON.stringify(act));
+                                                                router.push(`/itinerary/detail?type=attraction&dest=${destId}&name=${encodeURIComponent(act.name)}&fromLocal=true`); 
+                                                            }}
                                                                 className="text-xs font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 px-4 py-1.5 rounded-xl hover:bg-emerald-100 dark:hover:bg-emerald-500/20 transition-colors">
                                                                 Explorer ➔
                                                             </button>
@@ -586,7 +590,10 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             {data.hotels && data.hotels.length > 0 && (
                                                 <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 shadow-sm group cursor-pointer hover:shadow-md transition-all"
-                                                    onClick={() => router.push(`/itinerary/detail?type=hotel&dest=${destId}&name=${encodeURIComponent(data.hotels[0].name)}`)}>
+                                                    onClick={() => {
+                                                        localStorage.setItem('navii_detail_item', JSON.stringify(data.hotels[0]));
+                                                        router.push(`/itinerary/detail?type=hotel&dest=${destId}&name=${encodeURIComponent(data.hotels[0].name)}&fromLocal=true`);
+                                                    }}>
                                                     <div className="flex items-center gap-3 mb-2 text-xs font-bold text-zinc-400 uppercase tracking-widest"><span className="text-base leading-none">🏨</span> Place to stay</div>
                                                     <div className="flex gap-4">
                                                         <div className="w-16 h-16 rounded-xl shrink-0 bg-cover bg-center" style={{ backgroundImage: `url(${resolveImgSrc(data.hotels[0].img, 150)})` }} />
@@ -600,7 +607,10 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                                             )}
                                             {data.restaurants && data.restaurants.length > 0 && (
                                                 <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 shadow-sm group cursor-pointer hover:shadow-md transition-all"
-                                                    onClick={() => router.push(`/itinerary/detail?type=restaurant&dest=${destId}&name=${encodeURIComponent(data.restaurants[0].name)}`)}>
+                                                    onClick={() => {
+                                                        localStorage.setItem('navii_detail_item', JSON.stringify(data.restaurants[0]));
+                                                        router.push(`/itinerary/detail?type=restaurant&dest=${destId}&name=${encodeURIComponent(data.restaurants[0].name)}&fromLocal=true`);
+                                                    }}>
                                                     <div className="flex items-center gap-3 mb-2 text-xs font-bold text-zinc-400 uppercase tracking-widest"><span className="text-base leading-none">🍽️</span> Where to eat</div>
                                                     <div className="flex gap-4">
                                                         <div className="w-16 h-16 rounded-xl shrink-0 bg-cover bg-center" style={{ backgroundImage: `url(${resolveImgSrc(data.restaurants[0].img, 150)})` }} />

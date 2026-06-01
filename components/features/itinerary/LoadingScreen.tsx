@@ -21,10 +21,18 @@ export default function LoadingScreen({ form, onDone }: LoadingScreenProps) {
     const destName = form.destName as string;
     const groupLabel = GROUP_SIZES.find(g => g.id === form.group)?.label ?? '';
     const purposeLabel = PURPOSES.find(p => p.id === form.purpose)?.label ?? '';
-    // Only use hardcoded data for THIS specific destination — never fall back to Kerala
     const hardcodedData = DEST_DATA[destId] ?? null;
     const mapCenter = hardcodedData?.mapCenter ?? INDIA_CENTER;
-    const loadingHighlights = hardcodedData?.highlights ?? [];
+    
+    // Fallback highlights if we don't have hardcoded data for this destination
+    const fallbackHighlights = [
+        { lat: INDIA_CENTER.lat + 4, lng: INDIA_CENTER.lng - 2, name: 'Scanning flights...', img: '' },
+        { lat: INDIA_CENTER.lat - 6, lng: INDIA_CENTER.lng + 1, name: 'Finding stays...', img: '' },
+        { lat: INDIA_CENTER.lat + 2, lng: INDIA_CENTER.lng + 5, name: 'Curating activities...', img: '' },
+        { lat: INDIA_CENTER.lat - 3, lng: INDIA_CENTER.lng - 4, name: 'Finalizing route...', img: '' }
+    ];
+    
+    const loadingHighlights = hardcodedData?.highlights?.length ? hardcodedData.highlights : fallbackHighlights;
 
     const [currentStep, setCurrentStep] = useState(0);
     const [currentSub, setCurrentSub] = useState(0);
@@ -33,6 +41,35 @@ export default function LoadingScreen({ form, onDone }: LoadingScreenProps) {
     const [apiData, setApiData] = useState<any>(null);
     const [apiDone, setApiDone] = useState(false);
     const fetchedRef = useRef(false);
+
+    const [dynamicCenter, setDynamicCenter] = useState<{lat: number, lng: number} | null>(null);
+    const [dynamicHighlights, setDynamicHighlights] = useState<any[]>([]);
+
+    const activeMapCenter = hardcodedData?.mapCenter ?? dynamicCenter ?? INDIA_CENTER;
+    const activeHighlights = hardcodedData?.highlights?.length ? hardcodedData.highlights : (dynamicHighlights.length ? dynamicHighlights : fallbackHighlights);
+    
+    // Fetch real city center via Nominatim for non-hardcoded destinations
+    useEffect(() => {
+        if (hardcodedData) return;
+        fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(destName + ' India')}&format=json&limit=1`)
+            .then(res => res.json())
+            .then(data => {
+                if (data && data[0]) {
+                    const lat = parseFloat(data[0].lat);
+                    const lng = parseFloat(data[0].lon);
+                    setDynamicCenter({ lat, lng });
+                    
+                    // Generate 4 realistic-looking points near the city center to simulate itinerary building
+                    setDynamicHighlights([
+                        { lat: lat + 0.015, lng: lng - 0.015, name: 'Scanning top attractions...', img: '' },
+                        { lat: lat - 0.012, lng: lng + 0.01, name: 'Curating perfect stays...', img: '' },
+                        { lat: lat + 0.008, lng: lng + 0.02, name: 'Finding local eateries...', img: '' },
+                        { lat: lat - 0.02, lng: lng - 0.005, name: 'Finalizing your route...', img: '' }
+                    ]);
+                }
+            })
+            .catch(() => console.error("Geocoding failed for loading screen"));
+    }, [destName, hardcodedData]);
 
     // Timer
     useEffect(() => { const t = setInterval(() => setElapsed(e => e + 1), 1000); return () => clearInterval(t); }, []);
@@ -55,6 +92,7 @@ export default function LoadingScreen({ form, onDone }: LoadingScreenProps) {
                         days: form.days,
                         budget: form.budget,
                         startDate: form.startDate,
+                        travelerType: form.travelerType,
                         browsingSignals: getBrowsingSignals(),
                     }),
                 });
@@ -83,13 +121,13 @@ export default function LoadingScreen({ form, onDone }: LoadingScreenProps) {
         const step = GEN_STEPS[currentStep];
         const subInterval = step.duration / (step.sub.length + 1);
         if (currentSub < step.sub.length) {
-            const t = setTimeout(() => { setCurrentSub(s => s + 1); setRevealedPins(p => Math.min(p + 1, loadingHighlights.length)); }, subInterval);
+            const t = setTimeout(() => { setCurrentSub(s => s + 1); setRevealedPins(p => Math.min(p + 1, activeHighlights.length)); }, subInterval);
             return () => clearTimeout(t);
         } else {
             const t = setTimeout(() => { setCurrentStep(s => s + 1); setCurrentSub(0); }, subInterval);
             return () => clearTimeout(t);
         }
-    }, [currentStep, currentSub, apiDone, apiData, onDone, loadingHighlights.length]);
+    }, [currentStep, currentSub, apiDone, apiData, onDone, activeHighlights.length]);
 
     // If API finishes after animation, trigger onDone
     useEffect(() => {
@@ -101,11 +139,11 @@ export default function LoadingScreen({ form, onDone }: LoadingScreenProps) {
     const fmt = (s: number) => `${Math.floor(s / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`;
 
     const mapPins = useMemo(() =>
-        loadingHighlights.slice(0, revealedPins).map((h, i) => ({
-            lat: h.lat ?? mapCenter.lat, lng: h.lng ?? mapCenter.lng,
+        activeHighlights.slice(0, revealedPins).map((h, i) => ({
+            lat: h.lat ?? activeMapCenter.lat, lng: h.lng ?? activeMapCenter.lng,
             label: h.name, number: i + 1, img: h.img,
         })),
-        [loadingHighlights, mapCenter, revealedPins]);
+        [activeHighlights, activeMapCenter, revealedPins]);
 
     return (
         <div className="min-h-screen bg-[#f7f8fc] dark:bg-[#0a0a0f] pt-20">
@@ -181,8 +219,8 @@ export default function LoadingScreen({ form, onDone }: LoadingScreenProps) {
                     <div className="h-full min-h-[400px] lg:h-full rounded-3xl overflow-hidden border border-zinc-100 dark:border-zinc-800 shadow-sm">
                         <ItineraryMap
                             pins={mapPins}
-                            center={mapCenter}
-                            zoom={loadingHighlights.length > 0 ? 10 : 5}
+                            center={activeMapCenter}
+                            zoom={hardcodedData?.highlights?.length || dynamicCenter ? 12 : 4.5}
                             showRoute={mapPins.length > 1}
                             className="w-full h-full min-h-[400px]"
                         />

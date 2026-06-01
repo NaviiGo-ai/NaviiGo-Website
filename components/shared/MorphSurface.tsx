@@ -109,7 +109,7 @@ function Dock() {
 }
 
 function ChatPanel() {
-  const { closeAI, messages, sendMessage, itineraryContext, applyAction } = useAI();
+  const { closeAI, messages, sendMessage, itineraryContext, applyAction, lastAction, clearLastAction } = useAI();
   const shouldReduceMotion = useReducedMotion();
   const [input, setInput] = React.useState('');
   const chatEndRef = React.useRef<HTMLDivElement>(null);
@@ -127,8 +127,14 @@ function ChatPanel() {
   };
 
   const quickPrompts = itineraryContext 
-    ? ['Optimize this day', 'Suggest lunch near here', 'Estimate trip cost']
+    ? ['🍽️ More food stops', '🚶 Less walking', '💰 Make it cheaper', '✨ Add hidden gem']
     : ['Best temples in Kashi?', 'Budget trip to Goa?', 'Hidden gems in Spiti'];
+
+  const handleAcceptAction = React.useCallback(() => {
+      if (!lastAction) return;
+      applyAction({ type: lastAction.type, payload: lastAction.payload });
+      clearLastAction();
+  }, [lastAction, applyAction, clearLastAction]);
 
   return (
     <motion.div
@@ -180,30 +186,29 @@ function ChatPanel() {
           </div>
         ))}
 
-        {/* Itinerary Suggestions (Awareness) */}
-        {itineraryContext && messages.length > 1 && (
-          <motion.div 
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-emerald-500/5 border border-emerald-500/20 rounded-2xl p-4 mt-2 space-y-3"
-          >
-            <div className="flex items-center gap-2 text-emerald-400 font-black text-[10px] uppercase tracking-wider">
-              <Calendar className="w-3.5 h-3.5" /> Plan Insight
-            </div>
-            <p className="text-xs text-zinc-400">I noticed your itinerary has a tight gap. Should I optimize the travel route?</p>
-            <div className="flex gap-2">
-              <button 
-                onClick={() => applyAction({ type: 'optimize', payload: {} })}
-                className="text-[10px] font-black uppercase tracking-widest bg-emerald-500 text-white px-3 py-1.5 rounded-lg hover:bg-emerald-400 transition-colors"
-              >
-                Yes, Optimize
-              </button>
-              <button className="text-[10px] font-black uppercase tracking-widest bg-white/5 text-zinc-400 px-3 py-1.5 rounded-lg hover:bg-white/10 transition-colors">
-                No thanks
-              </button>
-            </div>
-          </motion.div>
-        )}
+        {/* Pending Action Banner */}
+        <AnimatePresence>
+            {lastAction && (
+                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
+                    className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-4 mt-2 shadow-sm">
+                    <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+                        <Sparkles className="w-3.5 h-3.5" /> AI Suggests a Change
+                    </p>
+                    <p className="text-xs font-semibold text-zinc-200 mb-3">{lastAction.description}</p>
+                    <div className="flex gap-2">
+                        <button onClick={handleAcceptAction}
+                            className="flex-1 bg-emerald-500 hover:bg-emerald-400 text-white text-[11px] font-bold rounded-xl py-2 transition-colors">
+                            ✓ Apply Change
+                        </button>
+                        <button onClick={clearLastAction}
+                            className="flex-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[11px] font-bold rounded-xl py-2 transition-colors">
+                            ✕ Skip
+                        </button>
+                    </div>
+                </motion.div>
+            )}
+        </AnimatePresence>
+
         <div ref={chatEndRef} />
       </div>
 

@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { resolveImgSrc } from '@/lib/imageService';
 import { DEST_IMAGES } from '@/lib/imageMap';
+import { getBrowsingSignals } from '@/lib/browsingSignals';
 
 interface SmartRecommendationsProps {
     purpose: string;
@@ -44,6 +45,7 @@ export default function SmartRecommendations({
                 uid: userId, budget, month: new Date().getMonth() + 1,
                 group, purpose, pastDestinations: [],
                 tasteVector: JSON.parse(localStorage.getItem('naviigo_taste_vector') || '[]'),
+                browsingSignals: getBrowsingSignals(),
             }),
         })
             .then(r => r.json())
@@ -75,8 +77,6 @@ export default function SmartRecommendations({
 
     const imgFor = (id: string) => resolveImgSrc(DEST_IMG_MAP[id] || DEST_IMAGES.mumbai, 600);
 
-    const [topRec, ...rest] = recs;
-
     return (
         <div className="mb-6">
             {/* Header */}
@@ -100,63 +100,36 @@ export default function SmartRecommendations({
 
             {!loading && recs.length > 0 && (
                 <div className="space-y-3">
-                    {/* Hero — top pick */}
-                    {topRec && (
-                        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
-                            className={`rounded-2xl overflow-hidden border-2 transition-all shadow-lg ${selected === topRec.id ? 'border-emerald-500 shadow-emerald-500/20' : 'border-emerald-500/40 hover:border-emerald-500'}`}>
-                            <div className="relative h-36 cursor-pointer group" onClick={() => handleSelect(topRec.id, topRec.name)}>
-                                <div className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
-                                    style={{ backgroundImage: `url(${imgFor(topRec.id)})` }} />
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
-                                <div className="absolute top-3 left-3 bg-emerald-500 text-white text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-lg flex items-center gap-1">
-                                    🏆 Top Pick
-                                </div>
-                                <div className="absolute top-3 right-3 bg-black/40 backdrop-blur text-white text-xs font-bold px-2 py-1 rounded-lg">
-                                    {topRec.score}% match
-                                </div>
-                                <div className="absolute bottom-0 left-0 right-0 p-4">
-                                    <div className="text-white font-bold text-xl mb-1">{topRec.name}</div>
-                                    <div className="flex flex-wrap gap-1">
-                                        {topRec.reasons?.slice(0, 2).map((r: string) => (
-                                            <span key={r} className="text-[10px] bg-white/20 backdrop-blur text-white rounded-full px-2 py-0.5">
-                                                {r.includes('season') ? '🗓️' : r.includes('budget') ? '💰' : '✨'} {r}
-                                            </span>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-                            <button onClick={() => handleGo(topRec.id, topRec.name)}
-                                className="w-full bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-bold text-sm py-3 flex items-center justify-center gap-2 transition-colors">
-                                Select {topRec.name} &amp; Continue →
-                            </button>
-                        </motion.div>
-                    )}
-
-                    {/* 3 smaller picks */}
-                    <div className="grid grid-cols-3 gap-3">
-                        {rest.slice(0, 3).map((rec, i) => (
+                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                        {recs.slice(0, 4).map((rec, i) => (
                             <motion.div key={rec.id}
                                 initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: (i + 1) * 0.07 }}
+                                transition={{ delay: i * 0.07 }}
                                 className={`rounded-2xl overflow-hidden border-2 transition-all ${selected === rec.id ? 'border-emerald-500 shadow-lg shadow-emerald-500/10' : 'border-transparent hover:border-zinc-600'}`}>
-                                <div className="relative h-20 cursor-pointer group" onClick={() => handleSelect(rec.id, rec.name)}>
+                                <div className="relative h-28 cursor-pointer group" onClick={() => handleSelect(rec.id, rec.name)}>
                                     <div className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
                                         style={{ backgroundImage: `url(${imgFor(rec.id)})` }} />
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
-                                    <div className="absolute top-1.5 right-1.5 bg-black/50 backdrop-blur text-white text-[9px] font-bold px-1.5 py-0.5 rounded">
+                                    
+                                    <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-md text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border border-white/10 shadow-sm">
+                                        {i + 1}
+                                    </div>
+
+                                    <div className="absolute top-2 right-2 bg-black/50 backdrop-blur text-white text-[9px] font-bold px-1.5 py-0.5 rounded">
                                         {rec.score}%
                                     </div>
-                                    <div className="absolute bottom-0 left-0 right-0 p-2">
-                                        <div className="text-white font-bold text-xs leading-tight">{rec.name}</div>
+
+                                    <div className="absolute bottom-0 left-0 right-0 p-3">
+                                        <div className="text-white font-bold text-sm leading-tight mb-0.5">{rec.name}</div>
                                         {rec.reasons?.[0] && (
-                                            <div className="text-white/60 text-[9px] mt-0.5 line-clamp-1">
+                                            <div className="text-white/70 text-[9px] line-clamp-1">
                                                 {rec.reasons[0].includes('season') ? '🗓️' : '✨'} {rec.reasons[0]}
                                             </div>
                                         )}
                                     </div>
                                 </div>
                                 <button onClick={() => handleGo(rec.id, rec.name)}
-                                    className="w-full bg-zinc-900 dark:bg-zinc-800 hover:bg-zinc-700 text-white text-[10px] font-bold py-2 flex items-center justify-center gap-1 transition-colors">
+                                    className="w-full bg-zinc-900 dark:bg-zinc-800 hover:bg-zinc-700 active:bg-zinc-600 text-white text-[10px] font-bold py-2.5 flex items-center justify-center gap-1 transition-colors">
                                     Select →
                                 </button>
                             </motion.div>

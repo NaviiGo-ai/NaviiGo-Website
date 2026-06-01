@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { searchDestinationsByVibe, DestinationVectorMatch } from '@/lib/ai/pinecone';
+import { generateEmbedding } from '@/lib/ai/embeddings';
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
-const GEMINI_MODEL = 'gemini-1.5-flash';
+const GEMINI_MODEL = 'gemini-2.5-flash';
 
 // Destination metadata with rough coordinates and characteristics
 const DEST_META: Record<string, { lat: number; lng: number; state: string; types: string[]; idealMonths: number[] }> = {
@@ -26,15 +27,35 @@ const DEST_META: Record<string, { lat: number; lng: number; state: string; types
 
 export async function POST(req: NextRequest) {
     try {
-        const { uid, budget, month, group, purpose, preferences, pastDestinations, tasteVector } = await req.json();
+        const { uid, budget, month, group, purpose, preferences, pastDestinations, tasteVector, browsingSignals } = await req.json();
 
         const currentMonth = month || new Date().getMonth() + 1; // 1-12
         const budgetNum = Number(budget) || 15000;
 
-        // Fetch semantic matches from Pinecone if tasteVector exists
+        // ── Process Browsing Signals ──
+        let finalVector = tasteVector || [];
+        if (browsingSignals) {
+            const { clickedCategories, viewedDestinations } = browsingSignals;
+            if ((clickedCategories && clickedCategories.length > 0) || (viewedDestinations && viewedDestinations.length > 0)) {
+                const signalText = `User is implicitly interested in categories: ${clickedCategories?.join(', ') || 'none'}. 
+                                    They recently viewed destinations: ${viewedDestinations?.join(', ') || 'none'}.`;
+                const signalVector = await generateEmbedding(signalText);
+                
+                if (signalVector) {
+                    if (finalVector.length === 0) {
+                        finalVector = signalVector;
+                    } else if (finalVector.length === signalVector.length) {
+                        // 50/50 blend between explicit taste and implicit browsing signals
+                        finalVector = finalVector.map((val: number, i: number) => (val * 0.5) + (signalVector[i] * 0.5));
+                    }
+                }
+            }
+        }
+
+        // Fetch semantic matches from Pinecone if finalVector exists
         let semanticMatches: DestinationVectorMatch[] = [];
-        if (tasteVector && tasteVector.length > 0) {
-            semanticMatches = await searchDestinationsByVibe(tasteVector, 15);
+        if (finalVector && finalVector.length > 0) {
+            semanticMatches = await searchDestinationsByVibe(finalVector, 15);
         }
 
         // Score each destination
