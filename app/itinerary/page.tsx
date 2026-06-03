@@ -100,7 +100,7 @@ function ItineraryContent() {
     <AnimatePresence mode="wait">
       {phase === 'setup' && <motion.div key="setup" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}><SetupWizard onDone={handleSetupDone} /></motion.div>}
       {phase === 'loading' && <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}><LoadingScreen form={savedForm} onDone={(data) => { setGeneratedData(data); setPhase('result'); }} /></motion.div>}
-      {phase === 'result' && <motion.div key="result" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}><ResultPage form={savedForm} generatedData={generatedData} shareId={sharedItineraryId} isLoaded={!!searchParams.get('load') || !!searchParams.get('shareId')} onDayView={() => setPhase('dayview')} onReset={handleReset} /></motion.div>}
+      {phase === 'result' && <motion.div key="result" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}><ResultPage form={savedForm} generatedData={generatedData} shareId={sharedItineraryId} onDayView={() => setPhase('dayview')} onReset={handleReset} /></motion.div>}
       {phase === 'dayview' && <motion.div key="dayview" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}><DayViewPage form={savedForm} generatedData={generatedData} onBack={() => setPhase('result')} /></motion.div>}
     </AnimatePresence>
   );
