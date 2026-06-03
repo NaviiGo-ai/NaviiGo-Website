@@ -426,8 +426,8 @@ export async function generateItinerary(ctx: UserContext, externalData?: DestInf
     );
     if (match) destKey = match.id;
 
-    // Use hardcoded DEST_DATA if available, otherwise use externally provided data (e.g. from Gemini)
-    const destData = DEST_DATA[destKey] || externalData;
+    // Use externalData (Gemini AI) if available, otherwise fallback to hardcoded DEST_DATA
+    const destData = externalData || DEST_DATA[destKey];
     if (!destData) {
         console.error(`[ItineraryModel] No data for destination: ${destKey} (${ctx.destName})`);
         return null;

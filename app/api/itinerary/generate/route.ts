@@ -51,23 +51,8 @@ export async function POST(req: NextRequest) {
             browsingSignals: browsingSignals || null,
         };
 
-        // ── Path A: Deterministic engine with hardcoded DEST_DATA ─────────────
-        if (DEST_DATA[resolvedDest]) {
-            console.log(`[Itinerary] Using deterministic engine with hardcoded data for ${destName}`);
-
-            const result = await generateItinerary(userContext);
-            if (result) {
-                return NextResponse.json({
-                    success: true,
-                    itinerary: result,
-                    source: 'personalized',
-                });
-            }
-        }
-
-        // ── Path B: Fetch data with Gemini, then personalize with deterministic engine
-        console.log(`[Itinerary] No hardcoded data for "${resolvedDest}", fetching via Gemini...`);
-
+        // ── Path A: Fetch data with Gemini dynamically ─────────────
+        console.log(`[Itinerary] Fetching dynamic AI data for "${resolvedDest}" via Gemini...`);
         const geminiData = await fetchDestinationDataWithGemini({
             destName: match?.name || destName,
             purpose,
@@ -83,6 +68,19 @@ export async function POST(req: NextRequest) {
                     success: true,
                     itinerary: result,
                     source: 'ai-personalized',
+                });
+            }
+        }
+
+        // ── Path B: Fallback to hardcoded DEST_DATA if Gemini fails ─────────────
+        if (DEST_DATA[resolvedDest]) {
+            console.warn(`[Itinerary] Gemini failed or returned nothing, falling back to hardcoded data for ${destName}`);
+            const result = await generateItinerary(userContext);
+            if (result) {
+                return NextResponse.json({
+                    success: true,
+                    itinerary: result,
+                    source: 'fallback-hardcoded',
                 });
             }
         }
