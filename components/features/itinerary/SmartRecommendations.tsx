@@ -90,11 +90,23 @@ export default function SmartRecommendations({
 
             {/* Skeletons */}
             {loading && (
-                <div className="space-y-3">
-                    <div className="h-36 rounded-2xl bg-zinc-800/50 animate-pulse" />
-                    <div className="grid grid-cols-3 gap-3">
-                        {[1, 2, 3].map(i => <div key={i} className="h-24 rounded-2xl bg-zinc-800/50 animate-pulse" />)}
-                    </div>
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                    {[1, 2, 3, 4].map(i => (
+                        <div key={i} className="rounded-2xl overflow-hidden border-2 border-transparent bg-zinc-100 dark:bg-zinc-800/50">
+                            <div className="h-28 relative overflow-hidden">
+                                {/* Shimmer animation base */}
+                                <div className="absolute inset-0 bg-zinc-200 dark:bg-zinc-700/50 animate-pulse" />
+                                {/* Shimmer wave */}
+                                <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent animate-[shimmer_1.5s_infinite]" />
+                                {/* Skeleton content */}
+                                <div className="absolute bottom-3 left-3 space-y-2">
+                                    <div className="h-3 w-20 bg-zinc-300 dark:bg-zinc-600 rounded" />
+                                    <div className="h-2 w-32 bg-zinc-300 dark:bg-zinc-600 rounded" />
+                                </div>
+                            </div>
+                            <div className="h-9 bg-zinc-200/80 dark:bg-zinc-800 animate-pulse" />
+                        </div>
+                    ))}
                 </div>
             )}
 

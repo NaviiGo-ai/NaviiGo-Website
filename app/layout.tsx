@@ -4,6 +4,7 @@ import './globals.css';
 import Navbar from '@/components/shared/Navbar';
 import Providers from './providers';
 import { LazySocialButton, LazyMorphSurface, LazyWebGLBackground } from '@/components/shared/LazyComponents';
+import Script from 'next/script';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -62,22 +63,10 @@ export default function RootLayout({
         </Providers>
 
         {/* TravelPayouts White Label Script */}
-        <script 
-          data-noptimize="1" 
-          data-cfasync="false" 
-          data-wpfc-render="false" 
-          suppressHydrationWarning
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function () {
-                var script = document.createElement("script");
-                script.async = 1;
-                script.type = "module";
-                script.src = "https://tpwgts.com/wl_web/main.js?wl_id=16321";
-                document.head.appendChild(script);
-              })();
-            `
-          }}
+        <Script
+          src="https://tpwgts.com/wl_web/main.js?wl_id=16321"
+          strategy="lazyOnload"
+          type="module"
         />
       </body>
     </html>

@@ -25,6 +25,7 @@ export interface GeneratedActivity {
     type?: 'attraction' | 'restaurant' | 'hotel';
     priceBase?: number;
     durationMins?: number;
+    bookingLink?: string;
 }
 
 export interface GeneratedDayPlan {
@@ -59,6 +60,7 @@ export interface GeneratedItinerary {
         tags: string[];
         lat: number;
         lng: number;
+        bookingLink?: string;
     }>;
     restaurants: Array<{
         id: string;
@@ -72,6 +74,7 @@ export interface GeneratedItinerary {
         lat: number;
         lng: number;
         tags: string[];
+        bookingLink?: string;
     }>;
     hotels: Array<{
         id: string;
@@ -84,6 +87,7 @@ export interface GeneratedItinerary {
         amenities: string[];
         lat: number;
         lng: number;
+        bookingLink?: string;
     }>;
     dayPlans: GeneratedDayPlan[];
     mapCenter: {
@@ -167,33 +171,33 @@ const TRAVELER_PACE: Record<string, {
     paceLabel: string;
 }> = {
     backpacker: {
-        maxActiveHours: 10, wakeHour: 6.5, lunchBreakMins: 45, afternoonRestMins: 0,
-        activitiesPerSlot: [2, 2, 1], templeEarlyMorning: true, nightlifeOk: true,
+        maxActiveHours: 10, wakeHour: 6.5, lunchBreakMins: 60, afternoonRestMins: 30,
+        activitiesPerSlot: [3, 3, 2], templeEarlyMorning: true, nightlifeOk: true,
         paceLabel: 'High energy — early starts, max experiences',
     },
     comfort: {
-        maxActiveHours: 8, wakeHour: 8, lunchBreakMins: 75, afternoonRestMins: 45,
-        activitiesPerSlot: [2, 1, 1], templeEarlyMorning: false, nightlifeOk: false,
+        maxActiveHours: 8, wakeHour: 8, lunchBreakMins: 90, afternoonRestMins: 60,
+        activitiesPerSlot: [3, 2, 2], templeEarlyMorning: false, nightlifeOk: false,
         paceLabel: 'Balanced — see key highlights without exhaustion',
     },
     luxury: {
-        maxActiveHours: 6, wakeHour: 9, lunchBreakMins: 90, afternoonRestMins: 60,
-        activitiesPerSlot: [1, 1, 1], templeEarlyMorning: false, nightlifeOk: true,
+        maxActiveHours: 6, wakeHour: 9, lunchBreakMins: 120, afternoonRestMins: 90,
+        activitiesPerSlot: [2, 2, 1], templeEarlyMorning: false, nightlifeOk: true,
         paceLabel: 'Relaxed — premium experiences, no rush',
     },
     family: {
-        maxActiveHours: 7, wakeHour: 8, lunchBreakMins: 90, afternoonRestMins: 60,
-        activitiesPerSlot: [2, 1, 1], templeEarlyMorning: false, nightlifeOk: false,
-        paceLabel: 'Family-friendly pace — rest time for kids & elders',
+        maxActiveHours: 7, wakeHour: 8.5, lunchBreakMins: 120, afternoonRestMins: 90,
+        activitiesPerSlot: [2, 2, 1], templeEarlyMorning: false, nightlifeOk: false,
+        paceLabel: 'Family-friendly pace — extended rest time for kids & elders',
     },
     flash: {
-        maxActiveHours: 11, wakeHour: 6, lunchBreakMins: 30, afternoonRestMins: 0,
-        activitiesPerSlot: [3, 2, 1], templeEarlyMorning: true, nightlifeOk: true,
+        maxActiveHours: 11, wakeHour: 6, lunchBreakMins: 45, afternoonRestMins: 0,
+        activitiesPerSlot: [4, 3, 2], templeEarlyMorning: true, nightlifeOk: true,
         paceLabel: 'Flash itinerary — squeeze in everything possible',
     },
     slow: {
-        maxActiveHours: 5, wakeHour: 9, lunchBreakMins: 90, afternoonRestMins: 90,
-        activitiesPerSlot: [1, 1, 1], templeEarlyMorning: false, nightlifeOk: false,
+        maxActiveHours: 5, wakeHour: 9.5, lunchBreakMins: 120, afternoonRestMins: 120,
+        activitiesPerSlot: [2, 1, 1], templeEarlyMorning: false, nightlifeOk: false,
         paceLabel: 'Slow travel — immerse, don\'t rush',
     },
 };
@@ -225,6 +229,7 @@ function getSurveyTip(tags: string[]): string {
 interface ScoredAttraction extends Attraction {
     score: number;
     originalIndex: number;
+    bookingLink?: string;
 }
 
 function scoreAttraction(
@@ -426,8 +431,8 @@ export async function generateItinerary(ctx: UserContext, externalData?: DestInf
     );
     if (match) destKey = match.id;
 
-    // Use hardcoded DEST_DATA if available, otherwise use externally provided data (e.g. from Gemini)
-    const destData = DEST_DATA[destKey] || externalData;
+    // Use externalData (Gemini AI) if available, otherwise fallback to hardcoded DEST_DATA
+    const destData = externalData || DEST_DATA[destKey];
     if (!destData) {
         console.error(`[ItineraryModel] No data for destination: ${destKey} (${ctx.destName})`);
         return null;
@@ -565,6 +570,7 @@ export async function generateItinerary(ctx: UserContext, externalData?: DestInf
                     lng: templeAttr.lng || destData.mapCenter.lng,
                     type: 'attraction',
                     durationMins: 75,
+                    bookingLink: templeAttr.bookingLink,
                 }, 1.25);
                 usedAttractions.add(templeAttr.name);
             }
@@ -581,12 +587,12 @@ export async function generateItinerary(ctx: UserContext, externalData?: DestInf
         for (const attr of scoredAttractions) {
             if (morningCount >= morningSlots) break;
             if (usedAttractions.has(attr.name)) continue;
-            if (clock >= 12) break;
+            if (clock >= 15.5) break;
 
             const { overhead, label } = travelBetween(attr.lat || prevLat, attr.lng || prevLng);
-            const attrDurationHours = (parseDurationHours(attr.duration));
+            const attrDurationHours = Math.min(2.5, parseDurationHours(attr.duration));
 
-            if (clock + overhead + attrDurationHours > 12.5) break; // don't bleed into lunch
+            if (clock + overhead + attrDurationHours > 16.0) break; // don't bleed into late lunch
 
             clock += overhead;
             const pushed = pushActivity({
@@ -599,13 +605,14 @@ export async function generateItinerary(ctx: UserContext, externalData?: DestInf
                 lng: attr.lng || destData.mapCenter.lng,
                 type: 'attraction',
                 durationMins: parseDurationHours(attr.duration) * 60,
+                bookingLink: attr.bookingLink,
             }, attrDurationHours);
 
             if (pushed) { usedAttractions.add(attr.name); morningCount++; }
         }
 
-        // ── Lunch (hard-coded to 12:30–1:30 Indian time) ────────────────────
-        clock = Math.max(clock, 12.5); // always lunch at 12:30 minimum
+        // ── Lunch (flexible, shifted later to allow more morning places) ───────────
+        clock = Math.max(clock, 13.5); // lunch at 1:30 PM minimum, often pushes to 3:00 PM
         const lunchRestaurant = scoredRestaurants.find(r => !usedRestaurants.has(r.name));
         if (lunchRestaurant) {
             usedRestaurants.add(lunchRestaurant.name);
@@ -621,6 +628,7 @@ export async function generateItinerary(ctx: UserContext, externalData?: DestInf
                 lng: lunchRestaurant.lng,
                 type: 'restaurant',
                 durationMins: pace.lunchBreakMins,
+                bookingLink: lunchRestaurant.bookingLink,
             }, pace.lunchBreakMins / 60);
         }
 
@@ -634,12 +642,12 @@ export async function generateItinerary(ctx: UserContext, externalData?: DestInf
         for (const attr of scoredAttractions) {
             if (afternoonCount >= pace.activitiesPerSlot[1]) break;
             if (usedAttractions.has(attr.name)) continue;
-            if (clock >= 17.5) break;
+            if (clock >= 19.5) break;
 
             const { overhead, label } = travelBetween(attr.lat || prevLat, attr.lng || prevLng);
-            const attrDurationHours = (parseDurationHours(attr.duration));
+            const attrDurationHours = Math.min(2.5, parseDurationHours(attr.duration));
 
-            if (clock + overhead + attrDurationHours > 18) break;
+            if (clock + overhead + attrDurationHours > 20.5) break;
 
             clock += overhead;
             const pushed = pushActivity({
@@ -652,6 +660,7 @@ export async function generateItinerary(ctx: UserContext, externalData?: DestInf
                 lng: attr.lng || destData.mapCenter.lng,
                 type: 'attraction',
                 durationMins: parseDurationHours(attr.duration) * 60,
+                bookingLink: attr.bookingLink,
             }, attrDurationHours);
 
             if (pushed) { usedAttractions.add(attr.name); afternoonCount++; }
@@ -681,6 +690,7 @@ export async function generateItinerary(ctx: UserContext, externalData?: DestInf
                 lng: attr.lng || destData.mapCenter.lng,
                 type: 'attraction',
                 durationMins: parseDurationHours(attr.duration) * 60,
+                bookingLink: attr.bookingLink,
             }, attrDurationHours);
 
             if (pushed) { usedAttractions.add(attr.name); eveningCount++; }
@@ -706,6 +716,7 @@ export async function generateItinerary(ctx: UserContext, externalData?: DestInf
                     lng: dinnerRestaurant.lng,
                     type: 'restaurant',
                     durationMins: 75,
+                    bookingLink: dinnerRestaurant.bookingLink,
                 }, 1.25);
                 if (!usedRestaurants.has(dinnerRestaurant.name)) usedRestaurants.add(dinnerRestaurant.name);
             }

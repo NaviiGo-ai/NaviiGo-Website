@@ -42,7 +42,7 @@ export default function AboutPage() {
         >
           <img 
             src="https://images.unsplash.com/photo-1564507592333-c60657eea523?auto=format&fit=crop&w=1280&q=80" 
-            alt="Aircraft wing in flight"
+            alt="The majestic Taj Mahal at sunrise"
             className="w-full h-full object-cover"
           />
           <div className="absolute inset-0 bg-black/30 flex items-center justify-center">

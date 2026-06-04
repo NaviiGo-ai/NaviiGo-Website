@@ -10,7 +10,7 @@ import ThemeToggle from './ThemeToggle';
 import { useAuth } from '@/lib/AuthContext';
 
 const ITINERARY_DROPDOWN = [
-  { name: 'Create New', href: '/itinerary', icon: PlusCircle, desc: 'AI-powered trip planner', accent: 'text-emerald-500' },
+  { name: 'Create New', href: '/itinerary?new=true', icon: PlusCircle, desc: 'AI-powered trip planner', accent: 'text-emerald-500' },
   { name: 'Ongoing Trips', href: '/itinerary/ongoing', icon: Navigation, desc: 'Currently active journeys', accent: 'text-blue-500' },
   { name: 'Upcoming Trips', href: '/itinerary/upcoming', icon: Clock, desc: 'Planned future adventures', accent: 'text-purple-500' },
   { name: 'Trip History', href: '/itinerary/history', icon: History, desc: 'Past trips & memories', accent: 'text-amber-500' },
@@ -303,14 +303,38 @@ export default function Navbar() {
               <ThemeToggle />
             </div>
 
-            <div className="space-y-3 pt-6 border-t border-gray-200">
-              <motion.button onClick={() => { toggleMenu(); signInWithGoogle(); }} className="w-full flex items-center justify-center space-x-2 px-4 py-3 rounded-lg bg-gradient-to-r from-primary to-primary/90 text-white hover:shadow-lg transition-shadow" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                <User className="w-4 h-4" />
-                <span className="font-medium">Sign In</span>
-              </motion.button>
-              <motion.button onClick={() => { toggleMenu(); signInWithGoogle(); }} className="w-full flex items-center justify-center space-x-2 px-4 py-3 rounded-lg border-2 border-black/10 text-slate-800 hover:border-primary hover:text-primary transition-colors dark:border-white/15 dark:text-slate-200 dark:hover:border-secondary dark:hover:text-secondary" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                <span className="font-medium">Create Account</span>
-              </motion.button>
+            <div className="space-y-3 pt-6 border-t border-gray-200 dark:border-slate-800">
+              {user ? (
+                <div className="flex flex-col space-y-4">
+                  <div className="flex items-center gap-3 px-2">
+                    {user.photoURL ? (
+                      <img src={user.photoURL} alt="User" className="w-10 h-10 rounded-full border-2 border-white dark:border-slate-800 shadow-sm" />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center">
+                        <User className="w-5 h-5 text-slate-500 dark:text-slate-400" />
+                      </div>
+                    )}
+                    <div className="flex flex-col flex-1 min-w-0">
+                      <span className="text-sm font-bold text-slate-800 dark:text-slate-200 leading-tight truncate" title={user.displayName || 'Traveler'}>{user.displayName || 'Traveler'}</span>
+                      <span className="text-[10px] text-slate-500 font-medium tracking-wide">MEMBER</span>
+                    </div>
+                  </div>
+                  <motion.button onClick={() => { toggleMenu(); signOut(); }} className="w-full flex items-center justify-center space-x-2 px-4 py-3 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 transition-colors dark:border-red-900/50 dark:text-red-400 dark:hover:bg-red-900/20" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                    <LogOut className="w-4 h-4" />
+                    <span className="font-medium">Sign Out</span>
+                  </motion.button>
+                </div>
+              ) : (
+                <>
+                  <motion.button onClick={() => { toggleMenu(); signInWithGoogle(); }} className="w-full flex items-center justify-center space-x-2 px-4 py-3 rounded-lg bg-gradient-to-r from-primary to-primary/90 text-white hover:shadow-lg transition-shadow" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                    <User className="w-4 h-4" />
+                    <span className="font-medium">Sign In</span>
+                  </motion.button>
+                  <motion.button onClick={() => { toggleMenu(); signInWithGoogle(); }} className="w-full flex items-center justify-center space-x-2 px-4 py-3 rounded-lg border-2 border-black/10 text-slate-800 hover:border-primary hover:text-primary transition-colors dark:border-white/15 dark:text-slate-200 dark:hover:border-secondary dark:hover:text-secondary" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                    <span className="font-medium">Create Account</span>
+                  </motion.button>
+                </>
+              )}
             </div>
           </div>
         </motion.div>

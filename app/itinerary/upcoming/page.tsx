@@ -112,7 +112,7 @@ export default function UpcomingTripsPage() {
                         <Plane className="w-12 h-12 text-zinc-300 dark:text-zinc-600 mx-auto mb-4" />
                         <h3 className="text-lg font-bold text-zinc-700 dark:text-zinc-300 mb-2">No upcoming trips</h3>
                         <p className="text-sm text-zinc-500 mb-6">Plan an itinerary with a future date to see it here!</p>
-                        <Link href="/itinerary" className="bg-emerald-600 text-white px-6 py-3 rounded-xl font-bold text-sm hover:bg-emerald-500 transition-colors">Create Itinerary</Link>
+                        <Link href="/itinerary?new=true" className="bg-emerald-600 text-white px-6 py-3 rounded-xl font-bold text-sm hover:bg-emerald-500 transition-colors">Create Itinerary</Link>
                     </div>
                 )}
 

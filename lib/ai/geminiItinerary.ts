@@ -33,6 +33,8 @@ async function withRetry<T>(fn: () => Promise<T>, maxRetries = 2): Promise<T | n
     return null;
 }
 
+import { fetchExactWeather } from '@/lib/api/weather';
+
 /**
  * Fetch live destination data from Google Places + enrich with Gemini.
  * Returns DestInfo ready for the deterministic personalization engine.
@@ -51,6 +53,10 @@ export async function fetchDestinationDataWithGemini(params: {
 
         // Step 2: Use Gemini to add cultural context & logistics (with retry)
         const enrichment = await withRetry(() => getGeminiEnrichment(params.destName));
+        
+        // Exact Weather injection
+        const liveWeather = await fetchExactWeather(liveData.center.lat, liveData.center.lng);
+        if (liveWeather && enrichment) enrichment.weather = liveWeather;
 
         // Step 3: Merge live data + Gemini enrichment into DestInfo
         return liveDataToDestInfo(params.destName, liveData, enrichment || undefined);
@@ -58,7 +64,11 @@ export async function fetchDestinationDataWithGemini(params: {
 
     // Fallback: If Google Places fails, use Gemini for everything
     console.log(`[GeminiEnrich] Google Places failed, using full Gemini fallback...`);
-    return await withRetry(() => getFullGeminiData(params));
+    const fullData = await withRetry(() => getFullGeminiData(params));
+    if (fullData) {
+        fullData.weather = await fetchExactWeather(fullData.mapCenter.lat, fullData.mapCenter.lng);
+    }
+    return fullData;
 }
 
 /**
@@ -79,14 +89,14 @@ async function getGeminiEnrichment(destName: string): Promise<{
 
     const prompt = `For the Indian destination "${destName}", provide ONLY this JSON (no markdown):
 {
-  "description": "2-3 vivid sentences describing what makes this place special — mention heritage, temples, culture, food",
+  "description": "3-4 highly evocative, poetic sentences describing what makes this place truly special — mention hidden heritage, specific local street foods, rich culture, and the exact vibe.",
   "crowdLevel": "Low" or "Medium" or "High",
-  "crowdNote": "Brief seasonal crowd info with best time to visit",
+  "crowdNote": "Specific crowd alerts (e.g. 'Extremely crowded from 12 PM - 3 PM, avoid school groups')",
   "logistics": {
-    "flights": "Nearest airport with code and approx fare from Delhi",
+    "flights": "Nearest airport with IATA code, approx distance/time to city center",
     "trains": "Nearest major railway station with code"
   },
-  "weather": { "Jan": "temp range", "Feb": "temp range", "Mar": "temp range", "Apr": "temp range", "May": "temp range", "Jun": "temp range", "Jul": "temp range", "Aug": "temp range", "Sep": "temp range", "Oct": "temp range", "Nov": "temp range", "Dec": "temp range" }
+  "weather": {}
 }`;
 
     const result = await model.generateContent(prompt);
@@ -116,20 +126,20 @@ async function getFullGeminiData(params: {
     const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
     const model = genAI.getGenerativeModel({ model: GEMINI_MODEL });
 
-    const prompt = `You are an expert Indian travel data provider. Return ONLY raw destination data for ${params.destName}, India as JSON (no markdown):
+    const prompt = `You are an expert, local Indian travel guide. Return ONLY raw destination data for ${params.destName}, India as strictly valid JSON (no markdown):
 {
-  "description": "2-3 vivid sentences",
+  "description": "3-4 highly evocative sentences describing the local vibe, hidden gems, and heritage.",
   "avgCost": "₹X – ₹Y per day",
   "crowdLevel": "Low/Medium/High",
-  "crowdNote": "seasonal info",
+  "crowdNote": "Exact crowd alerts (e.g., 'Avoid temples between 11 AM - 3 PM due to massive crowds')",
   "logistics": { "flights": "airport info", "trains": "station info" },
-  "weather": { "Jan": "range", ... "Dec": "range" },
+  "weather": {},
   "mapCenter": { "lat": number, "lng": number },
-  "highlights": [{ "name": "Real Name", "desc": "1-2 sentences with entry fees, timings for temples", "tags": ["Heritage"], "lat": number, "lng": number }],
-  "restaurants": [{ "name": "Real Name", "desc": "1-2 sentences", "cuisine": "type", "priceRange": "₹X–₹Y", "rating": 4.5, "mustTry": "dish", "lat": number, "lng": number, "tags": ["Local"] }],
-  "hotels": [{ "name": "Real Name", "desc": "1-2 sentences", "type": "Hotel/Resort/Hostel/Homestay", "priceRange": "₹X/night", "rating": 4.3, "amenities": ["WiFi"], "lat": number, "lng": number }]
+  "highlights": [{ "name": "Real Name", "desc": "2 detailed sentences with entry fees, exact timings (e.g., '6:00 AM - 8:00 PM'), and best spots for photos.", "tags": ["Heritage"], "lat": number, "lng": number, "duration": "1-2 hrs" }],
+  "restaurants": [{ "name": "Real Name", "desc": "1-2 sentences", "cuisine": "type", "priceRange": "₹X–₹Y", "rating": 4.8, "mustTry": "dish", "lat": number, "lng": number, "tags": ["Local"] }],
+  "hotels": [{ "name": "Real Name", "desc": "1-2 sentences", "type": "Hotel/Resort/Hostel/Homestay", "priceRange": "₹X/night", "rating": 4.5, "amenities": ["WiFi"], "lat": number, "lng": number }]
 }
-Rules: 6-8 highlights, 4 restaurants, 3-4 hotels. Use REAL names and coordinates.`;
+Rules: Generate exactly 12-15 highlights, 6 restaurants, and 5 hotels to ensure a dense itinerary. Provide extremely realistic names, coordinates, and exact timings.`;
 
     try {
         const result = await model.generateContent(prompt);
@@ -153,7 +163,7 @@ Rules: 6-8 highlights, 4 restaurants, 3-4 hotels. Use REAL names and coordinates
             mapCenter: parsed.mapCenter,
             highlights: (parsed.highlights || []).map((h: any) => ({
                 name: h.name, img: destImg, desc: h.desc,
-                bestMonths: h.bestMonths || 'Oct – Mar', duration: h.duration || '1–3 hrs',
+                bestMonths: h.bestMonths || 'Oct – Mar', duration: h.duration || '1.5 hrs',
                 walking: 'Medium' as const, value: 'High' as const,
                 tags: h.tags || ['Attraction'], lat: h.lat, lng: h.lng,
             })),

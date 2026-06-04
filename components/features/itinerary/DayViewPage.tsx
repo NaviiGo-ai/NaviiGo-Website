@@ -41,6 +41,7 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
     const data: any = generatedData ? { ...staticData, ...generatedData } : staticData;
     const [activeDay, setActiveDay] = useState(0);
     const [activeActivity, setActiveActivity] = useState(-1);
+    const [showAddActivity, setShowAddActivity] = useState(false);
     const [dayRouteInfo, setDayRouteInfo] = useState<{ distance: string, time: string } | null>(null);
     const [customPlans, setCustomPlans] = useState<DayPlan[]>(() => (form.customPlans as DayPlan[]) || JSON.parse(JSON.stringify(data.dayPlans)));
     const plan: DayPlan = customPlans[activeDay] ?? customPlans[0];
@@ -218,7 +219,8 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                 </div>
                 <ShareDropdown onCopyLink={handleShare} destName={destName} isSharing={isSharing} collaborators={collaborators} planData={{ ...data, dayPlans: customPlans }} />
                 {user && (
-                    <button
+                    <motion.button
+                        whileTap={{ scale: 0.98 }}
                         onClick={() => isTripActive ? stopTrip() : startTrip()}
                         className={`px-4 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-all ${
                             isTripActive
@@ -228,9 +230,9 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                     >
                         <Rocket className="w-3.5 h-3.5" />
                         {isTripActive ? 'End Trip' : 'Start Trip'}
-                    </button>
+                    </motion.button>
                 )}
-                <button onClick={async () => {
+                <motion.button whileTap={{ scale: 0.98 }} onClick={async () => {
                     if (user?.uid) {
                         await saveItineraryToFirestore(user.uid, { destId, destName, form: { ...form, customPlans }, generatedData: generatedData || null });
                     }
@@ -239,7 +241,7 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                 }} disabled={isSaved}
                     className={`px-4 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-colors ${isSaved ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 cursor-default' : 'bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 hover:bg-zinc-800 dark:hover:bg-zinc-200'}`}>
                     {isSaved ? '✓ Saved' : '💾 Save'}
-                </button>
+                </motion.button>
             </div>
 
             {/* Day tabs */}
@@ -289,7 +291,7 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                                 <div className="mb-8">
                             <div className="flex items-center justify-between mb-4">
                                 <h2 className="text-3xl md:text-4xl font-bold text-zinc-900 dark:text-white">Day {plan.day}: {plan.title}</h2>
-                                <button onClick={() => {
+                                <motion.button whileTap={{ scale: 0.98 }} onClick={() => {
                                     const baseDate = form.startDate ? new Date(form.startDate as string) : new Date();
                                     baseDate.setDate(baseDate.getDate() + activeDay);
                                     let ics = "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//NaviiGo//Itinerary//EN\n";
@@ -312,17 +314,29 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                                     const a = document.createElement('a'); a.href = url; a.download = `NaviiGo_Day${plan.day}.ics`; a.click();
                                 }} className="text-xs bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 px-3 py-1.5 rounded-full font-bold shadow-sm hover:scale-105 transition-transform flex items-center gap-1.5 shrink-0">
                                     <span>📅</span> Add to Calendar
-                                </button>
+                                </motion.button>
                             </div>
 
                             {/* Top Dashboard Grid */}
+                            {data.crowdNote && (
+                                <div className="mb-4 bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 rounded-2xl p-4 flex items-start gap-4 shadow-sm">
+                                    <div className="text-2xl mt-1">🤖</div>
+                                    <div>
+                                        <div className="text-xs font-bold text-amber-700 dark:text-amber-500 uppercase tracking-wider mb-1 flex items-center gap-2">Live AI Crowd Alert <span className="relative flex h-2 w-2"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span><span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span></span></div>
+                                        <div className="text-sm font-medium text-amber-900 dark:text-amber-400 leading-snug">{data.crowdNote}</div>
+                                    </div>
+                                </div>
+                            )}
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
                                 {/* Weather */}
-                                <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-100 dark:border-zinc-800 p-4 flex items-center gap-4 shadow-sm hover:shadow-md transition-shadow">
-                                    <span className="text-4xl">{plan.weather.emoji}</span>
+                                <div className={`rounded-2xl border p-4 flex items-center gap-4 shadow-sm transition-all ${plan.weather.temp.includes('°C') ? 'bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border-blue-500/20' : 'bg-white dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800'}`}>
+                                    <span className="text-4xl">{plan.weather.temp.includes('°C') ? '🌤️' : plan.weather.emoji}</span>
                                     <div>
-                                        <div className="font-bold text-lg text-zinc-900 dark:text-white leading-tight">{plan.weather.temp}</div>
-                                        <div className="text-xs text-zinc-500">{plan.weather.condition}</div>
+                                        <div className="flex items-center gap-2">
+                                            <div className="font-bold text-lg text-zinc-900 dark:text-white leading-tight">{plan.weather.temp}</div>
+                                            {plan.weather.temp.includes('°C') && <span className="text-[9px] bg-blue-500 text-white px-1.5 py-0.5 rounded uppercase font-bold tracking-wider">Live</span>}
+                                        </div>
+                                        <div className="text-xs text-zinc-500">{plan.weather.temp.includes('°C') ? 'Exact Forecast' : plan.weather.condition}</div>
                                         <div className="text-xs text-emerald-600 dark:text-emerald-400 mt-0.5 font-medium flex items-center gap-1">
                                             <span className="text-[10px]">💡</span> {plan.weather.tip}
                                         </div>
@@ -400,20 +414,19 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                                                 <h4 className="text-sm font-bold text-red-900 dark:text-red-400 mb-0.5">Overstuffed Schedule</h4>
                                                 <p className="text-[11px] text-red-700 dark:text-red-300 leading-tight">This day involves ~{Math.round(totalHours)} hours of activity. Consider removing an item to avoid exhaustion.</p>
                                             </div>
-                                            <button onClick={() => removeActivity(plan.activities.length - 1)} className="shrink-0 text-[10px] bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-300 font-bold px-2.5 py-1.5 rounded-lg hover:bg-red-200 transition-colors">
+                                            <motion.button whileTap={{ scale: 0.98 }} onClick={() => removeActivity(plan.activities.length - 1)} className="shrink-0 text-[10px] bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-300 font-bold px-2.5 py-1.5 rounded-lg hover:bg-red-200 transition-colors">
                                                 Drop Last
-                                            </button>
+                                            </motion.button>
                                         </div>
                                     )}
                                 </div>
                             )}
                         </div>
 
-                        {/* Timeline */}
                         <div className="space-y-6">
                             {/* Action Bar */}
                                 <div className="flex gap-3 flex-wrap bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl p-2 shadow-sm">
-                                    <button onClick={(e) => {
+                                    <motion.button whileTap={{ scale: 0.98 }} onClick={(e) => {
                                         e.stopPropagation();
                                         const currentPlans = customPlans.length > 0 ? [...customPlans] : [...data.dayPlans];
                                         const optimizedActivities = [...plan.activities].sort((a, b) => {
@@ -428,8 +441,8 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                                     }}
                                         className="flex-1 bg-zinc-900 dark:bg-white hover:bg-zinc-800 dark:hover:bg-zinc-100 text-white dark:text-zinc-900 transition-all px-4 py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2">
                                         <span>✨</span> Optimize Order
-                                    </button>
-                                    <button onClick={(e) => {
+                                    </motion.button>
+                                    <motion.button whileTap={{ scale: 0.98 }} onClick={(e) => {
                                         e.stopPropagation();
                                         if (plan.activities.length <= 3) { alert("Your schedule is already very relaxed!"); return; }
                                         const currentPlans = customPlans.length > 0 ? [...customPlans] : [...data.dayPlans];
@@ -443,7 +456,7 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                                     }}
                                         className="flex-1 bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-white hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-all px-4 py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2">
                                         <span>😌</span> Make it Relaxed
-                                    </button>
+                                    </motion.button>
                                 </div>
 
                                 {/* Timeline */}
@@ -457,7 +470,11 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                                         const slotChanged = i === 0 || plan.activities[i - 1].slot !== act.slot;
                                         const isActive = activeActivity === i;
                                         return (
-                                            <Reorder.Item key={act.name} value={act}>
+                                            <Reorder.Item key={act.name} value={act}
+                                                initial={{ opacity: 0, y: 20 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                transition={{ duration: 0.4, delay: i * 0.1, type: "spring", stiffness: 300, damping: 20 }}
+                                            >
                                                 {slotChanged && (
                                                     <div className="flex items-center gap-3 mb-6 mt-8 first:mt-0">
                                                         <span className="text-xl bg-white dark:bg-zinc-800 rounded-full w-8 h-8 flex items-center justify-center shadow-sm border border-zinc-200 dark:border-zinc-700">{slotEmoji[act.slot]}</span>
@@ -517,8 +534,8 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                                                         )}
                                                         {!isLast && <div className={`w-0.5 flex-1 mt-3 rounded-full transition-colors ${isActive ? 'bg-zinc-900 dark:bg-emerald-500' : 'bg-emerald-100 dark:bg-zinc-800'}`} />}
                                                     </div>
-                                                    <div className={`flex-1 bg-white dark:bg-zinc-900 rounded-[1.5rem] border p-5 transition-all relative overflow-hidden group-hover:shadow-md
-                            ${isActive ? 'border-zinc-500 dark:border-emerald-500/50 shadow-xl scale-[1.02]' : 'border-zinc-200 dark:border-zinc-800 shadow-sm'} ${isTripActive && isChecked(activeDay, act.name) ? 'opacity-60 grayscale-[30%]' : ''}`}>
+                                                    <div className={`flex-1 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl rounded-[1.5rem] border p-5 transition-all relative overflow-hidden group-hover:shadow-lg
+                            ${isActive ? 'border-zinc-500 dark:border-emerald-500/50 shadow-xl scale-[1.02]' : 'border-white/20 dark:border-zinc-700/50 shadow-sm'} ${isTripActive && isChecked(activeDay, act.name) ? 'opacity-60 grayscale-[30%]' : ''}`}>
                                                         <div className="flex items-start justify-between mb-3">
                                                             <div className="pr-4">
                                                                 <div className="inline-flex items-center gap-2 mb-2">
@@ -549,14 +566,27 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                                                                     <span>💳</span> ₹{act.priceBase || [250, 400, 800, 1500][i % 4]}
                                                                 </div>
                                                             </div>
-                                                            <button onClick={(e) => { 
-                                                                e.stopPropagation(); 
-                                                                localStorage.setItem('navii_detail_item', JSON.stringify(act));
-                                                                router.push(`/itinerary/detail?type=attraction&dest=${destId}&name=${encodeURIComponent(act.name)}&fromLocal=true`); 
-                                                            }}
-                                                                className="text-xs font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 px-4 py-1.5 rounded-xl hover:bg-emerald-100 dark:hover:bg-emerald-500/20 transition-colors">
-                                                                Explorer ➔
-                                                            </button>
+                                                            <div className="flex items-center gap-2">
+                                                                {act.bookingLink && (
+                                                                    <a
+                                                                        href={act.bookingLink}
+                                                                        target="_blank"
+                                                                        rel="noopener noreferrer"
+                                                                        onClick={(e) => e.stopPropagation()}
+                                                                        className="text-xs font-bold bg-blue-600 text-white px-4 py-1.5 rounded-xl hover:bg-blue-700 transition-colors shadow-sm flex items-center gap-1.5"
+                                                                    >
+                                                                        {act.type === 'restaurant' ? 'Reserve Table' : 'Get Tickets'} ➔
+                                                                    </a>
+                                                                )}
+                                                                <motion.button whileTap={{ scale: 0.98 }} onClick={(e) => { 
+                                                                    e.stopPropagation(); 
+                                                                    localStorage.setItem('navii_detail_item', JSON.stringify(act));
+                                                                    router.push(`/itinerary/detail?type=${act.type || 'attraction'}&dest=${destId}&name=${encodeURIComponent(act.name)}&fromLocal=true`); 
+                                                                }}
+                                                                    className="text-xs font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 px-4 py-1.5 rounded-xl hover:bg-emerald-100 dark:hover:bg-emerald-500/20 transition-colors">
+                                                                    Explorer ➔
+                                                                </motion.button>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -564,6 +594,28 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                                         );
                                     })}
                                 </Reorder.Group>
+
+                                {plan.activities.length === 0 && (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        className="mt-8 relative overflow-hidden rounded-3xl border border-zinc-200/50 dark:border-white/10 bg-white/40 dark:bg-zinc-900/40 backdrop-blur-xl p-8 text-center shadow-lg"
+                                    >
+                                        <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-teal-500/5" />
+                                        <div className="relative z-10 flex flex-col items-center">
+                                            <div className="w-16 h-16 bg-white dark:bg-zinc-800 rounded-full flex items-center justify-center shadow-md mb-4 text-2xl">
+                                                🏖️
+                                            </div>
+                                            <h3 className="text-xl font-bold text-zinc-900 dark:text-white mb-2">A Blank Canvas</h3>
+                                            <p className="text-sm text-zinc-500 dark:text-zinc-400 max-w-sm mb-6">
+                                                This day is completely free! Take a break, or add a custom activity to keep the adventure going.
+                                            </p>
+                                            <button onClick={() => setShowAddActivity(true)} className="px-6 py-2.5 rounded-xl bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 text-sm font-bold hover:scale-105 transition-transform shadow-lg">
+                                                + Add Activity
+                                            </button>
+                                        </div>
+                                    </motion.div>
+                                )}
 
                                 <AnimatePresence>
                                     {dayJustCompleted !== null && (

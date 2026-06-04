@@ -1,7 +1,7 @@
 'use client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect, useCallback, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/AuthContext';
 import { getUserItineraries, joinSharedItinerary } from '@/lib/firestore';
 import { doc, getDoc } from 'firebase/firestore';
@@ -21,6 +21,11 @@ function ItineraryContent() {
 
   const [phase, setPhase] = useState<Phase>(() => {
     if (typeof window !== 'undefined') {
+        const isNew = new URLSearchParams(window.location.search).get('new') === 'true';
+        if (isNew) {
+            sessionStorage.removeItem('navii_itinerary_state');
+            return 'setup';
+        }
         const stored = sessionStorage.getItem('navii_itinerary_state');
         if (stored) return JSON.parse(stored).phase || 'setup';
     }
@@ -94,13 +99,22 @@ function ItineraryContent() {
   const handleSetupDone = useCallback((form: Record<string, unknown>) => { setSavedForm(form); setPhase('loading'); }, []);
   const handleReset = useCallback(() => { setPhase('setup'); setSavedForm({}); setGeneratedData(null); sessionStorage.removeItem('navii_itinerary_state'); }, []);
 
+  // Listen for ?new=true in the URL to reset state without requiring a full reload/new tab
+  const router = useRouter();
+  useEffect(() => {
+    if (searchParams.get('new') === 'true') {
+      handleReset();
+      router.replace('/itinerary');
+    }
+  }, [searchParams, router, handleReset]);
+
   if (!isMounted) return null;
 
   return (
     <AnimatePresence mode="wait">
       {phase === 'setup' && <motion.div key="setup" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}><SetupWizard onDone={handleSetupDone} /></motion.div>}
       {phase === 'loading' && <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}><LoadingScreen form={savedForm} onDone={(data) => { setGeneratedData(data); setPhase('result'); }} /></motion.div>}
-      {phase === 'result' && <motion.div key="result" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}><ResultPage form={savedForm} generatedData={generatedData} shareId={sharedItineraryId} isLoaded={!!searchParams.get('load') || !!searchParams.get('shareId')} onDayView={() => setPhase('dayview')} onReset={handleReset} /></motion.div>}
+      {phase === 'result' && <motion.div key="result" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}><ResultPage form={savedForm} generatedData={generatedData} shareId={sharedItineraryId} onDayView={() => setPhase('dayview')} onReset={handleReset} /></motion.div>}
       {phase === 'dayview' && <motion.div key="dayview" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}><DayViewPage form={savedForm} generatedData={generatedData} onBack={() => setPhase('result')} /></motion.div>}
     </AnimatePresence>
   );

@@ -541,7 +541,7 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
 
                     {/* Sticky Map */}
                     <div className="w-full max-w-full lg:w-[400px] lg:sticky lg:top-[140px] lg:self-start">
-                        <div className="h-[350px] lg:h-[500px] rounded-2xl overflow-hidden border border-zinc-100 dark:border-zinc-800 shadow-sm">
+                        <div className="h-[350px] max-h-[calc(100vh-200px)] lg:h-[500px] lg:max-h-[calc(100vh-200px)] rounded-2xl overflow-hidden border border-zinc-100 dark:border-zinc-800 shadow-sm">
                             <ItineraryMap pins={mapPins} center={data.mapCenter} zoom={10} className="w-full h-full" />
                         </div>
                     </div>

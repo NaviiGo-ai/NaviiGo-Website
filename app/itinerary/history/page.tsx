@@ -116,7 +116,7 @@ export default function TripHistoryPage() {
                         <Plane className="w-12 h-12 text-zinc-300 dark:text-zinc-600 mx-auto mb-4" />
                         <h3 className="text-lg font-bold text-zinc-700 dark:text-zinc-300 mb-2">No past trips yet</h3>
                         <p className="text-sm text-zinc-500 mb-6">Your completed trips will appear here automatically.</p>
-                        <Link href="/itinerary" className="bg-emerald-600 text-white px-6 py-3 rounded-xl font-bold text-sm hover:bg-emerald-500 transition-colors">Plan Your First Trip</Link>
+                        <Link href="/itinerary?new=true" className="bg-emerald-600 text-white px-6 py-3 rounded-xl font-bold text-sm hover:bg-emerald-500 transition-colors">Plan Your First Trip</Link>
                     </div>
                 )}
 
@@ -151,7 +151,7 @@ export default function TripHistoryPage() {
                                             <Link href={`/itinerary?load=${trip.id}`} className="flex-1 bg-amber-500 hover:bg-amber-400 text-white text-center py-2.5 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2">
                                                 <TrendingUp className="w-4 h-4" /> View Trip
                                             </Link>
-                                            <Link href="/itinerary" className="px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 text-sm font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors">
+                                            <Link href="/itinerary?new=true" className="px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 text-sm font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors">
                                                 Re-plan
                                             </Link>
                                         </div>
