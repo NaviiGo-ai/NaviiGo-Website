@@ -1,7 +1,7 @@
 'use client';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect, useCallback, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/AuthContext';
 import { getUserItineraries, joinSharedItinerary } from '@/lib/firestore';
 import { doc, getDoc } from 'firebase/firestore';
@@ -98,6 +98,15 @@ function ItineraryContent() {
 
   const handleSetupDone = useCallback((form: Record<string, unknown>) => { setSavedForm(form); setPhase('loading'); }, []);
   const handleReset = useCallback(() => { setPhase('setup'); setSavedForm({}); setGeneratedData(null); sessionStorage.removeItem('navii_itinerary_state'); }, []);
+
+  // Listen for ?new=true in the URL to reset state without requiring a full reload/new tab
+  const router = useRouter();
+  useEffect(() => {
+    if (searchParams.get('new') === 'true') {
+      handleReset();
+      router.replace('/itinerary');
+    }
+  }, [searchParams, router, handleReset]);
 
   if (!isMounted) return null;
 
