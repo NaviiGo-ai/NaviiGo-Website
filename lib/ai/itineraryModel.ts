@@ -171,32 +171,32 @@ const TRAVELER_PACE: Record<string, {
     paceLabel: string;
 }> = {
     backpacker: {
-        maxActiveHours: 10, wakeHour: 6.5, lunchBreakMins: 60, afternoonRestMins: 30,
+        maxActiveHours: 16, wakeHour: 6.5, lunchBreakMins: 60, afternoonRestMins: 30,
         activitiesPerSlot: [3, 3, 2], templeEarlyMorning: true, nightlifeOk: true,
         paceLabel: 'High energy — early starts, max experiences',
     },
     comfort: {
-        maxActiveHours: 8, wakeHour: 8, lunchBreakMins: 90, afternoonRestMins: 60,
+        maxActiveHours: 14, wakeHour: 8, lunchBreakMins: 90, afternoonRestMins: 60,
         activitiesPerSlot: [3, 2, 2], templeEarlyMorning: false, nightlifeOk: false,
         paceLabel: 'Balanced — see key highlights without exhaustion',
     },
     luxury: {
-        maxActiveHours: 6, wakeHour: 9, lunchBreakMins: 120, afternoonRestMins: 90,
+        maxActiveHours: 13, wakeHour: 9, lunchBreakMins: 120, afternoonRestMins: 90,
         activitiesPerSlot: [2, 2, 1], templeEarlyMorning: false, nightlifeOk: true,
         paceLabel: 'Relaxed — premium experiences, no rush',
     },
     family: {
-        maxActiveHours: 7, wakeHour: 8.5, lunchBreakMins: 120, afternoonRestMins: 90,
+        maxActiveHours: 13, wakeHour: 8.5, lunchBreakMins: 120, afternoonRestMins: 90,
         activitiesPerSlot: [2, 2, 1], templeEarlyMorning: false, nightlifeOk: false,
         paceLabel: 'Family-friendly pace — extended rest time for kids & elders',
     },
     flash: {
-        maxActiveHours: 11, wakeHour: 6, lunchBreakMins: 45, afternoonRestMins: 0,
+        maxActiveHours: 16, wakeHour: 6, lunchBreakMins: 45, afternoonRestMins: 0,
         activitiesPerSlot: [4, 3, 2], templeEarlyMorning: true, nightlifeOk: true,
         paceLabel: 'Flash itinerary — squeeze in everything possible',
     },
     slow: {
-        maxActiveHours: 5, wakeHour: 9.5, lunchBreakMins: 120, afternoonRestMins: 120,
+        maxActiveHours: 11, wakeHour: 9.5, lunchBreakMins: 120, afternoonRestMins: 120,
         activitiesPerSlot: [2, 1, 1], templeEarlyMorning: false, nightlifeOk: false,
         paceLabel: 'Slow travel — immerse, don\'t rush',
     },
@@ -522,7 +522,7 @@ export async function generateItinerary(ctx: UserContext, externalData?: DestInf
 
         // Clock cursor — tracks current time as fractional hours
         let clock = isFirstDay && isArrivalDayLight ? 13.0 : pace.wakeHour + 0.5; // hotel checkout buffer
-        const dayEndHour = 21.0; // Hard stop at 9 PM (Indian travel norm)
+        const dayEndHour = 22.5; // Hard stop at 10:30 PM (Indian dinners run late)
         const maxEnd = pace.wakeHour + 0.5 + pace.maxActiveHours;
         const hardStop = Math.min(dayEndHour, maxEnd);
 
