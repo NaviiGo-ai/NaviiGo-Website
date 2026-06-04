@@ -147,7 +147,7 @@ export async function fetchLiveDestinationData(destName: string): Promise<{
     console.log(`[SerpAPI] Found: ${attractionResults.length} attractions, ${restaurantResults.length} restaurants, ${hotelResults.length} hotels`);
 
     // Convert to PlaceDetails
-    const attractions: PlaceDetails[] = attractionResults.slice(0, 20).map(p => ({
+    const attractions: PlaceDetails[] = attractionResults.slice(0, 30).map(p => ({
         name: p.title,
         desc: p.description || `${p.type || 'Attraction'} in ${destName} with ${p.reviews || 0}+ reviews.`,
         lat: p.gps_coordinates?.latitude || coords.lat,
@@ -162,7 +162,7 @@ export async function fetchLiveDestinationData(destName: string): Promise<{
         bookingLink: p.link || `https://www.google.com/search?q=${encodeURIComponent('Book tickets ' + p.title + ' ' + destName)}`,
     })).filter(a => a.name);
 
-    const restaurants: PlaceDetails[] = restaurantResults.slice(0, 15).map(p => ({
+    const restaurants: PlaceDetails[] = restaurantResults.slice(0, 20).map(p => ({
         name: p.title,
         desc: p.description || `${p.type || 'Restaurant'} in ${destName} — rated ${p.rating || 4.0}★.`,
         lat: p.gps_coordinates?.latitude || coords.lat,
@@ -178,7 +178,7 @@ export async function fetchLiveDestinationData(destName: string): Promise<{
         bookingLink: p.link || `https://www.zomato.com/search?q=${encodeURIComponent(p.title + ' ' + destName)}`,
     })).filter(r => r.name);
 
-    const hotels: PlaceDetails[] = hotelResults.slice(0, 10).map(p => ({
+    const hotels: PlaceDetails[] = hotelResults.slice(0, 15).map(p => ({
         name: p.title,
         desc: p.description || `${inferHotelType(p.title, p.type || '')} in ${destName} — rated ${p.rating || 4.0}★.`,
         lat: p.gps_coordinates?.latitude || coords.lat,

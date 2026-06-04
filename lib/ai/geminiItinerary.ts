@@ -139,7 +139,7 @@ async function getFullGeminiData(params: {
   "restaurants": [{ "name": "Real Name", "desc": "1-2 sentences", "cuisine": "type", "priceRange": "₹X–₹Y", "rating": 4.8, "mustTry": "dish", "lat": number, "lng": number, "tags": ["Local"] }],
   "hotels": [{ "name": "Real Name", "desc": "1-2 sentences", "type": "Hotel/Resort/Hostel/Homestay", "priceRange": "₹X/night", "rating": 4.5, "amenities": ["WiFi"], "lat": number, "lng": number }]
 }
-Rules: Generate exactly 12-15 highlights, 6 restaurants, and 5 hotels to ensure a dense itinerary. Provide extremely realistic names, coordinates, and exact timings.`;
+Rules: Generate exactly 20-25 highlights, 12 restaurants, and 8 hotels to ensure a dense itinerary. Provide extremely realistic names, coordinates, and exact timings.`;
 
     try {
         const result = await model.generateContent(prompt);

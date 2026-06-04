@@ -213,6 +213,9 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
             {/* Top bar */}
             <div className="sticky top-20 z-40 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-lg border-b border-zinc-100 dark:border-white/5 px-4 py-3 flex items-center gap-4">
                 <button onClick={onBack} className="w-9 h-9 rounded-full border border-zinc-200 dark:border-zinc-700 flex items-center justify-center hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors text-sm text-zinc-600 dark:text-zinc-300">←</button>
+                <button onClick={() => router.push('/itinerary?new=true')} className="w-9 h-9 rounded-full border border-emerald-500/30 flex items-center justify-center hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-colors text-emerald-600 dark:text-emerald-400" title="Create New Itinerary">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"/></svg>
+                </button>
                 <div className="flex-1">
                     <h1 className="font-bold text-zinc-900 dark:text-white text-sm">{destName} — Day-by-Day Itinerary</h1>
                     <p className="text-xs text-zinc-400 hidden sm:block">Full plan with crowd & weather alerts</p>
