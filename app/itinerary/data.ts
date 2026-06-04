@@ -57,6 +57,7 @@ export interface DestInfo {
     hotels: Hotel[];
     dayPlans: DayPlan[];
     mapCenter: { lat: number; lng: number };
+    estimatedTravelCost?: string;
 }
 
 // ─── PURPOSES ────────────────────────────────────────────────────────────────

@@ -44,6 +44,7 @@ export async function fetchDestinationDataWithGemini(params: {
     purpose: string;
     budget: number;
     days: number;
+    originCity?: string | null;
 }): Promise<DestInfo | null> {
     // Step 1: Try Google Places API for live data
     const liveData = await fetchLiveDestinationData(params.destName);
@@ -52,7 +53,7 @@ export async function fetchDestinationDataWithGemini(params: {
         console.log(`[GeminiEnrich] Got ${liveData.attractions.length} live attractions, enriching with Gemini...`);
 
         // Step 2: Use Gemini to add cultural context & logistics (with retry)
-        const enrichment = await withRetry(() => getGeminiEnrichment(params.destName));
+        const enrichment = await withRetry(() => getGeminiEnrichment(params.destName, params.originCity));
         
         // Exact Weather injection
         const liveWeather = await fetchExactWeather(liveData.center.lat, liveData.center.lng);
@@ -75,17 +76,22 @@ export async function fetchDestinationDataWithGemini(params: {
  * Get cultural enrichment from Gemini (description, logistics, weather, crowd info).
  * This is lightweight — just context, not the full place data.
  */
-async function getGeminiEnrichment(destName: string): Promise<{
+async function getGeminiEnrichment(destName: string, originCity?: string | null): Promise<{
     description: string;
     crowdLevel: string;
     crowdNote: string;
     logistics: { flights: string; trains: string };
     weather: Record<string, string>;
+    estimatedTravelCost?: string;
 } | null> {
     if (!GEMINI_API_KEY) return null;
 
     const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
     const model = genAI.getGenerativeModel({ model: GEMINI_MODEL });
+
+    const travelCostPrompt = originCity 
+        ? `\n  "estimatedTravelCost": "Estimate rough travel costs (e.g., flights, trains, gas) from ${originCity} to ${destName} (e.g. '₹4,000 - ₹7,000')",` 
+        : `\n  "estimatedTravelCost": "Varies by origin",`;
 
     const prompt = `For the Indian destination "${destName}", provide ONLY this JSON (no markdown):
 {
@@ -95,7 +101,7 @@ async function getGeminiEnrichment(destName: string): Promise<{
   "logistics": {
     "flights": "Nearest airport with IATA code, approx distance/time to city center",
     "trains": "Nearest major railway station with code"
-  },
+  },${travelCostPrompt}
   "weather": {}
 }`;
 
@@ -126,10 +132,14 @@ async function getFullGeminiData(params: {
     const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
     const model = genAI.getGenerativeModel({ model: GEMINI_MODEL });
 
+    const travelCostPrompt = params.originCity 
+        ? `\n  "estimatedTravelCost": "Estimate rough travel costs (e.g., flights, trains) from ${params.originCity} to ${params.destName} (e.g. '₹5,000 - ₹9,000')",` 
+        : `\n  "estimatedTravelCost": "Varies by origin",`;
+
     const prompt = `You are an expert, local Indian travel guide. Return ONLY raw destination data for ${params.destName}, India as strictly valid JSON (no markdown):
 {
   "description": "3-4 highly evocative sentences describing the local vibe, hidden gems, and heritage.",
-  "avgCost": "₹X – ₹Y per day",
+  "avgCost": "₹X – ₹Y per day",${travelCostPrompt}
   "crowdLevel": "Low/Medium/High",
   "crowdNote": "Exact crowd alerts (e.g., 'Avoid temples between 11 AM - 3 PM due to massive crowds')",
   "logistics": { "flights": "airport info", "trains": "station info" },
@@ -159,6 +169,7 @@ Rules: Generate exactly 20-25 highlights, 12 restaurants, and 8 hotels to ensure
             crowdLevel: parsed.crowdLevel || 'Medium',
             crowdNote: parsed.crowdNote || 'Check seasonal levels',
             logistics: parsed.logistics,
+            estimatedTravelCost: parsed.estimatedTravelCost,
             weather: parsed.weather || {},
             mapCenter: parsed.mapCenter,
             highlights: (parsed.highlights || []).map((h: any) => ({

@@ -94,6 +94,7 @@ export interface GeneratedItinerary {
         lat: number;
         lng: number;
     };
+    estimatedTravelCost?: string;
 }
 
 // ─── User Context ─────────────────────────────────────────────────────────────
@@ -107,6 +108,7 @@ export interface UserContext {
     budget: number;
     startDate: string;
     travelerType?: string; // backpacker | comfort | luxury | family | flash | slow
+    originCity?: string;
     taste_vector?: number[]; // Vector embedding of user's semantic taste profile
 
     preferences?: {
@@ -548,6 +550,22 @@ export async function generateItinerary(ctx: UserContext, externalData?: DestInf
             const overhead = travelOverheadHours(distM);
             return { overhead, label: estimateTravelTime(distM) };
         };
+
+        const topHotel = scoredHotels[0];
+
+        // ── Hotel Check-out (Last Day) ─────────────────────────────────────────
+        if (isLastDay && topHotel) {
+            pushActivity({
+                name: `Check-out from ${topHotel.name}`,
+                desc: `Pack your bags and check out. You can leave your luggage at the reception if you have more exploring to do today.`,
+                crowd: 'Low',
+                crowdTip: 'Clear your bills early to avoid the standard 11 AM rush.',
+                lat: topHotel.lat,
+                lng: topHotel.lng,
+                type: 'hotel',
+                durationMins: 30,
+            }, 0.5);
+        }
 
         // ── Morning: temple / attraction visits ──────────────────────────────
         const morningSlots = isFirstDay && isArrivalDayLight ? 0 : pace.activitiesPerSlot[0];

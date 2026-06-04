@@ -18,6 +18,7 @@ export async function POST(req: NextRequest) {
             preferences,
             browsingSignals,
             travelerType,
+            originCity,
         } = body;
 
         // Validate required fields
@@ -49,6 +50,7 @@ export async function POST(req: NextRequest) {
             preferences: preferences || null,
             pastTrips: [],
             browsingSignals: browsingSignals || null,
+            originCity: originCity || null,
         };
 
         // ── Path A: Fetch data with Gemini dynamically ─────────────
@@ -58,6 +60,7 @@ export async function POST(req: NextRequest) {
             purpose,
             budget: Number(budget) || 15000,
             days: Number(days) || 3,
+            originCity: originCity || null,
         });
 
         if (geminiData) {

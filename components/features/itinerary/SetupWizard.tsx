@@ -183,7 +183,7 @@ export default function SetupWizard({ onDone }: SetupWizardProps) {
     const [dir, setDir] = useState(1);
     const [buildFromReel, setBuildFromReel] = useState(false);
     const [vibeMatchMode, setVibeMatchMode] = useState(false);
-    const [form, setForm] = useState({ purpose: '', destination: '', destName: '', startDate: '', endDate: '', days: 0, group: '', budget: 15000 });
+    const [form, setForm] = useState({ purpose: '', destination: '', destName: '', startDate: '', endDate: '', days: 0, group: '', budget: 15000, originCity: '' });
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isTransitioning, setIsTransitioning] = useState(false);
     const set = (k: string, v: string | number) => setForm(p => ({ ...p, [k]: v }));
@@ -204,6 +204,19 @@ export default function SetupWizard({ onDone }: SetupWizardProps) {
             }
         }
     }, [searchParams]); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // Fetch user origin city for travel cost estimation
+    useEffect(() => {
+        fetch('https://ipapi.co/json/')
+            .then(res => res.json())
+            .then(data => {
+                if (data.city) {
+                    setForm(p => ({ ...p, originCity: data.city }));
+                }
+            })
+            .catch(() => console.warn('Could not fetch origin city'));
+    }, []);
+
     const variants = { enter: (d: number) => ({ opacity: 0, x: d * 40 }), center: { opacity: 1, x: 0 }, exit: (d: number) => ({ opacity: 0, x: -d * 40 }) };
 
     return (
