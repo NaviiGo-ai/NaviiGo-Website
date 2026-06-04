@@ -123,6 +123,7 @@ async function getFullGeminiData(params: {
     purpose: string;
     budget: number;
     days: number;
+    originCity?: string | null;
 }): Promise<DestInfo | null> {
     if (!GEMINI_API_KEY) {
         console.error('[GeminiData] No GEMINI_API_KEY configured');

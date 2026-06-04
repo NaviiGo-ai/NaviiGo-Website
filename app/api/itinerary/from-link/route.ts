@@ -11,13 +11,16 @@ const GEMINI_MODEL = 'gemini-2.5-flash';
 async function fetchUrlMetadata(url: string): Promise<{ title: string; description: string; image: string } | null> {
     try {
         // Use a simple HTML fetch — works for Instagram public pages
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 6000);
         const res = await fetch(url, {
             headers: {
                 'User-Agent': 'Mozilla/5.0 (compatible; NaviiGoBot/1.0; +https://naviigo.app)',
                 'Accept': 'text/html,application/xhtml+xml',
             },
-            signal: AbortSignal.timeout(6000),
+            signal: controller.signal,
         });
+        clearTimeout(timeoutId);
         if (!res.ok) return null;
         const html = await res.text();
 

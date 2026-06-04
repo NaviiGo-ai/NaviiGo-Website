@@ -58,14 +58,23 @@ export async function GET(req: NextRequest) {
             })),
         });
     } catch (err) {
-        // Mock fallback
+        // Latitude-aware fallback
+        const parsedLat = Number(lat);
+        const isCold = parsedLat > 30 || parsedLat < -30;
+        
         return NextResponse.json({
             current: {
-                temp: 28, feelsLike: 31, humidity: 72, rainChance: 20,
-                windSpeed: 12, condition: 'Partly Cloudy', emoji: '⛅',
+                temp: isCold ? 5 : 28, 
+                feelsLike: isCold ? 3 : 31, 
+                humidity: 72, 
+                rainChance: 20,
+                windSpeed: 12, 
+                condition: 'Partly Cloudy', 
+                emoji: '⛅',
             },
             daily: [],
             _mock: true,
+            error: true,
         });
     }
 }

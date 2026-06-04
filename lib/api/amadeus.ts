@@ -8,6 +8,7 @@ const AMADEUS_AUTH = 'https://api.amadeus.com/v1/security/oauth2/token';
 // ─── Token Management ─────────────────────────────────────────────────────────
 
 let cachedToken: { token: string; expiresAt: number } | null = null;
+let tokenPromise: Promise<string> | null = null;
 
 async function getAccessToken(): Promise<string> {
     // Return cached token if still valid (with 60s buffer)
@@ -15,35 +16,46 @@ async function getAccessToken(): Promise<string> {
         return cachedToken.token;
     }
 
-    const clientId = process.env.AMADEUS_CLIENT_ID;
-    const clientSecret = process.env.AMADEUS_CLIENT_SECRET;
+    // Deduplicate requests if one is already in flight
+    if (tokenPromise) return tokenPromise;
 
-    if (!clientId || !clientSecret) {
-        throw new Error('AMADEUS_CLIENT_ID and AMADEUS_CLIENT_SECRET must be set in .env.local');
-    }
+    tokenPromise = (async () => {
+        try {
+            const clientId = process.env.AMADEUS_CLIENT_ID;
+            const clientSecret = process.env.AMADEUS_CLIENT_SECRET;
 
-    const res = await fetch(AMADEUS_AUTH, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({
-            grant_type: 'client_credentials',
-            client_id: clientId,
-            client_secret: clientSecret,
-        }),
-    });
+            if (!clientId || !clientSecret) {
+                throw new Error('AMADEUS_CLIENT_ID and AMADEUS_CLIENT_SECRET must be set in .env.local');
+            }
 
-    if (!res.ok) {
-        const err = await res.text();
-        throw new Error(`Amadeus auth failed: ${res.status} ${err}`);
-    }
+            const res = await fetch(AMADEUS_AUTH, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({
+                    grant_type: 'client_credentials',
+                    client_id: clientId,
+                    client_secret: clientSecret,
+                }),
+            });
 
-    const data = await res.json();
-    cachedToken = {
-        token: data.access_token,
-        expiresAt: Date.now() + data.expires_in * 1000,
-    };
+            if (!res.ok) {
+                const err = await res.text();
+                throw new Error(`Amadeus auth failed: ${res.status} ${err}`);
+            }
 
-    return cachedToken.token;
+            const data = await res.json();
+            cachedToken = {
+                token: data.access_token,
+                expiresAt: Date.now() + data.expires_in * 1000,
+            };
+
+            return cachedToken.token;
+        } finally {
+            tokenPromise = null;
+        }
+    })();
+
+    return tokenPromise;
 }
 
 async function amadeusRequest(endpoint: string, options: RequestInit = {}): Promise<any> {
@@ -58,12 +70,18 @@ async function amadeusRequest(endpoint: string, options: RequestInit = {}): Prom
     });
 
     if (!res.ok) {
-        const errBody = await res.text();
+        const errBody = await res.text().catch(() => '');
         console.error(`[Amadeus] ${options.method || 'GET'} ${endpoint} → ${res.status}:`, errBody);
         throw new Error(`Amadeus API error: ${res.status}`);
     }
 
-    return res.json();
+    const text = await res.text();
+    try {
+        return JSON.parse(text);
+    } catch (e) {
+        console.error(`[Amadeus] JSON Parse Error for ${endpoint}:`, text.slice(0, 500));
+        throw new Error(`Amadeus API invalid response format`);
+    }
 }
 
 // ─── Flight Search ────────────────────────────────────────────────────────────

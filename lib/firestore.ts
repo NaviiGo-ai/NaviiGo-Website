@@ -16,6 +16,7 @@ import {
     Timestamp,
     addDoc,
     arrayUnion,
+    runTransaction,
 } from 'firebase/firestore';
 import type {
     UserProfile,
@@ -37,27 +38,28 @@ export async function upsertUserProfile(uid: string, data: {
     photoURL: string | null;
 }) {
     const ref = doc(db, 'users', uid);
-    const snap = await getDoc(ref);
-
-    if (snap.exists()) {
-        await updateDoc(ref, {
-            displayName: data.displayName,
-            email: data.email,
-            photoURL: data.photoURL,
-            lastLogin: serverTimestamp(),
-        });
-    } else {
-        await setDoc(ref, {
-            uid,
-            displayName: data.displayName,
-            email: data.email,
-            photoURL: data.photoURL,
-            createdAt: serverTimestamp(),
-            lastLogin: serverTimestamp(),
-            totalTrips: 0,
-            totalBookings: 0,
-        });
-    }
+    await runTransaction(db, async (transaction) => {
+        const snap = await transaction.get(ref);
+        if (snap.exists()) {
+            transaction.update(ref, {
+                displayName: data.displayName,
+                email: data.email,
+                photoURL: data.photoURL,
+                lastLogin: serverTimestamp(),
+            });
+        } else {
+            transaction.set(ref, {
+                uid,
+                displayName: data.displayName,
+                email: data.email,
+                photoURL: data.photoURL,
+                createdAt: serverTimestamp(),
+                lastLogin: serverTimestamp(),
+                totalTrips: 0,
+                totalBookings: 0,
+            });
+        }
+    });
 }
 
 export async function getUserProfile(uid: string): Promise<UserProfile | null> {
@@ -76,22 +78,24 @@ export async function getUserPreferences(uid: string): Promise<UserPreferences |
 
 export async function updateUserPreferences(uid: string, prefs: Partial<UserPreferences>) {
     const ref = doc(db, 'users', uid, 'preferences', 'main');
-    const snap = await getDoc(ref);
-    if (snap.exists()) {
-        await updateDoc(ref, { ...prefs, updatedAt: serverTimestamp() });
-    } else {
-        await setDoc(ref, {
-            travelStyle: null,
-            preferredGroup: null,
-            interests: [],
-            dietaryPreferences: [],
-            accessibilityNeeds: [],
-            homeCity: null,
-            recentSearches: [],
-            ...prefs,
-            updatedAt: serverTimestamp(),
-        });
-    }
+    await runTransaction(db, async (transaction) => {
+        const snap = await transaction.get(ref);
+        if (snap.exists()) {
+            transaction.update(ref, { ...prefs, updatedAt: serverTimestamp() });
+        } else {
+            transaction.set(ref, {
+                travelStyle: null,
+                preferredGroup: null,
+                interests: [],
+                dietaryPreferences: [],
+                accessibilityNeeds: [],
+                homeCity: null,
+                recentSearches: [],
+                ...prefs,
+                updatedAt: serverTimestamp(),
+            });
+        }
+    });
 }
 
 export async function addRecentSearch(uid: string, search: {
@@ -251,24 +255,31 @@ export async function updateActivityStatus(
     method: 'manual' | 'gps_auto' | null = null
 ) {
     const ref = doc(db, 'users', uid, 'tracking', tripId);
-    const snap = await getDoc(ref);
-    if (!snap.exists()) return;
+    
+    await runTransaction(db, async (transaction) => {
+        const snap = await transaction.get(ref);
+        if (!snap.exists()) return;
 
-    const data = snap.data() as TrackingSession;
-    const activities = [...data.activities];
-    activities[activityIndex] = {
-        ...activities[activityIndex],
-        status,
-        completedAt: status === 'completed' ? Timestamp.now() : null,
-        completionMethod: method,
-    };
+        const data = snap.data() as TrackingSession;
+        const activities = [...data.activities];
+        
+        // Skip if already in the requested state
+        if (activities[activityIndex]?.status === status) return;
 
-    const completedCount = activities.filter(a => a.status === 'completed').length;
+        activities[activityIndex] = {
+            ...activities[activityIndex],
+            status,
+            completedAt: status === 'completed' ? Timestamp.now() : null,
+            completionMethod: method,
+        };
 
-    await updateDoc(ref, {
-        activities,
-        completedCount,
-        lastUpdatedAt: serverTimestamp(),
+        const completedCount = activities.filter(a => a.status === 'completed').length;
+
+        transaction.update(ref, {
+            activities,
+            completedCount,
+            lastUpdatedAt: serverTimestamp(),
+        });
     });
 }
 

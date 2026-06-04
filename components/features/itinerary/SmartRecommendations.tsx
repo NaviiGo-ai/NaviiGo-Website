@@ -30,11 +30,11 @@ export default function SmartRecommendations({
 }: SmartRecommendationsProps) {
     const [recs, setRecs] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
-    const [fetched, setFetched] = useState(false);
+    const [refreshKey, setRefreshKey] = useState(0);
     const [selected, setSelected] = useState<string | null>(null);
 
     useEffect(() => {
-        if (!purpose || fetched) return;
+        if (!purpose) return;
         setLoading(true);
         setSelected(null);
 
@@ -51,8 +51,8 @@ export default function SmartRecommendations({
             .then(r => r.json())
             .then(data => { if (data.success) setRecs(data.recommendations.slice(0, 4)); })
             .catch(() => { })
-            .finally(() => { setLoading(false); setFetched(true); });
-    }, [purpose, group, budget, userId, fetched]);
+            .finally(() => { setLoading(false); });
+    }, [purpose, group, budget, userId, refreshKey]);
 
     if (!purpose) return null;
 
@@ -148,7 +148,7 @@ export default function SmartRecommendations({
                         ))}
                     </div>
 
-                    <button onClick={() => setFetched(false)}
+                    <button onClick={() => setRefreshKey(k => k + 1)}
                         className="text-xs text-zinc-400 hover:text-zinc-300 flex items-center gap-1 transition-colors">
                         🔄 Refresh recommendations
                     </button>

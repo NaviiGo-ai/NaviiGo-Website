@@ -92,14 +92,15 @@ export async function POST(req: NextRequest) {
         if (action === 'book') {
             const { pricedOffer, passengers, contactEmail, contactPhone } = body;
 
-            if (!pricedOffer || !passengers?.length) {
+            if (!pricedOffer || !passengers?.length || !contactEmail || !contactPhone) {
                 return NextResponse.json(
-                    { success: false, error: 'Missing pricedOffer or passengers' },
+                    { success: false, error: 'Missing required booking details (offer, passengers, email, phone)' },
                     { status: 400 }
                 );
             }
 
             // Format passengers for Amadeus
+            const safePhone = typeof contactPhone === 'string' ? contactPhone.replace(/\D/g, '').slice(-10) : '0000000000';
             const travelers: FlightPassenger[] = passengers.map((p: any, i: number) => ({
                 id: (i + 1).toString(),
                 dateOfBirth: p.dateOfBirth || '1990-01-01',
@@ -110,7 +111,7 @@ export async function POST(req: NextRequest) {
                     phones: [{
                         deviceType: 'MOBILE' as const,
                         countryCallingCode: '91',
-                        number: contactPhone.replace(/\D/g, '').slice(-10),
+                        number: safePhone || '0000000000',
                     }],
                 },
             }));

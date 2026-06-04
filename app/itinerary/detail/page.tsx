@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense } from "react";
+import { Suspense, useState, useEffect } from "react";
 import { DEST_DATA, FALLBACK_DEST, DESTINATIONS } from "@/app/itinerary/data";
 import { resolveImgSrc } from '@/lib/imageService';
 
@@ -16,30 +16,40 @@ function DetailContent() {
 
     const data = DEST_DATA[destId] ?? FALLBACK_DEST;
     const destInfo = DESTINATIONS.find(d => d.id === destId);
-
-    let itemData: any = null;
-
-    // Check localStorage first if it's a dynamically generated item
+    
     const isFromLocal = searchParams.get('fromLocal') === 'true';
-    if (isFromLocal) {
-        try {
-            const localStr = localStorage.getItem('navii_detail_item');
-            if (localStr) itemData = JSON.parse(localStr);
-        } catch (e) {
-            console.error('Failed to parse local item data', e);
-        }
-    }
+    const [itemData, setItemData] = useState<any>(null);
+    const [mounted, setMounted] = useState(false);
 
-    // Fallback to hardcoded DEST_DATA
-    if (!itemData) {
-        if (type === 'attraction') {
-            itemData = data.highlights?.find(h => h.name === name);
-        } else if (type === 'restaurant') {
-            itemData = data.restaurants?.find(r => r.name === name);
-        } else if (type === 'hotel') {
-            itemData = data.hotels?.find(h => h.name === name);
+    useEffect(() => {
+        setMounted(true);
+        let dataToSet = null;
+
+        // Check localStorage first if it's a dynamically generated item
+        if (isFromLocal) {
+            try {
+                const localStr = localStorage.getItem('navii_detail_item');
+                if (localStr) dataToSet = JSON.parse(localStr);
+            } catch (e) {
+                console.error('Failed to parse local item data', e);
+            }
         }
-    }
+
+        // Fallback to hardcoded DEST_DATA
+        if (!dataToSet) {
+            if (type === 'attraction') {
+                dataToSet = data.highlights?.find(h => h.name === name);
+            } else if (type === 'restaurant') {
+                dataToSet = data.restaurants?.find(r => r.name === name);
+            } else if (type === 'hotel') {
+                dataToSet = data.hotels?.find(h => h.name === name);
+            }
+        }
+        
+        setItemData(dataToSet);
+    }, [isFromLocal, type, name, data]);
+
+    if (!mounted) return null; // Avoid hydration mismatch on initial render
 
     if (!itemData) {
         return (

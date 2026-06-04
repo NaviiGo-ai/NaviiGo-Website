@@ -509,7 +509,9 @@ export async function generateItinerary(ctx: UserContext, externalData?: DestInf
     const tempForMonth = destData.weather?.[startMonth] || '20–30°C';
 
     // ── Build Day Plans with Indian Timing & Traveler Pace ─────────────────────
-    const pace = TRAVELER_PACE[ctx.travelerType || 'comfort'];
+    const pace = TRAVELER_PACE[ctx.travelerType || 'comfort'] || TRAVELER_PACE['comfort'];
+    // Ensure safe default pace bounds to prevent crashes
+    pace.maxActiveHours = Math.max(1, pace.maxActiveHours);
     const dayPlans: GeneratedDayPlan[] = [];
     const usedAttractions = new Set<string>();
     const usedRestaurants = new Set<string>();
@@ -576,21 +578,23 @@ export async function generateItinerary(ctx: UserContext, externalData?: DestInf
                 !usedAttractions.has(a.name) && a.tags.some(t => ['Temple', 'Spiritual', 'Aarti'].includes(t))
             );
             if (templeAttr && clock < 8) {
-                const { overhead, label } = travelBetween(templeAttr.lat || prevLat, templeAttr.lng || prevLng);
-                clock += overhead;
-                pushActivity({
+                const { overhead, label } = travelBetween(templeAttr.lat ?? prevLat, templeAttr.lng ?? prevLng);
+                const pushed = pushActivity({
                     name: templeAttr.name,
                     desc: templeAttr.desc,
                     crowd: 'Low',
                     crowdTip: 'Survey tip: 94% of temple-goers say pre-7AM is magical — no queues, conch shells echoing',
                     travelFromPrev: label,
-                    lat: templeAttr.lat || destData.mapCenter.lat,
-                    lng: templeAttr.lng || destData.mapCenter.lng,
+                    lat: templeAttr.lat ?? destData.mapCenter.lat,
+                    lng: templeAttr.lng ?? destData.mapCenter.lng,
                     type: 'attraction',
                     durationMins: 75,
                     bookingLink: templeAttr.bookingLink,
                 }, 1.25);
-                usedAttractions.add(templeAttr.name);
+                if (pushed) {
+                    clock += overhead;
+                    usedAttractions.add(templeAttr.name);
+                }
             }
         }
 
@@ -607,36 +611,37 @@ export async function generateItinerary(ctx: UserContext, externalData?: DestInf
             if (usedAttractions.has(attr.name)) continue;
             if (clock >= 15.5) break;
 
-            const { overhead, label } = travelBetween(attr.lat || prevLat, attr.lng || prevLng);
+            const { overhead, label } = travelBetween(attr.lat ?? prevLat, attr.lng ?? prevLng);
             const attrDurationHours = Math.min(2.5, parseDurationHours(attr.duration));
 
             if (clock + overhead + attrDurationHours > 16.0) break; // don't bleed into late lunch
 
-            clock += overhead;
             const pushed = pushActivity({
                 name: attr.name,
                 desc: attr.desc,
                 crowd: attr.walking === 'Easy' ? 'Low' : 'Medium',
                 crowdTip: getSurveyTip(attr.tags),
                 travelFromPrev: label,
-                lat: attr.lat || destData.mapCenter.lat,
-                lng: attr.lng || destData.mapCenter.lng,
+                lat: attr.lat ?? destData.mapCenter.lat,
+                lng: attr.lng ?? destData.mapCenter.lng,
                 type: 'attraction',
                 durationMins: parseDurationHours(attr.duration) * 60,
                 bookingLink: attr.bookingLink,
             }, attrDurationHours);
 
-            if (pushed) { usedAttractions.add(attr.name); morningCount++; }
+            if (pushed) { 
+                clock += overhead;
+                usedAttractions.add(attr.name); 
+                morningCount++; 
+            }
         }
 
         // ── Lunch (flexible, shifted later to allow more morning places) ───────────
         clock = Math.max(clock, 13.5); // lunch at 1:30 PM minimum, often pushes to 3:00 PM
-        const lunchRestaurant = scoredRestaurants.find(r => !usedRestaurants.has(r.name));
+        const lunchRestaurant = scoredRestaurants.find(r => !usedRestaurants.has(r.name)) || scoredRestaurants[0];
         if (lunchRestaurant) {
-            usedRestaurants.add(lunchRestaurant.name);
             const { overhead, label } = travelBetween(lunchRestaurant.lat, lunchRestaurant.lng);
-            clock += overhead;
-            pushActivity({
+            const pushed = pushActivity({
                 name: `Lunch at ${lunchRestaurant.name}`,
                 desc: `${lunchRestaurant.desc} Must-try: ${lunchRestaurant.mustTry}. ${lunchRestaurant.priceRange} per person.`,
                 crowd: 'Medium',
@@ -648,6 +653,10 @@ export async function generateItinerary(ctx: UserContext, externalData?: DestInf
                 durationMins: pace.lunchBreakMins,
                 bookingLink: lunchRestaurant.bookingLink,
             }, pace.lunchBreakMins / 60);
+            if (pushed) {
+                clock += overhead;
+                usedRestaurants.add(lunchRestaurant.name);
+            }
         }
 
         // ── Indian afternoon rest / chai break ──────────────────────────────
@@ -662,26 +671,29 @@ export async function generateItinerary(ctx: UserContext, externalData?: DestInf
             if (usedAttractions.has(attr.name)) continue;
             if (clock >= 19.5) break;
 
-            const { overhead, label } = travelBetween(attr.lat || prevLat, attr.lng || prevLng);
+            const { overhead, label } = travelBetween(attr.lat ?? prevLat, attr.lng ?? prevLng);
             const attrDurationHours = Math.min(2.5, parseDurationHours(attr.duration));
 
             if (clock + overhead + attrDurationHours > 20.5) break;
 
-            clock += overhead;
             const pushed = pushActivity({
                 name: attr.name,
                 desc: attr.desc,
                 crowd: 'Medium',
                 crowdTip: getSurveyTip(attr.tags),
                 travelFromPrev: label,
-                lat: attr.lat || destData.mapCenter.lat,
-                lng: attr.lng || destData.mapCenter.lng,
+                lat: attr.lat ?? destData.mapCenter.lat,
+                lng: attr.lng ?? destData.mapCenter.lng,
                 type: 'attraction',
                 durationMins: parseDurationHours(attr.duration) * 60,
                 bookingLink: attr.bookingLink,
             }, attrDurationHours);
 
-            if (pushed) { usedAttractions.add(attr.name); afternoonCount++; }
+            if (pushed) { 
+                clock += overhead;
+                usedAttractions.add(attr.name); 
+                afternoonCount++; 
+            }
         }
 
         // ── Evening: sunset / aarti / market ───────────────────────────────
@@ -692,26 +704,29 @@ export async function generateItinerary(ctx: UserContext, externalData?: DestInf
             if (usedAttractions.has(attr.name)) continue;
             if (clock >= 20.0) break;
 
-            const { overhead, label } = travelBetween(attr.lat || prevLat, attr.lng || prevLng);
+            const { overhead, label } = travelBetween(attr.lat ?? prevLat, attr.lng ?? prevLng);
             const attrDurationHours = (parseDurationHours(attr.duration));
 
             if (clock + overhead + attrDurationHours > 20.5) break;
 
-            clock += overhead;
             const pushed = pushActivity({
                 name: attr.name,
                 desc: attr.desc,
                 crowd: 'Medium',
                 crowdTip: '🌅 Golden hour — best light for photos and the most magical atmosphere',
                 travelFromPrev: label,
-                lat: attr.lat || destData.mapCenter.lat,
-                lng: attr.lng || destData.mapCenter.lng,
+                lat: attr.lat ?? destData.mapCenter.lat,
+                lng: attr.lng ?? destData.mapCenter.lng,
                 type: 'attraction',
                 durationMins: parseDurationHours(attr.duration) * 60,
                 bookingLink: attr.bookingLink,
             }, attrDurationHours);
 
-            if (pushed) { usedAttractions.add(attr.name); eveningCount++; }
+            if (pushed) { 
+                clock += overhead;
+                usedAttractions.add(attr.name); 
+                eveningCount++; 
+            }
         }
 
         // ── Dinner ─────────────────────────────────────────────────────────
@@ -720,9 +735,8 @@ export async function generateItinerary(ctx: UserContext, externalData?: DestInf
             const dinnerRestaurant = scoredRestaurants.find(r => !usedRestaurants.has(r.name)) || scoredRestaurants[0];
             if (dinnerRestaurant) {
                 const { overhead, label } = travelBetween(dinnerRestaurant.lat, dinnerRestaurant.lng);
-                clock += overhead;
                 const isLastMeal = isLastDay;
-                pushActivity({
+                const pushed = pushActivity({
                     name: `Dinner at ${dinnerRestaurant.name}`,
                     desc: isLastMeal
                         ? `End your trip on a delicious note! ${dinnerRestaurant.desc} Try the ${dinnerRestaurant.mustTry}.`
@@ -736,7 +750,10 @@ export async function generateItinerary(ctx: UserContext, externalData?: DestInf
                     durationMins: 75,
                     bookingLink: dinnerRestaurant.bookingLink,
                 }, 1.25);
-                if (!usedRestaurants.has(dinnerRestaurant.name)) usedRestaurants.add(dinnerRestaurant.name);
+                if (pushed) {
+                    clock += overhead;
+                    if (!usedRestaurants.has(dinnerRestaurant.name)) usedRestaurants.add(dinnerRestaurant.name);
+                }
             }
         }
 
