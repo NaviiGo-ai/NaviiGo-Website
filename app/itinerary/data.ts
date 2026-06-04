@@ -17,6 +17,7 @@ export interface Restaurant {
     cuisine: string; priceRange: string; rating: number;
     mustTry: string; timing: string;
     lat: number; lng: number; tags: string[];
+    bookingLink?: string;
 }
 
 export interface Hotel {
@@ -25,6 +26,7 @@ export interface Hotel {
     priceRange: string; rating: number;
     amenities: string[]; checkIn: string;
     lat: number; lng: number;
+    bookingLink?: string;
 }
 
 export interface DayActivity {
@@ -35,6 +37,7 @@ export interface DayActivity {
     type?: 'attraction' | 'restaurant' | 'hotel';
     priceBase?: number;
     durationMins?: number;
+    bookingLink?: string;
 }
 
 export interface DayPlan {

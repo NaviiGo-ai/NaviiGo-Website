@@ -21,6 +21,11 @@ function ItineraryContent() {
 
   const [phase, setPhase] = useState<Phase>(() => {
     if (typeof window !== 'undefined') {
+        const isNew = new URLSearchParams(window.location.search).get('new') === 'true';
+        if (isNew) {
+            sessionStorage.removeItem('navii_itinerary_state');
+            return 'setup';
+        }
         const stored = sessionStorage.getItem('navii_itinerary_state');
         if (stored) return JSON.parse(stored).phase || 'setup';
     }

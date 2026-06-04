@@ -126,20 +126,22 @@ export default function ItineraryMap({
 
             const icon = L.divIcon({
                 className: 'custom-map-marker',
-                html: `<div style="
-          width:${isActive ? 36 : 30}px; height:${isActive ? 36 : 30}px;
-          background: ${isActive ? '#059669' : '#10b981'};
-          border: 3px solid white;
-          border-radius: 50%;
-          display: flex; align-items: center; justify-content: center;
-          color: white; font-weight: 700; font-size: ${isActive ? 14 : 12}px;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-          transform: ${isActive ? 'scale(1.2)' : 'scale(1)'};
-          transition: transform 0.3s ease;
-          font-family: system-ui, sans-serif;
-        ">${pin.number}</div>`,
-                iconSize: [isActive ? 36 : 30, isActive ? 36 : 30],
-                iconAnchor: [isActive ? 18 : 15, isActive ? 18 : 15],
+                html: `<div style="position:relative; width:${isActive ? 42 : 36}px; height:${isActive ? 42 : 36}px; transform: ${isActive ? 'scale(1.15) translateY(-5px)' : 'scale(1)'}; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); display:flex; flex-direction:column; align-items:center;">
+                    <div style="
+                        width: 100%; height: 100%;
+                        background: ${isActive ? 'linear-gradient(135deg, #059669 0%, #047857 100%)' : 'linear-gradient(135deg, #10b981 0%, #059669 100%)'};
+                        border-radius: 50% 50% 50% 0;
+                        transform: rotate(-45deg);
+                        display: flex; align-items: center; justify-content: center;
+                        box-shadow: 2px 4px 10px rgba(0,0,0,0.3);
+                        border: 2px solid white;
+                    ">
+                        <span style="transform: rotate(45deg); color: white; font-weight: 800; font-size: ${isActive ? 16 : 14}px; font-family: system-ui, sans-serif;">${pin.number}</span>
+                    </div>
+                    ${isActive ? '<div style="position:absolute; bottom:-4px; width:12px; height:4px; background:rgba(0,0,0,0.4); border-radius:50%; filter:blur(2px);"></div>' : ''}
+                </div>`,
+                iconSize: [isActive ? 42 : 36, isActive ? 42 : 36],
+                iconAnchor: [isActive ? 21 : 18, isActive ? 42 : 36],
             });
 
             const marker = L.marker([pin.lat, pin.lng], { icon }).addTo(map);

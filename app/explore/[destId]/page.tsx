@@ -11,6 +11,7 @@ import { trackDeepDiveVibe, startCityView, flushCityView } from '@/lib/browsingS
 import ReviewSection from '@/components/features/reviews/ReviewSection';
 import { getUpcomingFestivals, type Festival } from '@/lib/festivalCalendar';
 import { resolveImgSrc } from '@/lib/imageService';
+import { LocalEvent } from '@/lib/api/googleEvents';
 
 interface DeepDiveData {
     redditConsensus: string;
@@ -32,6 +33,7 @@ export default function DestinationDeepDive() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [festivals, setFestivals] = useState<Festival[]>([]);
+    const [liveEvents, setLiveEvents] = useState<LocalEvent[]>([]);
 
     // Pre-fill from local storage if available from previous builds
     useEffect(() => {
@@ -52,6 +54,7 @@ export default function DestinationDeepDive() {
         startCityView(destination);
         // Fetch immediately on mount
         fetchDeepDive();
+        fetchEvents();
         // Load upcoming festivals for this destination
         setFestivals(getUpcomingFestivals(destination));
 
@@ -77,6 +80,22 @@ export default function DestinationDeepDive() {
             setError(e.message);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const fetchEvents = async () => {
+        try {
+            const res = await fetch('/api/explore/events', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ destination })
+            });
+            const json = await res.json();
+            if (res.ok && json.events) {
+                setLiveEvents(json.events);
+            }
+        } catch (e) {
+            console.error('Failed to fetch live events:', e);
         }
     };
 
@@ -243,6 +262,42 @@ export default function DestinationDeepDive() {
                         </div>
                     </motion.div>
                 ) : null}
+
+                {/* LIVE LOCAL EVENTS */}
+                {liveEvents.length > 0 && (
+                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="mt-12">
+                        <div className="flex items-center justify-between mb-6">
+                            <div>
+                                <h3 className="text-2xl font-bold text-zinc-900 dark:text-white flex items-center gap-2">
+                                    <Sparkles className="w-6 h-6 text-emerald-500" /> Live Local Events
+                                </h3>
+                                <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">Gigs, flea markets, and pop-ups happening in {destination}</p>
+                            </div>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            {liveEvents.map((event, i) => (
+                                <a key={i} href={event.link} target="_blank" rel="noopener noreferrer" className="group block bg-white dark:bg-[#111] border border-zinc-200 dark:border-white/10 rounded-2xl overflow-hidden hover:shadow-xl transition-all hover:-translate-y-1">
+                                    <div className="h-32 w-full relative overflow-hidden bg-zinc-100 dark:bg-zinc-800">
+                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                        <img src={event.thumbnail} alt={event.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                        <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider">
+                                            {event.date.when}
+                                        </div>
+                                    </div>
+                                    <div className="p-4">
+                                        <h4 className="font-bold text-sm text-zinc-900 dark:text-white line-clamp-2 mb-2 group-hover:text-emerald-500 transition-colors">{event.title}</h4>
+                                        <p className="text-xs text-zinc-500 dark:text-zinc-400 flex items-center gap-1 mt-1 truncate">
+                                            <MapPin className="w-3 h-3" /> {event.venue?.name || 'Local Venue'}
+                                        </p>
+                                        <div className="mt-3 text-xs font-semibold text-blue-600 dark:text-blue-400 flex items-center gap-1 group-hover:gap-2 transition-all">
+                                            Get Tickets <ArrowRight className="w-3 h-3" />
+                                        </div>
+                                    </div>
+                                </a>
+                            ))}
+                        </div>
+                    </motion.div>
+                )}
 
                 {/* CALL TO ACTION */}
                 {data && (

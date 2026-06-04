@@ -24,21 +24,26 @@ interface SerpPlace {
     hours?: string;
     price?: string;
     phone?: string;
+    link?: string;
 }
 
-interface PlaceDetails {
+export interface PlaceDetails {
     name: string;
     desc: string;
     lat: number;
     lng: number;
     rating: number;
     reviews: number;
-    photoUrl: string;
+    photoUrl?: string;
     tags: string[];
     type: string;
-    priceRange?: string;
+    priceRange?: string; // e.g. "$$" or "₹500-1000"
+    mustTry?: string; // for restaurants
     hours?: string;
+    walking?: string; // 'Easy' | 'Moderate' | 'Hard'
+    duration?: string; // e.g. "2 hours"
     address?: string;
+    bookingLink?: string; // Extracted booking/reservation link
 }
 
 // ─── SerpAPI Google Maps Search ──────────────────────────────────────────────
@@ -142,7 +147,7 @@ export async function fetchLiveDestinationData(destName: string): Promise<{
     console.log(`[SerpAPI] Found: ${attractionResults.length} attractions, ${restaurantResults.length} restaurants, ${hotelResults.length} hotels`);
 
     // Convert to PlaceDetails
-    const attractions: PlaceDetails[] = attractionResults.slice(0, 8).map(p => ({
+    const attractions: PlaceDetails[] = attractionResults.slice(0, 20).map(p => ({
         name: p.title,
         desc: p.description || `${p.type || 'Attraction'} in ${destName} with ${p.reviews || 0}+ reviews.`,
         lat: p.gps_coordinates?.latitude || coords.lat,
@@ -154,9 +159,10 @@ export async function fetchLiveDestinationData(destName: string): Promise<{
         type: p.type || 'Tourist attraction',
         hours: p.hours,
         address: p.address,
+        bookingLink: p.link || `https://www.google.com/search?q=${encodeURIComponent('Book tickets ' + p.title + ' ' + destName)}`,
     })).filter(a => a.name);
 
-    const restaurants: PlaceDetails[] = restaurantResults.slice(0, 6).map(p => ({
+    const restaurants: PlaceDetails[] = restaurantResults.slice(0, 15).map(p => ({
         name: p.title,
         desc: p.description || `${p.type || 'Restaurant'} in ${destName} — rated ${p.rating || 4.0}★.`,
         lat: p.gps_coordinates?.latitude || coords.lat,
@@ -169,9 +175,10 @@ export async function fetchLiveDestinationData(destName: string): Promise<{
         priceRange: p.price || '₹200–₹600',
         hours: p.hours,
         address: p.address,
+        bookingLink: p.link || `https://www.zomato.com/search?q=${encodeURIComponent(p.title + ' ' + destName)}`,
     })).filter(r => r.name);
 
-    const hotels: PlaceDetails[] = hotelResults.slice(0, 5).map(p => ({
+    const hotels: PlaceDetails[] = hotelResults.slice(0, 10).map(p => ({
         name: p.title,
         desc: p.description || `${inferHotelType(p.title, p.type || '')} in ${destName} — rated ${p.rating || 4.0}★.`,
         lat: p.gps_coordinates?.latitude || coords.lat,
@@ -184,6 +191,7 @@ export async function fetchLiveDestinationData(destName: string): Promise<{
         priceRange: p.price || '₹3,000–₹8,000/night',
         hours: p.hours,
         address: p.address,
+        bookingLink: p.link || `https://www.agoda.com/search?text=${encodeURIComponent(p.title + ' ' + destName)}`,
     })).filter(h => h.name);
 
     return { attractions, restaurants, hotels, center: coords };
@@ -199,7 +207,7 @@ export function liveDataToDestInfo(
 ): DestInfo {
     const highlights: Attraction[] = liveData.attractions.map(a => ({
         name: a.name,
-        img: a.photoUrl,
+        img: a.photoUrl || '',
         desc: a.desc,
         bestMonths: 'Oct – Mar',
         duration: '1–3 hrs',
@@ -213,7 +221,7 @@ export function liveDataToDestInfo(
     const restaurants: Restaurant[] = liveData.restaurants.map((r, i) => ({
         id: `lr${i + 1}`,
         name: r.name,
-        img: r.photoUrl,
+        img: r.photoUrl || '',
         desc: r.desc,
         cuisine: r.type || 'Local',
         priceRange: r.priceRange || '₹200–₹600',
@@ -228,7 +236,7 @@ export function liveDataToDestInfo(
     const hotels: Hotel[] = liveData.hotels.map((h, i) => ({
         id: `lh${i + 1}`,
         name: h.name,
-        img: h.photoUrl,
+        img: h.photoUrl || '',
         desc: h.desc,
         type: inferHotelType(h.name, h.type),
         priceRange: h.priceRange || '₹3,000–₹8,000/night',

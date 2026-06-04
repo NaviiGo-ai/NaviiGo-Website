@@ -25,6 +25,7 @@ export interface GeneratedActivity {
     type?: 'attraction' | 'restaurant' | 'hotel';
     priceBase?: number;
     durationMins?: number;
+    bookingLink?: string;
 }
 
 export interface GeneratedDayPlan {
@@ -59,6 +60,7 @@ export interface GeneratedItinerary {
         tags: string[];
         lat: number;
         lng: number;
+        bookingLink?: string;
     }>;
     restaurants: Array<{
         id: string;
@@ -72,6 +74,7 @@ export interface GeneratedItinerary {
         lat: number;
         lng: number;
         tags: string[];
+        bookingLink?: string;
     }>;
     hotels: Array<{
         id: string;
@@ -84,6 +87,7 @@ export interface GeneratedItinerary {
         amenities: string[];
         lat: number;
         lng: number;
+        bookingLink?: string;
     }>;
     dayPlans: GeneratedDayPlan[];
     mapCenter: {
@@ -167,32 +171,32 @@ const TRAVELER_PACE: Record<string, {
     paceLabel: string;
 }> = {
     backpacker: {
-        maxActiveHours: 10, wakeHour: 6.5, lunchBreakMins: 45, afternoonRestMins: 0,
+        maxActiveHours: 10, wakeHour: 6.5, lunchBreakMins: 60, afternoonRestMins: 30,
         activitiesPerSlot: [2, 2, 1], templeEarlyMorning: true, nightlifeOk: true,
         paceLabel: 'High energy — early starts, max experiences',
     },
     comfort: {
-        maxActiveHours: 8, wakeHour: 8, lunchBreakMins: 75, afternoonRestMins: 45,
+        maxActiveHours: 8, wakeHour: 8, lunchBreakMins: 90, afternoonRestMins: 60,
         activitiesPerSlot: [2, 1, 1], templeEarlyMorning: false, nightlifeOk: false,
         paceLabel: 'Balanced — see key highlights without exhaustion',
     },
     luxury: {
-        maxActiveHours: 6, wakeHour: 9, lunchBreakMins: 90, afternoonRestMins: 60,
+        maxActiveHours: 6, wakeHour: 9, lunchBreakMins: 120, afternoonRestMins: 90,
         activitiesPerSlot: [1, 1, 1], templeEarlyMorning: false, nightlifeOk: true,
         paceLabel: 'Relaxed — premium experiences, no rush',
     },
     family: {
-        maxActiveHours: 7, wakeHour: 8, lunchBreakMins: 90, afternoonRestMins: 60,
-        activitiesPerSlot: [2, 1, 1], templeEarlyMorning: false, nightlifeOk: false,
-        paceLabel: 'Family-friendly pace — rest time for kids & elders',
+        maxActiveHours: 7, wakeHour: 8.5, lunchBreakMins: 120, afternoonRestMins: 90,
+        activitiesPerSlot: [1, 1, 1], templeEarlyMorning: false, nightlifeOk: false,
+        paceLabel: 'Family-friendly pace — extended rest time for kids & elders',
     },
     flash: {
-        maxActiveHours: 11, wakeHour: 6, lunchBreakMins: 30, afternoonRestMins: 0,
+        maxActiveHours: 11, wakeHour: 6, lunchBreakMins: 45, afternoonRestMins: 0,
         activitiesPerSlot: [3, 2, 1], templeEarlyMorning: true, nightlifeOk: true,
         paceLabel: 'Flash itinerary — squeeze in everything possible',
     },
     slow: {
-        maxActiveHours: 5, wakeHour: 9, lunchBreakMins: 90, afternoonRestMins: 90,
+        maxActiveHours: 5, wakeHour: 9.5, lunchBreakMins: 120, afternoonRestMins: 120,
         activitiesPerSlot: [1, 1, 1], templeEarlyMorning: false, nightlifeOk: false,
         paceLabel: 'Slow travel — immerse, don\'t rush',
     },
@@ -225,6 +229,7 @@ function getSurveyTip(tags: string[]): string {
 interface ScoredAttraction extends Attraction {
     score: number;
     originalIndex: number;
+    bookingLink?: string;
 }
 
 function scoreAttraction(
@@ -565,6 +570,7 @@ export async function generateItinerary(ctx: UserContext, externalData?: DestInf
                     lng: templeAttr.lng || destData.mapCenter.lng,
                     type: 'attraction',
                     durationMins: 75,
+                    bookingLink: templeAttr.bookingLink,
                 }, 1.25);
                 usedAttractions.add(templeAttr.name);
             }
@@ -599,6 +605,7 @@ export async function generateItinerary(ctx: UserContext, externalData?: DestInf
                 lng: attr.lng || destData.mapCenter.lng,
                 type: 'attraction',
                 durationMins: parseDurationHours(attr.duration) * 60,
+                bookingLink: attr.bookingLink,
             }, attrDurationHours);
 
             if (pushed) { usedAttractions.add(attr.name); morningCount++; }
@@ -621,6 +628,7 @@ export async function generateItinerary(ctx: UserContext, externalData?: DestInf
                 lng: lunchRestaurant.lng,
                 type: 'restaurant',
                 durationMins: pace.lunchBreakMins,
+                bookingLink: lunchRestaurant.bookingLink,
             }, pace.lunchBreakMins / 60);
         }
 
@@ -652,6 +660,7 @@ export async function generateItinerary(ctx: UserContext, externalData?: DestInf
                 lng: attr.lng || destData.mapCenter.lng,
                 type: 'attraction',
                 durationMins: parseDurationHours(attr.duration) * 60,
+                bookingLink: attr.bookingLink,
             }, attrDurationHours);
 
             if (pushed) { usedAttractions.add(attr.name); afternoonCount++; }
@@ -681,6 +690,7 @@ export async function generateItinerary(ctx: UserContext, externalData?: DestInf
                 lng: attr.lng || destData.mapCenter.lng,
                 type: 'attraction',
                 durationMins: parseDurationHours(attr.duration) * 60,
+                bookingLink: attr.bookingLink,
             }, attrDurationHours);
 
             if (pushed) { usedAttractions.add(attr.name); eveningCount++; }
@@ -706,6 +716,7 @@ export async function generateItinerary(ctx: UserContext, externalData?: DestInf
                     lng: dinnerRestaurant.lng,
                     type: 'restaurant',
                     durationMins: 75,
+                    bookingLink: dinnerRestaurant.bookingLink,
                 }, 1.25);
                 if (!usedRestaurants.has(dinnerRestaurant.name)) usedRestaurants.add(dinnerRestaurant.name);
             }

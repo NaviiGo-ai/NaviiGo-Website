@@ -4,15 +4,15 @@ import { getAuth } from "firebase/auth";
 import { getFirestore, enableMultiTabIndexedDbPersistence } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 
-// NaviiGo Firebase Configuration — naviigo-firebase project
+// NaviiGo Firebase Configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyAozizf5h_AqPmzV1ZQ0weRSWsYmSrIDnA",
-  authDomain: "naviigo-firebase.firebaseapp.com",
-  projectId: "naviigo-firebase",
-  storageBucket: "naviigo-firebase.firebasestorage.app",
-  messagingSenderId: "683587822562",
-  appId: "1:683587822562:web:f5883b4f01f58b6e444fbb",
-  measurementId: "G-FDFF0E6287"
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
 };
 
 // Initialize Firebase (singleton)

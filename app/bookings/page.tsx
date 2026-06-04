@@ -24,7 +24,7 @@ type TabType = 'flights' | 'trains' | 'cabs' | 'hotels';
 const flightFilters = ['Non-stop', 'Morning Dep', 'Evening Dep', 'Under ₹5k', 'With Meal'];
 const trainFilters = ['Sleeper', '3A', '2A', '1A', 'CC', 'Non-stop', 'Daily'];
 const cabFilters = ['Sedan', 'SUV', 'Self-Drive', 'AC', 'Top Rated'];
-const hotelFilters = ['5 Star', '4 Star', '3 Star', 'Pool', 'Breakfast', 'Ghat View', 'Free Cancellation'];
+const hotelFilters = ['Staycations & Resorts', '5 Star', '4 Star', '3 Star', 'Pool', 'Breakfast', 'Free Cancellation'];
 
 // ─── SMALL COMPONENTS ────────────────────────────────────────────────────────
 
@@ -49,11 +49,10 @@ function FilterChips({ options, active, onToggle }: { options: string[], active:
 
 const SORT_OPTIONS = ['Price: Low to High', 'Price: High to Low', 'Duration', 'Departure Time', 'Rating'];
 
-function SortBar({ label }: { label: string }) {
-  const [sort, setSort] = useState(SORT_OPTIONS[0]);
+function SortBar({ label, sort, onSortChange }: { label: string; sort: string; onSortChange: (val: string) => void }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="flex items-center justify-between py-3 px-1 relative">
+    <div className="flex items-center justify-between py-3 px-1 relative z-40">
       <p className="text-xs font-bold uppercase tracking-widest text-zinc-400 flex items-center gap-2">
         <SlidersHorizontal className="w-3.5 h-3.5" />{label}
       </p>
@@ -74,7 +73,7 @@ function SortBar({ label }: { label: string }) {
               {SORT_OPTIONS.map(o => (
                 <button
                   key={o}
-                  onClick={() => { setSort(o); setOpen(false); }}
+                  onClick={() => { onSortChange(o); setOpen(false); }}
                   className={`w-full text-left px-4 py-2.5 text-xs font-semibold transition-colors ${sort === o ? 'bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400' : 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-800'
                     }`}
                 >{o}</button>
@@ -486,8 +485,7 @@ export default function BookingsPage() {
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [hasSearched, setHasSearched] = useState(false);
   const [resultsPage, setResultsPage] = useState(1);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [sortOption, setSortOption] = useState(SORT_OPTIONS[0]);
 
   // Booking Portal State
   const [selectedBooking, setSelectedBooking] = useState<any | null>(null);
@@ -677,16 +675,49 @@ export default function BookingsPage() {
   };
 
   const renderResults = () => {
-    const list = searchResults;
+    let list = searchResults;
+
+    // Apply basic frontend filtering if Staycations is selected
+    if (activeTab === 'hotels' && activeFilters.includes('Staycations & Resorts')) {
+        list = list.filter((h: any) => h.stars >= 4 || h.tags?.includes('Luxury') || h.name?.toLowerCase().includes('resort'));
+        // If list becomes empty, we just show a curated fallback
+        if (list.length === 0) {
+            list = [{ id: 'staycation-1', name: 'Curated Weekend Resort & Spa', area: lastQuery?.to || 'City Center', stars: 5, price: '₹12,000', priceNum: 12000, perNight: '/night', rating: 4.9, reviews: 120, amenities: ['Spa', 'Pool', 'Breakfast'], tags: ['Staycation', 'Luxury'], image: '🌴', refundable: true, distance: 'Secluded getaway', badge: 'bestvalue', deepLink: `https://www.agoda.com/search?text=${encodeURIComponent('Resorts in ' + (lastQuery?.to || 'India'))}` }];
+        }
+    }
+
     if (list.length === 0) return (
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-12">
         <p className="text-zinc-400 text-sm">No results found. Try a different route or date.</p>
       </motion.div>
     );
-    if (activeTab === 'flights') return list.map((f, i) => <FlightCard key={f.id || i} f={f} onBook={(item) => handleOpenPortal(item, 'flights')} />);
-    if (activeTab === 'trains') return list.map((t, i) => <TrainCard key={t.id || i} t={t} onBook={(item) => handleOpenPortal(item, 'trains')} />);
-    if (activeTab === 'cabs') return list.map((c, i) => <CabCard key={c.id || i} c={c} onBook={(item) => handleOpenPortal(item, 'cabs')} />);
-    return list.map((h, i) => <HotelCard key={h.id || i} h={h} onBook={(item) => handleOpenPortal(item, 'hotels')} />);
+    const parsePrice = (p: string) => parseInt((p||'').replace(/[^0-9]/g, '')) || 0;
+    const parseDuration = (d: string) => {
+      const match = (d||'').match(/(\d+)h(?:\s*(\d+)m)?/);
+      if (!match) return 0;
+      return parseInt(match[1]) * 60 + (parseInt(match[2]) || 0);
+    };
+
+    list = [...list].sort((a, b) => {
+      if (sortOption === 'Price: Low to High') return parsePrice(a.price) - parsePrice(b.price);
+      if (sortOption === 'Price: High to Low') return parsePrice(b.price) - parsePrice(a.price);
+      if (sortOption === 'Duration') {
+        const durA = parseDuration(a.duration || (a.time ? a.time.split(' - ')[0] : '0h'));
+        const durB = parseDuration(b.duration || (b.time ? b.time.split(' - ')[0] : '0h'));
+        return durA - durB;
+      }
+      if (sortOption === 'Rating') {
+        return (parseFloat(b.rating) || 0) - (parseFloat(a.rating) || 0);
+      }
+      return 0; // Default or Departure Time
+    });
+
+    const paginated = list.slice(0, resultsPage * 10);
+
+    if (activeTab === 'flights') return paginated.map((f, i) => <FlightCard key={f.id || i} f={f} onBook={(item) => handleOpenPortal(item, 'flights')} />);
+    if (activeTab === 'trains') return paginated.map((t, i) => <TrainCard key={t.id || i} t={t} onBook={(item) => handleOpenPortal(item, 'trains')} />);
+    if (activeTab === 'cabs') return paginated.map((c, i) => <CabCard key={c.id || i} c={c} onBook={(item) => handleOpenPortal(item, 'cabs')} />);
+    return paginated.map((h, i) => <HotelCard key={h.id || i} h={h} onBook={(item) => handleOpenPortal(item, 'hotels')} />);
   };
 
   const sectionLabel = () => {
@@ -769,10 +800,15 @@ export default function BookingsPage() {
                 <button
                   key={t.id}
                   onClick={() => setActiveTab(t.id)}
-                  className={`flex items-center gap-2 px-4 sm:px-6 py-2.5 rounded-xl font-bold text-sm transition-all duration-300 ${isActive ? `bg-zinc-100 dark:bg-white/10 ${t.color}` : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'}`}
+                  className={`relative flex items-center gap-2 px-4 sm:px-6 py-2.5 rounded-xl font-bold text-sm transition-all duration-300 ${isActive ? `bg-zinc-100 dark:bg-white/10 ${t.color}` : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'}`}
                 >
                   <Icon className="w-4 h-4" />
                   {t.label}
+                  {(t.id === 'trains' || t.id === 'cabs') && (
+                    <span className="absolute -top-2 -right-2 bg-rose-500 text-white text-[9px] font-black uppercase px-1.5 py-0.5 rounded shadow-sm">
+                      Demo
+                    </span>
+                  )}
                 </button>
               );
             })}
@@ -800,6 +836,13 @@ export default function BookingsPage() {
             <form onSubmit={handleSearch}>
               {renderForm()}
               <FilterChips options={filtersByTab[activeTab]} active={activeFilters} onToggle={toggleFilter} />
+
+              {formError && (
+                <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mt-6 p-4 rounded-xl bg-rose-50 border border-rose-200 dark:bg-rose-900/10 dark:border-rose-800/30 text-rose-600 dark:text-rose-400 text-sm font-semibold flex items-center justify-center gap-2">
+                  <AlertTriangle className="w-4 h-4" />
+                  {formError}
+                </motion.div>
+              )}
 
               <div className="mt-6 flex justify-center">
                 <button type="submit" disabled={isSearching} className={`group relative flex items-center justify-center gap-2 w-full sm:w-auto px-10 py-3.5 rounded-xl bg-gradient-to-r ${tabConfig.find(t => t.id === activeTab)?.accent} text-white font-black text-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 disabled:opacity-50 overflow-hidden`}>
@@ -866,7 +909,7 @@ export default function BookingsPage() {
               </motion.div>
             ) : (
               <>
-                <SortBar label={sectionLabel()} />
+                <SortBar label={sectionLabel()} sort={sortOption} onSortChange={setSortOption} />
                 {renderResults()}
                 <SmartInsights tab={activeTab} />
                 <div className="pt-4 flex justify-center">

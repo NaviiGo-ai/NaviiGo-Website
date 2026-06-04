@@ -177,7 +177,7 @@ function ExplorePageContent() {
                     <div className="flex items-center gap-1.5 mb-2">
                       <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
                       <span className="text-xs font-semibold text-white/90">{d.rating}</span>
-                      <span className="text-xs text-white/50 font-normal">({((i * 47) % 500) + 120} reviews)</span>
+                      <span className="text-xs text-white/50 font-normal ml-1 border-l border-white/20 pl-1">Popular</span>
                     </div>
                     <h3 className={`font-bold text-white mb-1 tracking-tight ${isLarge ? 'text-3xl lg:text-4xl' : isTall ? 'text-2xl' : 'text-xl'}`}>{d.name}</h3>
                     <p className={`text-white/70 font-medium ${isLarge ? 'text-sm' : 'text-xs'}`}>{d.state}</p>
@@ -377,7 +377,7 @@ function ExplorePageContent() {
                 </div>
                 <h2 className="text-3xl font-bold text-zinc-900 dark:text-white tracking-tight">Trending Destinations</h2>
               </div>
-              <Link href="/itinerary" className="hidden md:flex items-center gap-1 text-sm font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors">View all <ArrowRight className="w-3.5 h-3.5" /></Link>
+              <Link href="/itinerary?new=true" className="hidden md:flex items-center gap-1 text-sm font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors">View all <ArrowRight className="w-3.5 h-3.5" /></Link>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
               {TRENDING.map((t, i) => (
@@ -456,7 +456,7 @@ function ExplorePageContent() {
           <div className="bg-zinc-900 dark:bg-white rounded-2xl p-10 md:p-14 text-center shadow-lg">
             <h2 className="text-3xl font-bold text-white dark:text-black mb-3 tracking-tight">Ready to book?</h2>
             <p className="text-zinc-400 dark:text-zinc-500 mb-8 text-base font-medium">Use our planning tools to craft the perfect itinerary.</p>
-            <Link href="/itinerary" className="inline-flex items-center gap-2 bg-white dark:bg-black text-black dark:text-white px-8 py-3.5 rounded-xl font-bold text-sm shadow-sm hover:scale-[1.02] transition-transform">
+            <Link href="/itinerary?new=true" className="inline-flex items-center gap-2 bg-white dark:bg-black text-black dark:text-white px-8 py-3.5 rounded-xl font-bold text-sm shadow-sm hover:scale-[1.02] transition-transform">
               Start Planning
             </Link>
           </div>

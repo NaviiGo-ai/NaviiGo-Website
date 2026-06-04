@@ -21,7 +21,7 @@ const features = [
     description: 'Share your destination, budget & vibe. Our AI builds a complete day-by-day plan with hidden gems, local food spots & darshan timings.',
     color: 'from-blue-500/20 to-blue-600/5',
     borderColor: 'border-blue-500/20',
-    link: '/itinerary',
+    link: '/itinerary?new=true',
   },
   {
     icon: '📜',
@@ -211,10 +211,8 @@ export default function Home() {
           <p className="text-lg text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed">
             Found a bucket list trip you want to complete? Save it to your itinerary and we'll keep you updated on the best times, weather, and seamless transit options.
           </p>
-          <Link href="/saved">
-            <button className="px-8 py-3.5 rounded-2xl bg-orange-500/10 border border-orange-500/30 text-orange-400 font-semibold hover:bg-orange-500 hover:text-white transition-all hover:scale-105 shadow-[0_0_20px_rgba(249,115,22,0.1)] hover:shadow-[0_0_30px_rgba(249,115,22,0.3)]">
+          <Link href="/saved" className="inline-block px-8 py-3.5 rounded-2xl bg-orange-500/10 border border-orange-500/30 text-orange-400 font-semibold hover:bg-orange-500 hover:text-white transition-all hover:scale-105 shadow-[0_0_20px_rgba(249,115,22,0.1)] hover:shadow-[0_0_30px_rgba(249,115,22,0.3)]">
               View Saved Routes →
-            </button>
           </Link>
         </motion.div>
       </section>
@@ -237,10 +235,8 @@ export default function Home() {
               Have questions about your spiritual journey or itinerary? Our AI Guide and expert support team are available 24/7 to assist you.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link href="/support">
-                <button className="px-8 py-3.5 rounded-2xl bg-slate-800 text-white font-semibold hover:bg-slate-700 transition-all border border-slate-700 hover:border-slate-600 w-full sm:w-auto">
+              <Link href="/support" className="inline-block px-8 py-3.5 rounded-2xl bg-slate-800 text-white font-semibold hover:bg-slate-700 transition-all border border-slate-700 hover:border-slate-600 w-full sm:w-auto">
                   Help Center
-                </button>
               </Link>
               <button className="px-8 py-3.5 rounded-2xl bg-white text-slate-900 font-semibold hover:bg-slate-100 transition-all shadow-lg w-full sm:w-auto">
                 Contact Support
@@ -316,7 +312,7 @@ export default function Home() {
             Let our AI plan your perfect trip — from spiritual circuits to hidden gems, booked at the best prices.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/itinerary">
+            <Link href="/itinerary?new=true">
               <button className="px-10 py-4 rounded-2xl bg-blue-600 text-white font-semibold text-base hover:bg-blue-500 transition-all hover:scale-105 shadow-xl shadow-blue-600/20">
                 Plan Your Trip with AI
               </button>
