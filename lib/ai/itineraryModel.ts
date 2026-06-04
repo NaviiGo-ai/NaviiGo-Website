@@ -172,32 +172,32 @@ const TRAVELER_PACE: Record<string, {
 }> = {
     backpacker: {
         maxActiveHours: 10, wakeHour: 6.5, lunchBreakMins: 60, afternoonRestMins: 30,
-        activitiesPerSlot: [2, 2, 1], templeEarlyMorning: true, nightlifeOk: true,
+        activitiesPerSlot: [3, 3, 2], templeEarlyMorning: true, nightlifeOk: true,
         paceLabel: 'High energy — early starts, max experiences',
     },
     comfort: {
         maxActiveHours: 8, wakeHour: 8, lunchBreakMins: 90, afternoonRestMins: 60,
-        activitiesPerSlot: [2, 1, 1], templeEarlyMorning: false, nightlifeOk: false,
+        activitiesPerSlot: [3, 2, 2], templeEarlyMorning: false, nightlifeOk: false,
         paceLabel: 'Balanced — see key highlights without exhaustion',
     },
     luxury: {
         maxActiveHours: 6, wakeHour: 9, lunchBreakMins: 120, afternoonRestMins: 90,
-        activitiesPerSlot: [1, 1, 1], templeEarlyMorning: false, nightlifeOk: true,
+        activitiesPerSlot: [2, 2, 1], templeEarlyMorning: false, nightlifeOk: true,
         paceLabel: 'Relaxed — premium experiences, no rush',
     },
     family: {
         maxActiveHours: 7, wakeHour: 8.5, lunchBreakMins: 120, afternoonRestMins: 90,
-        activitiesPerSlot: [1, 1, 1], templeEarlyMorning: false, nightlifeOk: false,
+        activitiesPerSlot: [2, 2, 1], templeEarlyMorning: false, nightlifeOk: false,
         paceLabel: 'Family-friendly pace — extended rest time for kids & elders',
     },
     flash: {
         maxActiveHours: 11, wakeHour: 6, lunchBreakMins: 45, afternoonRestMins: 0,
-        activitiesPerSlot: [3, 2, 1], templeEarlyMorning: true, nightlifeOk: true,
+        activitiesPerSlot: [4, 3, 2], templeEarlyMorning: true, nightlifeOk: true,
         paceLabel: 'Flash itinerary — squeeze in everything possible',
     },
     slow: {
         maxActiveHours: 5, wakeHour: 9.5, lunchBreakMins: 120, afternoonRestMins: 120,
-        activitiesPerSlot: [1, 1, 1], templeEarlyMorning: false, nightlifeOk: false,
+        activitiesPerSlot: [2, 1, 1], templeEarlyMorning: false, nightlifeOk: false,
         paceLabel: 'Slow travel — immerse, don\'t rush',
     },
 };
@@ -587,12 +587,12 @@ export async function generateItinerary(ctx: UserContext, externalData?: DestInf
         for (const attr of scoredAttractions) {
             if (morningCount >= morningSlots) break;
             if (usedAttractions.has(attr.name)) continue;
-            if (clock >= 12) break;
+            if (clock >= 14) break;
 
             const { overhead, label } = travelBetween(attr.lat || prevLat, attr.lng || prevLng);
-            const attrDurationHours = (parseDurationHours(attr.duration));
+            const attrDurationHours = Math.min(2.5, parseDurationHours(attr.duration));
 
-            if (clock + overhead + attrDurationHours > 12.5) break; // don't bleed into lunch
+            if (clock + overhead + attrDurationHours > 14.5) break; // don't bleed into lunch
 
             clock += overhead;
             const pushed = pushActivity({
@@ -642,12 +642,12 @@ export async function generateItinerary(ctx: UserContext, externalData?: DestInf
         for (const attr of scoredAttractions) {
             if (afternoonCount >= pace.activitiesPerSlot[1]) break;
             if (usedAttractions.has(attr.name)) continue;
-            if (clock >= 17.5) break;
+            if (clock >= 19.5) break;
 
             const { overhead, label } = travelBetween(attr.lat || prevLat, attr.lng || prevLng);
-            const attrDurationHours = (parseDurationHours(attr.duration));
+            const attrDurationHours = Math.min(2.5, parseDurationHours(attr.duration));
 
-            if (clock + overhead + attrDurationHours > 18) break;
+            if (clock + overhead + attrDurationHours > 20.5) break;
 
             clock += overhead;
             const pushed = pushActivity({
