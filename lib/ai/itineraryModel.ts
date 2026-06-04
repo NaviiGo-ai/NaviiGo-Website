@@ -587,12 +587,12 @@ export async function generateItinerary(ctx: UserContext, externalData?: DestInf
         for (const attr of scoredAttractions) {
             if (morningCount >= morningSlots) break;
             if (usedAttractions.has(attr.name)) continue;
-            if (clock >= 14) break;
+            if (clock >= 15.5) break;
 
             const { overhead, label } = travelBetween(attr.lat || prevLat, attr.lng || prevLng);
             const attrDurationHours = Math.min(2.5, parseDurationHours(attr.duration));
 
-            if (clock + overhead + attrDurationHours > 14.5) break; // don't bleed into lunch
+            if (clock + overhead + attrDurationHours > 16.0) break; // don't bleed into late lunch
 
             clock += overhead;
             const pushed = pushActivity({
@@ -611,8 +611,8 @@ export async function generateItinerary(ctx: UserContext, externalData?: DestInf
             if (pushed) { usedAttractions.add(attr.name); morningCount++; }
         }
 
-        // ── Lunch (hard-coded to 12:30–1:30 Indian time) ────────────────────
-        clock = Math.max(clock, 12.5); // always lunch at 12:30 minimum
+        // ── Lunch (flexible, shifted later to allow more morning places) ───────────
+        clock = Math.max(clock, 13.5); // lunch at 1:30 PM minimum, often pushes to 3:00 PM
         const lunchRestaurant = scoredRestaurants.find(r => !usedRestaurants.has(r.name));
         if (lunchRestaurant) {
             usedRestaurants.add(lunchRestaurant.name);
