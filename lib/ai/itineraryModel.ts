@@ -555,6 +555,20 @@ export async function generateItinerary(ctx: UserContext, externalData?: DestInf
 
         const topHotel = scoredHotels[0];
 
+        // ── Hotel Check-in (First Day) ─────────────────────────────────────────
+        if (isFirstDay && topHotel) {
+            pushActivity({
+                name: `Check-in at ${topHotel.name}`,
+                desc: `Arrive and settle into your accommodation. ${topHotel.desc}`,
+                crowd: 'Low',
+                crowdTip: 'Standard check-in is usually 2:00 PM. If you arrive early, leave your bags at reception and start exploring.',
+                lat: topHotel.lat,
+                lng: topHotel.lng,
+                type: 'hotel',
+                durationMins: 45,
+            }, 0.75);
+        }
+
         // ── Hotel Check-out (Last Day) ─────────────────────────────────────────
         if (isLastDay && topHotel) {
             pushActivity({
