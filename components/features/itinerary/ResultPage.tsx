@@ -22,6 +22,7 @@ interface ResultPageProps {
     form: Record<string, unknown>;
     generatedData?: any;
     shareId?: string | null;
+    isLoaded?: boolean;
     onDayView: () => void;
     onReset: () => void;
 }
