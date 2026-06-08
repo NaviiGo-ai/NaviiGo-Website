@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { searchDestinationsByVibe, DestinationVectorMatch } from '@/lib/ai/pinecone';
 import { generateEmbedding } from '@/lib/ai/embeddings';
+import { checkRateLimit, getClientIP } from '@/lib/rateLimit';
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
 const GEMINI_MODEL = 'gemini-2.5-flash';
@@ -26,6 +27,16 @@ const DEST_META: Record<string, { lat: number; lng: number; state: string; types
 };
 
 export async function POST(req: NextRequest) {
+    // Rate limit: 5 requests per minute per IP
+    const ip = getClientIP(req);
+    const { allowed, retryAfter } = checkRateLimit(ip, 5, 60 * 1000);
+    if (!allowed) {
+        return NextResponse.json(
+            { success: false, error: 'Too many recommendation requests. Please wait before trying again.' },
+            { status: 429, headers: { 'Retry-After': retryAfter.toString() } }
+        );
+    }
+
     try {
         const { uid, budget, month, group, purpose, preferences, pastDestinations, tasteVector, browsingSignals } = await req.json();
 

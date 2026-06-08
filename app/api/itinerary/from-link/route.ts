@@ -5,37 +5,10 @@ const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
 const GEMINI_MODEL = 'gemini-2.5-flash';
 
 /**
- * Fetch open-graph metadata from a public URL (Instagram posts/reels are public).
- * Falls back gracefully if fetch fails.
+ * SECURITY FIX: Removed remote URL fetching to prevent SSRF attacks.
+ * Users can paste URL or caption text - both are analyzed as plain text by Gemini.
+ * This prevents attackers from probing internal services or metadata endpoints.
  */
-async function fetchUrlMetadata(url: string): Promise<{ title: string; description: string; image: string } | null> {
-    try {
-        // Use a simple HTML fetch — works for Instagram public pages
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 6000);
-        const res = await fetch(url, {
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (compatible; NaviiGoBot/1.0; +https://naviigo.app)',
-                'Accept': 'text/html,application/xhtml+xml',
-            },
-            signal: controller.signal,
-        });
-        clearTimeout(timeoutId);
-        if (!res.ok) return null;
-        const html = await res.text();
-
-        // Extract og:title, og:description, og:image
-        const ogTitle = html.match(/<meta[^>]*property="og:title"[^>]*content="([^"]+)"/)?.[1] || '';
-        const ogDesc = html.match(/<meta[^>]*property="og:description"[^>]*content="([^"]+)"/)?.[1] || '';
-        const ogImage = html.match(/<meta[^>]*property="og:image"[^>]*content="([^"]+)"/)?.[1] || '';
-
-        // Also try to extract any visible text
-        const title = ogTitle || html.match(/<title>([^<]+)<\/title>/)?.[1] || '';
-        return { title, description: ogDesc, image: ogImage };
-    } catch {
-        return null;
-    }
-}
 
 /**
  * POST /api/itinerary/from-link
@@ -51,20 +24,14 @@ export async function POST(req: NextRequest) {
         }
 
         // Build the text we'll analyze
+        // Treat URL as plain text (no fetching) to prevent SSRF attacks
         let analysisText = captionText || '';
-
         if (url) {
-            const meta = await fetchUrlMetadata(url);
-            if (meta) {
-                analysisText = [meta.title, meta.description, captionText].filter(Boolean).join('\n');
-            } else {
-                // If fetch failed, still try with just the URL text + any caption
-                analysisText = `URL: ${url}\n${captionText || ''}`;
-            }
+            analysisText = [url, captionText].filter(Boolean).join('\n');
         }
 
         if (!analysisText.trim()) {
-            return NextResponse.json({ success: false, error: 'Could not extract any text from the link. Try pasting the caption text directly.' }, { status: 400 });
+            return NextResponse.json({ success: false, error: 'Could not extract any text. Try pasting the caption text directly.' }, { status: 400 });
         }
 
         if (!GEMINI_API_KEY) {

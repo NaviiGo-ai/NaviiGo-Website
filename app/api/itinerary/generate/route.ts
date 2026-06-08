@@ -2,8 +2,19 @@ import { NextRequest, NextResponse } from 'next/server';
 import { generateItinerary, type UserContext } from '@/lib/ai/itineraryModel';
 import { fetchDestinationDataWithGemini, buildMinimalDestInfo } from '@/lib/ai/geminiItinerary';
 import { DEST_DATA, DESTINATIONS } from '@/app/itinerary/data';
+import { checkRateLimit, getClientIP } from '@/lib/rateLimit';
 
 export async function POST(req: NextRequest) {
+    // Rate limit: 5 requests per minute per IP
+    const ip = getClientIP(req);
+    const { allowed, retryAfter } = checkRateLimit(ip, 5, 60 * 1000);
+    if (!allowed) {
+        return NextResponse.json(
+            { success: false, error: 'Too many itinerary generation requests. Please wait before trying again.' },
+            { status: 429, headers: { 'Retry-After': retryAfter.toString() } }
+        );
+    }
+
     try {
         const body = await req.json();
         const {

@@ -7,12 +7,27 @@ import {
     lookupIATACode,
 } from '@/lib/api/amadeus';
 import type { FlightPassenger } from '@/lib/api/amadeus';
+import { checkRateLimit, getClientIP } from '@/lib/rateLimit';
 
 // POST /api/booking/flights — search, price, or book flights via Amadeus
 export async function POST(req: NextRequest) {
+    // Rate limit: 10 search requests per minute, 1 booking per 10 minutes
+    const ip = getClientIP(req);
+    const body = await req.json();
+    const { action } = body;
+    
+    const limit = action === 'book' ? 1 : 10; // Stricter limit for bookings
+    const window = action === 'book' ? 10 * 60 * 1000 : 60 * 1000;
+    const { allowed, retryAfter } = checkRateLimit(`${ip}:${action}`, limit, window);
+    
+    if (!allowed) {
+        return NextResponse.json(
+            { success: false, error: 'Too many requests. Please wait before trying again.' },
+            { status: 429, headers: { 'Retry-After': retryAfter.toString() } }
+        );
+    }
+
     try {
-        const body = await req.json();
-        const { action } = body;
 
         // ── SEARCH ────────────────────────────────────────────────────
         if (action === 'search') {
