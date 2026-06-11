@@ -107,7 +107,7 @@ export default function HeroSlider() {
 
   return (
     <section className="relative min-h-dvh overflow-hidden text-white">
-      <AnimatePresence mode="sync">
+      <AnimatePresence>
         <motion.div
           key={currentSlide.name}
           className="absolute inset-0"
