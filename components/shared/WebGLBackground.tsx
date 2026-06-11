@@ -40,7 +40,7 @@ function Scene() {
 export default function WebGLBackground() {
   return (
     <div className="fixed inset-0 z-[-1] pointer-events-none transition-opacity duration-1000">
-      <Canvas camera={{ position: [0, 0, 1] }}>
+      <Canvas camera={{ position: [0, 0, 1] }} style={{ pointerEvents: 'none' }}>
         <Scene />
       </Canvas>
       <div className="absolute inset-0 bg-gradient-to-b from-transparent to-white/50 dark:to-black/50 pointer-events-none" />
