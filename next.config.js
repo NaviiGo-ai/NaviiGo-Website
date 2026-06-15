@@ -49,7 +49,7 @@ const nextConfig = {
           "script-src 'self' 'unsafe-inline' 'unsafe-eval' *.googleapis.com apis.google.com cdn.sentry.io www.googletagmanager.com tpwgts.com unpkg.com",
           "style-src 'self' 'unsafe-inline' fonts.googleapis.com accounts.google.com unpkg.com",
           "font-src 'self' fonts.gstatic.com",
-          "connect-src 'self' wss: ws: *.googleapis.com *.google.com apis.google.com *.firebaseio.com *.firebaseapp.com identitytoolkit.googleapis.com securetoken.googleapis.com api.pinecone.io *.open-meteo.com *.sentry.io *.nominatim.openstreetmap.org nominatim.openstreetmap.org router.project-osrm.org www.googletagmanager.com www.google-analytics.com analytics.google.com tpwgts.com *.onrender.com ipapi.co",
+          "connect-src 'self' wss: ws: *.googleapis.com *.google.com apis.google.com *.firebaseio.com *.firebaseapp.com identitytoolkit.googleapis.com securetoken.googleapis.com api.pinecone.io *.open-meteo.com *.sentry.io *.nominatim.openstreetmap.org nominatim.openstreetmap.org router.project-osrm.org www.googletagmanager.com www.google-analytics.com analytics.google.com tpwgts.com *.onrender.com ipapi.co unpkg.com *.basemaps.cartocdn.com",
           "img-src 'self' data: blob: https:",
           "media-src 'self'",
           "frame-src 'self' *.firebaseapp.com accounts.google.com apis.google.com tpwgts.com",
