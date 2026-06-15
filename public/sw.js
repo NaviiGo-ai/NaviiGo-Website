@@ -1,5 +1,5 @@
-const CACHE_NAME = 'naviigo-v4-offline';
-const TILE_CACHE = 'naviigo-tiles-v1';
+const CACHE_NAME = 'naviigo-v5-offline';
+const TILE_CACHE = 'naviigo-tiles-v2';
 
 // We explicitly cache critical static roots
 const PRECACHE_URLS = [
