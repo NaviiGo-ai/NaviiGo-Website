@@ -16,10 +16,13 @@ from routers import itinerary, chat, recommendations, explore, weather, transpor
 async def lifespan(app: FastAPI):
     from services.destination_cache import load_csv_destinations
     from services.firebase_client import is_firebase_configured
+    from services.gemini_cache import is_redis_connected
     count = load_csv_destinations()
     fb_status = "connected" if is_firebase_configured() else "not configured (place firebase-service-account.json in backend/)"
+    redis_status = "✅ connected" if is_redis_connected() else "⚠ unavailable (using file cache fallback)"
     print(f"[Startup] CSV destinations preloaded: {count}")
     print(f"[Startup] Firebase: {fb_status}")
+    print(f"[Startup] Redis: {redis_status}")
     yield
 
 

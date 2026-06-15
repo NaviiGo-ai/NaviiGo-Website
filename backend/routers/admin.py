@@ -2,7 +2,7 @@
 from fastapi import APIRouter, HTTPException, UploadFile, File
 from pydantic import BaseModel
 from typing import Optional
-from services.gemini_cache import get_cache_stats as get_gemini_stats, clear_namespace, clear_all
+from services.gemini_cache import get_cache_stats as get_gemini_stats, clear_namespace, clear_all, is_redis_connected
 from services.destination_cache import get_cache_stats as get_dest_stats, load_csv_destinations, clear_cache as clear_dest_cache
 from services.user_data import get_full_user_context, get_ai_profile, get_user_itineraries
 from services.firebase_client import is_firebase_configured
@@ -16,6 +16,7 @@ async def cache_stats():
     return {
         "gemini_cache": get_gemini_stats(),
         "destination_cache": get_dest_stats(),
+        "redis_connected": is_redis_connected(),
         "firebase_connected": is_firebase_configured(),
     }
 

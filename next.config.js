@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  allowedDevOrigins: ['127.0.0.1'],
   serverExternalPackages: ['@pinecone-database/pinecone'],
   images: {
     remotePatterns: [
@@ -31,24 +32,42 @@ const nextConfig = {
     ],
   },
   async headers() {
+    const securityHeaders = [
+      { key: 'X-Content-Type-Options', value: 'nosniff' },
+      { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+      { key: 'X-XSS-Protection', value: '1; mode=block' },
+      { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+      { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(self)' },
+    ];
+
+    // Only apply strict CSP in production — dev mode needs open CSP for HMR/WebSockets
+    if (process.env.NODE_ENV === 'production') {
+      securityHeaders.push({
+        key: 'Content-Security-Policy',
+        value: [
+          "default-src 'self'",
+          "script-src 'self' 'unsafe-inline' 'unsafe-eval' *.googleapis.com apis.google.com cdn.sentry.io",
+          "style-src 'self' 'unsafe-inline' fonts.googleapis.com accounts.google.com",
+          "font-src 'self' fonts.gstatic.com",
+          "connect-src 'self' wss: ws: *.googleapis.com *.firebaseio.com *.firebaseapp.com identitytoolkit.googleapis.com securetoken.googleapis.com api.pinecone.io *.open-meteo.com *.sentry.io *.nominatim.openstreetmap.org router.project-osrm.org",
+          "img-src 'self' data: blob: https:",
+          "media-src 'self'",
+          "frame-src 'self' *.firebaseapp.com accounts.google.com apis.google.com",
+          "frame-ancestors 'self'",
+          "base-uri 'self'",
+          "form-action 'self'",
+        ].join('; '),
+      });
+      securityHeaders.push({
+        key: 'Strict-Transport-Security',
+        value: 'max-age=63072000; includeSubDomains; preload',
+      });
+    }
+
     return [
       {
         source: '/(.*)',
-        headers: [
-          { key: 'X-Content-Type-Options', value: 'nosniff' },
-          { key: 'X-Frame-Options', value: 'DENY' },
-          { key: 'X-XSS-Protection', value: '1; mode=block' },
-          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-          { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(self)' },
-          {
-            key: 'Content-Security-Policy',
-            value: "script-src 'self' *.googleapis.com cdn.sentry.io; connect-src 'self' *.googleapis.com firebaseio.com firestore.googleapis.com api.pinecone.io *.open-meteo.com cdn.sentry.io; img-src 'self' data: https:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
-          },
-          {
-            key: 'Strict-Transport-Security',
-            value: 'max-age=63072000; includeSubDomains; preload',
-          },
-        ],
+        headers: securityHeaders,
       },
     ];
   },
