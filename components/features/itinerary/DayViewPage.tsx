@@ -213,6 +213,9 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
             {/* Top bar */}
             <div className="sticky top-20 z-40 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-lg border-b border-zinc-100 dark:border-white/5 px-4 py-3 flex items-center gap-4">
                 <button onClick={onBack} className="w-9 h-9 rounded-full border border-zinc-200 dark:border-zinc-700 flex items-center justify-center hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors text-sm text-zinc-600 dark:text-zinc-300">←</button>
+                <button onClick={() => router.push('/itinerary?new=true')} className="w-9 h-9 rounded-full border border-emerald-500/30 flex items-center justify-center hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-colors text-emerald-600 dark:text-emerald-400" title="Create New Itinerary">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"/></svg>
+                </button>
                 <div className="flex-1">
                     <h1 className="font-bold text-zinc-900 dark:text-white text-sm">{destName} — Day-by-Day Itinerary</h1>
                     <p className="text-xs text-zinc-400 hidden sm:block">Full plan with crowd & weather alerts</p>
@@ -354,7 +357,13 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                                     <div className="w-full h-2 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden flex">
                                         <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min(100, (plan.activities.length * 20))}%` }} transition={{ duration: 1 }} className={`h-full ${plan.activities.length > 4 ? 'bg-amber-400' : 'bg-emerald-500'}`} />
                                     </div>
-                                    <div className="text-[10px] text-zinc-400 mt-2 text-right">{plan.activities.length} activities planned</div>
+                                    {data.estimatedTravelCost ? (
+                                        <div className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 mt-2 line-clamp-1" title={data.estimatedTravelCost}>
+                                            ✈️ {data.estimatedTravelCost}
+                                        </div>
+                                    ) : (
+                                        <div className="text-[10px] text-zinc-400 mt-2 text-right">{plan.activities.length} activities planned</div>
+                                    )}
                                 </div>
 
                                 {/* Crowd Context */}
@@ -394,6 +403,37 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                                     </div>
                                 )}
                             </div>
+
+                            {/* Top Stays */}
+                            {data.hotels && data.hotels.length > 0 && (
+                                <div className="mb-8">
+                                    <h3 className="text-xs font-bold text-zinc-900 dark:text-white uppercase tracking-widest mb-3 flex items-center gap-2">
+                                        <span>🏨</span> Top Stays For Your Budget
+                                    </h3>
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                                        {data.hotels.slice(0, 3).map((hotel: any, i: number) => (
+                                            <div key={i} className="group relative bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-100 dark:border-zinc-800 overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all flex flex-col">
+                                                <div className="h-28 bg-cover bg-center shrink-0" style={{ backgroundImage: `url(${resolveImgSrc(hotel.img, 400)})` }} />
+                                                <div className="p-3 flex-1 flex flex-col">
+                                                    <div className="font-bold text-sm text-zinc-900 dark:text-white line-clamp-1 mb-0.5">{hotel.name}</div>
+                                                    <div className="text-[11px] text-zinc-500 line-clamp-2 mb-3 flex-1">{hotel.desc}</div>
+                                                    <div className="flex items-center justify-between mt-auto">
+                                                        <div>
+                                                            <div className="text-[10px] font-bold text-amber-500">★ {hotel.rating}</div>
+                                                            <div className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">{hotel.priceRange}</div>
+                                                        </div>
+                                                        {hotel.bookingLink && (
+                                                            <a href={hotel.bookingLink} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-bold rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-500/20 transition-colors">
+                                                                Book
+                                                            </a>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
 
                             {/* Alerts Row */}
                             {(isRaining || isExhausting || plan.activities.length > 5) && (

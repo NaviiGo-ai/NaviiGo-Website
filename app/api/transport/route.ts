@@ -54,12 +54,13 @@ export async function GET(req: NextRequest) {
             const gmData = await gmRes.json();
             const gmRow = gmData.rows?.[0]?.elements?.[0];
             if (gmRow?.status === 'OK') {
+                const gmDurationMin = Math.ceil((gmRow.duration?.value ?? (driveMinutes * 60)) / 60);
                 return NextResponse.json({
-                    distance: gmRow.distance.text,
+                    distance: gmRow.distance?.text || `${distKm.toFixed(1)} km`,
                     options: [
                         { mode: 'Walking', emoji: '🚶', duration: `${walkMinutes} min`, cost: '₹0', tip: 'Healthy & free' },
-                        { mode: 'Auto Rickshaw', emoji: '🛺', duration: `${Math.ceil(gmRow.duration.value / 60)} min`, cost: `₹${autoCost}–${autoCost + 20}`, tip: 'Negotiate before boarding' },
-                        { mode: 'Cab / Ola', emoji: '🚗', duration: `${Math.ceil(gmRow.duration.value / 60)} min`, cost: `₹${cabCost}–${cabCost + 40}`, tip: 'Book via Ola/Rapido app' },
+                        { mode: 'Auto Rickshaw', emoji: '🛺', duration: `${gmDurationMin} min`, cost: `₹${autoCost}–${autoCost + 20}`, tip: 'Negotiate before boarding' },
+                        { mode: 'Cab / Ola', emoji: '🚗', duration: `${gmDurationMin} min`, cost: `₹${cabCost}–${cabCost + 40}`, tip: 'Book via Ola/Rapido app' },
                     ],
                 });
             }

@@ -1,6 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import { checkRateLimit, getClientIP } from '@/lib/rateLimit';
+
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const GEMINI_MODEL = 'gemini-2.5-flash';
 
 export async function POST(req: NextRequest) {
+    // Rate limit: 10 requests per minute per IP
+    const ip = getClientIP(req);
+    const { allowed, retryAfter } = checkRateLimit(ip, 10, 60 * 1000);
+    if (!allowed) {
+        return NextResponse.json(
+            { error: 'Too many requests. Please wait before sending another message.' },
+            { status: 429, headers: { 'Retry-After': retryAfter.toString() } }
+        );
+    }
+
     try {
         const body = await req.json();
         const baseUrl = process.env.NEXT_PUBLIC_PYTHON_API_URL || 'http://localhost:8000';

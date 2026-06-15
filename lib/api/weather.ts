@@ -21,8 +21,10 @@ export async function fetchExactWeather(lat: number, lng: number): Promise<Recor
         const minTemps = data.daily.temperature_2m_min;
         
         // Calculate average min and max for the upcoming week
-        const avgMax = Math.round(maxTemps.reduce((a: number, b: number) => a + b, 0) / maxTemps.length);
-        const avgMin = Math.round(minTemps.reduce((a: number, b: number) => a + b, 0) / minTemps.length);
+        const maxLen = maxTemps.length || 1;
+        const minLen = minTemps.length || 1;
+        const avgMax = Math.round(maxTemps.reduce((a: number, b: number) => a + b, 0) / maxLen);
+        const avgMin = Math.round(minTemps.reduce((a: number, b: number) => a + b, 0) / minLen);
         
         // The API asks for "Jan": "range", etc. 
         // We will return this exact live temperature for the current month.

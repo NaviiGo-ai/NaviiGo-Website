@@ -2,6 +2,7 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     // ── User Data: only the user can read/write their own data ──
+    // SECURITY: Each user can only access their own document. Sub-collections inherit this rule.
     match /users/{userId} {
       allow read, write: if request.auth != null && request.auth.uid == userId;
 
@@ -12,12 +13,15 @@ service cloud.firestore {
     }
 
     // ── Shared Itineraries: public read, auth write ─────────────
+    // DESIGN: Shared itineraries are publicly readable (anyone can view shared links).
+    // CREATE requires auth to prevent spam. UPDATE/DELETE require ownership verification.
+    // IMPORTANT: ownerUid field MUST be set on all create/update operations.
     match /itineraries/{shareId} {
-      allow read: if true;
-      allow create: if request.auth != null;
-      allow update: if request.auth != null;
+      allow read: if true; // Shared itineraries are intended to be public
+      allow create: if request.auth != null; // Require auth to prevent spam
+      allow update: if request.auth != null && resource.data.ownerUid == request.auth.uid; // Only owner can modify
       allow delete: if request.auth != null
-        && resource.data.ownerUid == request.auth.uid;
+        && resource.data.ownerUid == request.auth.uid; // Only owner can delete
     }
   }
 }

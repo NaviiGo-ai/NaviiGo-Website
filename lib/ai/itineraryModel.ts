@@ -94,6 +94,7 @@ export interface GeneratedItinerary {
         lat: number;
         lng: number;
     };
+    estimatedTravelCost?: string;
 }
 
 // ─── User Context ─────────────────────────────────────────────────────────────
@@ -107,6 +108,7 @@ export interface UserContext {
     budget: number;
     startDate: string;
     travelerType?: string; // backpacker | comfort | luxury | family | flash | slow
+    originCity?: string;
     taste_vector?: number[]; // Vector embedding of user's semantic taste profile
 
     preferences?: {
@@ -171,32 +173,32 @@ const TRAVELER_PACE: Record<string, {
     paceLabel: string;
 }> = {
     backpacker: {
-        maxActiveHours: 10, wakeHour: 6.5, lunchBreakMins: 60, afternoonRestMins: 30,
+        maxActiveHours: 16, wakeHour: 6.5, lunchBreakMins: 60, afternoonRestMins: 30,
         activitiesPerSlot: [3, 3, 2], templeEarlyMorning: true, nightlifeOk: true,
         paceLabel: 'High energy — early starts, max experiences',
     },
     comfort: {
-        maxActiveHours: 8, wakeHour: 8, lunchBreakMins: 90, afternoonRestMins: 60,
+        maxActiveHours: 14, wakeHour: 8, lunchBreakMins: 90, afternoonRestMins: 60,
         activitiesPerSlot: [3, 2, 2], templeEarlyMorning: false, nightlifeOk: false,
         paceLabel: 'Balanced — see key highlights without exhaustion',
     },
     luxury: {
-        maxActiveHours: 6, wakeHour: 9, lunchBreakMins: 120, afternoonRestMins: 90,
+        maxActiveHours: 13, wakeHour: 9, lunchBreakMins: 120, afternoonRestMins: 90,
         activitiesPerSlot: [2, 2, 1], templeEarlyMorning: false, nightlifeOk: true,
         paceLabel: 'Relaxed — premium experiences, no rush',
     },
     family: {
-        maxActiveHours: 7, wakeHour: 8.5, lunchBreakMins: 120, afternoonRestMins: 90,
+        maxActiveHours: 13, wakeHour: 8.5, lunchBreakMins: 120, afternoonRestMins: 90,
         activitiesPerSlot: [2, 2, 1], templeEarlyMorning: false, nightlifeOk: false,
         paceLabel: 'Family-friendly pace — extended rest time for kids & elders',
     },
     flash: {
-        maxActiveHours: 11, wakeHour: 6, lunchBreakMins: 45, afternoonRestMins: 0,
+        maxActiveHours: 16, wakeHour: 6, lunchBreakMins: 45, afternoonRestMins: 0,
         activitiesPerSlot: [4, 3, 2], templeEarlyMorning: true, nightlifeOk: true,
         paceLabel: 'Flash itinerary — squeeze in everything possible',
     },
     slow: {
-        maxActiveHours: 5, wakeHour: 9.5, lunchBreakMins: 120, afternoonRestMins: 120,
+        maxActiveHours: 11, wakeHour: 9.5, lunchBreakMins: 120, afternoonRestMins: 120,
         activitiesPerSlot: [2, 1, 1], templeEarlyMorning: false, nightlifeOk: false,
         paceLabel: 'Slow travel — immerse, don\'t rush',
     },
@@ -507,7 +509,9 @@ export async function generateItinerary(ctx: UserContext, externalData?: DestInf
     const tempForMonth = destData.weather?.[startMonth] || '20–30°C';
 
     // ── Build Day Plans with Indian Timing & Traveler Pace ─────────────────────
-    const pace = TRAVELER_PACE[ctx.travelerType || 'comfort'];
+    const pace = TRAVELER_PACE[ctx.travelerType || 'comfort'] || TRAVELER_PACE['comfort'];
+    // Ensure safe default pace bounds to prevent crashes
+    pace.maxActiveHours = Math.max(1, pace.maxActiveHours);
     const dayPlans: GeneratedDayPlan[] = [];
     const usedAttractions = new Set<string>();
     const usedRestaurants = new Set<string>();
@@ -522,7 +526,7 @@ export async function generateItinerary(ctx: UserContext, externalData?: DestInf
 
         // Clock cursor — tracks current time as fractional hours
         let clock = isFirstDay && isArrivalDayLight ? 13.0 : pace.wakeHour + 0.5; // hotel checkout buffer
-        const dayEndHour = 21.0; // Hard stop at 9 PM (Indian travel norm)
+        const dayEndHour = 22.5; // Hard stop at 10:30 PM (Indian dinners run late)
         const maxEnd = pace.wakeHour + 0.5 + pace.maxActiveHours;
         const hardStop = Math.min(dayEndHour, maxEnd);
 
@@ -549,6 +553,36 @@ export async function generateItinerary(ctx: UserContext, externalData?: DestInf
             return { overhead, label: estimateTravelTime(distM) };
         };
 
+        const topHotel = scoredHotels[0];
+
+        // ── Hotel Check-in (First Day) ─────────────────────────────────────────
+        if (isFirstDay && topHotel) {
+            pushActivity({
+                name: `Check-in at ${topHotel.name}`,
+                desc: `Arrive and settle into your accommodation. ${topHotel.desc}`,
+                crowd: 'Low',
+                crowdTip: 'Standard check-in is usually 2:00 PM. If you arrive early, leave your bags at reception and start exploring.',
+                lat: topHotel.lat,
+                lng: topHotel.lng,
+                type: 'hotel',
+                durationMins: 45,
+            }, 0.75);
+        }
+
+        // ── Hotel Check-out (Last Day) ─────────────────────────────────────────
+        if (isLastDay && topHotel) {
+            pushActivity({
+                name: `Check-out from ${topHotel.name}`,
+                desc: `Pack your bags and check out. You can leave your luggage at the reception if you have more exploring to do today.`,
+                crowd: 'Low',
+                crowdTip: 'Clear your bills early to avoid the standard 11 AM rush.',
+                lat: topHotel.lat,
+                lng: topHotel.lng,
+                type: 'hotel',
+                durationMins: 30,
+            }, 0.5);
+        }
+
         // ── Morning: temple / attraction visits ──────────────────────────────
         const morningSlots = isFirstDay && isArrivalDayLight ? 0 : pace.activitiesPerSlot[0];
 
@@ -558,21 +592,23 @@ export async function generateItinerary(ctx: UserContext, externalData?: DestInf
                 !usedAttractions.has(a.name) && a.tags.some(t => ['Temple', 'Spiritual', 'Aarti'].includes(t))
             );
             if (templeAttr && clock < 8) {
-                const { overhead, label } = travelBetween(templeAttr.lat || prevLat, templeAttr.lng || prevLng);
-                clock += overhead;
-                pushActivity({
+                const { overhead, label } = travelBetween(templeAttr.lat ?? prevLat, templeAttr.lng ?? prevLng);
+                const pushed = pushActivity({
                     name: templeAttr.name,
                     desc: templeAttr.desc,
                     crowd: 'Low',
                     crowdTip: 'Survey tip: 94% of temple-goers say pre-7AM is magical — no queues, conch shells echoing',
                     travelFromPrev: label,
-                    lat: templeAttr.lat || destData.mapCenter.lat,
-                    lng: templeAttr.lng || destData.mapCenter.lng,
+                    lat: templeAttr.lat ?? destData.mapCenter.lat,
+                    lng: templeAttr.lng ?? destData.mapCenter.lng,
                     type: 'attraction',
                     durationMins: 75,
                     bookingLink: templeAttr.bookingLink,
                 }, 1.25);
-                usedAttractions.add(templeAttr.name);
+                if (pushed) {
+                    clock += overhead;
+                    usedAttractions.add(templeAttr.name);
+                }
             }
         }
 
@@ -589,36 +625,37 @@ export async function generateItinerary(ctx: UserContext, externalData?: DestInf
             if (usedAttractions.has(attr.name)) continue;
             if (clock >= 15.5) break;
 
-            const { overhead, label } = travelBetween(attr.lat || prevLat, attr.lng || prevLng);
+            const { overhead, label } = travelBetween(attr.lat ?? prevLat, attr.lng ?? prevLng);
             const attrDurationHours = Math.min(2.5, parseDurationHours(attr.duration));
 
             if (clock + overhead + attrDurationHours > 16.0) break; // don't bleed into late lunch
 
-            clock += overhead;
             const pushed = pushActivity({
                 name: attr.name,
                 desc: attr.desc,
                 crowd: attr.walking === 'Easy' ? 'Low' : 'Medium',
                 crowdTip: getSurveyTip(attr.tags),
                 travelFromPrev: label,
-                lat: attr.lat || destData.mapCenter.lat,
-                lng: attr.lng || destData.mapCenter.lng,
+                lat: attr.lat ?? destData.mapCenter.lat,
+                lng: attr.lng ?? destData.mapCenter.lng,
                 type: 'attraction',
                 durationMins: parseDurationHours(attr.duration) * 60,
                 bookingLink: attr.bookingLink,
             }, attrDurationHours);
 
-            if (pushed) { usedAttractions.add(attr.name); morningCount++; }
+            if (pushed) { 
+                clock += overhead;
+                usedAttractions.add(attr.name); 
+                morningCount++; 
+            }
         }
 
         // ── Lunch (flexible, shifted later to allow more morning places) ───────────
         clock = Math.max(clock, 13.5); // lunch at 1:30 PM minimum, often pushes to 3:00 PM
-        const lunchRestaurant = scoredRestaurants.find(r => !usedRestaurants.has(r.name));
+        const lunchRestaurant = scoredRestaurants.find(r => !usedRestaurants.has(r.name)) || scoredRestaurants[0];
         if (lunchRestaurant) {
-            usedRestaurants.add(lunchRestaurant.name);
             const { overhead, label } = travelBetween(lunchRestaurant.lat, lunchRestaurant.lng);
-            clock += overhead;
-            pushActivity({
+            const pushed = pushActivity({
                 name: `Lunch at ${lunchRestaurant.name}`,
                 desc: `${lunchRestaurant.desc} Must-try: ${lunchRestaurant.mustTry}. ${lunchRestaurant.priceRange} per person.`,
                 crowd: 'Medium',
@@ -630,6 +667,10 @@ export async function generateItinerary(ctx: UserContext, externalData?: DestInf
                 durationMins: pace.lunchBreakMins,
                 bookingLink: lunchRestaurant.bookingLink,
             }, pace.lunchBreakMins / 60);
+            if (pushed) {
+                clock += overhead;
+                usedRestaurants.add(lunchRestaurant.name);
+            }
         }
 
         // ── Indian afternoon rest / chai break ──────────────────────────────
@@ -644,26 +685,29 @@ export async function generateItinerary(ctx: UserContext, externalData?: DestInf
             if (usedAttractions.has(attr.name)) continue;
             if (clock >= 19.5) break;
 
-            const { overhead, label } = travelBetween(attr.lat || prevLat, attr.lng || prevLng);
+            const { overhead, label } = travelBetween(attr.lat ?? prevLat, attr.lng ?? prevLng);
             const attrDurationHours = Math.min(2.5, parseDurationHours(attr.duration));
 
             if (clock + overhead + attrDurationHours > 20.5) break;
 
-            clock += overhead;
             const pushed = pushActivity({
                 name: attr.name,
                 desc: attr.desc,
                 crowd: 'Medium',
                 crowdTip: getSurveyTip(attr.tags),
                 travelFromPrev: label,
-                lat: attr.lat || destData.mapCenter.lat,
-                lng: attr.lng || destData.mapCenter.lng,
+                lat: attr.lat ?? destData.mapCenter.lat,
+                lng: attr.lng ?? destData.mapCenter.lng,
                 type: 'attraction',
                 durationMins: parseDurationHours(attr.duration) * 60,
                 bookingLink: attr.bookingLink,
             }, attrDurationHours);
 
-            if (pushed) { usedAttractions.add(attr.name); afternoonCount++; }
+            if (pushed) { 
+                clock += overhead;
+                usedAttractions.add(attr.name); 
+                afternoonCount++; 
+            }
         }
 
         // ── Evening: sunset / aarti / market ───────────────────────────────
@@ -674,26 +718,29 @@ export async function generateItinerary(ctx: UserContext, externalData?: DestInf
             if (usedAttractions.has(attr.name)) continue;
             if (clock >= 20.0) break;
 
-            const { overhead, label } = travelBetween(attr.lat || prevLat, attr.lng || prevLng);
+            const { overhead, label } = travelBetween(attr.lat ?? prevLat, attr.lng ?? prevLng);
             const attrDurationHours = (parseDurationHours(attr.duration));
 
             if (clock + overhead + attrDurationHours > 20.5) break;
 
-            clock += overhead;
             const pushed = pushActivity({
                 name: attr.name,
                 desc: attr.desc,
                 crowd: 'Medium',
                 crowdTip: '🌅 Golden hour — best light for photos and the most magical atmosphere',
                 travelFromPrev: label,
-                lat: attr.lat || destData.mapCenter.lat,
-                lng: attr.lng || destData.mapCenter.lng,
+                lat: attr.lat ?? destData.mapCenter.lat,
+                lng: attr.lng ?? destData.mapCenter.lng,
                 type: 'attraction',
                 durationMins: parseDurationHours(attr.duration) * 60,
                 bookingLink: attr.bookingLink,
             }, attrDurationHours);
 
-            if (pushed) { usedAttractions.add(attr.name); eveningCount++; }
+            if (pushed) { 
+                clock += overhead;
+                usedAttractions.add(attr.name); 
+                eveningCount++; 
+            }
         }
 
         // ── Dinner ─────────────────────────────────────────────────────────
@@ -702,9 +749,8 @@ export async function generateItinerary(ctx: UserContext, externalData?: DestInf
             const dinnerRestaurant = scoredRestaurants.find(r => !usedRestaurants.has(r.name)) || scoredRestaurants[0];
             if (dinnerRestaurant) {
                 const { overhead, label } = travelBetween(dinnerRestaurant.lat, dinnerRestaurant.lng);
-                clock += overhead;
                 const isLastMeal = isLastDay;
-                pushActivity({
+                const pushed = pushActivity({
                     name: `Dinner at ${dinnerRestaurant.name}`,
                     desc: isLastMeal
                         ? `End your trip on a delicious note! ${dinnerRestaurant.desc} Try the ${dinnerRestaurant.mustTry}.`
@@ -718,7 +764,10 @@ export async function generateItinerary(ctx: UserContext, externalData?: DestInf
                     durationMins: 75,
                     bookingLink: dinnerRestaurant.bookingLink,
                 }, 1.25);
-                if (!usedRestaurants.has(dinnerRestaurant.name)) usedRestaurants.add(dinnerRestaurant.name);
+                if (pushed) {
+                    clock += overhead;
+                    if (!usedRestaurants.has(dinnerRestaurant.name)) usedRestaurants.add(dinnerRestaurant.name);
+                }
             }
         }
 

@@ -77,9 +77,11 @@ const spotCards: SpotCard[] = [
 
 export default function HeroSlider() {
   const [activeSlide, setActiveSlide] = useState(0);
+  const [mounted, setMounted] = useState(false);
   const currentSlide = slides[activeSlide] ?? slides[0] ?? fallbackSlide;
 
   useEffect(() => {
+    setMounted(true);
     const ticker = window.setInterval(() => {
       setActiveSlide((current) => (current + 1) % slides.length);
     }, 5200);
@@ -105,9 +107,42 @@ export default function HeroSlider() {
     setActiveSlide((current) => (current + 1) % slides.length);
   };
 
+  if (!mounted) {
+    return (
+      <section className="relative min-h-dvh overflow-hidden text-white bg-slate-950">
+        <div className="absolute inset-0">
+          <Image
+            src={slides[0].background}
+            alt={`${slides[0].name} landscape`}
+            fill
+            priority
+            className="object-cover"
+          />
+        </div>
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/50 to-slate-950/20 backdrop-blur-[2px]" />
+        <div className="relative z-10 mx-auto flex min-h-dvh w-full max-w-[1500px] items-center px-6 py-10 lg:px-10">
+          <div className="max-w-2xl">
+            <h1 className="text-6xl font-extrabold tracking-tight sm:text-7xl lg:text-8xl leading-none drop-shadow-2xl">
+              {slides[0].name}
+            </h1>
+            <p className="mt-6 max-w-lg text-sm leading-relaxed text-white/60 sm:text-base font-light">
+              {slides[0].blurb}
+            </p>
+            <Link
+              href="/explore?q=Varanasi"
+              className="mt-10 inline-flex items-center gap-4 rounded-xl bg-blue-600/90 px-10 py-4 text-sm font-bold text-white shadow-xl"
+            >
+              Explore <span className="text-xl">→</span>
+            </Link>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="relative min-h-dvh overflow-hidden text-white">
-      <AnimatePresence mode="sync">
+      <AnimatePresence>
         <motion.div
           key={currentSlide.name}
           className="absolute inset-0"

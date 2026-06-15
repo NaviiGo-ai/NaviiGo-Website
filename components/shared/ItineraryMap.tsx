@@ -38,6 +38,12 @@ export default function ItineraryMap({
     const polylineRef = useRef<any>(null);
     const userMarkerRef = useRef<any>(null);
     const [leafletLoaded, setLeafletLoaded] = useState(false);
+    
+    // Store latest onRouteCalculated to prevent stale closures without triggering re-renders
+    const onRouteCalculatedRef = useRef(onRouteCalculated);
+    useEffect(() => {
+        onRouteCalculatedRef.current = onRouteCalculated;
+    }, [onRouteCalculated]);
 
     // Load Leaflet CSS + JS from CDN
     useEffect(() => {
@@ -197,8 +203,8 @@ export default function ItineraryMap({
                 for(let i = 0; i < latlngs.length - 1; i++) {
                     totalDist += latlngs[i].distanceTo(latlngs[i+1]);
                 }
-                if (typeof onRouteCalculated === 'function') {
-                    onRouteCalculated([{
+                if (typeof onRouteCalculatedRef.current === 'function') {
+                    onRouteCalculatedRef.current([{
                         distance: totalDist > 1000 ? (totalDist / 1000).toFixed(1) + ' km (est)' : Math.round(totalDist) + ' m (est)',
                         time: 'Off-road'
                     }]);
@@ -208,11 +214,11 @@ export default function ItineraryMap({
             polylineRef.current.on('routesfound', function (e: any) {
                 const routes = e.routes;
                 if (routes && routes.length > 0) {
-                    if (typeof onRouteCalculated === 'function') {
+                    if (typeof onRouteCalculatedRef.current === 'function') {
                         const summary = routes[0].summary;
                         const t = summary.totalTime;
                         const d = summary.totalDistance;
-                        onRouteCalculated([{
+                        onRouteCalculatedRef.current([{
                             distance: d > 1000 ? (d / 1000).toFixed(1) + ' km' : Math.round(d) + ' m',
                             time: t > 3600 ? Math.floor(t / 3600) + ' hr ' + Math.round((t % 3600) / 60) + ' min' : Math.round(t / 60) + ' min'
                         }]);

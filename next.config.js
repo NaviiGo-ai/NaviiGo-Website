@@ -40,6 +40,14 @@ const nextConfig = {
           { key: 'X-XSS-Protection', value: '1; mode=block' },
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
           { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=(self)' },
+          {
+            key: 'Content-Security-Policy',
+            value: "script-src 'self' *.googleapis.com cdn.sentry.io; connect-src 'self' *.googleapis.com firebaseio.com firestore.googleapis.com api.pinecone.io *.open-meteo.com cdn.sentry.io; img-src 'self' data: https:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
+          },
+          {
+            key: 'Strict-Transport-Security',
+            value: 'max-age=63072000; includeSubDomains; preload',
+          },
         ],
       },
     ];

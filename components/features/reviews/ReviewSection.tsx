@@ -66,14 +66,18 @@ export default function ReviewSection({ destId, destName }: ReviewSectionProps) 
     // Load reviews from Firestore
     useEffect(() => {
         if (!destId) return;
+        let isMounted = true;
+        
         getReviews(destId).then(fsReviews => {
-            if (fsReviews.length > 0) {
+            if (isMounted && fsReviews.length > 0) {
                 setReviews(fsReviews);
             }
         });
         getAverageRating(destId).then(r => {
-            if (r.count > 0) setAvgRating(r);
+            if (isMounted && r.count > 0) setAvgRating(r);
         });
+
+        return () => { isMounted = false; };
     }, [destId]);
 
     // Sort reviews

@@ -7,12 +7,27 @@ import {
     lookupIATACode,
 } from '@/lib/api/amadeus';
 import type { FlightPassenger } from '@/lib/api/amadeus';
+import { checkRateLimit, getClientIP } from '@/lib/rateLimit';
 
 // POST /api/booking/flights — search, price, or book flights via Amadeus
 export async function POST(req: NextRequest) {
+    // Rate limit: 10 search requests per minute, 1 booking per 10 minutes
+    const ip = getClientIP(req);
+    const body = await req.json();
+    const { action } = body;
+    
+    const limit = action === 'book' ? 1 : 10; // Stricter limit for bookings
+    const window = action === 'book' ? 10 * 60 * 1000 : 60 * 1000;
+    const { allowed, retryAfter } = checkRateLimit(`${ip}:${action}`, limit, window);
+    
+    if (!allowed) {
+        return NextResponse.json(
+            { success: false, error: 'Too many requests. Please wait before trying again.' },
+            { status: 429, headers: { 'Retry-After': retryAfter.toString() } }
+        );
+    }
+
     try {
-        const body = await req.json();
-        const { action } = body;
 
         // ── SEARCH ────────────────────────────────────────────────────
         if (action === 'search') {
@@ -92,14 +107,15 @@ export async function POST(req: NextRequest) {
         if (action === 'book') {
             const { pricedOffer, passengers, contactEmail, contactPhone } = body;
 
-            if (!pricedOffer || !passengers?.length) {
+            if (!pricedOffer || !passengers?.length || !contactEmail || !contactPhone) {
                 return NextResponse.json(
-                    { success: false, error: 'Missing pricedOffer or passengers' },
+                    { success: false, error: 'Missing required booking details (offer, passengers, email, phone)' },
                     { status: 400 }
                 );
             }
 
             // Format passengers for Amadeus
+            const safePhone = typeof contactPhone === 'string' ? contactPhone.replace(/\D/g, '').slice(-10) : '0000000000';
             const travelers: FlightPassenger[] = passengers.map((p: any, i: number) => ({
                 id: (i + 1).toString(),
                 dateOfBirth: p.dateOfBirth || '1990-01-01',
@@ -110,7 +126,7 @@ export async function POST(req: NextRequest) {
                     phones: [{
                         deviceType: 'MOBILE' as const,
                         countryCallingCode: '91',
-                        number: contactPhone.replace(/\D/g, '').slice(-10),
+                        number: safePhone || '0000000000',
                     }],
                 },
             }));

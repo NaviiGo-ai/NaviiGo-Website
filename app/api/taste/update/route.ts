@@ -20,6 +20,12 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ success: true, newVector: selectionVector });
         }
 
+        // Validate dimension parity to prevent vector corruption (NaNs)
+        if (currentVector.length !== selectionVector.length) {
+            console.warn(`[taste/update] Vector dimension mismatch. Current: ${currentVector.length}, New: ${selectionVector.length}. Overwriting with new vector.`);
+            return NextResponse.json({ success: true, newVector: selectionVector });
+        }
+
         // Shift the user's current vector towards the new selection (Exponential Moving Average)
         // 80% old taste, 20% new taste
         const alpha = 0.2;
