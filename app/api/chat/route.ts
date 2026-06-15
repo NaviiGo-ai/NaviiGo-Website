@@ -1,73 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { GoogleGenerativeAI } from '@google/generative-ai';
-
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const GEMINI_MODEL = 'gemini-2.5-flash';
 
 export async function POST(req: NextRequest) {
     try {
-        const { message, context, currentPlans, itineraryContext } = await req.json();
+        const body = await req.json();
+        const baseUrl = process.env.NEXT_PUBLIC_PYTHON_API_URL || 'http://localhost:8000';
+        
+        console.log(`[Proxy] Forwarding chat request to Python backend`);
+        
+        const pythonResponse = await fetch(`${baseUrl}/api/chat/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+        });
 
-        if (!GEMINI_API_KEY || GEMINI_API_KEY === 'your_gemini_api_key_here') {
-            return NextResponse.json({
-                reply: "AI Chat is in demo mode. Add your GEMINI_API_KEY to .env.local to enable real AI responses.",
-                action: null,
-            });
+        const data = await pythonResponse.json();
+
+        if (!pythonResponse.ok) {
+            return NextResponse.json({ success: false, error: data.detail || 'Python backend failed' }, { status: pythonResponse.status });
         }
 
-        const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
-        const model = genAI.getGenerativeModel({ model: GEMINI_MODEL });
-
-        // Use itineraryContext (from AIContext) or currentPlans (legacy) — whichever is available
-        const itineraryData = itineraryContext || currentPlans;
-
-        const systemContext = `You are NaviiGo's AI travel assistant. You help users edit their travel itinerary with personality and flair.
-Current itinerary:
-- Destination: ${itineraryData?.destName || 'Unknown'}
-- Day plans: ${JSON.stringify(itineraryData?.dayPlans || [], null, 2)}
-- Highlights: ${JSON.stringify((itineraryData?.highlights || []).map((h: any) => h.name), null, 2)}
-- Restaurants: ${JSON.stringify((itineraryData?.restaurants || []).map((r: any) => r.name), null, 2)}
-
-Conversation: ${JSON.stringify(context || [], null, 2)}
-
-You can either:
-1. Just reply with a helpful message (action: null)
-2. Reply AND suggest an itinerary change (return action with type + payload)
-
-Supported action types:
-- "removeActivity": { dayIndex: number, activityIndex: number }
-- "addActivity": { dayIndex: number, activity: { name, desc, time, slot, crowd, crowdTip, lat, lng, type } }
-- "reorderDay": { dayIndex: number, fromIndex: number, toIndex: number }
-- "replaceActivity": { dayIndex: number, activityIndex: number, activity: { name, desc, time, slot, crowd, crowdTip, lat, lng, type } }
-- "addDay": { day: { day: number, title: string, activities: [...] } }
-- "changeHotel": { hotelIndex: number, newHotel: { name, desc, type, priceRange, rating, amenities } }
-- "swapRestaurant": { dayIndex: number, activityIndex: number, newRestaurant: { name, desc, cuisine, mustTry } }
-- "surpriseActivity": { dayIndex: number } - replace a random activity with something offbeat/hidden gem
-
-Be warm, fun and helpful. When editing, explain WHY the change is better.
-Respond with ONLY valid JSON:
-{
-  "reply": "Natural conversational reply",
-  "action": null | { "type": "...", "payload": {...} }
-}`;
-
-        const result = await model.generateContent(systemContext + '\n\nUser: ' + message);
-        const text = result.response.text();
-
-        // Parse JSON from Gemini response
-        const jsonMatch = text.match(/\{[\s\S]*\}/);
-        if (!jsonMatch) {
-            return NextResponse.json({ reply: text, action: null });
-        }
-
-        const parsed = JSON.parse(jsonMatch[0]);
-        return NextResponse.json(parsed);
-
-    } catch (err: unknown) {
-        console.error('[AI Chat Error]', err);
-        return NextResponse.json(
-            { reply: "I'm having trouble right now. Please try again in a moment.", action: null },
-            { status: 200 }
-        );
+        return NextResponse.json(data);
+    } catch (error: any) {
+        console.error('[Proxy] Chat Error:', error);
+        return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 });
     }
 }

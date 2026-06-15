@@ -116,29 +116,39 @@ export function handleImageError(
 
 // ─── Universal Image Source Resolver ──────────────────────────────────────────
 // Handles full URLs, local paths, and legacy Unsplash IDs.
-// Use this everywhere: resolveImgSrc(item.img, 800)
+// Use this everywhere: resolveImgSrc(item.img, 800, item.name, item.cuisine)
 
-export function resolveImgSrc(src: string, width: number = 800): string {
-    if (!src) return '/destinations/delhi.png';
-    // Already a full URL — use it
+export function resolveImgSrc(src: string, width: number = 800, name?: string, _category?: string): string {
+    if (!src || src === 'placeholder') {
+        return '/destinations/delhi.png';
+    }
+    // Already a full URL — use it directly
     if (src.startsWith('http://') || src.startsWith('https://')) return src;
     // Local path (e.g. /destinations/jaipur.png)
     if (src.startsWith('/')) return src;
-    // "placeholder" from Gemini — use generic fallback
-    if (src === 'placeholder') return '/destinations/delhi.png';
-    // Check if it's a known Unsplash ID we can map to local
-    if (UNSPLASH_TO_LOCAL[src]) return UNSPLASH_TO_LOCAL[src];
     // If it looks like just a filename, try destinations folder
     if (!src.includes('/') && (src.endsWith('.png') || src.endsWith('.jpg') || src.endsWith('.jpeg') || src.endsWith('.webp'))) {
         return `/destinations/${src}`;
     }
-    // Legacy Unsplash ID format — use local fallback for reliability
+    // Legacy Unsplash ID format (e.g. '1567521464027-f127ff144326')
+    // When name is provided (restaurant/hotel cards), use the Unsplash CDN for unique images per ID
+    // When no name (destination hero), use the local mapping for reliability
     if (/^\d+-[a-f0-9]+$/.test(src)) {
-        return '/destinations/delhi.png';
+        if (name) {
+            // Use Unsplash CDN — each ID is a unique photo
+            return `https://images.unsplash.com/photo-${src}?auto=format&fit=crop&w=${width}&q=80`;
+        }
+        // For hero/destination backgrounds, use local mapping if available
+        if (UNSPLASH_TO_LOCAL[src]) return UNSPLASH_TO_LOCAL[src];
+        return `https://images.unsplash.com/photo-${src}?auto=format&fit=crop&w=${width}&q=80`;
     }
+    // Check local mapping
+    if (UNSPLASH_TO_LOCAL[src]) return UNSPLASH_TO_LOCAL[src];
     // Final fallback
     return '/destinations/delhi.png';
 }
+
+
 
 // ─── Verified Unsplash IDs for Indian Destinations ────────────────────────────
 // DEPRECATED: Use local images instead. Kept for backward compatibility.

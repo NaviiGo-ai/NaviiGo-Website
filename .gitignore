@@ -10,7 +10,11 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
-*.local
+
+# Environment secrets (keep .env.local.example tracked!)
+.env.local
+.env*.local
+!.env.local.example
 
 # Editor directories and files
 .vscode/*
@@ -25,10 +29,22 @@ dist-ssr
 
 # Next.js build output
 .next
-.next/*
 out
 build
-dist
+
+# Python backend
+backend/venv/
+backend/cache/
+backend/__pycache__/
+backend/**/__pycache__/
+backend/*.pyc
+**/__pycache__/
+*.pyc
+
+# Firebase service account keys (NEVER commit these!)
+*firebase*adminsdk*.json
+*service*account*.json
+*serviceAccountKey*.json
 
 # Temp dev artifacts
 scratch/
@@ -38,3 +54,4 @@ tsconfig.tsbuildinfo
 download_*.js
 fetch_*.js
 patch_*.js
+

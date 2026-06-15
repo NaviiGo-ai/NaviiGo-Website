@@ -22,6 +22,7 @@ interface ResultPageProps {
     form: Record<string, unknown>;
     generatedData?: any;
     shareId?: string | null;
+    isLoaded?: boolean;
     onDayView: () => void;
     onReset: () => void;
 }
@@ -41,7 +42,6 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
     const [editLoading, setEditLoading] = useState(false);
     const [localData, setLocalData] = useState<any>(null);
     const editChatRef = useRef<HTMLDivElement>(null);
-    const autoSaveRef = useRef(false);
 
     const destId = form.destination as string, destName = form.destName as string;
     const purpose = form.purpose as string, group = form.group as string;
@@ -56,28 +56,24 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
     const groupLabel = GROUP_SIZES.find(g => g.id === group)?.label ?? group;
     const weatherForMonth = data.weather?.[displayMonth] ?? data.weather?.['Jan'] ?? '20–30°C';
 
+    // Register itinerary for AI edits — persist changes to Firestore
     useEffect(() => {
         registerItinerary(data, (newData) => {
             setLocalData(newData);
-            if (!autoSaveRef.current) {
-                autoSaveRef.current = true;
-                setTimeout(() => {
-                    if (user?.uid) {
-                        saveItineraryToFirestore(user.uid, { 
-                            destId: (form.destId as string) || 'unknown',
-                            destName: destInfo?.name || 'Unknown',
-                            form, 
-                            generatedData: newData 
-                        }).catch(console.error);
-                    }
-                    if (shareId) {
-                        updateSharedPlans(shareId, newData.dayPlans).catch(console.error);
-                    }
-                    autoSaveRef.current = false;
-                }, 2000);
+            // Save updated itinerary to Firestore so changes persist
+            if (user?.uid) {
+                saveItineraryToFirestore(user.uid, {
+                    destId: (form.destId as string) || destId || 'unknown',
+                    destName: destInfo?.name || destName || 'Unknown',
+                    form,
+                    generatedData: newData,
+                }).catch(console.error);
+            }
+            if (shareId) {
+                updateSharedPlans(shareId, newData.dayPlans).catch(console.error);
             }
         });
-    }, [data, registerItinerary, form, user, shareId]);
+    }, [data, registerItinerary, shareId, user, form, destId, destName, destInfo]);
 
     // Live Sync Listener
     useEffect(() => {
@@ -95,9 +91,11 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
         }
     }, [shareId]);
 
-    // ── Auto-save itinerary to Firestore on generation ─────────
+    // ── Auto-save itinerary to Firestore ─────────────────────────
+    // Uses deterministic doc ID in Firestore so re-saves just update, never duplicate.
+    const autoSaveRef = useRef(false);
     useEffect(() => {
-        if (!user?.uid || autoSaveRef.current || isSaved) return;
+        if (!user?.uid || autoSaveRef.current) return;
         autoSaveRef.current = true;
         saveItineraryToFirestore(user.uid, {
             destId,
@@ -111,11 +109,13 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
             console.error('[Itinerary] Auto-save failed:', err);
             autoSaveRef.current = false;
         });
-    }, [user?.uid, destId, destName, form, generatedData, isSaved]);
+    }, [user?.uid, destId, destName, form, generatedData]);
+
 
     useEffect(() => {
         if (data.mapCenter) {
-            fetch(`/api/places?lat=${data.mapCenter.lat}&lng=${data.mapCenter.lng}&type=tourist_attraction&radius=5000`)
+            const baseUrl = process.env.NEXT_PUBLIC_PYTHON_API_URL || '';
+            fetch(`${baseUrl}/api/places?lat=${data.mapCenter.lat}&lng=${data.mapCenter.lng}&type=tourist_attraction&radius=5000`)
                 .then(r => r.json())
                 .then(d => setHiddenGems(d.places?.slice(0, 4) ?? []))
                 .catch(() => { });
@@ -125,7 +125,8 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
     // Fetch AI insider tips
     useEffect(() => {
         if (!destName) return;
-        fetch('/api/chat', {
+        const baseUrl = process.env.NEXT_PUBLIC_PYTHON_API_URL || '';
+        fetch(`${baseUrl}/api/chat`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -150,7 +151,8 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
     // Fetch AI Packing List
     useEffect(() => {
         if (!destName || !displayMonth) return;
-        fetch('/api/chat', {
+        const baseUrl = process.env.NEXT_PUBLIC_PYTHON_API_URL || '';
+        fetch(`${baseUrl}/api/chat`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -280,8 +282,12 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                                         <span className="text-lg">💾</span> Save to Profile
                                     </button>
                                 ) : (
-                                    <button disabled className="bg-emerald-500/20 text-emerald-300 px-8 py-4 rounded-2xl font-bold text-sm backdrop-blur-md border border-emerald-500/30 flex items-center justify-center gap-2 cursor-default">
-                                        <span className="text-lg">✓</span> {isSaved ? "Saved to Profile" : "Saving..."}
+                                    <button onClick={async () => {
+                                        await saveItineraryToFirestore(user.uid, { destId, destName, form, generatedData: generatedData || null });
+                                        setIsSaved(true);
+                                    }} disabled={isSaved}
+                                        className={`px-8 py-4 rounded-2xl font-bold text-sm backdrop-blur-md border flex items-center justify-center gap-2 transition-all ${isSaved ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30 cursor-default' : 'bg-white/10 hover:bg-white/20 text-white border-white/20 active:scale-95'}`}>
+                                        <span className="text-lg">{isSaved ? '✓' : '💾'}</span> {isSaved ? 'Saved to Profile' : 'Save to Profile'}
                                     </button>
                                 )}
                                 <button onClick={onDayView} className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white transition-all px-8 py-4 rounded-2xl font-bold text-sm shadow-xl shadow-emerald-500/20 flex items-center justify-center gap-2 active:scale-95">
@@ -398,7 +404,7 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                                         onClick={() => router.push(`/itinerary/detail?type=attraction&dest=${destId}&name=${encodeURIComponent(a.name)}`)}
                                         className="bg-white dark:bg-zinc-900 rounded-2xl overflow-hidden border border-zinc-100 dark:border-zinc-800 shadow-sm hover:shadow-md transition-all cursor-pointer hover:-translate-y-1">
                                         <div className="relative h-36">
-                                            <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${resolveImgSrc(a.img, 500)})` }} />
+                                            <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${resolveImgSrc(a.img, 500, a.name, a.tags?.[0])})` }} />
                                             <div className="absolute top-2 left-2 w-7 h-7 rounded-full bg-emerald-500 text-white text-xs font-bold flex items-center justify-center shadow-md">{i + 1}</div>
                                             <div className="absolute bottom-2 left-2 flex gap-1">{a.tags.slice(0, 2).map((t: string) => <span key={t} className="text-[10px] bg-black/50 text-white backdrop-blur px-2 py-0.5 rounded-full font-medium">{t}</span>)}</div>
                                         </div>
@@ -431,7 +437,7 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                                             onClick={() => router.push(`/itinerary/detail?type=restaurant&dest=${destId}&name=${encodeURIComponent(r.name)}`)}
                                             className="bg-white dark:bg-zinc-900 rounded-2xl overflow-hidden border border-zinc-100 dark:border-zinc-800 shadow-sm hover:shadow-md transition-all cursor-pointer hover:-translate-y-1">
                                             <div className="relative h-32">
-                                                <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${resolveImgSrc(r.img, 500)})` }} />
+                                                <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${resolveImgSrc(r.img, 500, r.name, r.cuisine)})` }} />
                                                 <div className="absolute bottom-2 left-2 flex gap-1"><span className="text-[10px] bg-black/60 text-white backdrop-blur px-2 py-0.5 rounded-full font-medium">{r.cuisine}</span></div>
                                             </div>
                                             <div className="p-3">
@@ -458,7 +464,7 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                                             onClick={() => router.push(`/itinerary/detail?type=hotel&dest=${destId}&name=${encodeURIComponent(h.name)}`)}
                                             className="bg-white dark:bg-zinc-900 rounded-2xl overflow-hidden border border-zinc-100 dark:border-zinc-800 shadow-sm hover:shadow-md transition-all cursor-pointer hover:-translate-y-1">
                                             <div className="relative h-32">
-                                                <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${resolveImgSrc(h.img, 500)})` }} />
+                                                <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${resolveImgSrc(h.img, 500, h.name, h.type)})` }} />
                                                 <div className="absolute bottom-2 left-2 flex gap-1"><span className="text-[10px] bg-black/60 text-white backdrop-blur px-2 py-0.5 rounded-full font-medium">{h.type}</span></div>
                                                 <div className="absolute top-2 right-2 text-[10px] font-bold text-white bg-black/50 backdrop-blur px-1.5 py-0.5 rounded">{h.priceRange}</div>
                                             </div>
@@ -548,18 +554,6 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                 </div>
             </div>
 
-            {/* Floating AI Edit Button */}
-            <motion.button
-                initial={{ scale: 0, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ delay: 1.5, type: 'spring' }}
-                onClick={openEditPanel}
-                className="fixed bottom-6 right-6 z-50 bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-500 hover:to-purple-500 text-white rounded-2xl px-5 py-3.5 shadow-2xl shadow-purple-500/30 flex items-center gap-2.5 font-bold text-sm transition-all hover:scale-105 active:scale-95"
-            >
-                <span className="text-lg">✏️</span>
-                <span>Edit with AI</span>
-                <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-            </motion.button>
 
             {/* AI Edit Panel (Slide-in) */}
             <AnimatePresence>

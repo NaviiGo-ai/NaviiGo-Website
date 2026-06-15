@@ -303,7 +303,7 @@ export default function Navbar() {
               <ThemeToggle />
             </div>
 
-            <div className="space-y-3 pt-6 border-t border-gray-200 dark:border-slate-800">
+            <div className="space-y-3 pt-6 border-t border-gray-200 dark:border-slate-800" suppressHydrationWarning>
               {user ? (
                 <div className="flex flex-col space-y-4">
                   <div className="flex items-center gap-3 px-2">
