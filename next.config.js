@@ -57,5 +57,9 @@ module.exports = withSentryConfig(nextConfig, {
   silent: !process.env.CI, // Suppresses all logs
   widenClientFileUpload: true,
   hideSourceMaps: true,
-  disableLogger: true,
+  webpack: {
+    treeshake: {
+      removeDebugLogging: true,
+    },
+  },
 });

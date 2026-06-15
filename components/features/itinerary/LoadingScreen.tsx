@@ -23,7 +23,7 @@ export default function LoadingScreen({ form, onDone }: LoadingScreenProps) {
     const purposeLabel = PURPOSES.find(p => p.id === form.purpose)?.label ?? '';
     const hardcodedData = DEST_DATA[destId] ?? null;
     const mapCenter = hardcodedData?.mapCenter ?? INDIA_CENTER;
-    
+
     // Fallback highlights if we don't have hardcoded data for this destination
     const fallbackHighlights = [
         { lat: INDIA_CENTER.lat + 4, lng: INDIA_CENTER.lng - 2, name: 'Scanning flights...', img: '' },
@@ -31,7 +31,7 @@ export default function LoadingScreen({ form, onDone }: LoadingScreenProps) {
         { lat: INDIA_CENTER.lat + 2, lng: INDIA_CENTER.lng + 5, name: 'Curating activities...', img: '' },
         { lat: INDIA_CENTER.lat - 3, lng: INDIA_CENTER.lng - 4, name: 'Finalizing route...', img: '' }
     ];
-    
+
     const loadingHighlights = hardcodedData?.highlights?.length ? hardcodedData.highlights : fallbackHighlights;
 
     const [currentStep, setCurrentStep] = useState(0);
@@ -42,12 +42,12 @@ export default function LoadingScreen({ form, onDone }: LoadingScreenProps) {
     const [apiDone, setApiDone] = useState(false);
     const fetchedRef = useRef(false);
 
-    const [dynamicCenter, setDynamicCenter] = useState<{lat: number, lng: number} | null>(null);
+    const [dynamicCenter, setDynamicCenter] = useState<{ lat: number, lng: number } | null>(null);
     const [dynamicHighlights, setDynamicHighlights] = useState<any[]>([]);
 
     const activeMapCenter = hardcodedData?.mapCenter ?? dynamicCenter ?? INDIA_CENTER;
     const activeHighlights = hardcodedData?.highlights?.length ? hardcodedData.highlights : (dynamicHighlights.length ? dynamicHighlights : fallbackHighlights);
-    
+
     // Fetch real city center via Nominatim for non-hardcoded destinations
     useEffect(() => {
         if (hardcodedData) return;
@@ -58,7 +58,7 @@ export default function LoadingScreen({ form, onDone }: LoadingScreenProps) {
                     const lat = parseFloat(data[0].lat);
                     const lng = parseFloat(data[0].lon);
                     setDynamicCenter({ lat, lng });
-                    
+
                     // Generate 4 realistic-looking points near the city center to simulate itinerary building
                     setDynamicHighlights([
                         { lat: lat + 0.015, lng: lng - 0.015, name: 'Scanning top attractions...', img: '' },
@@ -81,7 +81,8 @@ export default function LoadingScreen({ form, onDone }: LoadingScreenProps) {
 
         const generate = async () => {
             try {
-                const res = await fetch('/api/itinerary/generate', {
+                const baseUrl = process.env.NEXT_PUBLIC_PYTHON_API_URL || '';
+                const res = await fetch(`${baseUrl}/api/itinerary/generate`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({

@@ -38,7 +38,8 @@ export default function SmartRecommendations({
         setLoading(true);
         setSelected(null);
 
-        fetch('/api/recommendations', {
+        const baseUrl = process.env.NEXT_PUBLIC_PYTHON_API_URL || '';
+        fetch(`${baseUrl}/api/recommendations`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -59,7 +60,8 @@ export default function SmartRecommendations({
     const handleSelect = (id: string, name: string) => { onSelect(id, name); setSelected(id); };
     const handleGo = (id: string, name: string) => {
         // Fire and forget taste vector update
-        fetch('/api/taste/update', {
+        const baseUrl = process.env.NEXT_PUBLIC_PYTHON_API_URL || '';
+        fetch(`${baseUrl}/api/taste/update`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
