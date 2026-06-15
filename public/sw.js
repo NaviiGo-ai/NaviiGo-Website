@@ -1,4 +1,4 @@
-const CACHE_NAME = 'naviigo-v3-offline';
+const CACHE_NAME = 'naviigo-v4-offline';
 const TILE_CACHE = 'naviigo-tiles-v1';
 
 // We explicitly cache critical static roots
@@ -36,6 +36,15 @@ self.addEventListener('fetch', (event) => {
     
     // Skip API routes so they fail gracefully if offline
     if (url.pathname.startsWith('/api/')) return;
+
+    // Skip ALL cross-origin requests EXCEPT map tiles
+    // This prevents the SW from intercepting Firebase auth, Google OAuth,
+    // Sentry, analytics, and other third-party API calls
+    if (url.origin !== self.location.origin &&
+        !url.hostname.includes('carto') &&
+        !url.hostname.includes('tile')) {
+        return;
+    }
 
     // 1. Cache First for Map Tiles
     if (url.hostname.includes('carto') || url.hostname.includes('tile')) {

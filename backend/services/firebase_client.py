@@ -31,7 +31,7 @@ def _init():
     if _app is not None:
         return
 
-    project_id = os.getenv("NEXT_PUBLIC_FIREBASE_PROJECT_ID", "naviigo-tourism")
+    project_id = os.getenv("NEXT_PUBLIC_FIREBASE_PROJECT_ID", "naviigo-firebase")
 
     # Priority 1: Service account key file
     sa_path = os.getenv("FIREBASE_SERVICE_ACCOUNT_KEY")
