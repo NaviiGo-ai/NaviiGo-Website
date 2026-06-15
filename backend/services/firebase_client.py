@@ -33,7 +33,20 @@ def _init():
 
     project_id = os.getenv("NEXT_PUBLIC_FIREBASE_PROJECT_ID", "naviigo-firebase")
 
-    # Priority 1: Service account key file
+    # Priority 1: Service account key from JSON string (Best for Production/Render/Railway)
+    sa_json_str = os.getenv("FIREBASE_SERVICE_ACCOUNT_JSON")
+    if sa_json_str:
+        try:
+            import json
+            cred_dict = json.loads(sa_json_str)
+            cred = credentials.Certificate(cred_dict)
+            _app = firebase_admin.initialize_app(cred)
+            print(f"[Firebase] Initialized with service account from FIREBASE_SERVICE_ACCOUNT_JSON environment variable.")
+            return
+        except Exception as e:
+            print(f"[Firebase] Error parsing FIREBASE_SERVICE_ACCOUNT_JSON: {e}")
+
+    # Priority 2: Service account key file
     sa_path = os.getenv("FIREBASE_SERVICE_ACCOUNT_KEY")
     if not sa_path:
         backend_dir = Path(__file__).resolve().parent.parent
@@ -57,7 +70,7 @@ def _init():
         cred = credentials.Certificate(sa_path)
         _app = firebase_admin.initialize_app(cred)
     else:
-        # Priority 2: Application Default Credentials (works on GCP/Cloud Run)
+        # Priority 3: Application Default Credentials (works natively on GCP/Cloud Run)
         try:
             _app = firebase_admin.initialize_app(options={"projectId": project_id})
             print(f"[Firebase] Initialized with application default credentials (project: {project_id})")
