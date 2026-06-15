@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
 const GEMINI_MODEL = 'gemini-2.5-flash';
@@ -81,23 +80,28 @@ If this doesn't seem travel-related, return { "destName": null, "confidence": "l
         if (!jsonMatch) {
             return NextResponse.json({ success: false, error: 'Could not parse travel info from this content.' }, { status: 400 });
         }
+export async function POST(req: NextRequest) {
+    try {
+        const body = await req.json();
+        const baseUrl = process.env.NEXT_PUBLIC_PYTHON_API_URL || 'http://localhost:8000';
+        
+        console.log(`[Proxy] Forwarding from-link request to Python backend`);
+        
+        const pythonResponse = await fetch(`${baseUrl}/api/itinerary/from-link`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+        });
 
-        const extracted = JSON.parse(jsonMatch[0]);
+        const data = await pythonResponse.json();
 
-        if (!extracted.destName) {
-            return NextResponse.json({
-                success: false,
-                error: "Couldn't find a travel destination in this content. Try pasting the caption text directly.",
-            }, { status: 400 });
+        if (!pythonResponse.ok) {
+            return NextResponse.json({ success: false, error: data.detail || 'Python backend failed' }, { status: pythonResponse.status });
         }
 
-        return NextResponse.json({ success: true, extracted });
-
-    } catch (err: any) {
-        console.error('[from-link] Error:', err.message);
-        return NextResponse.json(
-            { success: false, error: 'Failed to analyze the link. Try pasting the caption text directly.' },
-            { status: 500 }
-        );
+        return NextResponse.json({ success: true, extracted: data.extracted || data });
+    } catch (error: any) {
+        console.error('[Proxy] From-Link Error:', error);
+        return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 });
     }
 }

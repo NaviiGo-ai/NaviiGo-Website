@@ -154,7 +154,8 @@ export function AIProvider({ children }: { children: ReactNode }) {
     setMessages(prev => [...prev, { role: 'user', text }]);
 
     try {
-      const response = await fetch('/api/chat', {
+      const baseUrl = process.env.NEXT_PUBLIC_PYTHON_API_URL || '';
+      const response = await fetch(`${baseUrl}/api/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: text, itineraryContext: itinerary, context: messages.slice(-6) })
@@ -174,7 +175,8 @@ export function AIProvider({ children }: { children: ReactNode }) {
     setEditMessages(prev => [...prev, { role: 'user', text }]);
 
     try {
-      const response = await fetch('/api/chat', {
+      const baseUrl = process.env.NEXT_PUBLIC_PYTHON_API_URL || '';
+      const response = await fetch(`${baseUrl}/api/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

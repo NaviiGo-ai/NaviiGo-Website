@@ -157,14 +157,44 @@ export async function saveItineraryToFirestore(uid: string, data: {
     generatedData: Record<string, unknown> | null;
 }): Promise<string> {
     const colRef = collection(db, 'users', uid, 'itineraries');
-    const docRef = await addDoc(colRef, {
-        ...data,
-        isActive: false,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
+
+    // Check Firebase for an existing itinerary with the same destId + purpose + startDate
+    const allSnap = await getDocs(colRef);
+    const startDate = (data.form?.startDate as string) || '';
+    const purpose = (data.form?.purpose as string) || '';
+    
+    let existingDocId: string | null = null;
+    allSnap.forEach((d) => {
+        const existing = d.data();
+        const existingForm = existing.form as Record<string, unknown> | undefined;
+        if (
+            existing.destId === data.destId &&
+            (existingForm?.purpose || '') === purpose &&
+            (existingForm?.startDate || '') === startDate
+        ) {
+            existingDocId = d.id;
+        }
     });
-    await updateDoc(doc(db, 'users', uid), { totalTrips: increment(1) });
-    return docRef.id;
+
+    if (existingDocId) {
+        // Update existing doc — don't duplicate, don't re-increment totalTrips
+        const ref = doc(db, 'users', uid, 'itineraries', existingDocId);
+        await setDoc(ref, {
+            ...data,
+            updatedAt: serverTimestamp(),
+        }, { merge: true });
+        return existingDocId;
+    } else {
+        // First save — new unique ID via addDoc, increment trip count
+        const newRef = await addDoc(colRef, {
+            ...data,
+            isActive: false,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+        });
+        await updateDoc(doc(db, 'users', uid), { totalTrips: increment(1) });
+        return newRef.id;
+    }
 }
 
 export async function getUserItineraries(uid: string): Promise<SavedItineraryDoc[]> {

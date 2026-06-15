@@ -40,7 +40,8 @@ function CitySearch({ value, destName, onSelect }: { value: string; destName: st
         if (input.length < 2) { setResults([]); return; }
         setLoading(true);
         try {
-            const res = await fetch(`/api/places/autocomplete?input=${encodeURIComponent(input)}`);
+            const baseUrl = process.env.NEXT_PUBLIC_PYTHON_API_URL || '';
+            const res = await fetch(`${baseUrl}/api/places/autocomplete?input=${encodeURIComponent(input)}`);
             const data = await res.json();
             setResults(data.predictions || []);
             setIsOpen(true);
@@ -263,7 +264,8 @@ export default function SetupWizard({ onDone }: SetupWizardProps) {
                                     setForm(p => ({ ...p, destination: destId, destName, purpose: purpose || p.purpose || 'leisure' }));
                                     
                                     // Update taste vector in background
-                                    fetch('/api/taste/update', {
+                                    const baseUrl = process.env.NEXT_PUBLIC_PYTHON_API_URL || '';
+                                    fetch(`${baseUrl}/api/taste/update`, {
                                         method: 'POST',
                                         headers: { 'Content-Type': 'application/json' },
                                         body: JSON.stringify({

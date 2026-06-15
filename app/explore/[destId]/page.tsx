@@ -68,7 +68,8 @@ export default function DestinationDeepDive() {
         // Track the vibe selection for personalization
         trackDeepDiveVibe(destination, companion, vibe);
         try {
-            const res = await fetch('/api/explore/deep-dive', {
+            const baseUrl = process.env.NEXT_PUBLIC_PYTHON_API_URL || '';
+            const res = await fetch(`${baseUrl}/api/explore/deep-dive`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ destination, companion, vibe })
@@ -85,7 +86,8 @@ export default function DestinationDeepDive() {
 
     const fetchEvents = async () => {
         try {
-            const res = await fetch('/api/explore/events', {
+            const baseUrl = process.env.NEXT_PUBLIC_PYTHON_API_URL || '';
+            const res = await fetch(`${baseUrl}/api/explore/events`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ destination })
@@ -251,9 +253,9 @@ export default function DestinationDeepDive() {
                             </div>
                             <div className="grid grid-cols-1 gap-3">
                                 {data.instagramWorthy.map((spot, i) => (
-                                    <div key={i} className="bg-zinc-50 dark:bg-zinc-900/50 rounded-xl p-4 flex justify-between items-center gap-4 hover:shadow-md transition-shadow cursor-default">
-                                        <div className="font-bold text-sm text-zinc-900 dark:text-white line-clamp-2">{spot.spot}</div>
-                                        <div className="text-[10px] font-bold bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400 px-2 py-1 rounded shrink-0">
+                                    <div key={i} className="bg-zinc-50 dark:bg-zinc-900/50 rounded-xl p-4 flex flex-col gap-2 hover:shadow-md transition-shadow cursor-default">
+                                        <div className="font-bold text-sm text-zinc-900 dark:text-white">{spot.spot}</div>
+                                        <div className="text-[10px] font-bold bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400 px-2 py-1.5 rounded w-fit leading-relaxed">
                                             {spot.bestTime}
                                         </div>
                                     </div>

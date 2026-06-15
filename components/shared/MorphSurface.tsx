@@ -136,6 +136,70 @@ function ChatPanel() {
       clearLastAction();
   }, [lastAction, applyAction, clearLastAction]);
 
+  // Detect if an AI message suggests adding/removing something
+  const detectSuggestion = React.useCallback((text: string): { type: 'add' | 'remove' | null; name: string; dayIndex: number } => {
+    // Extract day number if mentioned (default to 0)
+    const dayMatch = text.match(/Day\s*(\d+)/i);
+    const dayIndex = dayMatch ? parseInt(dayMatch[1], 10) - 1 : 0; // Day 1 = index 0
+
+    // Broad add detection
+    const addPatterns = [
+      /(?:add|include|insert|try adding)\s+(?:a\s+)?(.+?)(?:\s+to\s+(?:your|the)\s+(?:Day|itinerary))/i,
+      /I'?d\s+love\s+to\s+add\s+(.+?)(?:\s+to\s+your)/i,
+      /(?:recommend|suggest)(?:ing)?\s+(?:adding\s+)?(.+?)(?:\s+(?:to|for)\s+(?:your|Day))/i,
+      /(?:how about|what about|consider)\s+(?:adding\s+)?(.+?)(?:\s+(?:to|on|for)\s+)/i,
+      /Let'?s\s+add\s+(.+?)(?:\s+(?:to|on|for)\s+)/i,
+      /(?:adding|add)\s+(.+?)(?:\s+(?:would|could|will|as))/i,
+    ];
+    for (const pat of addPatterns) {
+      const m = text.match(pat);
+      if (m) return { type: 'add', name: m[1].replace(/["""*_]/g, '').trim(), dayIndex };
+    }
+
+    // Broad remove detection
+    const removePatterns = [
+      /(?:remove|drop|skip|cut|take out)\s+(?:the\s+)?(.+?)(?:\s+(?:from|on)\s+(?:your|the|Day))/i,
+      /(?:removing|remove)\s+(.+?)(?:\s+(?:would|could|will|to))/i,
+    ];
+    for (const pat of removePatterns) {
+      const m = text.match(pat);
+      if (m) return { type: 'remove', name: m[1].replace(/["""*_]/g, '').trim(), dayIndex };
+    }
+
+    return { type: null, name: '', dayIndex: 0 };
+  }, []);
+
+  const handleQuickAdd = React.useCallback((name: string, dayIndex: number) => {
+    if (!itineraryContext?.dayPlans) return;
+    // Clamp dayIndex to valid range
+    const di = Math.min(dayIndex, (itineraryContext.dayPlans.length || 1) - 1);
+    if (!itineraryContext.dayPlans[di]) return;
+    applyAction({
+      type: 'addActivity',
+      payload: {
+        dayIndex: di,
+        activity: {
+          name, desc: `Added via AI recommendation`, time: '05:00 PM',
+          slot: 'Evening', crowd: 'Medium', crowdTip: 'AI suggested',
+          lat: itineraryContext.mapCenter?.lat || 0,
+          lng: itineraryContext.mapCenter?.lng || 0,
+        }
+      }
+    });
+  }, [itineraryContext, applyAction]);
+
+  const handleQuickRemove = React.useCallback((name: string) => {
+    if (!itineraryContext?.dayPlans) return;
+    for (let d = 0; d < itineraryContext.dayPlans.length; d++) {
+      const acts = itineraryContext.dayPlans[d].activities || [];
+      const idx = acts.findIndex((a: any) => a.name.toLowerCase().includes(name.toLowerCase()));
+      if (idx >= 0) {
+        applyAction({ type: 'removeActivity', payload: { dayIndex: d, activityIndex: idx } });
+        return;
+      }
+    }
+  }, [itineraryContext, applyAction]);
+
   return (
     <motion.div
       className="flex flex-col h-full w-full"
@@ -166,8 +230,11 @@ function ChatPanel() {
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-5 space-y-4 custom-scrollbar">
-        {messages.map((msg, i) => (
-          <div key={i} className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
+        {messages.map((msg, i) => {
+          const suggestion = msg.role === 'ai' && itineraryContext ? detectSuggestion(msg.text) : { type: null, name: '', dayIndex: 0 };
+          return (
+          <div key={i} className="space-y-2">
+            <div className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
             {msg.role === 'ai' && (
               <div className="w-7 h-7 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0 mt-0.5 border border-emerald-500/30">
                 <Sparkles className="w-3.5 h-3.5 text-emerald-500" />
@@ -184,7 +251,30 @@ function ChatPanel() {
               {msg.text}
             </div>
           </div>
-        ))}
+          {/* Inline action buttons when AI suggests add/remove */}
+          {suggestion.type && suggestion.name && (
+            <div className="ml-10 flex gap-2">
+              {suggestion.type === 'add' && (
+                <button
+                  onClick={() => handleQuickAdd(suggestion.name, suggestion.dayIndex)}
+                  className="flex items-center gap-1.5 text-[11px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-xl px-3 py-1.5 hover:bg-emerald-500/30 transition-colors"
+                >
+                  <span className="text-sm">➕</span> Add {suggestion.name.length > 20 ? suggestion.name.slice(0, 20) + '…' : suggestion.name}
+                </button>
+              )}
+              {suggestion.type === 'remove' && (
+                <button
+                  onClick={() => handleQuickRemove(suggestion.name)}
+                  className="flex items-center gap-1.5 text-[11px] font-bold bg-red-500/20 text-red-400 border border-red-500/30 rounded-xl px-3 py-1.5 hover:bg-red-500/30 transition-colors"
+                >
+                  <span className="text-sm">➖</span> Remove {suggestion.name.length > 20 ? suggestion.name.slice(0, 20) + '…' : suggestion.name}
+                </button>
+              )}
+            </div>
+          )}
+          </div>
+        );
+        })}
 
         {/* Pending Action Banner */}
         <AnimatePresence>

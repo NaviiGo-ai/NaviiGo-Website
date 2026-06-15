@@ -688,7 +688,7 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                                                     }}>
                                                     <div className="flex items-center gap-3 mb-2 text-xs font-bold text-zinc-400 uppercase tracking-widest"><span className="text-base leading-none">🏨</span> Place to stay</div>
                                                     <div className="flex gap-4">
-                                                        <div className="w-16 h-16 rounded-xl shrink-0 bg-cover bg-center" style={{ backgroundImage: `url(${resolveImgSrc(data.hotels[0].img, 150)})` }} />
+                                                        <div className="w-16 h-16 rounded-xl shrink-0 bg-cover bg-center" style={{ backgroundImage: `url(${resolveImgSrc(data.hotels[0].img, 150, data.hotels[0].name, data.hotels[0].type)})` }} />
                                                         <div className="flex flex-col justify-center">
                                                             <div className="font-bold text-base text-zinc-900 dark:text-white line-clamp-1 group-hover:text-emerald-500 transition-colors">{data.hotels[0].name}</div>
                                                             <div className="text-xs text-zinc-500 mt-0.5">{data.hotels[0].type} • {data.hotels[0].priceRange}</div>
@@ -705,7 +705,7 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                                                     }}>
                                                     <div className="flex items-center gap-3 mb-2 text-xs font-bold text-zinc-400 uppercase tracking-widest"><span className="text-base leading-none">🍽️</span> Where to eat</div>
                                                     <div className="flex gap-4">
-                                                        <div className="w-16 h-16 rounded-xl shrink-0 bg-cover bg-center" style={{ backgroundImage: `url(${resolveImgSrc(data.restaurants[0].img, 150)})` }} />
+                                                        <div className="w-16 h-16 rounded-xl shrink-0 bg-cover bg-center" style={{ backgroundImage: `url(${resolveImgSrc(data.restaurants[0].img, 150, data.restaurants[0].name, data.restaurants[0].cuisine)})` }} />
                                                         <div className="flex flex-col justify-center">
                                                             <div className="font-bold text-base text-zinc-900 dark:text-white line-clamp-1 group-hover:text-amber-500 transition-colors">{data.restaurants[0].name}</div>
                                                             <div className="text-xs text-zinc-500 mt-0.5">{data.restaurants[0].cuisine}</div>
@@ -750,7 +750,7 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                                             {data.highlights?.filter((a: any) => !plan.activities.find((pa: any) => pa.name === a.name)).slice(0, 4).map((sug: any) => (
                                                 <div key={sug.name} className="bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl p-2.5 flex gap-3 group cursor-pointer hover:border-emerald-400 hover:shadow-md transition-all"
                                                     onClick={() => addCustomActivity({ name: sug.name, display_name: sug.desc, lat: sug.lat || data.mapCenter.lat, lon: sug.lng || data.mapCenter.lng })}>
-                                                    <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 bg-cover bg-center" style={{ backgroundImage: `url(${resolveImgSrc(sug.img, 150)})` }} />
+                                                    <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 bg-cover bg-center" style={{ backgroundImage: `url(${resolveImgSrc(sug.img, 150, sug.name, sug.tags?.[0])})` }} />
                                                     <div className="min-w-0 flex flex-col justify-center">
                                                         <div className="text-[11px] font-bold text-zinc-900 dark:text-white truncate group-hover:text-emerald-600 transition-colors">{sug.name}</div>
                                                         <div className="text-[9px] text-zinc-500 truncate mt-0.5">{sug.desc}</div>

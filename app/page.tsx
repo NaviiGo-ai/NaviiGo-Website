@@ -312,15 +312,11 @@ export default function Home() {
             Let our AI plan your perfect trip — from spiritual circuits to hidden gems, booked at the best prices.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/itinerary?new=true">
-              <button className="px-10 py-4 rounded-2xl bg-blue-600 text-white font-semibold text-base hover:bg-blue-500 transition-all hover:scale-105 shadow-xl shadow-blue-600/20">
+            <Link href="/itinerary?new=true" className="px-10 py-4 rounded-2xl bg-blue-600 text-white font-semibold text-base hover:bg-blue-500 transition-all hover:scale-105 shadow-xl shadow-blue-600/20 inline-block">
                 Plan Your Trip with AI
-              </button>
             </Link>
-            <Link href="/explore">
-              <button className="px-10 py-4 rounded-2xl bg-slate-800 text-white font-semibold text-base hover:bg-slate-700 transition-all border border-slate-700">
+            <Link href="/explore" className="px-10 py-4 rounded-2xl bg-slate-800 text-white font-semibold text-base hover:bg-slate-700 transition-all border border-slate-700 inline-block">
                 Browse Destinations
-              </button>
             </Link>
           </div>
         </motion.div>
