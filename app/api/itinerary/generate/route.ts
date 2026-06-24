@@ -1,4 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+import {
+    badRequest, validateString, validateNumber,
+    KNOWN_GROUPS, KNOWN_PURPOSES,
+} from '@/lib/validation';
 
 /**
  * POST /api/itinerary/generate
@@ -11,6 +15,50 @@ import { NextRequest, NextResponse } from 'next/server';
 export async function POST(req: NextRequest) {
     try {
         const body = await req.json();
+
+        // ── Validation ────────────────────────────────────────────────
+        const destination = validateString(body.destination, 'destination', 100);
+        if (!destination) {
+            return badRequest('destination is required and must be a non-empty string under 100 characters.');
+        }
+
+        const days = validateNumber(body.days, 1, 365);
+        if (days === null) {
+            return badRequest('days must be a number between 1 and 365.');
+        }
+
+        const budget = validateNumber(body.budget, 1, Number.MAX_SAFE_INTEGER);
+        if (budget === null) {
+            return badRequest('budget must be a positive number.');
+        }
+
+        // group is optional but must be a known value if provided
+        if (body.group !== undefined && !KNOWN_GROUPS.has(body.group)) {
+            return badRequest(`group must be one of: ${[...KNOWN_GROUPS].join(', ')}.`);
+        }
+
+        // purpose is optional but must be a known value if provided
+        if (body.purpose !== undefined && !KNOWN_PURPOSES.has(body.purpose)) {
+            return badRequest(`purpose must be one of: ${[...KNOWN_PURPOSES].join(', ')}.`);
+        }
+
+        const safeBody = {
+            destination,
+            destName: validateString(body.destName, 'destName', 100) || destination,
+            purpose: body.purpose ?? null,
+            group: body.group ?? null,
+            days,
+            budget,
+            startDate: body.startDate ?? null,
+            endDate: body.endDate ?? null,
+            userId: typeof body.userId === 'string' ? body.userId : null,
+            preferences: body.preferences ?? null,
+            browsingSignals: body.browsingSignals ?? null,
+            travelerType: body.travelerType ?? null,
+            originCity: validateString(body.originCity, 'originCity', 100) ?? null,
+        };
+        // ─────────────────────────────────────────────────────────────
+
         const baseUrl = process.env.NEXT_PUBLIC_PYTHON_API_URL || 'http://localhost:8000';
 
         console.log(`[Proxy] Forwarding itinerary request to Python backend: ${baseUrl}/api/itinerary/generate`);
@@ -18,7 +66,7 @@ export async function POST(req: NextRequest) {
         const pythonResponse = await fetch(`${baseUrl}/api/itinerary/generate`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(body),
+            body: JSON.stringify(safeBody),
         });
 
         const data = await pythonResponse.json();

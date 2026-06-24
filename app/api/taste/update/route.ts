@@ -1,13 +1,43 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateEmbedding } from '@/lib/ai/embeddings';
+import { badRequest, validateString, validateNumberArray, KNOWN_DEST_IDS, KNOWN_PURPOSES } from '@/lib/validation';
 
 export async function POST(req: NextRequest) {
     try {
-        const { currentVector, selectedDestId, selectedTags, purpose } = await req.json();
+        const body = await req.json();
+
+        // ── Validation ────────────────────────────────────────────────
+        // selectedDestId must be a known destination
+        const selectedDestId = validateString(body.selectedDestId, 'selectedDestId', 50);
+        if (!selectedDestId || !KNOWN_DEST_IDS.has(selectedDestId)) {
+            return badRequest(`selectedDestId must be one of the known destination IDs.`);
+        }
+
+        // purpose must be a known value
+        if (body.purpose !== undefined && !KNOWN_PURPOSES.has(body.purpose)) {
+            return badRequest(`purpose must be one of: ${[...KNOWN_PURPOSES].join(', ')}.`);
+        }
+
+        // selectedTags must be an array of strings, capped at 20 items
+        const rawTags = body.selectedTags;
+        const selectedTags: string[] = Array.isArray(rawTags)
+            ? rawTags.slice(0, 20).filter((t: unknown) => typeof t === 'string').map((t: string) => t.slice(0, 50))
+            : [];
+
+        // currentVector must be an array of finite numbers (max 2048 dims) if provided
+        const currentVector = body.currentVector !== undefined && body.currentVector !== null
+            ? validateNumberArray(body.currentVector, 2048)
+            : null;
+
+        if (body.currentVector !== undefined && body.currentVector !== null && currentVector === null) {
+            return badRequest('currentVector must be an array of finite numbers with at most 2048 dimensions.');
+        }
+        // ─────────────────────────────────────────────────────────────
 
         // Construct a text string representing the vibe of the selection
-        const textToEmbed = `Destination: ${selectedDestId}. Vibe: ${purpose}. Features: ${selectedTags?.join(', ')}`;
-        
+        const purpose = body.purpose ?? 'leisure';
+        const textToEmbed = `Destination: ${selectedDestId}. Vibe: ${purpose}. Features: ${selectedTags.join(', ')}`;
+
         // Get the vector for this selection
         const selectionVector = await generateEmbedding(textToEmbed);
 

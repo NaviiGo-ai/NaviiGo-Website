@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { badRequest, validateString } from '@/lib/validation';
 
 /**
  * POST /api/chat
@@ -11,6 +12,23 @@ import { NextRequest, NextResponse } from 'next/server';
 export async function POST(req: NextRequest) {
     try {
         const body = await req.json();
+
+        // ── Validation ────────────────────────────────────────────────
+        const message = validateString(body.message, 'message', 1200);
+        if (!message) {
+            return badRequest('message is required and must be a non-empty string under 1200 characters.');
+        }
+
+        // context must be an array if provided; cap it to 20 items
+        const context = Array.isArray(body.context) ? body.context.slice(0, 20) : [];
+
+        const safeBody = {
+            message,
+            context,
+            itineraryContext: body.itineraryContext ?? null,
+        };
+        // ─────────────────────────────────────────────────────────────
+
         const baseUrl = process.env.NEXT_PUBLIC_PYTHON_API_URL || 'http://localhost:8000';
 
         console.log(`[Proxy] Forwarding chat request to Python backend`);
@@ -18,7 +36,7 @@ export async function POST(req: NextRequest) {
         const pythonResponse = await fetch(`${baseUrl}/api/chat/`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(body),
+            body: JSON.stringify(safeBody),
         });
 
         const data = await pythonResponse.json();
