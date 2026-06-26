@@ -1,13 +1,27 @@
 "use client";
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 import { gsap } from 'gsap';
-import { Globe, Heart, Menu, Search, User, X, LifeBuoy, LogOut, Info, ChevronDown, MapPin, Clock, Navigation, History, PlusCircle } from 'lucide-react';
+import { Globe, Heart, Menu, Search, User, X, LifeBuoy, LogOut, Info, ChevronDown, MapPin, Clock, Navigation, History, PlusCircle, Compass, Plane, BookOpen } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
 import { useAuth } from '@/lib/AuthContext';
+import { ALL_DESTINATIONS } from '@/components/features/explore/exploreData';
+
+// Static page entries for search
+const PAGE_ENTRIES = [
+  { name: 'Plan a Trip', href: '/itinerary?new=true', icon: PlusCircle, desc: 'AI-powered itinerary generator' },
+  { name: 'Explore Destinations', href: '/explore', icon: Compass, desc: 'Discover incredible India' },
+  { name: 'Bookings', href: '/bookings', icon: Plane, desc: 'Flights, trains, cabs & hotels' },
+  { name: 'Digital Passport', href: '/passport', icon: BookOpen, desc: 'Your travel stamps & leaderboard' },
+  { name: 'Saved Trips', href: '/saved', icon: Heart, desc: 'Your saved itineraries' },
+  { name: 'Travel Deals', href: '/deals', icon: Globe, desc: 'Compare prices across 500+ partners' },
+  { name: 'About NaviiGo', href: '/about', icon: Info, desc: 'Our mission & team' },
+  { name: 'Support', href: '/support', icon: LifeBuoy, desc: 'FAQs & help center' },
+];
 
 const ITINERARY_DROPDOWN = [
   { name: 'Create New', href: '/itinerary?new=true', icon: PlusCircle, desc: 'AI-powered trip planner', accent: 'text-emerald-500' },
@@ -18,14 +32,69 @@ const ITINERARY_DROPDOWN = [
 
 export default function Navbar() {
   const navRef = useRef<HTMLElement | null>(null);
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
+  const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedIndex, setSelectedIndex] = useState(-1);
   const [itineraryDropdownOpen, setItineraryDropdownOpen] = useState(false);
   const [mobileItineraryOpen, setMobileItineraryOpen] = useState(false);
   const dropdownTimeout = useRef<NodeJS.Timeout | null>(null);
   const { scrollY } = useScroll();
+
+  // ── Search: filter destinations + pages by query ──
+  const searchResults = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return { destinations: [], pages: [] };
+
+    const destinations = ALL_DESTINATIONS.filter(d =>
+      d.name.toLowerCase().includes(q) ||
+      d.state.toLowerCase().includes(q) ||
+      d.category.toLowerCase().includes(q) ||
+      d.tagline.toLowerCase().includes(q) ||
+      d.highlights.some(h => h.toLowerCase().includes(q))
+    ).slice(0, 6);
+
+    const pages = PAGE_ENTRIES.filter(p =>
+      p.name.toLowerCase().includes(q) ||
+      p.desc.toLowerCase().includes(q)
+    ).slice(0, 4);
+
+    return { destinations, pages };
+  }, [searchQuery]);
+
+  const totalResults = searchResults.destinations.length + searchResults.pages.length;
+
+  // Reset selected index when query changes
+  useEffect(() => { setSelectedIndex(-1); }, [searchQuery]);
+
+  const navigateToResult = useCallback((index: number) => {
+    const { destinations, pages } = searchResults;
+    if (index < destinations.length) {
+      router.push(`/explore/${encodeURIComponent(destinations[index].name)}`);
+    } else {
+      const pageIdx = index - destinations.length;
+      if (pageIdx < pages.length) router.push(pages[pageIdx].href);
+    }
+    setIsSearchOpen(false);
+    setSearchQuery('');
+  }, [searchResults, router]);
+
+  const handleSearchKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') { setIsSearchOpen(false); return; }
+    if (e.key === 'ArrowDown') { e.preventDefault(); setSelectedIndex(i => Math.min(i + 1, totalResults - 1)); return; }
+    if (e.key === 'ArrowUp') { e.preventDefault(); setSelectedIndex(i => Math.max(i - 1, -1)); return; }
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (selectedIndex >= 0) {
+        navigateToResult(selectedIndex);
+      } else if (totalResults > 0) {
+        navigateToResult(0);
+      }
+    }
+  }, [selectedIndex, totalResults, navigateToResult]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -80,6 +149,8 @@ export default function Navbar() {
       <motion.nav
         ref={navRef}
         data-lenis-prevent
+        role="navigation"
+        aria-label="Main navigation"
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled
             ? 'bg-white/90 dark:bg-slate-950/90 backdrop-blur-xl border-b border-black/5 dark:border-white/10 shadow-sm'
             : 'bg-slate-950/30 backdrop-blur-md border-b border-white/5'
@@ -167,11 +238,12 @@ export default function Navbar() {
             {/* Right Side Actions */}
             <div className="hidden md:flex items-center space-x-3">
               <motion.button
-                onClick={() => setIsSearchOpen(true)}
+                onClick={() => { setIsSearchOpen(true); setSearchQuery(''); setSelectedIndex(-1); }}
                 className="p-2 rounded-full hover:bg-black/5 text-slate-700 transition-colors dark:text-slate-200 dark:hover:bg-white/10"
                 whileHover={{ scale: 1.1, rotate: 90 }}
                 whileTap={{ scale: 0.9 }}
-                aria-label="Search"
+                aria-label="Open search"
+                aria-haspopup="dialog"
               >
                 <Search className="w-5 h-5" />
               </motion.button>
@@ -223,7 +295,9 @@ export default function Navbar() {
               onClick={toggleMenu}
               className="md:hidden p-2 rounded-lg hover:bg-black/5 text-slate-700 dark:text-slate-200 dark:hover:bg-white/10 relative z-[60]"
               whileTap={{ scale: 0.9 }}
-              aria-label="Toggle menu"
+              aria-label={isOpen ? 'Close menu' : 'Open menu'}
+              aria-expanded={isOpen}
+              aria-controls="mobile-menu"
             >
               {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </motion.button>
@@ -240,6 +314,10 @@ export default function Navbar() {
       >
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: isOpen ? 1 : 0 }} transition={{ duration: 0.3 }} className="absolute inset-0 bg-black/25 backdrop-blur-sm" onClick={toggleMenu} />
         <motion.div
+          id="mobile-menu"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Navigation menu"
           initial={{ x: '100%' }}
           animate={{ x: isOpen ? 0 : '100%' }}
           transition={{ type: 'spring', damping: 30, stiffness: 300 }}
@@ -346,37 +424,141 @@ export default function Navbar() {
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[60] flex items-start justify-center pt-20 sm:pt-24 px-4">
             <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setIsSearchOpen(false)} />
             <motion.div
+              role="dialog"
+              aria-modal="true"
+              aria-label="Search NaviiGo"
               initial={{ opacity: 0, scale: 0.95, y: -20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: -20 }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
               className="relative w-full max-w-2xl bg-white dark:bg-slate-900 rounded-2xl shadow-2xl overflow-hidden ring-1 ring-black/5 dark:ring-white/10"
             >
+              {/* Search Input */}
               <div className="flex items-center px-4 py-4 border-b border-slate-100 dark:border-slate-800">
                 <Search className="w-5 h-5 text-slate-400 dark:text-slate-500" />
                 <input
+                  ref={searchInputRef}
                   type="text"
-                  placeholder="Search destinations, itineraries, or users..."
+                  placeholder="Search destinations, pages..."
                   className="flex-1 bg-transparent border-none outline-none px-4 text-slate-800 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-0"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={handleSearchKeyDown}
                   autoFocus
-                  onKeyDown={(e) => { if (e.key === 'Escape') setIsSearchOpen(false); }}
+                  role="combobox"
+                  aria-expanded={totalResults > 0}
+                  aria-controls="search-results"
+                  aria-activedescendant={selectedIndex >= 0 ? `search-result-${selectedIndex}` : undefined}
                 />
                 {searchQuery && (
-                  <button onClick={() => setSearchQuery('')} className="p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 transition-colors">
+                  <button onClick={() => setSearchQuery('')} className="p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 transition-colors" aria-label="Clear search">
                     <X className="w-4 h-4" />
                   </button>
                 )}
                 <button onClick={() => setIsSearchOpen(false)} className="ml-2 px-3 py-1 rounded-lg text-sm font-medium text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 transition-colors">Esc</button>
               </div>
-              <div className="px-4 py-6 bg-slate-50/50 dark:bg-slate-800/50">
-                <h3 className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">Quick Jump</h3>
-                <div className="flex flex-wrap gap-2">
-                  {['Goa', 'Manali', 'Honeymoon Itinerary', 'Spiritual Circuit'].map((term) => (
-                    <button key={term} onClick={() => setSearchQuery(term)} className="px-3 py-1.5 rounded-full bg-white dark:bg-slate-900 text-sm text-slate-600 dark:text-slate-300 shadow-sm ring-1 ring-black/5 dark:ring-white/5 hover:text-primary transition-colors">{term}</button>
-                  ))}
-                </div>
+
+              {/* Search Results */}
+              <div id="search-results" className="max-h-[60vh] overflow-y-auto" role="listbox">
+                {searchQuery.trim() && totalResults > 0 ? (
+                  <div className="py-2">
+                    {/* Destination Results */}
+                    {searchResults.destinations.length > 0 && (
+                      <div className="px-4 pt-3 pb-1">
+                        <h3 className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Destinations</h3>
+                      </div>
+                    )}
+                    {searchResults.destinations.map((dest, i) => (
+                      <button
+                        key={dest.id}
+                        id={`search-result-${i}`}
+                        role="option"
+                        aria-selected={selectedIndex === i}
+                        onClick={() => navigateToResult(i)}
+                        onMouseEnter={() => setSelectedIndex(i)}
+                        className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors ${
+                          selectedIndex === i
+                            ? 'bg-blue-50 dark:bg-blue-500/10'
+                            : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                        }`}
+                      >
+                        <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center shrink-0">
+                          <MapPin className="w-4 h-4 text-emerald-500" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="text-sm font-semibold text-slate-800 dark:text-slate-200 truncate">{dest.name}</div>
+                          <div className="text-xs text-slate-500 dark:text-slate-400 truncate">{dest.state} · {dest.category} · {dest.tagline}</div>
+                        </div>
+                        <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider shrink-0">{dest.rating}★</span>
+                      </button>
+                    ))}
+
+                    {/* Page Results */}
+                    {searchResults.pages.length > 0 && (
+                      <div className="px-4 pt-4 pb-1">
+                        <h3 className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Pages</h3>
+                      </div>
+                    )}
+                    {searchResults.pages.map((page, i) => {
+                      const idx = searchResults.destinations.length + i;
+                      return (
+                        <button
+                          key={page.href}
+                          id={`search-result-${idx}`}
+                          role="option"
+                          aria-selected={selectedIndex === idx}
+                          onClick={() => navigateToResult(idx)}
+                          onMouseEnter={() => setSelectedIndex(idx)}
+                          className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors ${
+                            selectedIndex === idx
+                              ? 'bg-blue-50 dark:bg-blue-500/10'
+                              : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                          }`}
+                        >
+                          <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center shrink-0">
+                            <page.icon className="w-4 h-4 text-blue-500" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm font-semibold text-slate-800 dark:text-slate-200">{page.name}</div>
+                            <div className="text-xs text-slate-500 dark:text-slate-400">{page.desc}</div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : searchQuery.trim() && totalResults === 0 ? (
+                  <div className="px-4 py-10 text-center">
+                    <div className="text-3xl mb-3">🔍</div>
+                    <p className="text-sm font-medium text-slate-500 dark:text-slate-400">No results for &ldquo;{searchQuery}&rdquo;</p>
+                    <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Try searching for a city, state, or category</p>
+                  </div>
+                ) : (
+                  /* Quick Jump (shown when no query) */
+                  <div className="px-4 py-5 bg-slate-50/50 dark:bg-slate-800/30">
+                    <h3 className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3">Quick Jump</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {[
+                        { label: 'Goa', href: '/explore/Goa' },
+                        { label: 'Manali', href: '/explore/Manali' },
+                        { label: 'Varanasi', href: '/explore/Varanasi' },
+                        { label: 'Kerala', href: '/explore/Kerala Backwaters' },
+                        { label: 'Ladakh', href: '/explore/Ladakh' },
+                        { label: 'Jaipur', href: '/explore/Jaipur' },
+                      ].map((item) => (
+                        <button
+                          key={item.label}
+                          onClick={() => { router.push(item.href); setIsSearchOpen(false); }}
+                          className="px-3 py-1.5 rounded-full bg-white dark:bg-slate-900 text-sm text-slate-600 dark:text-slate-300 shadow-sm ring-1 ring-black/5 dark:ring-white/5 hover:ring-blue-500/30 hover:text-blue-600 dark:hover:text-blue-400 transition-all"
+                        >
+                          {item.label}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800">
+                      <p className="text-[11px] text-slate-400 dark:text-slate-500"><kbd className="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-[10px] font-mono">↑↓</kbd> navigate &nbsp; <kbd className="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-[10px] font-mono">↵</kbd> select &nbsp; <kbd className="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-[10px] font-mono">esc</kbd> close</p>
+                    </div>
+                  </div>
+                )}
               </div>
             </motion.div>
           </motion.div>
