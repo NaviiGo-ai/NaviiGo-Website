@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { applyRateLimit } from '@/lib/rateLimit';
 
 /**
  * POST /api/recommendations
@@ -10,6 +11,10 @@ import { NextRequest, NextResponse } from 'next/server';
  * Returns: { success: true, recommendations: [...] }
  */
 export async function POST(req: NextRequest) {
+    // 5 requests/min per IP — AI/Pinecone recommendation engine
+    const limited = applyRateLimit(req, 5, 60_000, 'ai');
+    if (limited) return limited;
+
     try {
         const body = await req.json();
         const baseUrl = process.env.NEXT_PUBLIC_PYTHON_API_URL || 'http://localhost:8000';

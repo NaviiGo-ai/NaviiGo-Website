@@ -3,6 +3,7 @@ import {
     badRequest, validateString, validateNumber,
     KNOWN_GROUPS, KNOWN_PURPOSES,
 } from '@/lib/validation';
+import { applyRateLimit } from '@/lib/rateLimit';
 
 /**
  * POST /api/itinerary/generate
@@ -13,6 +14,10 @@ import {
  * Returns: { success: true, generatedData: { ... } }
  */
 export async function POST(req: NextRequest) {
+    // 5 requests/min per IP — itinerary gen is the most expensive Gemini call
+    const limited = applyRateLimit(req, 5, 60_000, 'ai');
+    if (limited) return limited;
+
     try {
         const body = await req.json();
 

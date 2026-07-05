@@ -1,8 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateEmbedding } from '@/lib/ai/embeddings';
 import { badRequest, validateString, validateNumberArray, KNOWN_DEST_IDS, KNOWN_PURPOSES } from '@/lib/validation';
+import { applyRateLimit } from '@/lib/rateLimit';
 
 export async function POST(req: NextRequest) {
+    // 5 requests/min per IP — calls Gemini embedding API
+    const limited = applyRateLimit(req, 5, 60_000, 'ai');
+    if (limited) return limited;
+
     try {
         const body = await req.json();
 

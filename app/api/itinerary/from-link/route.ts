@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { badRequest, validateString, validateHttpsUrl } from '@/lib/validation';
+import { applyRateLimit } from '@/lib/rateLimit';
 
 /**
  * POST /api/itinerary/from-link
@@ -10,6 +11,10 @@ import { badRequest, validateString, validateHttpsUrl } from '@/lib/validation';
  * Returns: { success: true, extracted: { destName, places, vibe, days, purpose, tags, summary, confidence } }
  */
 export async function POST(req: NextRequest) {
+    // 5 requests/min per IP — Gemini-powered social link analysis
+    const limited = applyRateLimit(req, 5, 60_000, 'ai');
+    if (limited) return limited;
+
     try {
         const body = await req.json();
 

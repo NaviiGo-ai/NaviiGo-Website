@@ -1,7 +1,12 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { badRequest, validateString } from '@/lib/validation';
+import { applyRateLimit } from '@/lib/rateLimit';
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
+    // 5 requests/min per IP — AI-powered events lookup
+    const limited = applyRateLimit(req, 5, 60_000, 'ai');
+    if (limited) return limited;
+
     try {
         const body = await req.json();
 

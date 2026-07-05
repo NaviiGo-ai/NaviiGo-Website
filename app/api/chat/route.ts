@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { badRequest, validateString } from '@/lib/validation';
+import { applyRateLimit } from '@/lib/rateLimit';
 
 /**
  * POST /api/chat
@@ -10,6 +11,10 @@ import { badRequest, validateString } from '@/lib/validation';
  * Returns: { reply, action }
  */
 export async function POST(req: NextRequest) {
+    // 20 requests/min per IP for chat — generous for interactive use
+    const limited = applyRateLimit(req, 20, 60_000, 'chat');
+    if (limited) return limited;
+
     try {
         const body = await req.json();
 

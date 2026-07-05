@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { badRequest, validateString, KNOWN_COMPANIONS, KNOWN_VIBES } from '@/lib/validation';
+import { applyRateLimit } from '@/lib/rateLimit';
 
 /**
  * POST /api/explore/deep-dive
@@ -10,6 +11,10 @@ import { badRequest, validateString, KNOWN_COMPANIONS, KNOWN_VIBES } from '@/lib
  * Returns: { success: true, data: { redditConsensus, hiddenGems, touristTrapsToAvoid, instagramWorthy, localFoodMustHaves } }
  */
 export async function POST(req: NextRequest) {
+    // 5 requests/min per IP — Gemini-powered destination deep dive
+    const limited = applyRateLimit(req, 5, 60_000, 'ai');
+    if (limited) return limited;
+
     try {
         const body = await req.json();
 
