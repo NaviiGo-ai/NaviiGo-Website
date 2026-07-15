@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { badRequest, validateLat, validateLng } from '@/lib/validation';
 
 const GOOGLE_KEY = process.env.GOOGLE_DISTANCE_MATRIX_KEY;
 
@@ -9,14 +10,18 @@ const GOOGLE_KEY = process.env.GOOGLE_DISTANCE_MATRIX_KEY;
  */
 export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
-    const fromLat = searchParams.get('fromLat');
-    const fromLng = searchParams.get('fromLng');
-    const toLat = searchParams.get('toLat');
-    const toLng = searchParams.get('toLng');
 
-    if (!fromLat || !fromLng || !toLat || !toLng) {
-        return NextResponse.json({ error: 'Missing coordinates' }, { status: 400 });
-    }
+    // ── Validation ────────────────────────────────────────────────────
+    const fromLat = validateLat(searchParams.get('fromLat'));
+    const fromLng = validateLng(searchParams.get('fromLng'));
+    const toLat   = validateLat(searchParams.get('toLat'));
+    const toLng   = validateLng(searchParams.get('toLng'));
+
+    if (fromLat === null || searchParams.get('fromLat') === null) return badRequest('fromLat is required and must be a number between -90 and 90.');
+    if (fromLng === null || searchParams.get('fromLng') === null) return badRequest('fromLng is required and must be a number between -180 and 180.');
+    if (toLat === null   || searchParams.get('toLat')   === null) return badRequest('toLat is required and must be a number between -90 and 90.');
+    if (toLng === null   || searchParams.get('toLng')   === null) return badRequest('toLng is required and must be a number between -180 and 180.');
+    // ─────────────────────────────────────────────────────────────────
 
     // ── Helper: OSRM for free driving distance ─────────────────
     const getOSRM = async (mode: 'foot' | 'car') => {
@@ -39,7 +44,7 @@ export async function GET(req: NextRequest) {
             getOSRM('car'),
         ]);
 
-        const distKm = driveData ? driveData.distanceM / 1000 : haversine(+fromLat, +fromLng, +toLat, +toLng);
+        const distKm = driveData ? driveData.distanceM / 1000 : haversine(fromLat, fromLng, toLat, toLng);
         const driveMinutes = driveData ? Math.ceil(driveData.durationS / 60) : Math.ceil(distKm * 3);
         const walkMinutes = walkData ? Math.ceil(walkData.durationS / 60) : Math.ceil(distKm * 12);
 

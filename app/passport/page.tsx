@@ -2,6 +2,7 @@
 
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRef, useLayoutEffect, useState, useEffect } from 'react';
+import Image from 'next/image';
 import gsap from 'gsap';
 import { X, MapPin, Calendar, CheckCircle2, Trophy, Flame, Star, Target, ChevronRight, Zap, Globe2, TrendingUp, Award, Heart, Lock, ArrowRight, Activity, Plane } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
@@ -117,7 +118,7 @@ export default function PassportPage() {
                     Start checking into destinations, collect beautiful stamps, earn XP, and climb the global leaderboards.
                 </p>
                 <button onClick={signInWithGoogle} className="w-full bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-bold py-4 rounded-2xl flex items-center justify-center gap-3 hover:scale-105 active:scale-95 transition-all shadow-xl shadow-zinc-900/10 dark:shadow-white/10">
-                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-5 h-5 bg-white rounded-full p-0.5" alt="Google" />
+                    <Image src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width={20} height={20} className="bg-white rounded-full p-0.5" alt="Google" />
                     Sign in to Start
                 </button>
             </motion.div>
@@ -170,7 +171,7 @@ export default function PassportPage() {
                                 </svg>
                                 <div className="absolute inset-0 m-auto w-[100px] h-[100px] rounded-full bg-zinc-200 dark:bg-zinc-800 p-1">
                                     {user?.photoURL ? (
-                                        <img src={user.photoURL} alt="Profile" className="w-full h-full rounded-full object-cover" />
+                                        <Image src={user.photoURL!} alt="Profile" width={100} height={100} className="w-full h-full rounded-full object-cover" />
                                     ) : (
                                         <div className="w-full h-full rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-4xl">😎</div>
                                     )}
@@ -386,7 +387,7 @@ export default function PassportPage() {
                                 return (
                                     <div key={rank} className="flex flex-col items-center group cursor-pointer">
                                         <div className="relative mb-4 z-10 group-hover:-translate-y-2 transition-transform">
-                                            <img src={entry.photoURL || '/placeholder.jpg'} alt="" className={`w-16 h-16 md:w-20 md:h-20 rounded-full border-4 border-white dark:border-zinc-900 object-cover shadow-xl ${idx === 0 ? 'w-20 h-20 md:w-24 md:h-24 ring-4 ring-amber-400' : ''}`} />
+                                            <Image src={entry.photoURL || '/placeholder.jpg'} alt="" width={80} height={80} className={`rounded-full border-4 border-white dark:border-zinc-900 object-cover shadow-xl ${idx === 0 ? 'w-20 h-20 md:w-24 md:h-24 ring-4 ring-amber-400' : 'w-16 h-16 md:w-20 md:h-20'}`} />
                                             <div className={`absolute -bottom-3 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-gradient-to-br ${color} flex items-center justify-center text-white font-black shadow-lg border-2 border-white dark:border-zinc-900`}>{rank}</div>
                                         </div>
                                         <div className="text-center mb-4">
@@ -405,7 +406,7 @@ export default function PassportPage() {
                                 {leaderboard.slice(3).map((entry, i) => (
                                     <div key={entry.uid} className="flex items-center gap-4 p-5 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors">
                                         <div className="w-8 text-center font-black text-zinc-400 text-lg">{i + 4}</div>
-                                        <img src={entry.photoURL || '/placeholder.jpg'} alt="" className="w-12 h-12 rounded-full bg-zinc-200" />
+                                        <Image src={entry.photoURL || '/placeholder.jpg'} alt="" width={48} height={48} className="w-12 h-12 rounded-full object-cover bg-zinc-200" />
                                         <div className="flex-1 min-w-0">
                                             <div className="font-bold text-zinc-900 dark:text-white truncate">{entry.displayName}</div>
                                             <div className="text-xs text-zinc-500">Level {entry.level}</div>

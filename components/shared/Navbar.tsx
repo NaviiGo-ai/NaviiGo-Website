@@ -258,8 +258,7 @@ export default function Navbar() {
                   </div>
                   {user.photoURL ? (
                     <motion.div whileHover={{ scale: 1.05 }} className="relative">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={user.photoURL} alt="User" className="w-9 h-9 rounded-full border-2 border-white dark:border-slate-800 shadow-sm" />
+                      <Image src={user.photoURL!} alt="User" width={36} height={36} className="w-9 h-9 rounded-full border-2 border-white dark:border-slate-800 shadow-sm" />
                       <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white dark:border-slate-800"></div>
                     </motion.div>
                   ) : (
@@ -386,7 +385,7 @@ export default function Navbar() {
                 <div className="flex flex-col space-y-4">
                   <div className="flex items-center gap-3 px-2">
                     {user.photoURL ? (
-                      <img src={user.photoURL} alt="User" className="w-10 h-10 rounded-full border-2 border-white dark:border-slate-800 shadow-sm" />
+                      <Image src={user.photoURL!} alt="User" width={40} height={40} className="w-10 h-10 rounded-full border-2 border-white dark:border-slate-800 shadow-sm" />
                     ) : (
                       <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center">
                         <User className="w-5 h-5 text-slate-500 dark:text-slate-400" />

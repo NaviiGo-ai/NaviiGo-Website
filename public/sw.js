@@ -46,6 +46,9 @@ self.addEventListener('fetch', (event) => {
     // Skip API routes so they fail gracefully if offline
     if (url.pathname.startsWith('/api/')) return;
 
+    // Skip the deals page — third-party widgets must always be fetched fresh
+    if (url.pathname.startsWith('/deals')) return;
+
     // Skip ALL cross-origin requests EXCEPT map tiles
     // This prevents the SW from intercepting Firebase auth, Google OAuth,
     // Sentry, analytics, and other third-party API calls

@@ -1,6 +1,7 @@
 "use client";
 
 import { useLayoutEffect, useRef } from "react";
+import Image from "next/image";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { motion } from "framer-motion";
@@ -77,10 +78,13 @@ export default function HorizontalScroll() {
           >
             {/* Background Image */}
             <div className="absolute inset-0 z-0">
-               <img 
+               <Image 
                  src={panel.image} 
                  alt={panel.title}
-                 className="w-full h-full object-cover"
+                 fill
+                 priority={index === 0}
+                 className="object-cover"
+                 sizes="100vw"
                />
                <div className={`absolute inset-0 bg-gradient-to-t ${panel.accent}`} />
                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />

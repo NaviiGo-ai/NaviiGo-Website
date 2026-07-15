@@ -1,8 +1,8 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAnalytics, isSupported } from "firebase/analytics";
-import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
-import { getStorage } from "firebase/storage";
+import { getAuth, Auth } from "firebase/auth";
+import { getFirestore, Firestore } from "firebase/firestore";
+import { getStorage, FirebaseStorage } from "firebase/storage";
 
 // NaviiGo Firebase Configuration
 const firebaseConfig = {
@@ -15,11 +15,16 @@ const firebaseConfig = {
   measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
 };
 
-// Initialize Firebase (singleton)
+// Initialize Firebase app (singleton — safe on both server and client)
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-const auth = getAuth(app);
-const db = getFirestore(app, 'naviigo-db');
-const storage = getStorage(app);
+
+// Firebase services use browser-only APIs; calling them during SSR returns null
+// and crashes client code. Only initialize in the browser.
+const isBrowser = typeof window !== 'undefined';
+const auth: Auth | null = isBrowser ? getAuth(app) : null;
+// Firestore works in both browser and server (Next.js API routes) — do not guard
+const db: Firestore = getFirestore(app, 'naviigo-db');
+const storage: FirebaseStorage | null = isBrowser ? getStorage(app) : null;
 
 let analytics: ReturnType<typeof getAnalytics> | null = null;
 

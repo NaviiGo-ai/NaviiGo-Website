@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
+import Image from 'next/image';
 import { saveSharedItinerary, listenToItinerary, saveItineraryToFirestore, updateSharedPlans } from '@/lib/firestore';
 import { useAuth } from '@/lib/AuthContext';
 import { resolveImgSrc } from '@/lib/imageService';
@@ -493,7 +494,7 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                                         <motion.div key={g.placeId || g.name} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
                                             className="bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl p-4 border border-zinc-100 dark:border-zinc-800">
                                             <div className="flex gap-3">
-                                                {g.photo && <img src={g.photo} alt={g.name} className="w-16 h-16 rounded-xl object-cover" />}
+                                                {g.photo && <Image src={g.photo} alt={g.name} width={64} height={64} className="w-16 h-16 rounded-xl object-cover" />}
                                                 <div className="flex-1 min-w-0">
                                                     <h3 className="font-bold text-zinc-900 dark:text-white text-sm line-clamp-1">{g.name}</h3>
                                                     <div className="text-xs text-emerald-600 font-medium mb-1">{g.type}</div>

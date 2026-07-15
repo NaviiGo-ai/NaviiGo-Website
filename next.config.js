@@ -29,6 +29,10 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'places.googleapis.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'www.gstatic.com',
+      },
     ],
   },
   async headers() {
