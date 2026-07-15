@@ -51,6 +51,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } catch (err) {
           console.error('Failed to upsert user profile:', err);
         }
+
+        // ── Personalization sync: load cloud data into localStorage ──
+        try {
+          const { setCurrentUid, loadFromFirestore } = await import('./browsingSignals');
+          setCurrentUid(user.uid);
+          await loadFromFirestore(user.uid);
+
+          // Also load taste vector from Firestore into localStorage
+          const { getPersonalizationTaste } = await import('./firestore');
+          const taste = await getPersonalizationTaste(user.uid);
+          if (taste?.vector?.length) {
+            localStorage.setItem('naviigo_taste_vector', JSON.stringify(taste.vector));
+          }
+        } catch (err) {
+          console.error('Failed to sync personalization:', err);
+        }
+      } else {
+        // Signed out — stop Firestore sync
+        try {
+          const { setCurrentUid } = await import('./browsingSignals');
+          setCurrentUid(null);
+        } catch {}
       }
     });
 

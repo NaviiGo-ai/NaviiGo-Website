@@ -216,3 +216,25 @@ export interface DestinationReview {
   createdAt: Timestamp;
 }
 
+// ─── Personalization (Browsing Signals & Taste Vector) ────────────────────────
+// Path: users/{uid}/personalization/signals
+export interface PersonalizationSignalsDoc {
+  /** Seconds spent viewing each city's card/deep-dive page */
+  timeOnCity: Record<string, number>;
+  /** Category pills clicked on Explore page (Heritage, Beach, etc.) */
+  clickedCategories: string[];
+  /** Vibes selected on deep-dive pages */
+  deepDiveVibes: Array<{ dest: string; companion: string; vibe: string }>;
+  /** Destinations the user clicked into (ordered, most recent last) */
+  viewedDestinations: string[];
+  /** Firestore server timestamp */
+  updatedAt: Timestamp;
+}
+
+// Path: users/{uid}/personalization/taste
+export interface PersonalizationTasteDoc {
+  /** Gemini embedding vector representing user taste profile */
+  vector: number[];
+  /** Firestore server timestamp */
+  updatedAt: Timestamp;
+}

@@ -273,8 +273,17 @@ export default function SetupWizard({ onDone }: SetupWizardProps) {
                                             selectedDestId: destId,
                                             purpose: purpose || 'leisure'
                                         })
-                                    }).then(r => r.json()).then(d => {
-                                        if (d.success) localStorage.setItem('naviigo_taste_vector', JSON.stringify(d.newVector));
+                                    }).then(r => r.json()).then(async d => {
+                                        if (d.success) {
+                                            localStorage.setItem('naviigo_taste_vector', JSON.stringify(d.newVector));
+                                            // Persist to Firestore for cross-device sync
+                                            if (user?.uid) {
+                                                try {
+                                                    const { savePersonalizationTaste } = await import('@/lib/firestore');
+                                                    await savePersonalizationTaste(user.uid, d.newVector);
+                                                } catch {}
+                                            }
+                                        }
                                     }).catch(console.error);
 
                                     setVibeMatchMode(false);

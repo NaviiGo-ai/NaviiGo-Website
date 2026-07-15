@@ -1,6 +1,8 @@
 // ─── Browsing Signal Collector ────────────────────────────────────────────────
 // Tracks user browsing behaviour on explore pages to feed into itinerary
 // personalization. All data lives in localStorage — zero API cost.
+// When a user is signed in, signals are also synced to Firestore for
+// cross-device personalization (debounced to avoid excessive writes).
 
 const STORAGE_KEY = 'naviigo_browsing_signals';
 
@@ -39,12 +41,97 @@ export function getBrowsingSignals(): BrowsingSignals {
     }
 }
 
-function save(signals: BrowsingSignals) {
+// ── Firestore Sync Layer ─────────────────────────────────────────────────────
+
+let _currentUid: string | null = null;
+let _firestoreDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+const DEBOUNCE_MS = 2000; // 2 seconds — batches rapid signal updates
+
+/** Call on sign-in / sign-out to enable/disable Firestore sync */
+export function setCurrentUid(uid: string | null) {
+    _currentUid = uid;
+}
+
+/** Debounced write to Firestore — avoids excessive writes during rapid browsing */
+function scheduleFirestoreSync() {
+    if (!_currentUid) return;
+    if (_firestoreDebounceTimer) clearTimeout(_firestoreDebounceTimer);
+    _firestoreDebounceTimer = setTimeout(() => {
+        syncToFirestore();
+    }, DEBOUNCE_MS);
+}
+
+/** Actually write current localStorage signals to Firestore */
+async function syncToFirestore() {
+    if (!_currentUid) return;
+    try {
+        const signals = getBrowsingSignals();
+        const { savePersonalizationSignals } = await import('./firestore');
+        await savePersonalizationSignals(_currentUid, {
+            timeOnCity: signals.timeOnCity,
+            clickedCategories: signals.clickedCategories,
+            deepDiveVibes: signals.deepDiveVibes,
+            viewedDestinations: signals.viewedDestinations,
+        });
+    } catch (err) {
+        console.error('[BrowsingSignals] Firestore sync failed:', err);
+    }
+}
+
+/** Load from Firestore and merge into localStorage (Firestore wins if newer) */
+export async function loadFromFirestore(uid: string) {
+    try {
+        const { getPersonalizationSignals } = await import('./firestore');
+        const remote = await getPersonalizationSignals(uid);
+        if (!remote) return; // No cloud data yet — keep local
+
+        const local = getBrowsingSignals();
+        const remoteTimestamp = remote.updatedAt?.toMillis?.() || 0;
+
+        // If Firestore data is newer, merge it into localStorage
+        if (remoteTimestamp > local.lastUpdated) {
+            const merged: BrowsingSignals = {
+                // Merge timeOnCity — take the max time for each city
+                timeOnCity: { ...local.timeOnCity },
+                // Deduplicate categories
+                clickedCategories: [...new Set([
+                    ...local.clickedCategories,
+                    ...(remote.clickedCategories || []),
+                ])],
+                // Take Firestore's deep-dive vibes (more recent)
+                deepDiveVibes: remote.deepDiveVibes || local.deepDiveVibes,
+                // Take Firestore's viewed destinations (more recent ordering)
+                viewedDestinations: remote.viewedDestinations || local.viewedDestinations,
+                lastUpdated: remoteTimestamp,
+            };
+            // Merge timeOnCity — keep the larger value
+            for (const [city, time] of Object.entries(remote.timeOnCity || {})) {
+                merged.timeOnCity[city] = Math.max(merged.timeOnCity[city] || 0, time);
+            }
+            saveLocal(merged);
+        } else if (local.lastUpdated > remoteTimestamp) {
+            // Local is newer — push to Firestore
+            syncToFirestore();
+        }
+    } catch (err) {
+        console.error('[BrowsingSignals] Failed to load from Firestore:', err);
+    }
+}
+
+// ── Core Save ────────────────────────────────────────────────────────────────
+
+function saveLocal(signals: BrowsingSignals) {
     if (typeof window === 'undefined') return;
     signals.lastUpdated = Date.now();
     try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(signals));
     } catch { /* quota exceeded — silently skip */ }
+}
+
+function save(signals: BrowsingSignals) {
+    saveLocal(signals);
+    // Queue Firestore sync if user is signed in
+    scheduleFirestoreSync();
 }
 
 // ── City View Tracking ───────────────────────────────────────────────────────
