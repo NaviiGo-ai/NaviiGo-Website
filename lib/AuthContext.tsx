@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import {
   User,
   onAuthStateChanged,
@@ -57,17 +57,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => unsubscribe();
   }, []);
 
+  // Guard against double-click / rapid re-invocation of sign-in
+  const signingInRef = useRef(false);
+
   const signInWithGoogle = async () => {
-    if (!auth) return;
+    if (!auth || signingInRef.current) return;
+    signingInRef.current = true;
     const provider = new GoogleAuthProvider();
     try {
       await signInWithPopup(auth, provider);
     } catch (error: any) {
-      if (error?.code === 'auth/popup-closed-by-user') {
-        // User simply closed the popup, this is normal behavior and doesn't need an error overlay
+      const code = error?.code;
+      // User closed the popup or a new popup cancelled the old one — not real errors
+      if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') {
+        signingInRef.current = false;
+        return;
+      }
+      // Browser blocked the popup — fall back to redirect-based flow
+      if (code === 'auth/popup-blocked') {
+        try {
+          const { signInWithRedirect } = await import('firebase/auth');
+          await signInWithRedirect(auth, provider);
+        } catch (redirectErr) {
+          console.error("Error signing in with redirect fallback", redirectErr);
+        }
+        signingInRef.current = false;
         return;
       }
       console.error("Error signing in with Google", error);
+    } finally {
+      signingInRef.current = false;
     }
   };
 

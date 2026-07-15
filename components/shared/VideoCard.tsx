@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 
 // Curated travel YouTube videos per destination
 const DEST_VIDEOS: Record<string, { id: string; title: string; channel: string }> = {
-    kerala: { id: 'qGDMlqJG3To', title: 'Kerala Travel Guide — Backwaters, Hills & Beaches', channel: 'Wander with Josh' },
+    kerala: { id: 'EXr0V7xfVbk', title: 'Kerala Travel Guide — Backwaters, Hills & Beaches', channel: 'Wander with Josh' },
     jaipur: { id: 'sGFEhSjbPJw', title: 'Jaipur in 48 Hours — Pink City Guide', channel: 'Travel Monks' },
     varanasi: { id: '0h09g8Zp_tM', title: 'Varanasi — The Eternal City of India', channel: 'Lost LeBlanc' },
     goa: { id: 'dpIAJNtdJ3I', title: 'Goa Travel Guide — Best Beaches & Food', channel: 'Nomadic Boys' },
@@ -14,7 +14,7 @@ const DEST_VIDEOS: Record<string, { id: string; title: string; channel: string }
     rishikesh: { id: 'sGFEhSjbPJw', title: 'Rishikesh — Yoga, Rafting & Mountains', channel: 'Mindful Wanderer' },
 };
 
-const DEFAULT_VIDEO = { id: 'qGDMlqJG3To', title: 'India Travel Highlights 2024', channel: 'NaviiGo Picks' };
+const DEFAULT_VIDEO = { id: '95rx0JoGeic', title: 'India Travel Highlights 2024', channel: 'NaviiGo Picks' };
 
 interface VideoCardProps {
     destId: string;

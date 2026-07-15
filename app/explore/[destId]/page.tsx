@@ -68,7 +68,7 @@ export default function DestinationDeepDive() {
         // Track the vibe selection for personalization
         trackDeepDiveVibe(destination, companion, vibe);
         try {
-            const baseUrl = process.env.NEXT_PUBLIC_PYTHON_API_URL || '';
+            const baseUrl = '';
             const res = await fetch(`${baseUrl}/api/explore/deep-dive`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -86,7 +86,7 @@ export default function DestinationDeepDive() {
 
     const fetchEvents = async () => {
         try {
-            const baseUrl = process.env.NEXT_PUBLIC_PYTHON_API_URL || '';
+            const baseUrl = '';
             const res = await fetch(`${baseUrl}/api/explore/events`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },

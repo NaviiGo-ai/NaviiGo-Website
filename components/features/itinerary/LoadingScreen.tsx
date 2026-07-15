@@ -81,7 +81,7 @@ export default function LoadingScreen({ form, onDone }: LoadingScreenProps) {
 
         const generate = async () => {
             try {
-                const baseUrl = process.env.NEXT_PUBLIC_PYTHON_API_URL || '';
+                const baseUrl = '';
                 const res = await fetch(`${baseUrl}/api/itinerary/generate`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },

@@ -24,7 +24,7 @@ export default function BuildFromLink({ onExtracted }: BuildFromLinkProps) {
         setExtracted(null);
 
         try {
-            const baseUrl = process.env.NEXT_PUBLIC_PYTHON_API_URL || '';
+            const baseUrl = '';
             const res = await fetch(`${baseUrl}/api/itinerary/from-link`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },

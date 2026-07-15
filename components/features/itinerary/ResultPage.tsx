@@ -115,7 +115,7 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
 
     useEffect(() => {
         if (data.mapCenter) {
-            const baseUrl = process.env.NEXT_PUBLIC_PYTHON_API_URL || '';
+            const baseUrl = '';
             fetch(`${baseUrl}/api/places?lat=${data.mapCenter.lat}&lng=${data.mapCenter.lng}&type=tourist_attraction&radius=5000`)
                 .then(r => r.json())
                 .then(d => setHiddenGems(d.places?.slice(0, 4) ?? []))
@@ -126,7 +126,7 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
     // Fetch AI insider tips
     useEffect(() => {
         if (!destName) return;
-        const baseUrl = process.env.NEXT_PUBLIC_PYTHON_API_URL || '';
+        const baseUrl = '';
         fetch(`${baseUrl}/api/chat`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -152,7 +152,7 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
     // Fetch AI Packing List
     useEffect(() => {
         if (!destName || !displayMonth) return;
-        const baseUrl = process.env.NEXT_PUBLIC_PYTHON_API_URL || '';
+        const baseUrl = '';
         fetch(`${baseUrl}/api/chat`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
