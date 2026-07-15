@@ -19,7 +19,6 @@ export async function POST(req: NextRequest) {
         const body = await req.json();
         const baseUrl = process.env.NEXT_PUBLIC_PYTHON_API_URL || 'http://localhost:8000';
 
-        console.log(`[Proxy] Forwarding recommendations request to Python backend`);
 
         const pythonResponse = await fetch(`${baseUrl}/api/recommendations/`, {
             method: 'POST',

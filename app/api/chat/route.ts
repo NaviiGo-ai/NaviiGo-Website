@@ -36,7 +36,6 @@ export async function POST(req: NextRequest) {
 
         const baseUrl = process.env.NEXT_PUBLIC_PYTHON_API_URL || 'http://localhost:8000';
 
-        console.log(`[Proxy] Forwarding chat request to Python backend`);
 
         const pythonResponse = await fetch(`${baseUrl}/api/chat/`, {
             method: 'POST',

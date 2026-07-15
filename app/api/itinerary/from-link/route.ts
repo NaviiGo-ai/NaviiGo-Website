@@ -42,7 +42,6 @@ export async function POST(req: NextRequest) {
 
         const baseUrl = process.env.NEXT_PUBLIC_PYTHON_API_URL || 'http://localhost:8000';
 
-        console.log(`[Proxy] Forwarding from-link request to Python backend`);
 
         const pythonResponse = await fetch(`${baseUrl}/api/itinerary/from-link`, {
             method: 'POST',

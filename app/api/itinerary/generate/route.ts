@@ -66,7 +66,6 @@ export async function POST(req: NextRequest) {
 
         const baseUrl = process.env.NEXT_PUBLIC_PYTHON_API_URL || 'http://localhost:8000';
 
-        console.log(`[Proxy] Forwarding itinerary request to Python backend: ${baseUrl}/api/itinerary/generate`);
 
         const pythonResponse = await fetch(`${baseUrl}/api/itinerary/generate`, {
             method: 'POST',

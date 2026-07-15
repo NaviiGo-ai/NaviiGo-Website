@@ -122,7 +122,7 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
         if (!searchQuery.trim()) return;
         setIsSearching(true);
         try {
-            const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(searchQuery)}&format=json&limit=5`);
+            const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(searchQuery)}&format=json&limit=5&email=contact@naviigo.com`);
             const results = await res.json();
             setSearchRes(results);
         } catch (err) { console.error(err); }
