@@ -551,7 +551,6 @@ export default function BookingsPage() {
   }, []);
 
   const handleOpenPortal = (item: any, type: any) => {
-    console.log("--- OPENING BOOKING PORTAL ---", { item, type, travelers });
     // Enrich item with search context for deep link pre-filling
     const enrichedItem = {
       ...item,

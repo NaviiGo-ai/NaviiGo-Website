@@ -1,14 +1,23 @@
-const CACHE_NAME = 'naviigo-v6-offline';
+const CACHE_NAME = 'naviigo-v7-offline';
 const TILE_CACHE = 'naviigo-tiles-v3';
 
-// We explicitly cache critical static roots
+// Critical static routes to pre-cache (public pages only)
 const PRECACHE_URLS = [
     '/',
     '/explore',
-    '/itinerary',
     '/bookings',
-    '/passport',
     '/offline', // Fallback page
+];
+
+// Auth-gated routes — NEVER cache these (they contain user-specific data)
+const AUTH_GATED_ROUTES = [
+    '/passport',
+    '/saved',
+    '/itinerary/ongoing',
+    '/itinerary/upcoming',
+    '/itinerary/history',
+    '/itinerary/detail',
+    '/itinerary/tracking',
 ];
 
 self.addEventListener('install', (event) => {
@@ -44,6 +53,12 @@ self.addEventListener('fetch', (event) => {
         !url.hostname.includes('carto') &&
         !url.hostname.includes('tile')) {
         return;
+    }
+
+    // Skip auth-gated routes — these contain user-specific data and must
+    // never be served from cache (stale user state after sign-out/sign-in)
+    if (AUTH_GATED_ROUTES.some(route => url.pathname.startsWith(route))) {
+        return; // Let the browser handle these normally (network-only)
     }
 
     // 1. Cache First for Map Tiles

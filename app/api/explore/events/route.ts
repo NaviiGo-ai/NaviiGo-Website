@@ -5,7 +5,6 @@ export async function POST(req: Request) {
         const body = await req.json();
         const baseUrl = process.env.NEXT_PUBLIC_PYTHON_API_URL || 'http://localhost:8000';
         
-        console.log(`[Proxy] Forwarding events request to Python backend`);
         
         const pythonResponse = await fetch(`${baseUrl}/api/explore/events`, {
             method: 'POST',

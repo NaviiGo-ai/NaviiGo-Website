@@ -51,7 +51,7 @@ export default function LoadingScreen({ form, onDone }: LoadingScreenProps) {
     // Fetch real city center via Nominatim for non-hardcoded destinations
     useEffect(() => {
         if (hardcodedData) return;
-        fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(destName + ' India')}&format=json&limit=1`)
+        fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(destName + ' India')}&format=json&limit=1&email=contact@naviigo.com`)
             .then(res => res.json())
             .then(data => {
                 if (data && data[0]) {
