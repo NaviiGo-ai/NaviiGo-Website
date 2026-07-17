@@ -23,6 +23,8 @@ import hashlib
 from pathlib import Path
 from typing import Optional, Dict, Any, Callable, Awaitable
 from collections import OrderedDict
+import threading
+import asyncio
 
 # ── Redis Setup ──────────────────────────────────────────────────────────────
 _redis_client = None
@@ -43,11 +45,11 @@ def _init_redis():
         )
         _redis_client.ping()
         _redis_available = True
-        print(f"[GeminiCache] ✅ Redis connected: {redis_url}")
+        print(f"[GeminiCache] [OK] Redis connected: {redis_url}")
     except Exception as e:
         _redis_available = False
         _redis_client = None
-        print(f"[GeminiCache] ⚠ Redis unavailable ({e}), falling back to file cache")
+        print(f"[GeminiCache] [WARN] Redis unavailable ({e}), falling back to file cache")
 
 # Initialize Redis on module load
 _init_redis()
@@ -61,6 +63,8 @@ CACHE_ROOT.mkdir(parents=True, exist_ok=True)
 MAX_MEMORY_ENTRIES = 500
 _memory: OrderedDict[str, Dict[str, Any]] = OrderedDict()
 # Each entry: {"data": ..., "ts": unix_timestamp, "ttl": seconds}
+_cache_lock = threading.Lock()
+_file_lock = threading.Lock()
 
 # ── Stats ────────────────────────────────────────────────────────────────────
 _stats = {"hits_memory": 0, "hits_redis": 0, "hits_file": 0, "misses": 0, "errors": 0}
@@ -92,26 +96,40 @@ def _safe_filename(namespace: str, key: str) -> Path:
 # ── Memory Layer ─────────────────────────────────────────────────────────────
 
 def _mem_get(full_key: str) -> Optional[Any]:
-    entry = _memory.get(full_key)
-    if not entry:
-        return None
-    if time.time() - entry["ts"] > entry["ttl"]:
-        _memory.pop(full_key, None)
-        return None
-    _memory.move_to_end(full_key)
-    return entry["data"]
+    with _cache_lock:
+        entry = _memory.get(full_key)
+        if not entry:
+            return None
+        if time.monotonic() - entry["ts"] > entry["ttl"]:
+            _memory.pop(full_key, None)
+            return None
+        _memory.move_to_end(full_key)
+        return entry["data"]
 
 
 def _mem_set(full_key: str, data: Any, ttl_seconds: float):
-    _memory[full_key] = {"data": data, "ts": time.time(), "ttl": ttl_seconds}
-    _memory.move_to_end(full_key)
-    while len(_memory) > MAX_MEMORY_ENTRIES:
-        _memory.popitem(last=False)
+    with _cache_lock:
+        now = time.monotonic()
+        
+        # Cleanup a few expired items to prevent unbounded growth of stale data
+        to_remove = []
+        for k, v in _memory.items():
+            if now - v["ts"] > v["ttl"]:
+                to_remove.append(k)
+            if len(to_remove) >= 10:
+                break
+        for k in to_remove:
+            _memory.pop(k, None)
+
+        _memory[full_key] = {"data": data, "ts": now, "ttl": ttl_seconds}
+        _memory.move_to_end(full_key)
+        while len(_memory) > MAX_MEMORY_ENTRIES:
+            _memory.popitem(last=False)
 
 
 # ── Redis Layer ──────────────────────────────────────────────────────────────
 
-def _redis_get(namespace: str, key: str) -> Optional[Any]:
+def _redis_get_sync(namespace: str, key: str) -> Optional[Any]:
     """Get a value from Redis. Returns None if Redis is unavailable or key doesn't exist."""
     if not _redis_available or not _redis_client:
         return None
@@ -125,8 +143,11 @@ def _redis_get(namespace: str, key: str) -> Optional[Any]:
         print(f"[GeminiCache] Redis GET error: {e}")
         return None
 
+async def _redis_get(namespace: str, key: str) -> Optional[Any]:
+    return await asyncio.to_thread(_redis_get_sync, namespace, key)
 
-def _redis_set(namespace: str, key: str, data: Any, ttl_seconds: float):
+
+def _redis_set_sync(namespace: str, key: str, data: Any, ttl_seconds: float):
     """Store a value in Redis with TTL. Silently fails if Redis is unavailable."""
     if not _redis_available or not _redis_client:
         return
@@ -136,6 +157,9 @@ def _redis_set(namespace: str, key: str, data: Any, ttl_seconds: float):
         _redis_client.setex(rkey, int(ttl_seconds), raw)
     except Exception as e:
         print(f"[GeminiCache] Redis SET error: {e}")
+
+async def _redis_set(namespace: str, key: str, data: Any, ttl_seconds: float):
+    await asyncio.to_thread(_redis_set_sync, namespace, key, data, ttl_seconds)
 
 
 def _redis_delete_pattern(pattern: str):
@@ -160,25 +184,33 @@ def _redis_delete_pattern(pattern: str):
 
 # ── File Layer ───────────────────────────────────────────────────────────────
 
-def _file_get(path: Path, ttl_seconds: float) -> Optional[Any]:
+def _file_get_sync(path: Path, ttl_seconds: float) -> Optional[Any]:
     if not path.exists():
         return None
     try:
-        age = time.time() - path.stat().st_mtime
-        if age > ttl_seconds:
-            return None
-        with open(path, "r", encoding="utf-8") as f:
-            return json.load(f)
+        with _file_lock:
+            age = time.time() - path.stat().st_mtime
+            if age > ttl_seconds:
+                return None
+            with open(path, "r", encoding="utf-8") as f:
+                return json.load(f)
     except Exception:
         return None
 
+async def _file_get(path: Path, ttl_seconds: float) -> Optional[Any]:
+    return await asyncio.to_thread(_file_get_sync, path, ttl_seconds)
 
-def _file_set(path: Path, data: Any):
+
+def _file_set_sync(path: Path, data: Any):
     try:
-        with open(path, "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
+        with _file_lock:
+            with open(path, "w", encoding="utf-8") as f:
+                json.dump(data, f, ensure_ascii=False, indent=2)
     except Exception as e:
         print(f"[GeminiCache] File write error: {e}")
+
+async def _file_set(path: Path, data: Any):
+    await asyncio.to_thread(_file_set_sync, path, data)
 
 
 # ── Public API ───────────────────────────────────────────────────────────────
@@ -214,7 +246,7 @@ async def cached_gemini_call(
         return data
 
     # Layer 2: Redis (shared, survives restarts)
-    data = _redis_get(cache_namespace, cache_key)
+    data = await _redis_get(cache_namespace, cache_key)
     if data is not None:
         _stats["hits_redis"] += 1
         _mem_set(fk, data, ttl_s)  # Promote to memory
@@ -223,11 +255,11 @@ async def cached_gemini_call(
 
     # Layer 3: File (persistent fallback)
     file_path = _safe_filename(cache_namespace, cache_key)
-    data = _file_get(file_path, ttl_s)
+    data = await _file_get(file_path, ttl_s)
     if data is not None:
         _stats["hits_file"] += 1
         _mem_set(fk, data, ttl_s)  # Promote to memory
-        _redis_set(cache_namespace, cache_key, data, ttl_s)  # Promote to Redis
+        await _redis_set(cache_namespace, cache_key, data, ttl_s)  # Promote to Redis
         print(f"[GeminiCache] HIT file — {cache_namespace}/{cache_key}")
         return data
 
@@ -238,8 +270,8 @@ async def cached_gemini_call(
         data = await generator()
         if data is not None:
             _mem_set(fk, data, ttl_s)
-            _redis_set(cache_namespace, cache_key, data, ttl_s)
-            _file_set(file_path, data)
+            await _redis_set(cache_namespace, cache_key, data, ttl_s)
+            await _file_set(file_path, data)
             print(f"[GeminiCache] Stored {cache_namespace}/{cache_key}")
             return data
     except Exception as e:
@@ -294,9 +326,10 @@ def get_cache_stats() -> dict:
 def clear_namespace(namespace: str):
     """Clear all cache entries for a namespace."""
     # Memory
-    keys_to_remove = [k for k in _memory if k.startswith(f"{namespace}::")]
-    for k in keys_to_remove:
-        _memory.pop(k, None)
+    with _cache_lock:
+        keys_to_remove = [k for k in _memory if k.startswith(f"{namespace}::")]
+        for k in keys_to_remove:
+            _memory.pop(k, None)
     # Redis
     redis_cleared = _redis_delete_pattern(f"{REDIS_KEY_PREFIX}{namespace}:*")
     # Files
@@ -316,7 +349,8 @@ def clear_namespace(namespace: str):
 
 def clear_all():
     """Clear the entire cache."""
-    _memory.clear()
+    with _cache_lock:
+        _memory.clear()
     redis_cleared = _redis_delete_pattern(f"{REDIS_KEY_PREFIX}*")
     file_cleared = 0
     for f in CACHE_ROOT.rglob("*.json"):

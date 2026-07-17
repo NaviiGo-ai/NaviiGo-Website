@@ -3,6 +3,7 @@ import json
 import re
 import asyncio
 from typing import Optional, Dict, Any, List
+from google import genai
 from services.gemini_client import get_client, GEMINI_MODEL, is_configured
 
 
@@ -48,10 +49,24 @@ Respond with ONLY valid JSON:
 }}"""
 
     try:
+        # Prevent prompt injection & DoS
+        safe_message = message[:1000]
+        safe_context = (context or [])[-5:]
+        
+        contents = []
+        for msg in safe_context:
+            role = "user" if msg.get("sender") == "user" else "model"
+            contents.append({"role": role, "parts": [{"text": str(msg.get("text", ""))}]})
+        
+        contents.append({"role": "user", "parts": [{"text": safe_message}]})
+
         response = await asyncio.to_thread(
             client.models.generate_content,
             model=GEMINI_MODEL,
-            contents=system_context + "\n\nUser: " + message,
+            contents=contents,
+            config=genai.types.GenerateContentConfig(
+                system_instruction=system_context,
+            )
         )
         text = response.text
 
@@ -59,7 +74,12 @@ Respond with ONLY valid JSON:
         if not json_match:
             return {"reply": text, "action": None}
 
-        return json.loads(json_match.group(0))
+        try:
+            return json.loads(json_match.group(0))
+        except json.JSONDecodeError:
+            print("[AI Chat] JSON Decode Error. Falling back to raw text.")
+            return {"reply": text.replace("```json", "").replace("```", "").strip(), "action": None}
+            
     except Exception as e:
         print(f"[AI Chat Error] {e}")
         return {"reply": "I'm having trouble right now. Please try again in a moment.", "action": None}

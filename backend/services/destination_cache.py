@@ -13,6 +13,7 @@ import csv
 import json
 import time
 import asyncio
+import threading
 from pathlib import Path
 from typing import Optional, Dict, Any
 from collections import OrderedDict
@@ -37,6 +38,9 @@ _memory_cache: OrderedDict[str, Dict[str, Any]] = OrderedDict()
 _csv_data: Dict[str, Dict[str, Any]] = {}
 _csv_loaded = False
 
+_cache_lock = threading.Lock()
+_file_lock = threading.Lock()
+
 
 def _normalize_key(dest_name: str) -> str:
     """Normalize destination name to a filesystem-safe cache key."""
@@ -48,60 +52,69 @@ def _normalize_key(dest_name: str) -> str:
 # ────────────────────────────────────────────────────────────────────────────
 
 def _mem_get(key: str) -> Optional[Dict[str, Any]]:
-    entry = _memory_cache.get(key)
-    if not entry:
-        return None
-    # Check TTL
-    if time.time() - entry["ts"] > CACHE_TTL_SECONDS:
-        _memory_cache.pop(key, None)
-        return None
-    # Move to end (most recently used)
-    _memory_cache.move_to_end(key)
-    return entry["data"]
+    with _cache_lock:
+        entry = _memory_cache.get(key)
+        if not entry:
+            return None
+        # Check TTL
+        if time.monotonic() - entry["ts"] > CACHE_TTL_SECONDS:
+            _memory_cache.pop(key, None)
+            return None
+        # Move to end (most recently used)
+        _memory_cache.move_to_end(key)
+        return entry["data"]
 
 
 def _mem_set(key: str, data: Dict[str, Any]):
-    _memory_cache[key] = {"data": data, "ts": time.time()}
-    _memory_cache.move_to_end(key)
-    # Evict oldest if over limit
-    while len(_memory_cache) > MAX_MEMORY_ENTRIES:
-        _memory_cache.popitem(last=False)
+    with _cache_lock:
+        _memory_cache[key] = {"data": data, "ts": time.monotonic()}
+        _memory_cache.move_to_end(key)
+        # Evict oldest if over limit
+        while len(_memory_cache) > MAX_MEMORY_ENTRIES:
+            _memory_cache.popitem(last=False)
 
 
 # ────────────────────────────────────────────────────────────────────────────
 # Layer 2: File Cache
 # ────────────────────────────────────────────────────────────────────────────
 
-def _file_get(key: str) -> Optional[Dict[str, Any]]:
+def _file_get_sync(key: str) -> Optional[Dict[str, Any]]:
     path = CACHE_DIR / f"{key}.json"
     if not path.exists():
         return None
     try:
-        stat = path.stat()
-        age = time.time() - stat.st_mtime
-        if age > CACHE_TTL_SECONDS:
-            return None  # Expired
-        with open(path, "r", encoding="utf-8") as f:
-            return json.load(f)
+        with _file_lock:
+            stat = path.stat()
+            age = time.time() - stat.st_mtime
+            if age > CACHE_TTL_SECONDS:
+                return None  # Expired
+            with open(path, "r", encoding="utf-8") as f:
+                return json.load(f)
     except Exception as e:
         print(f"[Cache] File read error for {key}: {e}")
         return None
 
+async def _file_get(key: str) -> Optional[Dict[str, Any]]:
+    return await asyncio.to_thread(_file_get_sync, key)
 
-def _file_set(key: str, data: Dict[str, Any]):
+def _file_set_sync(key: str, data: Dict[str, Any]):
     path = CACHE_DIR / f"{key}.json"
     try:
-        with open(path, "w", encoding="utf-8") as f:
-            json.dump(data, f, ensure_ascii=False, indent=2)
+        with _file_lock:
+            with open(path, "w", encoding="utf-8") as f:
+                json.dump(data, f, ensure_ascii=False, indent=2)
     except Exception as e:
         print(f"[Cache] File write error for {key}: {e}")
+
+async def _file_set(key: str, data: Dict[str, Any]):
+    await asyncio.to_thread(_file_set_sync, key, data)
 
 
 # ────────────────────────────────────────────────────────────────────────────
 # Layer 3: CSV / Bulk Data
 # ────────────────────────────────────────────────────────────────────────────
 
-def load_csv_destinations():
+def _load_csv_sync():
     """
     Load destination data from CSV and/or JSON files in backend/data/.
     
@@ -143,10 +156,14 @@ def load_csv_destinations():
         except Exception as e:
             print(f"[Cache] Failed to load CSV {csv_file.name}: {e}")
 
-    _csv_loaded = True
+    with _cache_lock:
+        _csv_loaded = True
     if loaded_count > 0:
         print(f"[Cache] Loaded {loaded_count} destinations from data/ directory")
     return loaded_count
+
+async def load_csv_destinations():
+    return await asyncio.to_thread(_load_csv_sync)
 
 
 def _csv_row_to_dest_data(row: dict, name: str) -> dict:
@@ -250,11 +267,13 @@ def _csv_row_to_dest_data(row: dict, name: str) -> dict:
     }
 
 
-def _csv_get(key: str) -> Optional[Dict[str, Any]]:
-    global _csv_loaded
-    if not _csv_loaded:
-        load_csv_destinations()
-    return _csv_data.get(key)
+async def _csv_get(key: str) -> Optional[Dict[str, Any]]:
+    with _cache_lock:
+        loaded = _csv_loaded
+    if not loaded:
+        await load_csv_destinations()
+    with _cache_lock:
+        return _csv_data.get(key)
 
 
 # ────────────────────────────────────────────────────────────────────────────
@@ -281,18 +300,18 @@ async def get_destination_data(
         return data
 
     # Layer 2: File cache
-    data = _file_get(key)
+    data = await _file_get(key)
     if data:
         print(f"[Cache] HIT file — {dest_name}")
         _mem_set(key, data)
         return data
 
     # Layer 3: CSV / bulk data
-    data = _csv_get(key)
+    data = await _csv_get(key)
     if data:
         print(f"[Cache] HIT csv/bulk — {dest_name}")
         _mem_set(key, data)
-        _file_set(key, data)  # Promote to file cache for faster access
+        await _file_set(key, data)  # Promote to file cache for faster access
         return data
 
     # Layer 4: Gemini API (last resort)
@@ -301,7 +320,7 @@ async def get_destination_data(
     if data:
         # Write-through to all layers
         _mem_set(key, data)
-        _file_set(key, data)
+        await _file_set(key, data)
         print(f"[Cache] Stored {dest_name} in all cache layers")
         return data
 
@@ -328,21 +347,29 @@ def clear_cache(dest_name: Optional[str] = None):
     """Clear cache for a specific destination or all destinations."""
     if dest_name:
         key = _normalize_key(dest_name)
-        _memory_cache.pop(key, None)
+        with _cache_lock:
+            _memory_cache.pop(key, None)
         path = CACHE_DIR / f"{key}.json"
         if path.exists():
             path.unlink()
         return {"cleared": key}
     else:
-        _memory_cache.clear()
+        with _cache_lock:
+            _memory_cache.clear()
         for f in CACHE_DIR.glob("*.json"):
-            f.unlink()
+            try:
+                f.unlink()
+            except Exception:
+                pass
         return {"cleared": "all"}
 
 
-def import_json_file(dest_name: str, data: Dict[str, Any]) -> bool:
+def import_json_file_sync(dest_name: str, data: Dict[str, Any]) -> bool:
     """Import a single destination's data directly (for admin/bulk endpoints)."""
     key = _normalize_key(dest_name)
     _mem_set(key, data)
-    _file_set(key, data)
+    _file_set_sync(key, data)
     return True
+
+async def import_json_file(dest_name: str, data: Dict[str, Any]) -> bool:
+    return await asyncio.to_thread(import_json_file_sync, dest_name, data)

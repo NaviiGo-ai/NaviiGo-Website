@@ -80,8 +80,15 @@ def _init():
             return
 
     database_id = os.getenv("FIRESTORE_DATABASE_ID", "naviigo-db")
-    _db = firestore.client(database_id=database_id)
-    print(f"[Firebase] Firestore client ready (project: {project_id}, database: {database_id})")
+    try:
+        _db = firestore.client(database_id=database_id)
+        print(f"[Firebase] Firestore client ready (project: {project_id}, database: {database_id})")
+    except Exception as e:
+        print(f"[Firebase] WARNING: Could not initialize Firestore Client: {e}")
+        print(f"[Firebase] User data persistence is DISABLED. Place a service account JSON at backend/firebase-service-account.json")
+        _app = None
+        _db = None
+        return
 
 
 def get_db():

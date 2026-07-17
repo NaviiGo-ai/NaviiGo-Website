@@ -10,27 +10,32 @@ SERPAPI_KEY = os.getenv("SERPAPI_API_KEY", "")
 async def _fetch_events_from_serp(destination: str) -> List[Dict[str, Any]]:
     """Raw SerpAPI call — only called on cache miss."""
     query = f"events in {destination}"
-    url = f"https://serpapi.com/search.json?engine=google_events&q={query}&hl=en&gl=in&api_key={SERPAPI_KEY}"
+    url = f"https://serpapi.com/search.json?engine=google_events&q={query}&hl=en&gl=in"
 
-    async with httpx.AsyncClient(timeout=10.0) as client:
-        resp = await client.get(url)
-        if resp.status_code != 200:
-            raise Exception(f"SerpAPI error: {resp.status_code}")
+    try:
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            resp = await client.get(url, params={"api_key": SERPAPI_KEY})
+            if resp.status_code != 200:
+                print(f"[Events] SerpAPI error: {resp.status_code}")
+                return _mock_events(destination)
 
-        data = resp.json()
-        if data.get("events_results"):
-            return [
-                {
-                    "title": e.get("title", ""),
-                    "date": e.get("date", {"start_date": "Upcoming", "when": "Check link for dates"}),
-                    "address": e.get("address", []),
-                    "link": e.get("link", f"https://www.google.com/search?q={query}"),
-                    "description": e.get("description", "Join this exciting local event."),
-                    "thumbnail": e.get("thumbnail", "https://images.unsplash.com/photo-1459749411175-04bf5292ceea?auto=format&fit=crop&w=800&q=80"),
-                    "venue": e.get("venue", {"name": "Local Venue"}),
-                }
-                for e in data["events_results"][:8]
-            ]
+            data = resp.json()
+            if data.get("events_results"):
+                return [
+                    {
+                        "title": e.get("title", ""),
+                        "date": e.get("date", {"start_date": "Upcoming", "when": "Check link for dates"}),
+                        "address": e.get("address", []),
+                        "link": e.get("link", f"https://www.google.com/search?q={query}"),
+                        "description": e.get("description", "Join this exciting local event."),
+                        "thumbnail": e.get("thumbnail", "https://images.unsplash.com/photo-1459749411175-04bf5292ceea?auto=format&fit=crop&w=800&q=80"),
+                        "venue": e.get("venue", {"name": "Local Venue"}),
+                    }
+                    for e in data["events_results"][:8]
+                ]
+
+    except Exception as e:
+        print(f"[Events] SerpAPI request failed: {e}")
 
     return _mock_events(destination)
 
