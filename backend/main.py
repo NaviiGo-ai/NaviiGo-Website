@@ -36,10 +36,11 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS — allow Next.js frontend
+# CORS — allow Next.js frontend (read from env, no wildcard in production)
+_cors_origins = os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "https://naviigo.app", "https://www.naviigo.app"],
+    allow_origins=list(set(["http://localhost:3000", "https://naviigo.app", "https://www.naviigo.app"] + [origin.strip() for origin in _cors_origins if origin.strip()])),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

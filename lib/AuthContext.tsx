@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import {
   User,
   onAuthStateChanged,
@@ -29,6 +29,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // auth is null during SSR or when Firebase credentials are missing
+    if (!auth) {
+      setLoading(false);
+      return;
+    }
+
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setUser(user);
       setLoading(false);
@@ -45,26 +51,69 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         } catch (err) {
           console.error('Failed to upsert user profile:', err);
         }
+
+        // ── Personalization sync: load cloud data into localStorage ──
+        try {
+          const { setCurrentUid, loadFromFirestore } = await import('./browsingSignals');
+          setCurrentUid(user.uid);
+          await loadFromFirestore(user.uid);
+
+          // Also load taste vector from Firestore into localStorage
+          const { getPersonalizationTaste } = await import('./firestore');
+          const taste = await getPersonalizationTaste(user.uid);
+          if (taste?.vector?.length) {
+            localStorage.setItem('naviigo_taste_vector', JSON.stringify(taste.vector));
+          }
+        } catch (err) {
+          console.error('Failed to sync personalization:', err);
+        }
+      } else {
+        // Signed out — stop Firestore sync
+        try {
+          const { setCurrentUid } = await import('./browsingSignals');
+          setCurrentUid(null);
+        } catch {}
       }
     });
 
     return () => unsubscribe();
   }, []);
 
+  // Guard against double-click / rapid re-invocation of sign-in
+  const signingInRef = useRef(false);
+
   const signInWithGoogle = async () => {
+    if (!auth || signingInRef.current) return;
+    signingInRef.current = true;
     const provider = new GoogleAuthProvider();
     try {
       await signInWithPopup(auth, provider);
     } catch (error: any) {
-      if (error?.code === 'auth/popup-closed-by-user') {
-        // User simply closed the popup, this is normal behavior and doesn't need an error overlay
+      const code = error?.code;
+      // User closed the popup or a new popup cancelled the old one — not real errors
+      if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') {
+        signingInRef.current = false;
+        return;
+      }
+      // Browser blocked the popup — fall back to redirect-based flow
+      if (code === 'auth/popup-blocked') {
+        try {
+          const { signInWithRedirect } = await import('firebase/auth');
+          await signInWithRedirect(auth, provider);
+        } catch (redirectErr) {
+          console.error("Error signing in with redirect fallback", redirectErr);
+        }
+        signingInRef.current = false;
         return;
       }
       console.error("Error signing in with Google", error);
+    } finally {
+      signingInRef.current = false;
     }
   };
 
   const signOut = async () => {
+    if (!auth) return;
     try {
       await firebaseSignOut(auth);
     } catch (error) {

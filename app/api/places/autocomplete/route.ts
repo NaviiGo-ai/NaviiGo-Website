@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(input)}&format=json&addressdetails=1&limit=6&countrycodes=in`;
+    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(input)}&format=json&addressdetails=1&limit=6&countrycodes=in&email=contact@naviigo.com`;
     const res = await fetch(url, {
       headers: { 'User-Agent': 'NaviiGo/1.0 (travel-app)' },
       next: { revalidate: 3600 },

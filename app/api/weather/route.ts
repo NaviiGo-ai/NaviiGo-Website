@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { badRequest, validateLat, validateLng } from '@/lib/validation';
 
 /**
  * Weather API route using Open-Meteo (100% free, no key required).
@@ -6,8 +7,18 @@ import { NextRequest, NextResponse } from 'next/server';
  */
 export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
-    const lat = searchParams.get('lat') ?? '20.5937';
-    const lng = searchParams.get('lng') ?? '78.9629';
+
+    // ── Validation ────────────────────────────────────────────────────
+    const lat = validateLat(searchParams.get('lat') ?? '20.5937');
+    const lng = validateLng(searchParams.get('lng') ?? '78.9629');
+
+    if (lat === null) {
+        return badRequest('lat must be a valid number between -90 and 90.');
+    }
+    if (lng === null) {
+        return badRequest('lng must be a valid number between -180 and 180.');
+    }
+    // ─────────────────────────────────────────────────────────────────
 
     try {
         const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation_probability,weather_code,wind_speed_10m&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max,weather_code&timezone=Asia%2FKolkata&forecast_days=7`;
@@ -59,17 +70,16 @@ export async function GET(req: NextRequest) {
         });
     } catch (err) {
         // Latitude-aware fallback
-        const parsedLat = Number(lat);
-        const isCold = parsedLat > 30 || parsedLat < -30;
-        
+        const isCold = lat > 30 || lat < -30;
+
         return NextResponse.json({
             current: {
-                temp: isCold ? 5 : 28, 
-                feelsLike: isCold ? 3 : 31, 
-                humidity: 72, 
+                temp: isCold ? 5 : 28,
+                feelsLike: isCold ? 3 : 31,
+                humidity: 72,
                 rainChance: 20,
-                windSpeed: 12, 
-                condition: 'Partly Cloudy', 
+                windSpeed: 12,
+                condition: 'Partly Cloudy',
                 emoji: '⛅',
             },
             daily: [],

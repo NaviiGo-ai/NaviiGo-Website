@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { useRef, useLayoutEffect } from "react";
+import Image from "next/image";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
@@ -40,10 +41,13 @@ export default function AboutPage() {
           transition={{ duration: 1, ease: "easeOut" }}
           className="w-full h-[60vh] rounded-[2rem] overflow-hidden relative mb-24"
         >
-          <img 
+          <Image 
             src="https://images.unsplash.com/photo-1564507592333-c60657eea523?auto=format&fit=crop&w=1280&q=80" 
             alt="The majestic Taj Mahal at sunrise"
-            className="w-full h-full object-cover"
+            fill
+            priority
+            className="object-cover"
+            sizes="100vw"
           />
           <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
             <h1 className="text-white text-5xl md:text-8xl font-bold tracking-tighter">We are NaviiGo.</h1>
@@ -88,10 +92,12 @@ export default function AboutPage() {
             <div className="group relative rounded-[2rem] overflow-hidden bg-white dark:bg-[#0a0a0a] border border-zinc-200 dark:border-zinc-800/50 p-6 transition-all hover:-translate-y-2 hover:shadow-2xl dark:hover:shadow-blue-900/20">
               <div className="aspect-square w-full rounded-3xl overflow-hidden mb-6 relative">
                 <div className="absolute inset-0 bg-zinc-200 dark:bg-zinc-800" />
-                <img 
+                <Image 
                   src="/team/param.png" 
                   alt="Param Nainani"
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 relative z-10"
+                  fill
+                  className="object-cover transition-transform duration-700 group-hover:scale-110 relative z-10"
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                 />
               </div>
               <h3 className="text-2xl font-bold tracking-tight">Param Nainani</h3>
@@ -102,10 +108,12 @@ export default function AboutPage() {
             <div className="group relative rounded-[2rem] overflow-hidden bg-white dark:bg-[#0a0a0a] border border-zinc-200 dark:border-zinc-800/50 p-6 transition-all hover:-translate-y-2 hover:shadow-2xl dark:hover:shadow-blue-900/20">
               <div className="aspect-square w-full rounded-3xl overflow-hidden mb-6 relative">
                 <div className="absolute inset-0 bg-zinc-200 dark:bg-zinc-800" />
-                <img 
+                <Image 
                   src="/team/manpreet.png" 
                   alt="Manpreet Singh"
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 relative z-10"
+                  fill
+                  className="object-cover transition-transform duration-700 group-hover:scale-110 relative z-10"
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                 />
               </div>
               <h3 className="text-2xl font-bold tracking-tight">Manpreet Singh</h3>
@@ -116,10 +124,12 @@ export default function AboutPage() {
             <div className="group relative rounded-[2rem] overflow-hidden bg-white dark:bg-[#0a0a0a] border border-zinc-200 dark:border-zinc-800/50 p-6 transition-all hover:-translate-y-2 hover:shadow-2xl dark:hover:shadow-blue-900/20">
               <div className="aspect-square w-full rounded-3xl overflow-hidden mb-6 relative">
                 <div className="absolute inset-0 bg-zinc-200 dark:bg-zinc-800" />
-                <img 
+                <Image 
                   src="/team/ojaswee.png" 
                   alt="Ojaswee Upadhyay"
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 relative z-10"
+                  fill
+                  className="object-cover transition-transform duration-700 group-hover:scale-110 relative z-10"
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                 />
               </div>
               <h3 className="text-2xl font-bold tracking-tight">Ojaswee Upadhyay</h3>
@@ -130,10 +140,12 @@ export default function AboutPage() {
             <div className="group relative rounded-[2rem] overflow-hidden bg-white dark:bg-[#0a0a0a] border border-zinc-200 dark:border-zinc-800/50 p-6 transition-all hover:-translate-y-2 hover:shadow-2xl dark:hover:shadow-blue-900/20">
               <div className="aspect-square w-full rounded-3xl overflow-hidden mb-6 relative">
                 <div className="absolute inset-0 bg-zinc-200 dark:bg-zinc-800" />
-                <img 
+                <Image 
                   src="/team/lavish.png" 
                   alt="Lavish Sharma"
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 relative z-10"
+                  fill
+                  className="object-cover transition-transform duration-700 group-hover:scale-110 relative z-10"
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                 />
               </div>
               <h3 className="text-2xl font-bold tracking-tight">Lavish Sharma</h3>
@@ -144,10 +156,12 @@ export default function AboutPage() {
             <div className="group relative rounded-[2rem] overflow-hidden bg-white dark:bg-[#0a0a0a] border border-zinc-200 dark:border-zinc-800/50 p-6 transition-all hover:-translate-y-2 hover:shadow-2xl dark:hover:shadow-blue-900/20">
               <div className="aspect-square w-full rounded-3xl overflow-hidden mb-6 relative">
                 <div className="absolute inset-0 bg-zinc-200 dark:bg-zinc-800" />
-                <img 
+                <Image 
                   src="/team/nikhil.png" 
                   alt="Nikhil Bhatt"
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 relative z-10"
+                  fill
+                  className="object-cover transition-transform duration-700 group-hover:scale-110 relative z-10"
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                 />
               </div>
               <h3 className="text-2xl font-bold tracking-tight">Nikhil Bhatt</h3>

@@ -40,7 +40,7 @@ function CitySearch({ value, destName, onSelect }: { value: string; destName: st
         if (input.length < 2) { setResults([]); return; }
         setLoading(true);
         try {
-            const baseUrl = process.env.NEXT_PUBLIC_PYTHON_API_URL || '';
+            const baseUrl = '';
             const res = await fetch(`${baseUrl}/api/places/autocomplete?input=${encodeURIComponent(input)}`);
             const data = await res.json();
             setResults(data.predictions || []);
@@ -264,7 +264,7 @@ export default function SetupWizard({ onDone }: SetupWizardProps) {
                                     setForm(p => ({ ...p, destination: destId, destName, purpose: purpose || p.purpose || 'leisure' }));
                                     
                                     // Update taste vector in background
-                                    const baseUrl = process.env.NEXT_PUBLIC_PYTHON_API_URL || '';
+                                    const baseUrl = '';
                                     fetch(`${baseUrl}/api/taste/update`, {
                                         method: 'POST',
                                         headers: { 'Content-Type': 'application/json' },
@@ -273,8 +273,17 @@ export default function SetupWizard({ onDone }: SetupWizardProps) {
                                             selectedDestId: destId,
                                             purpose: purpose || 'leisure'
                                         })
-                                    }).then(r => r.json()).then(d => {
-                                        if (d.success) localStorage.setItem('naviigo_taste_vector', JSON.stringify(d.newVector));
+                                    }).then(r => r.json()).then(async d => {
+                                        if (d.success) {
+                                            localStorage.setItem('naviigo_taste_vector', JSON.stringify(d.newVector));
+                                            // Persist to Firestore for cross-device sync
+                                            if (user?.uid) {
+                                                try {
+                                                    const { savePersonalizationTaste } = await import('@/lib/firestore');
+                                                    await savePersonalizationTaste(user.uid, d.newVector);
+                                                } catch {}
+                                            }
+                                        }
                                     }).catch(console.error);
 
                                     setVibeMatchMode(false);

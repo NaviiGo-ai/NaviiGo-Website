@@ -38,7 +38,7 @@ export default function SmartRecommendations({
         setLoading(true);
         setSelected(null);
 
-        const baseUrl = process.env.NEXT_PUBLIC_PYTHON_API_URL || '';
+        const baseUrl = '';
         fetch(`${baseUrl}/api/recommendations`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -60,7 +60,7 @@ export default function SmartRecommendations({
     const handleSelect = (id: string, name: string) => { onSelect(id, name); setSelected(id); };
     const handleGo = (id: string, name: string) => {
         // Fire and forget taste vector update
-        const baseUrl = process.env.NEXT_PUBLIC_PYTHON_API_URL || '';
+        const baseUrl = '';
         fetch(`${baseUrl}/api/taste/update`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -69,8 +69,17 @@ export default function SmartRecommendations({
                 selectedDestId: id,
                 purpose
             })
-        }).then(r => r.json()).then(d => {
-            if (d.success) localStorage.setItem('naviigo_taste_vector', JSON.stringify(d.newVector));
+        }).then(r => r.json()).then(async d => {
+            if (d.success) {
+                localStorage.setItem('naviigo_taste_vector', JSON.stringify(d.newVector));
+                // Persist to Firestore for cross-device sync
+                if (userId) {
+                    try {
+                        const { savePersonalizationTaste } = await import('@/lib/firestore');
+                        await savePersonalizationTaste(userId, d.newVector);
+                    } catch {}
+                }
+            }
         }).catch(console.error);
 
         if (onSelectAndNext) onSelectAndNext(id, name);

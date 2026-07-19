@@ -49,7 +49,7 @@ export default function PlaceAutocomplete({
     setLoading(true);
     setShowPopular(false);
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_PYTHON_API_URL || '';
+      const baseUrl = '';
       const res = await fetch(`${baseUrl}/api/places/autocomplete?input=${encodeURIComponent(input)}`);
       const data = await res.json();
       setResults(data.predictions || []);

@@ -573,3 +573,59 @@ export async function getActiveTripProgress(uid: string, tripId: string): Promis
 }
 
 export { db };
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// PERSONALIZATION — users/{uid}/personalization/signals + taste
+// ═══════════════════════════════════════════════════════════════════════════════
+
+import type {
+    PersonalizationSignalsDoc,
+    PersonalizationTasteDoc,
+} from './firestoreSchema';
+
+export async function savePersonalizationSignals(uid: string, signals: {
+    timeOnCity: Record<string, number>;
+    clickedCategories: string[];
+    deepDiveVibes: Array<{ dest: string; companion: string; vibe: string }>;
+    viewedDestinations: string[];
+}) {
+    try {
+        const ref = doc(db, 'users', uid, 'personalization', 'signals');
+        await setDoc(ref, {
+            ...signals,
+            updatedAt: serverTimestamp(),
+        }, { merge: true });
+    } catch (err) {
+        console.error('[Personalization] Failed to save signals:', err);
+    }
+}
+
+export async function getPersonalizationSignals(uid: string): Promise<PersonalizationSignalsDoc | null> {
+    try {
+        const snap = await getDoc(doc(db, 'users', uid, 'personalization', 'signals'));
+        return snap.exists() ? (snap.data() as PersonalizationSignalsDoc) : null;
+    } catch {
+        return null;
+    }
+}
+
+export async function savePersonalizationTaste(uid: string, vector: number[]) {
+    try {
+        const ref = doc(db, 'users', uid, 'personalization', 'taste');
+        await setDoc(ref, {
+            vector,
+            updatedAt: serverTimestamp(),
+        }, { merge: true });
+    } catch (err) {
+        console.error('[Personalization] Failed to save taste vector:', err);
+    }
+}
+
+export async function getPersonalizationTaste(uid: string): Promise<PersonalizationTasteDoc | null> {
+    try {
+        const snap = await getDoc(doc(db, 'users', uid, 'personalization', 'taste'));
+        return snap.exists() ? (snap.data() as PersonalizationTasteDoc) : null;
+    } catch {
+        return null;
+    }
+}

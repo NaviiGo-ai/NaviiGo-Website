@@ -4,7 +4,6 @@ import Link from 'next/link';
 import Image from 'next/image';
 import HeroSlider from '@/components/features/home/HeroSlider';
 import HorizontalScroll from '@/components/features/gsap-scroll/HorizontalScroll';
-import Footer from '@/components/shared/Footer';
 import { motion } from 'framer-motion';
 
 const stats = [
@@ -322,7 +321,6 @@ export default function Home() {
         </motion.div>
       </section>
 
-      <Footer />
     </main>
   );
 }
