@@ -33,7 +33,11 @@ def _extract_json(text: str) -> Optional[dict]:
     brace_match = re.search(r"\{[\s\S]*\}", json_str)
     if brace_match:
         json_str = brace_match.group(0)
-    return json.loads(json_str)
+    try:
+        return json.loads(json_str)
+    except json.JSONDecodeError as e:
+        print(f"[GeminiData] JSON Decode Error: {e}")
+        raise ValueError(f"Invalid JSON: {e}")
 
 
 async def _get_full_gemini_data(dest_name: str, purpose: str, budget: int, days: int) -> Optional[Dict[str, Any]]:
@@ -66,7 +70,7 @@ Rules: Generate exactly 12-15 highlights, 6 restaurants, and 5 hotels to ensure 
         return _extract_json(response.text)
     except Exception as e:
         print(f"[GeminiData] Error generating data for {dest_name}: {str(e)[:120]}")
-        return None
+        raise  # Bubble up to with_retry
 
 
 async def fetch_destination_data_with_gemini(dest_name: str, purpose: str, budget: int, days: int) -> Optional[Dict[str, Any]]:

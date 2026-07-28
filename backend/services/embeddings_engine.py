@@ -18,7 +18,7 @@ async def generate_embedding(text: str) -> Optional[List[float]]:
         client = get_client()
         result = await asyncio.to_thread(
             client.models.embed_content,
-            model="models/text-embedding-004",
+            model="gemini-embedding-2",
             contents=text,
         )
         # The response shape varies between SDK versions — try multiple paths
@@ -30,12 +30,10 @@ async def generate_embedding(text: str) -> Optional[List[float]]:
             return emb.values if hasattr(emb, 'values') else list(emb)
         else:
             print(f"[Embeddings] Unexpected response shape: {type(result)}")
-            # Fall back to mock so the app still works
-            return [random.random() - 0.5 for _ in range(768)]
+            return None
     except Exception as e:
         print(f"[Embeddings] Failed to generate embedding: {e}")
-        # Return mock vector so downstream features still work
-        return [random.random() - 0.5 for _ in range(768)]
+        return None
 
 
 def cosine_similarity(vec_a: List[float], vec_b: List[float]) -> float:

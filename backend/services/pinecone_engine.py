@@ -15,11 +15,12 @@ _index = None
 
 def _get_index():
     global _pc, _index
-    if not PINECONE_API_KEY:
+    api_key = os.getenv("PINECONE_API_KEY", "")
+    if not api_key:
         return None
     if _pc is None:
-        _pc = Pinecone(api_key=PINECONE_API_KEY)
-        _index = _pc.Index(PINECONE_INDEX_NAME)
+        _pc = Pinecone(api_key=api_key)
+        _index = _pc.Index(os.getenv("PINECONE_INDEX_NAME", "naviigo-vectors"))
     return _index
 
 

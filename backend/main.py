@@ -3,6 +3,9 @@ import os
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
+from limiter import limiter
 from dotenv import load_dotenv
 
 # Load environment variables from parent .env.local
@@ -17,9 +20,9 @@ async def lifespan(app: FastAPI):
     from services.destination_cache import load_csv_destinations
     from services.firebase_client import is_firebase_configured
     from services.gemini_cache import is_redis_connected
-    count = load_csv_destinations()
+    count = await load_csv_destinations()
     fb_status = "connected" if is_firebase_configured() else "not configured (place firebase-service-account.json in backend/)"
-    redis_status = "✅ connected" if is_redis_connected() else "⚠ unavailable (using file cache fallback)"
+    redis_status = "[OK] connected" if is_redis_connected() else "[WARN] unavailable (using file cache fallback)"
     print(f"[Startup] CSV destinations preloaded: {count}")
     print(f"[Startup] Firebase: {fb_status}")
     print(f"[Startup] Redis: {redis_status}")
@@ -37,11 +40,15 @@ app = FastAPI(
 _cors_origins = os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[origin.strip() for origin in _cors_origins],
+    allow_origins=list(set(["http://localhost:3000", "https://naviigo.app", "https://www.naviigo.app"] + [origin.strip() for origin in _cors_origins if origin.strip()])),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Rate Limiting
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # ── Register all routers ──
 app.include_router(itinerary.router,       prefix="/api/itinerary",       tags=["Itinerary"])

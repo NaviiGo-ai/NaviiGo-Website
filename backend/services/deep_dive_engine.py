@@ -51,7 +51,11 @@ Generate exactly 3 hiddenGems, 2 touristTrapsToAvoid, 3 instagramWorthy, 3 local
     if text.endswith("```"):
         text = text[:-3]
 
-    return json.loads(text.strip())
+    try:
+        return json.loads(text.strip())
+    except json.JSONDecodeError as e:
+        print(f"[DeepDive] JSON Decode Error: {e}")
+        return None
 
 
 async def get_deep_dive(destination: str, companion: str = "Solo", vibe: str = "Explore everything") -> Dict[str, Any]:

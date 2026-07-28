@@ -3,6 +3,7 @@ import os
 import httpx
 from typing import Optional
 from fastapi import APIRouter, HTTPException
+from fastapi.responses import Response
 
 GOOGLE_PLACES_KEY = os.getenv("GOOGLE_PLACES_API_KEY", "")
 
@@ -101,7 +102,7 @@ async def place_details(lat: float = 20.5937, lng: float = 78.9629, type: str = 
             "isOpen": (place.get("opening_hours") or {}).get("open_now"),
             "types": place.get("types", []),
             "photo": (
-                f"https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference={place['photos'][0]['photo_reference']}&key={GOOGLE_PLACES_KEY}"
+                f"/api/places/photo/{place['photos'][0]['photo_reference']}"
                 if place.get("photos") else None
             ),
         } for place in (data.get("results") or [])[:10]]
@@ -109,3 +110,19 @@ async def place_details(lat: float = 20.5937, lng: float = 78.9629, type: str = 
         return {"success": True, "results": results, "total": len(data.get("results", []))}
     except Exception as e:
         return {"success": False, "results": [], "error": str(e)}
+
+
+@router.get("/photo/{photo_reference}")
+async def get_photo(photo_reference: str, maxwidth: int = 400):
+    """Proxy Google Places photos to hide the API key."""
+    if not GOOGLE_PLACES_KEY:
+        raise HTTPException(status_code=400, detail="No Google Places API key")
+    
+    url = f"https://maps.googleapis.com/maps/api/place/photo?maxwidth={maxwidth}&photoreference={photo_reference}&key={GOOGLE_PLACES_KEY}"
+    try:
+        async with httpx.AsyncClient(timeout=10.0, follow_redirects=True) as client:
+            resp = await client.get(url)
+            return Response(content=resp.content, media_type=resp.headers.get("content-type", "image/jpeg"))
+    except Exception as e:
+        print(f"[Places] Photo proxy error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch photo")

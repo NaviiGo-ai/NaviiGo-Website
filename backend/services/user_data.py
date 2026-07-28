@@ -15,7 +15,8 @@
 from datetime import datetime
 from typing import Optional, Dict, Any, List
 from services.firebase_client import get_db, is_firebase_configured
-from google.cloud.firestore_v1 import SERVER_TIMESTAMP
+from firebase_admin import firestore
+import asyncio
 
 
 # ────────────────────────────────────────────────────────────────────────────
@@ -29,7 +30,7 @@ async def get_user_preferences(uid: str) -> Optional[Dict[str, Any]]:
     if not db:
         return None
     try:
-        doc = db.collection("users").document(uid).collection("preferences").document("main").get()
+        doc = await asyncio.to_thread(db.collection("users").document(uid).collection("preferences").document("main").get)
         return doc.to_dict() if doc.exists else None
     except Exception as e:
         print(f"[UserData] Error getting preferences for {uid}: {e}")
@@ -43,9 +44,9 @@ async def update_user_preferences(uid: str, prefs: Dict[str, Any]):
         return
     try:
         ref = db.collection("users").document(uid).collection("preferences").document("main")
-        doc = ref.get()
+        doc = await asyncio.to_thread(ref.get)
         if doc.exists:
-            ref.update({**prefs, "updatedAt": SERVER_TIMESTAMP})
+            await asyncio.to_thread(ref.update, {**prefs, "updatedAt": firestore.SERVER_TIMESTAMP})
         else:
             ref.set({
                 "travelStyle": None,
@@ -56,7 +57,7 @@ async def update_user_preferences(uid: str, prefs: Dict[str, Any]):
                 "homeCity": None,
                 "recentSearches": [],
                 **prefs,
-                "updatedAt": SERVER_TIMESTAMP,
+                "updatedAt": firestore.SERVER_TIMESTAMP,
             })
     except Exception as e:
         print(f"[UserData] Error updating preferences for {uid}: {e}")
@@ -73,7 +74,7 @@ async def get_ai_profile(uid: str) -> Optional[Dict[str, Any]]:
     if not db:
         return None
     try:
-        doc = db.collection("users").document(uid).collection("ai_profile").document("main").get()
+        doc = await asyncio.to_thread(db.collection("users").document(uid).collection("ai_profile").document("main").get)
         return doc.to_dict() if doc.exists else None
     except Exception as e:
         print(f"[UserData] Error getting AI profile for {uid}: {e}")
@@ -87,18 +88,7 @@ async def update_ai_profile(uid: str, data: Dict[str, Any]):
         return
     try:
         ref = db.collection("users").document(uid).collection("ai_profile").document("main")
-        doc = ref.get()
-        if doc.exists:
-            ref.update({**data, "updatedAt": SERVER_TIMESTAMP})
-        else:
-            ref.set({
-                "tasteVector": [],
-                "browsingSignals": {},
-                "pastDestinations": [],
-                "lastRecommendations": [],
-                **data,
-                "updatedAt": SERVER_TIMESTAMP,
-            })
+        await asyncio.to_thread(ref.set, {**data, "updatedAt": firestore.SERVER_TIMESTAMP}, merge=True)
     except Exception as e:
         print(f"[UserData] Error updating AI profile for {uid}: {e}")
 
@@ -117,15 +107,14 @@ async def update_browsing_signals(uid: str, signals: Dict[str, Any]):
         existing = await get_ai_profile(uid)
         current_signals = (existing or {}).get("browsingSignals", {})
         
-        # Merge clicked categories (union)
-        existing_cats = set(current_signals.get("clickedCategories", []))
-        new_cats = set(signals.get("clickedCategories", []))
-        merged_cats = list(existing_cats | new_cats)
-
-        # Merge viewed destinations (union, last 20)
-        existing_viewed = current_signals.get("viewedDestinations", [])
-        new_viewed = signals.get("viewedDestinations", [])
-        merged_viewed = list(dict.fromkeys(new_viewed + existing_viewed))[:20]
+        # Merge deep dive vibes (replace per dest) safely
+        existing_vibes = current_signals.get("deepDiveVibes", [])
+        new_vibes = signals.get("deepDiveVibes", [])
+        vibe_map = {v["dest"]: v for v in existing_vibes if "dest" in v}
+        for v in new_vibes:
+            if "dest" in v:
+                vibe_map[v["dest"]] = v
+        merged_vibes = list(vibe_map.values())
 
         # Merge time on city (sum)
         existing_time = current_signals.get("timeOnCity", {})
@@ -134,22 +123,24 @@ async def update_browsing_signals(uid: str, signals: Dict[str, Any]):
         for city, t in new_time.items():
             merged_time[city] = merged_time.get(city, 0) + t
 
-        # Merge deep dive vibes (replace per dest)
-        existing_vibes = current_signals.get("deepDiveVibes", [])
-        new_vibes = signals.get("deepDiveVibes", [])
-        vibe_map = {v["dest"]: v for v in existing_vibes}
-        for v in new_vibes:
-            vibe_map[v["dest"]] = v
-        merged_vibes = list(vibe_map.values())
-
-        merged = {
-            "clickedCategories": merged_cats,
-            "viewedDestinations": merged_viewed,
-            "timeOnCity": merged_time,
-            "deepDiveVibes": merged_vibes,
+        ref = db.collection("users").document(uid).collection("ai_profile").document("main")
+        updates = {
+            "updatedAt": firestore.SERVER_TIMESTAMP,
+            "browsingSignals": {
+                "timeOnCity": merged_time,
+                "deepDiveVibes": merged_vibes,
+            }
         }
+        
+        new_cats = signals.get("clickedCategories", [])
+        new_viewed = signals.get("viewedDestinations", [])
+        
+        if new_cats:
+            updates["browsingSignals"]["clickedCategories"] = firestore.ArrayUnion(new_cats)
+        if new_viewed:
+            updates["browsingSignals"]["viewedDestinations"] = firestore.ArrayUnion(new_viewed)
 
-        await update_ai_profile(uid, {"browsingSignals": merged})
+        await asyncio.to_thread(ref.set, updates, merge=True)
     except Exception as e:
         print(f"[UserData] Error merging browsing signals for {uid}: {e}")
 
@@ -160,11 +151,8 @@ async def add_past_destination(uid: str, dest_id: str):
     if not db:
         return
     try:
-        existing = await get_ai_profile(uid)
-        past = (existing or {}).get("pastDestinations", [])
-        if dest_id not in past:
-            past = [dest_id] + past[:19]  # Keep last 20
-        await update_ai_profile(uid, {"pastDestinations": past})
+        ref = db.collection("users").document(uid).collection("ai_profile").document("main")
+        await asyncio.to_thread(ref.set, {"pastDestinations": firestore.ArrayUnion([dest_id])}, merge=True)
     except Exception as e:
         print(f"[UserData] Error adding past destination for {uid}: {e}")
 
@@ -180,27 +168,31 @@ async def save_itinerary(uid: str, data: Dict[str, Any]) -> Optional[str]:
     if not db:
         return None
     try:
+        # Use a batch to write itinerary and increment totalTrips atomically
+        batch = db.batch()
+        
         col_ref = db.collection("users").document(uid).collection("itineraries")
-        doc_ref = col_ref.add({
+        new_doc = col_ref.document()
+        
+        batch.set(new_doc, {
             "destId": data.get("destination", ""),
             "destName": data.get("destName", ""),
             "form": data.get("form", {}),
             "generatedData": data.get("generatedData"),
             "isActive": False,
-            "createdAt": SERVER_TIMESTAMP,
-            "updatedAt": SERVER_TIMESTAMP,
+            "createdAt": firestore.SERVER_TIMESTAMP,
+            "updatedAt": firestore.SERVER_TIMESTAMP,
         })
-        # Update user trip count
+        
         user_ref = db.collection("users").document(uid)
-        user_doc = user_ref.get()
-        if user_doc.exists:
-            from google.cloud.firestore_v1 import transforms
-            user_ref.update({"totalTrips": transforms.Increment(1)})
+        batch.update(user_ref, {"totalTrips": firestore.Increment(1)})
+        
+        await asyncio.to_thread(batch.commit)
 
         # Track destination in AI profile
         await add_past_destination(uid, data.get("destination", ""))
         
-        return doc_ref[1].id
+        return new_doc.id
     except Exception as e:
         print(f"[UserData] Error saving itinerary for {uid}: {e}")
         return None
@@ -232,7 +224,7 @@ async def get_user_profile(uid: str) -> Optional[Dict[str, Any]]:
     if not db:
         return None
     try:
-        doc = db.collection("users").document(uid).get()
+        doc = await asyncio.to_thread(db.collection("users").document(uid).get)
         return doc.to_dict() if doc.exists else None
     except Exception as e:
         print(f"[UserData] Error getting profile for {uid}: {e}")
@@ -250,9 +242,11 @@ async def get_full_user_context(uid: str) -> Dict[str, Any]:
     Returns a dict that can be directly fed into the recommendation and
     itinerary engines for maximum personalization.
     """
-    profile = await get_user_profile(uid)
-    prefs = await get_user_preferences(uid)
-    ai_profile = await get_ai_profile(uid)
+    profile, prefs, ai_profile = await asyncio.gather(
+        get_user_profile(uid),
+        get_user_preferences(uid),
+        get_ai_profile(uid),
+    )
 
     return {
         "uid": uid,

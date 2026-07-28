@@ -5,8 +5,8 @@
 #   3. Optionally save to Firebase if userId is provided
 #   4. Return the fully processed itinerary with dayPlans
 
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+from fastapi import APIRouter, HTTPException, Request
+from pydantic import BaseModel, Field
 from typing import Optional, Dict, Any, List
 from datetime import datetime
 from services.destination_cache import get_destination_data
@@ -14,6 +14,7 @@ from services.itinerary_model import generate_itinerary
 from services.from_link_engine import extract_from_link
 from services.user_data import save_itinerary, get_full_user_context, add_past_destination
 from services.gemini_cache import cached_gemini_call
+from limiter import limiter
 
 router = APIRouter()
 
@@ -24,8 +25,8 @@ class ItineraryRequest(BaseModel):
     destName: str
     purpose: str = "cultural"
     group: Optional[str] = "solo"
-    days: Optional[int] = 3
-    budget: Optional[int] = 15000
+    days: int = Field(default=3, ge=1, le=14)
+    budget: int = Field(default=15000, ge=0)
     startDate: Optional[str] = None
     travelerType: Optional[str] = "comfort"
     preferences: Optional[Dict[str, Any]] = None
@@ -38,22 +39,23 @@ class FromLinkRequest(BaseModel):
 
 
 @router.post("/generate")
-async def generate(request: ItineraryRequest):
+@limiter.limit("5/minute")
+async def generate(payload: ItineraryRequest, request: Request):
     try:
-        if not request.destName or not request.purpose or not request.days:
+        if not payload.destName or not payload.purpose or not payload.days:
             raise HTTPException(status_code=400, detail="Missing required fields: destName, purpose, days")
 
-        resolved_dest = request.destination or request.destName.lower().replace(" ", "")
-        dest_name = request.destName
+        resolved_dest = payload.destination or payload.destName.lower().replace(" ", "")
+        dest_name = payload.destName
 
         # Enrich with Firebase user data if userId provided
-        preferences = request.preferences
-        browsing_signals = request.browsingSignals
-        traveler_type = request.travelerType or "comfort"
-        group = request.group or "solo"
+        preferences = payload.preferences
+        browsing_signals = payload.browsingSignals
+        traveler_type = payload.travelerType or "comfort"
+        group = payload.group or "solo"
 
-        if request.userId:
-            user_ctx = await get_full_user_context(request.userId)
+        if payload.userId:
+            user_ctx = await get_full_user_context(payload.userId)
             if not preferences and user_ctx.get("interests"):
                 preferences = {"interests": user_ctx["interests"]}
             if not browsing_signals and user_ctx.get("browsingSignals"):
@@ -67,11 +69,11 @@ async def generate(request: ItineraryRequest):
         user_context = {
             "destination": resolved_dest,
             "destName": dest_name,
-            "purpose": request.purpose,
+            "purpose": payload.purpose,
             "group": group,
-            "days": request.days or 3,
-            "budget": request.budget or 15000,
-            "startDate": request.startDate or datetime.now().strftime("%Y-%m-%d"),
+            "days": payload.days or 3,
+            "budget": payload.budget or 15000,
+            "startDate": payload.startDate or datetime.now().strftime("%Y-%m-%d"),
             "travelerType": traveler_type,
             "preferences": preferences,
             "pastTrips": [],
@@ -82,9 +84,9 @@ async def generate(request: ItineraryRequest):
         print(f"[Itinerary] Fetching data for \"{dest_name}\" (cache-first)...")
         gemini_data = await get_destination_data(
             dest_name=dest_name,
-            purpose=request.purpose,
-            budget=request.budget or 15000,
-            days=request.days or 3,
+            purpose=payload.purpose,
+            budget=payload.budget or 15000,
+            days=payload.days or 3,
         )
 
         if gemini_data:
@@ -93,16 +95,16 @@ async def generate(request: ItineraryRequest):
             result = generate_itinerary(user_context, gemini_data)
             if result:
                 # ── Step 3: Save to Firebase if userId provided ──
-                if request.userId:
-                    await save_itinerary(request.userId, {
+                if payload.userId:
+                    await save_itinerary(payload.userId, {
                         "destination": resolved_dest,
                         "destName": dest_name,
                         "form": {
-                            "purpose": request.purpose,
+                            "purpose": payload.purpose,
                             "group": group,
-                            "days": request.days,
-                            "budget": request.budget,
-                            "startDate": request.startDate,
+                            "days": payload.days,
+                            "budget": payload.budget,
+                            "startDate": payload.startDate,
                             "travelerType": traveler_type,
                         },
                         "generatedData": result,
@@ -121,11 +123,11 @@ async def generate(request: ItineraryRequest):
             fallback_result = generate_itinerary(user_context, fallback_data)
             if fallback_result:
                 # Still save to Firebase
-                if request.userId:
-                    await save_itinerary(request.userId, {
+                if payload.userId:
+                    await save_itinerary(payload.userId, {
                         "destination": resolved_dest,
                         "destName": dest_name,
-                        "form": {"purpose": request.purpose, "group": group, "days": request.days},
+                        "form": {"purpose": payload.purpose, "group": group, "days": payload.days},
                         "generatedData": fallback_result,
                     })
                 return {
@@ -163,9 +165,10 @@ async def generate(request: ItineraryRequest):
 
 
 @router.post("/from-link")
-async def from_link(request: FromLinkRequest):
+@limiter.limit("10/minute")
+async def from_link(payload: FromLinkRequest, request: Request):
     try:
-        extracted = await extract_from_link(url=request.url, caption_text=request.captionText)
+        extracted = await extract_from_link(url=payload.url, caption_text=payload.captionText)
         return {"success": True, "extracted": extracted}
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
