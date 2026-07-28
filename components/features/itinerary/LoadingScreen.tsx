@@ -13,10 +13,11 @@ const INDIA_CENTER = { lat: 22.5937, lng: 78.9629 };
 
 interface LoadingScreenProps {
     form: Record<string, unknown>;
+    uuid?: string;
     onDone: (data: any) => void;
 }
 
-export default function LoadingScreen({ form, onDone }: LoadingScreenProps) {
+export default function LoadingScreen({ form, uuid, onDone }: LoadingScreenProps) {
     const destId = form.destination as string;
     const destName = form.destName as string;
     const groupLabel = GROUP_SIZES.find(g => g.id === form.group)?.label ?? '';
@@ -95,16 +96,28 @@ export default function LoadingScreen({ form, onDone }: LoadingScreenProps) {
                         startDate: form.startDate,
                         travelerType: form.travelerType,
                         browsingSignals: getBrowsingSignals(),
+                        userId: form.userId ?? null,
+                        uuid: uuid ?? null,
                     }),
                 });
                 const result = await res.json();
                 if (result.success && result.itinerary) {
                     setApiData(result.itinerary);
+                    if (uuid && typeof window !== 'undefined') {
+                        try {
+                            sessionStorage.setItem(`navii_itin_${uuid}`, JSON.stringify({
+                                form,
+                                generatedData: result.itinerary,
+                                destName: destName,
+                            }));
+                        } catch (e) {}
+                    }
                 }
             } catch (err) {
                 console.error('Itinerary generation failed:', err);
             }
             setApiDone(true);
+
         };
 
         generate();

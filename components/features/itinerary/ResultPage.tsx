@@ -79,18 +79,23 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
     // Live Sync Listener
     useEffect(() => {
         if (shareId) {
-            const unsub = listenToItinerary(shareId, (liveData) => {
-                setCollaborators(liveData.collaborators ?? 1);
-                if (liveData.customPlans && liveData.customPlans.length > 0) {
-                    setLocalData((prev: any) => ({
-                        ...prev,
-                        dayPlans: liveData.customPlans,
-                    }));
-                }
-            });
-            return () => unsub();
+            try {
+                const unsub = listenToItinerary(shareId, (liveData) => {
+                    setCollaborators(liveData.collaborators ?? 1);
+                    if (liveData.customPlans && liveData.customPlans.length > 0) {
+                        setLocalData((prev: any) => ({
+                            ...prev,
+                            dayPlans: liveData.customPlans,
+                        }));
+                    }
+                });
+                return () => { if (unsub) unsub(); };
+            } catch (err) {
+                console.warn('[ResultPage] listenToItinerary failed:', err);
+            }
         }
     }, [shareId]);
+
 
     // ── Auto-save itinerary to Firestore ─────────────────────────
     // Uses deterministic doc ID in Firestore so re-saves just update, never duplicate.
@@ -345,6 +350,7 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                         </div>
 
                         {/* Smart Packing List */}
+
                         {packingList.length > 0 && (
                             <div>
                                 <div className="flex items-center justify-between mb-2">
@@ -354,7 +360,7 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                                 <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-100 dark:border-zinc-800 p-5 shadow-sm">
                                     <ul className="space-y-3">
                                         {packingList.map((item, idx) => (
-                                            <li key={idx} className="flex items-start gap-3 group cursor-pointer">
+                                            <li key={`pack-item-${idx}`} className="flex items-start gap-3 group cursor-pointer">
                                                 <div className="w-5 h-5 rounded-full border border-zinc-300 dark:border-zinc-700 flex shrink-0 items-center justify-center mt-0.5 group-hover:border-emerald-500 group-hover:bg-emerald-500/10 transition-colors">
                                                 </div>
                                                 <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300 group-hover:text-zinc-900 dark:group-hover:text-white transition-colors">{item}</span>
@@ -401,13 +407,13 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                             <h2 className="text-lg font-bold text-zinc-900 dark:text-white mb-4">🏆 Top Highlights</h2>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 {data.highlights.map((a: any, i: number) => (
-                                    <motion.div key={a.name} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}
+                                    <motion.div key={`hl-card-${i}-${a.name || 'item'}`} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}
                                         onClick={() => router.push(`/itinerary/detail?type=attraction&dest=${destId}&name=${encodeURIComponent(a.name)}`)}
                                         className="bg-white dark:bg-zinc-900 rounded-2xl overflow-hidden border border-zinc-100 dark:border-zinc-800 shadow-sm hover:shadow-md transition-all cursor-pointer hover:-translate-y-1">
                                         <div className="relative h-36">
                                             <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${resolveImgSrc(a.img, 500, a.name, a.tags?.[0])})` }} />
                                             <div className="absolute top-2 left-2 w-7 h-7 rounded-full bg-emerald-500 text-white text-xs font-bold flex items-center justify-center shadow-md">{i + 1}</div>
-                                            <div className="absolute bottom-2 left-2 flex gap-1">{a.tags.slice(0, 2).map((t: string) => <span key={t} className="text-[10px] bg-black/50 text-white backdrop-blur px-2 py-0.5 rounded-full font-medium">{t}</span>)}</div>
+                                            <div className="absolute bottom-2 left-2 flex gap-1">{a.tags?.slice(0, 2).map((t: string, tIdx: number) => <span key={`hl-tag-${i}-${tIdx}`} className="text-[10px] bg-black/50 text-white backdrop-blur px-2 py-0.5 rounded-full font-medium">{t}</span>)}</div>
                                         </div>
                                         <div className="p-3">
                                             <h3 className="font-bold text-zinc-900 dark:text-white text-sm mb-1">{a.name}</h3>
@@ -434,7 +440,7 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                                 <h2 className="text-lg font-bold text-zinc-900 dark:text-white mb-4">🍽️ Cuisine & Dining</h2>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     {data.restaurants.map((r: any, i: number) => (
-                                        <motion.div key={r.id} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
+                                        <motion.div key={`rest-card-${i}-${r.id || r.name || 'item'}`} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
                                             onClick={() => router.push(`/itinerary/detail?type=restaurant&dest=${destId}&name=${encodeURIComponent(r.name)}`)}
                                             className="bg-white dark:bg-zinc-900 rounded-2xl overflow-hidden border border-zinc-100 dark:border-zinc-800 shadow-sm hover:shadow-md transition-all cursor-pointer hover:-translate-y-1">
                                             <div className="relative h-32">
@@ -461,7 +467,7 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                                 <h2 className="text-lg font-bold text-zinc-900 dark:text-white mb-4">🏨 Stay Options</h2>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     {data.hotels.map((h: any, i: number) => (
-                                        <motion.div key={h.id} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
+                                        <motion.div key={`hotel-card-${i}-${h.id || h.name || 'item'}`} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
                                             onClick={() => router.push(`/itinerary/detail?type=hotel&dest=${destId}&name=${encodeURIComponent(h.name)}`)}
                                             className="bg-white dark:bg-zinc-900 rounded-2xl overflow-hidden border border-zinc-100 dark:border-zinc-800 shadow-sm hover:shadow-md transition-all cursor-pointer hover:-translate-y-1">
                                             <div className="relative h-32">
@@ -476,7 +482,7 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                                                 </div>
                                                 <p className="text-xs text-zinc-500 dark:text-zinc-400 line-clamp-2 mb-2">{h.desc}</p>
                                                 <div className="flex gap-1 flex-wrap">
-                                                    {h.amenities.slice(0, 3).map((a: string) => <span key={a} className="text-[9px] text-zinc-500 bg-zinc-100 dark:bg-zinc-800 dark:text-zinc-400 px-1.5 py-0.5 rounded">{a}</span>)}
+                                                    {h.amenities?.slice(0, 3).map((a: string, aIdx: number) => <span key={`amenity-${i}-${aIdx}`} className="text-[9px] text-zinc-500 bg-zinc-100 dark:bg-zinc-800 dark:text-zinc-400 px-1.5 py-0.5 rounded">{a}</span>)}
                                                 </div>
                                             </div>
                                         </motion.div>
@@ -491,7 +497,7 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                                 <h2 className="text-lg font-bold text-zinc-900 dark:text-white mb-4">💎 Local Hidden Gems</h2>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     {hiddenGems.map((g, i) => (
-                                        <motion.div key={g.placeId || g.name} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
+                                        <motion.div key={`gem-card-${i}-${g.placeId || g.name || 'item'}`} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
                                             className="bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl p-4 border border-zinc-100 dark:border-zinc-800">
                                             <div className="flex gap-3">
                                                 {g.photo && <Image src={g.photo} alt={g.name} width={64} height={64} className="w-16 h-16 rounded-xl object-cover" />}
@@ -513,7 +519,7 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                                 <h2 className="text-lg font-bold text-zinc-900 dark:text-white mb-4">🧠 Local Insider Tips</h2>
                                 <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/10 dark:to-orange-900/10 border border-amber-100 dark:border-amber-500/20 rounded-2xl p-5 space-y-3">
                                     {insiderTips.map((tip, i) => (
-                                        <motion.div key={i} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.08 }}
+                                        <motion.div key={`insider-tip-${i}`} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.08 }}
                                             className="flex gap-3 items-start">
                                             <div className="w-6 h-6 rounded-full bg-amber-100 dark:bg-amber-500/20 flex items-center justify-center flex-shrink-0 mt-0.5 text-xs">{i + 1}</div>
                                             <p className="text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed">{tip}</p>
@@ -529,7 +535,7 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                                 <h2 className="text-lg font-bold text-zinc-900 dark:text-white mb-4">🧭 Travel Tips from Locals</h2>
                                 <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-100 dark:border-zinc-800 p-5 shadow-sm space-y-3">
                                     {data.travelTips.map((tip: string, i: number) => (
-                                        <div key={i} className="flex gap-3 items-start">
+                                        <div key={`travel-tip-${i}`} className="flex gap-3 items-start">
                                             <span className="text-emerald-500 font-bold text-sm mt-0.5">💡</span>
                                             <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed">{tip}</p>
                                         </div>
@@ -537,6 +543,7 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                                 </div>
                             </div>
                         )}
+
 
                         {generatedData && (
                             <div className="flex items-center gap-2 text-xs text-zinc-400 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl px-4 py-3 border border-zinc-100 dark:border-zinc-800">

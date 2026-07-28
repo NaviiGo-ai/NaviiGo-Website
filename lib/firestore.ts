@@ -156,46 +156,52 @@ export async function saveItineraryToFirestore(uid: string, data: {
     form: Record<string, unknown>;
     generatedData: Record<string, unknown> | null;
 }): Promise<string> {
-    const colRef = collection(db, 'users', uid, 'itineraries');
+    try {
+        const colRef = collection(db, 'users', uid, 'itineraries');
 
-    // Check Firebase for an existing itinerary with the same destId + purpose + startDate
-    const allSnap = await getDocs(colRef);
-    const startDate = (data.form?.startDate as string) || '';
-    const purpose = (data.form?.purpose as string) || '';
-    
-    let existingDocId: string | null = null;
-    allSnap.forEach((d) => {
-        const existing = d.data();
-        const existingForm = existing.form as Record<string, unknown> | undefined;
-        if (
-            existing.destId === data.destId &&
-            (existingForm?.purpose || '') === purpose &&
-            (existingForm?.startDate || '') === startDate
-        ) {
-            existingDocId = d.id;
-        }
-    });
-
-    if (existingDocId) {
-        // Update existing doc — don't duplicate, don't re-increment totalTrips
-        const ref = doc(db, 'users', uid, 'itineraries', existingDocId);
-        await setDoc(ref, {
-            ...data,
-            updatedAt: serverTimestamp(),
-        }, { merge: true });
-        return existingDocId;
-    } else {
-        // First save — new unique ID via addDoc, increment trip count
-        const newRef = await addDoc(colRef, {
-            ...data,
-            isActive: false,
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp(),
+        // Check Firebase for an existing itinerary with the same destId + purpose + startDate
+        const allSnap = await getDocs(colRef);
+        const startDate = (data.form?.startDate as string) || '';
+        const purpose = (data.form?.purpose as string) || '';
+        
+        let existingDocId: string | null = null;
+        allSnap.forEach((d) => {
+            const existing = d.data();
+            const existingForm = existing.form as Record<string, unknown> | undefined;
+            if (
+                existing.destId === data.destId &&
+                (existingForm?.purpose || '') === purpose &&
+                (existingForm?.startDate || '') === startDate
+            ) {
+                existingDocId = d.id;
+            }
         });
-        await updateDoc(doc(db, 'users', uid), { totalTrips: increment(1) });
-        return newRef.id;
+
+        if (existingDocId) {
+            // Update existing doc — don't duplicate, don't re-increment totalTrips
+            const ref = doc(db, 'users', uid, 'itineraries', existingDocId);
+            await setDoc(ref, {
+                ...data,
+                updatedAt: serverTimestamp(),
+            }, { merge: true });
+            return existingDocId;
+        } else {
+            // First save — new unique ID via addDoc, increment trip count
+            const newRef = await addDoc(colRef, {
+                ...data,
+                isActive: false,
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp(),
+            });
+            await updateDoc(doc(db, 'users', uid), { totalTrips: increment(1) });
+            return newRef.id;
+        }
+    } catch (err) {
+        console.warn('[Firestore] saveItineraryToFirestore error:', err);
+        return 'temp-local-id';
     }
 }
+
 
 export async function getUserItineraries(uid: string): Promise<SavedItineraryDoc[]> {
     const q = query(
@@ -355,25 +361,111 @@ export async function saveSharedItinerary(shareId: string, data: {
     generatedData?: any;
     destName: string;
 }, ownerUid?: string, ownerEmail?: string) {
-    await setDoc(doc(db, 'itineraries', shareId), {
-        ...data,
-        ownerUid: ownerUid || null,
-        collaborators: 1,
-        invitedUsers: ownerEmail ? [ownerEmail] : [],
-        updatedAt: serverTimestamp(),
-        createdAt: serverTimestamp(),
-    });
+    try {
+        await setDoc(doc(db, 'itineraries', shareId), {
+            ...data,
+            ownerUid: ownerUid || null,
+            collaborators: 1,
+            invitedUsers: ownerEmail ? [ownerEmail] : [],
+            updatedAt: serverTimestamp(),
+            createdAt: serverTimestamp(),
+        });
+    } catch (err) {
+        console.warn('[Firestore] saveSharedItinerary error:', err);
+    }
     return shareId;
 }
 
 export async function updateSharedPlans(shareId: string, customPlans: unknown[]) {
-    await updateDoc(doc(db, 'itineraries', shareId), {
-        customPlans,
-        updatedAt: serverTimestamp(),
-    });
+    try {
+        await updateDoc(doc(db, 'itineraries', shareId), {
+            customPlans,
+            updatedAt: serverTimestamp(),
+        });
+    } catch (err) {
+        console.warn('[Firestore] updateSharedPlans error:', err);
+    }
+}
+
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// UUID-BASED ITINERARIES — itineraries/{uuid}  (new primary store)
+// Each generated itinerary gets a client-generated UUID as its document ID.
+// Works for both logged-in users and guests (guests expire after 30 days).
+// ═══════════════════════════════════════════════════════════════════════════════
+
+export async function saveItineraryByUUID(uuid: string, data: {
+    form: Record<string, unknown>;
+    generatedData: Record<string, unknown> | null;
+    destName: string;
+    userId?: string | null;
+    isPublic?: boolean;
+}) {
+    if (!db) return;
+    try {
+        const ref = doc(db, 'itineraries', uuid);
+        const now = new Date();
+        const expiresAt = data.userId
+            ? null
+            : new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+        await setDoc(ref, {
+            ...data,
+            isPublic: data.isPublic ?? true,
+            expiresAt: expiresAt ? Timestamp.fromDate(expiresAt) : null,
+            updatedAt: serverTimestamp(),
+            createdAt: serverTimestamp(),
+        }, { merge: true });
+    } catch (err) {
+        console.warn('[Firestore] saveItineraryByUUID error (non-fatal):', err);
+    }
+}
+
+export async function getItineraryByUUID(uuid: string): Promise<{
+    form: Record<string, unknown>;
+    generatedData: any;
+    destName: string;
+    userId?: string | null;
+    isPublic?: boolean;
+} | null> {
+    if (!db) return null;
+    try {
+        const snap = await getDoc(doc(db, 'itineraries', uuid));
+        if (!snap.exists()) return null;
+        return snap.data() as any;
+    } catch (err) {
+        console.warn('[Firestore] getItineraryByUUID failed:', err);
+        return null;
+    }
+}
+
+/** Real-time listener — used by the [uuid] page to detect when generation completes */
+export function listenToItineraryByUUID(
+    uuid: string,
+    onUpdate: (data: { form: Record<string, unknown>; generatedData: any; destName: string } | null) => void,
+    onError?: () => void
+) {
+    if (!db) {
+        onError?.();
+        return () => {};
+    }
+    try {
+        return onSnapshot(
+            doc(db, 'itineraries', uuid),
+            (snap) => {
+                onUpdate(snap.exists() ? (snap.data() as any) : null);
+            },
+            () => onError?.()
+        );
+    } catch (err) {
+        console.warn('[Firestore] listenToItineraryByUUID failed:', err);
+        onError?.();
+        return () => {};
+    }
 }
 
 export async function joinSharedItinerary(shareId: string, userEmail?: string) {
+    if (!db) return;
     try {
         const updateData: any = { collaborators: increment(1) };
         if (userEmail) {
@@ -390,16 +482,28 @@ export function listenToItinerary(
     onUpdate: (data: { form: Record<string, unknown>; customPlans: any[]; collaborators: number }) => void,
     onError?: () => void
 ) {
-    return onSnapshot(
-        doc(db, 'itineraries', shareId),
-        (snap) => {
-            if (snap.exists()) {
-                onUpdate(snap.data() as any);
-            }
-        },
-        () => onError?.()
-    );
+    if (!db) {
+        onError?.();
+        return () => {};
+    }
+    try {
+        return onSnapshot(
+            doc(db, 'itineraries', shareId),
+            (snap) => {
+                if (snap.exists()) {
+                    onUpdate(snap.data() as any);
+                }
+            },
+            () => onError?.()
+        );
+    } catch (err) {
+        console.warn('[Firestore] listenToItinerary failed:', err);
+        onError?.();
+        return () => {};
+    }
 }
+
+
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // DIGITAL PASSPORT — users/{uid}/passport/stats + stamps
