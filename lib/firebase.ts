@@ -22,8 +22,8 @@ const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
 // and crashes client code. Only initialize in the browser.
 const isBrowser = typeof window !== 'undefined';
 const auth: Auth | null = isBrowser ? getAuth(app) : null;
-// Firestore works in both browser and server (Next.js API routes) — do not guard
-const db: Firestore = getFirestore(app, 'naviigo-db');
+// Firestore works only in the browser (client-side JS SDK); do not initialize during Node.js SSR
+const db: Firestore = (isBrowser ? getFirestore(app) : null!) as Firestore;
 const storage: FirebaseStorage | null = isBrowser ? getStorage(app) : null;
 
 let analytics: ReturnType<typeof getAnalytics> | null = null;

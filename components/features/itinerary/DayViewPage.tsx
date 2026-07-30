@@ -39,12 +39,33 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
     const destId = form.destination as string, destName = form.destName as string;
     const staticData = DEST_DATA[destId] ?? FALLBACK_DEST;
     const data: any = generatedData ? { ...staticData, ...generatedData } : staticData;
-    const [activeDay, setActiveDay] = useState(0);
+    const [activeDay, setActiveDay] = useState(() => {
+        const initial = typeof form._initialDay === 'number' ? form._initialDay : 0;
+        const totalDays = (generatedData ?? DEST_DATA[form.destination as string] ?? FALLBACK_DEST)?.dayPlans?.length ?? 0;
+        return Math.max(0, Math.min(initial, totalDays - 1));
+    });
     const [activeActivity, setActiveActivity] = useState(-1);
     const [showAddActivity, setShowAddActivity] = useState(false);
     const [dayRouteInfo, setDayRouteInfo] = useState<{ distance: string, time: string } | null>(null);
     const [customPlans, setCustomPlans] = useState<DayPlan[]>(() => (form.customPlans as DayPlan[]) || JSON.parse(JSON.stringify(data.dayPlans)));
     const plan: DayPlan = customPlans[activeDay] ?? customPlans[0];
+
+    // Sync activeDay with browser history navigation (back/forward)
+    useEffect(() => {
+        const handlePopState = () => {
+            const parts = window.location.pathname.split('/');
+            const dayIdx = parts.indexOf('day');
+            if (dayIdx !== -1 && parts[dayIdx + 1]) {
+                const dayNum = parseInt(parts[dayIdx + 1], 10);
+                if (!isNaN(dayNum) && dayNum >= 1) {
+                    setActiveDay(dayNum - 1);
+                }
+            }
+        };
+        window.addEventListener('popstate', handlePopState);
+        return () => window.removeEventListener('popstate', handlePopState);
+    }, []);
+
 
     const destState = DESTINATIONS.find(d => d.id === destId)?.state || '';
     const purpose = (form.purpose as string) || 'cultural';
@@ -251,13 +272,21 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
             <div className="sticky top-[120px] z-10 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-lg border-b border-zinc-100 dark:border-white/5 px-4 py-2 overflow-x-auto no-scrollbar">
                 <div className="flex gap-2">
                     {data.dayPlans.map((dp: DayPlan, i: number) => (
-                        <button key={dp.day} onClick={() => { setActiveDay(i); setActiveActivity(-1); }}
+                        <button key={dp.day} onClick={() => {
+                            setActiveDay(i);
+                            setActiveActivity(-1);
+                            const uuid = form._uuid as string;
+                            if (uuid) {
+                                window.history.pushState(null, '', `/itinerary/${uuid}/day/${i + 1}`);
+                            }
+                        }}
                             className={`flex-shrink-0 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all
                 ${activeDay === i ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/25' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'}`}>
                             Day {dp.day}
                         </button>
                     ))}
                 </div>
+
                 {isTripActive && (() => {
                     const progress = getProgress();
                     const pColor = progress.percent < 34 ? 'from-blue-500 to-cyan-500' :

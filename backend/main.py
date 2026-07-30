@@ -8,8 +8,9 @@ from slowapi.errors import RateLimitExceeded
 from limiter import limiter
 from dotenv import load_dotenv
 
-# Load environment variables from parent .env.local
+# Load environment variables from parent .env.local or .env
 load_dotenv(dotenv_path="../.env.local")
+load_dotenv(dotenv_path="../.env")
 
 from routers import itinerary, chat, recommendations, explore, weather, transport, taste, places, admin
 

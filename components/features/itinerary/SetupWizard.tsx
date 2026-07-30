@@ -2,7 +2,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Loader2 } from 'lucide-react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import CalendarPicker from '@/components/shared/CalendarPicker';
 import { PURPOSES, DESTINATIONS, GROUP_SIZES } from '@/app/itinerary/data';
 import { resolveImgSrc } from '@/lib/imageService';
@@ -179,6 +179,7 @@ function CitySearch({ value, destName, onSelect }: { value: string; destName: st
 
 export default function SetupWizard({ onDone }: SetupWizardProps) {
     const searchParams = useSearchParams();
+    const router = useRouter();
     const { user } = useAuth();
     const [step, setStep] = useState(1);
     const [dir, setDir] = useState(1);
@@ -191,6 +192,19 @@ export default function SetupWizard({ onDone }: SetupWizardProps) {
     const next = () => { setDir(1); setStep(s => s + 1); };
     const back = () => { setDir(-1); setStep(s => s - 1); };
     const canNext = [form.purpose !== '', form.destination !== '', form.startDate !== '' && form.endDate !== '', form.group !== ''][step - 1] ?? false;
+
+    /**
+     * Generate a UUID, store the form in sessionStorage keyed by that UUID,
+     * then navigate to /itinerary/[uuid]. The [uuid] page handles generation.
+     */
+    const handleSubmit = useCallback(() => {
+        const uuid = crypto.randomUUID();
+        const formWithMeta = { ...form, userId: user?.uid ?? null };
+        sessionStorage.setItem(`navii_form_${uuid}`, JSON.stringify(formWithMeta));
+        // Also call the legacy onDone so parent can still hook in if needed
+        onDone({ ...formWithMeta, uuid });
+        router.push(`/itinerary/${uuid}`);
+    }, [form, user, onDone, router]);
 
     // Pre-fill destination from URL query params (e.g. from Explore deep-dive CTA)
     useEffect(() => {
@@ -408,7 +422,7 @@ export default function SetupWizard({ onDone }: SetupWizardProps) {
                         {/* Sticky Next/Back buttons — always visible */}
                         <div className="flex gap-3 pt-4 border-t border-zinc-100 dark:border-zinc-800 mt-4 max-w-2xl">
                             {step > 1 && <motion.button whileTap={{ scale: 0.98 }} onClick={back} className="flex-1 py-3.5 rounded-2xl border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 font-medium hover:bg-zinc-50 dark:hover:bg-white/5 transition-colors">← Back</motion.button>}
-                            <motion.button whileTap={canNext && !isSubmitting && !isTransitioning ? { scale: 0.98 } : {}} onClick={step < 4 ? () => { setIsTransitioning(true); setTimeout(() => { setIsTransitioning(false); next(); }, 300); } : () => { setIsSubmitting(true); onDone(form); }} disabled={!canNext || isSubmitting || isTransitioning}
+                            <motion.button whileTap={canNext && !isSubmitting && !isTransitioning ? { scale: 0.98 } : {}} onClick={step < 4 ? () => { setIsTransitioning(true); setTimeout(() => { setIsTransitioning(false); next(); }, 300); } : () => { setIsSubmitting(true); handleSubmit(); }} disabled={!canNext || isSubmitting || isTransitioning}
                                 className={`flex-[2] py-3.5 rounded-2xl font-bold text-base transition-all flex items-center justify-center gap-2 ${canNext && !isSubmitting && !isTransitioning ? 'bg-emerald-600 text-white hover:bg-emerald-500 shadow-lg shadow-emerald-500/25' : 'bg-zinc-200 dark:bg-zinc-700 text-zinc-400 cursor-not-allowed'}`}>
                                 {isSubmitting || isTransitioning ? (
                                     <>
