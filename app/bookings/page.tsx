@@ -731,7 +731,7 @@ export default function BookingsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-[#050505] pt-24 pb-24 px-4 sm:px-6 md:px-10 font-sans">
+    <div className="min-h-screen bg-zinc-50 dark:bg-[#050505] pt-20 sm:pt-24 pb-24 px-4 sm:px-6 md:px-10 font-sans">
       <style>{`
         .input-field {
           width: 100%;

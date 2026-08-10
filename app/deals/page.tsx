@@ -168,7 +168,7 @@ export default function MetasearchDealsPage() {
   return (
     <>
       <style>{pulse}</style>
-      <div className="min-h-screen bg-black pt-28 pb-12 relative overflow-hidden">
+      <div className="min-h-screen bg-black pt-20 sm:pt-28 pb-12 relative overflow-hidden">
         {/* Background Ornaments */}
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-orange-500/10 rounded-full blur-[120px] pointer-events-none" />
         <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-emerald-500/10 rounded-full blur-[120px] pointer-events-none" />
@@ -183,7 +183,7 @@ export default function MetasearchDealsPage() {
             <div className="inline-block px-4 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-400 text-xs font-black uppercase tracking-widest mb-6 backdrop-blur-md">
               Global MetaSearch Partner
             </div>
-            <h1 className="text-4xl md:text-5xl font-black text-white mb-6 uppercase tracking-tight leading-[1.1]">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-6 uppercase tracking-tight leading-[1.1]">
               Global Travel
               <br />
               <span className="bg-gradient-to-r from-orange-400 to-amber-500 bg-clip-text text-transparent">

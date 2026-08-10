@@ -3,7 +3,7 @@ import Link from "next/link";
 
 export default function PrivacyPage() {
   return (
-    <div className="min-h-screen pt-28 pb-20 bg-zinc-50 dark:bg-[#0a0a0a]">
+    <div className="min-h-screen pt-20 sm:pt-28 pb-20 bg-zinc-50 dark:bg-[#0a0a0a]">
       <div className="max-w-4xl mx-auto px-6">
         <div className="text-center mb-12">
           <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-500/10 text-emerald-500 rounded-2xl flex items-center justify-center mx-auto mb-6">

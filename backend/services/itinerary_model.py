@@ -2,6 +2,12 @@
 # Faithfully ported from lib/ai/itineraryModel.ts (792 lines).
 # Scoring-based itinerary generation using user signals — wizard inputs,
 # browsing analytics, preferences, and past trip history.
+#
+# Enhancements:
+#   - Dynamic Day 1 arrival clock (morning/afternoon/evening/night)
+#   - Last Day departure constraint math (flight buffer, transit, checkout)
+#   - Spatial day-arc clustering (no more north→south→north backtracking)
+#   - Must-Do pinning (fixed anchor activities)
 
 import math
 import random
@@ -80,7 +86,7 @@ WEATHER_CONDITIONS = [
     {"condition": "Clear Skies",   "emoji": "☀️",  "rain": 0,  "tip": "Great day for sightseeing — carry sunscreen"},
     {"condition": "Partly Cloudy", "emoji": "⛅",  "rain": 15, "tip": "Light & breezy — carry sunglasses"},
     {"condition": "Hazy Morning",  "emoji": "🌤️", "rain": 5,  "tip": "Cool morning — good for early starts"},
-    {"condition": "Misty Morning", "emoji": "🌫️", "rain": 30, "tip": "Carry a light jacket and umbrella"},
+    {"condition": "Misty Morning",  "emoji": "🌫️", "rain": 30, "tip": "Carry a light jacket and umbrella"},
     {"condition": "Sunny",         "emoji": "☀️",  "rain": 0,  "tip": "Stay hydrated and use sunscreen"},
 ]
 
@@ -94,6 +100,30 @@ DAY_TITLES_MAP = {
 }
 
 GEO_RADIUS_KM = 80
+
+# ─── Departure Buffer Constants ─────────────────────────────────────────────
+
+DEPARTURE_BUFFER_HOURS = {
+    "flight": 2.0,      # Need 2h at airport before departure
+    "train": 1.0,       # 1h buffer at railway station
+    "bus": 0.5,         # 30 min at bus stand
+    "car": 0.25,        # 15 min buffer for self-drive
+}
+
+# Default transit time from city center to departure point (in hours)
+DEFAULT_TRANSIT_TO_DEPARTURE = 0.75  # 45 minutes
+
+# Default checkout time (fractional hour)
+DEFAULT_CHECKOUT_HOUR = 11.0
+
+# ─── Arrival Clock Mapping ──────────────────────────────────────────────────
+
+ARRIVAL_CLOCK_MAP = {
+    "morning":   12.0,   # Arrive morning → check-in by noon, full afternoon
+    "afternoon": 14.0,   # Arrive afternoon → check-in by 2 PM (current default)
+    "evening":   17.0,   # Arrive evening → check-in at 5 PM, dinner only
+    "night":     20.0,   # Arrive night → check-in only, no activities
+}
 
 
 # ─── Utility Functions ──────────────────────────────────────────────────────
@@ -176,6 +206,75 @@ def _geo_filter_and_snap(items: List[dict], center: dict) -> List[dict]:
     return result
 
 
+# ─── Spatial Clustering ─────────────────────────────────────────────────────
+# Groups attractions into geographic clusters so each day covers a coherent
+# zone instead of zigzagging across the city.
+
+def _cluster_by_quadrant(attractions: List[dict], center: dict, num_clusters: int) -> List[List[dict]]:
+    """
+    Divide attractions into geographic clusters using quadrant-based grouping.
+    Returns a list of clusters, each sorted by score (highest first).
+    """
+    if not attractions:
+        return [[] for _ in range(num_clusters)]
+
+    # Assign each attraction to a quadrant (NE, NW, SE, SW)
+    quadrants: Dict[str, List[dict]] = {"NE": [], "NW": [], "SE": [], "SW": []}
+    for attr in attractions:
+        lat = attr.get("lat", center["lat"])
+        lng = attr.get("lng", center["lng"])
+        ns = "N" if lat >= center["lat"] else "S"
+        ew = "E" if lng >= center["lng"] else "W"
+        quadrants[ns + ew].append(attr)
+
+    # Sort quadrants by total score (highest first)
+    sorted_quads = sorted(quadrants.values(), key=lambda q: sum(a.get("score", 0) for a in q), reverse=True)
+
+    # Merge small quadrants and distribute into num_clusters groups
+    clusters: List[List[dict]] = [[] for _ in range(num_clusters)]
+    all_sorted = []
+    for quad in sorted_quads:
+        all_sorted.extend(quad)
+
+    # Round-robin distribute to clusters while keeping geographic locality
+    for i, attr in enumerate(all_sorted):
+        clusters[i % num_clusters].append(attr)
+
+    # Within each cluster, sort by nearest-neighbor to minimize backtracking
+    for cluster in clusters:
+        if len(cluster) > 1:
+            cluster.sort(key=lambda a: a.get("score", 0), reverse=True)
+            _nearest_neighbor_sort(cluster, center)
+
+    return clusters
+
+
+def _nearest_neighbor_sort(attractions: List[dict], center: dict):
+    """Sort attractions in-place using nearest-neighbor greedy algorithm."""
+    if len(attractions) <= 2:
+        return
+
+    sorted_list = [attractions[0]]  # Start with highest-scored
+    remaining = list(attractions[1:])
+    current_lat = sorted_list[0].get("lat", center["lat"])
+    current_lng = sorted_list[0].get("lng", center["lng"])
+
+    while remaining:
+        nearest_idx = 0
+        nearest_dist = float("inf")
+        for i, attr in enumerate(remaining):
+            dist = _haversine_m(current_lat, current_lng, attr.get("lat", center["lat"]), attr.get("lng", center["lng"]))
+            if dist < nearest_dist:
+                nearest_dist = dist
+                nearest_idx = i
+        nearest = remaining.pop(nearest_idx)
+        sorted_list.append(nearest)
+        current_lat = nearest.get("lat", center["lat"])
+        current_lng = nearest.get("lng", center["lng"])
+
+    attractions[:] = sorted_list
+
+
 # ─── Scoring Engine ──────────────────────────────────────────────────────────
 
 def _score_attraction(attr: dict, index: int, ctx: dict, budget_tier: str) -> dict:
@@ -256,7 +355,31 @@ def _score_attraction(attr: dict, index: int, ctx: dict, budget_tier: str) -> di
         except Exception:
             pass
 
-    return {**attr, "score": score, "originalIndex": index}
+    # 8. Weather-aware adjustment — boost indoor activities during rainy conditions
+    weather_info = ctx.get("weatherInfo")  # e.g. {"rain": 70, "condition": "Monsoon"}
+    if weather_info and weather_info.get("rain", 0) > 50:
+        indoor_tags = {"Museum", "Shopping", "Heritage", "Palace", "Culture", "Temple", "Market"}
+        outdoor_tags = {"Beach", "Trekking", "Nature", "Waterfall", "Houseboat", "Sunset", "Safari", "Adventure"}
+        if any(t in indoor_tags for t in tags):
+            score += 15  # Prefer indoor during rain
+        if any(t in outdoor_tags for t in tags):
+            score -= 25  # Penalize outdoor during rain
+
+    # 9. Crowd-aware preferred time slot hint
+    # Store a hint that gets used during day-building to avoid peak hours
+    crowd_preferred_slot = None
+    for tag in tags:
+        if tag in ("Temple", "Spiritual", "Aarti"):
+            crowd_preferred_slot = "Morning"  # Temples: avoid 11 AM–2 PM
+        elif tag in ("Market", "Shopping"):
+            crowd_preferred_slot = "Evening"   # Markets: peak in evening but electric
+        elif tag in ("Beach", "Nature"):
+            crowd_preferred_slot = "Morning"   # Avoid midday UV
+    
+    result = {**attr, "score": score, "originalIndex": index}
+    if crowd_preferred_slot:
+        result["preferredSlot"] = crowd_preferred_slot
+    return result
 
 
 # ─── Main Generation Function ───────────────────────────────────────────────
@@ -265,6 +388,12 @@ def generate_itinerary(ctx: dict, dest_data: dict) -> Optional[dict]:
     """
     Generate a fully personalized itinerary with day plans, scored attractions,
     restaurants, hotels — identical to the TypeScript itineraryModel output.
+
+    New features:
+    - Dynamic arrival clock (ctx.arrivalTime → morning/afternoon/evening/night)
+    - Last-day departure constraint (ctx.departureTime, ctx.departureMode)
+    - Spatial clustering (group attractions by quadrant per day)
+    - Must-Do pinning (ctx.mustDo → fixed anchor activities)
     """
     if not dest_data:
         return None
@@ -281,6 +410,40 @@ def generate_itinerary(ctx: dict, dest_data: dict) -> Optional[dict]:
     scored_attractions = [_score_attraction(a, i, ctx, budget_tier) for i, a in enumerate(highlights)]
     scored_attractions.sort(key=lambda a: a["score"], reverse=True)
     scored_attractions = _geo_filter_and_snap(scored_attractions, map_center)
+
+    # ── Must-Do Pinning ──────────────────────────────────────────────────────
+    must_do_list = ctx.get("mustDo") or []
+    pinned_by_day: Dict[int, List[dict]] = {}
+    pinned_names = set()
+
+    for pin in must_do_list:
+        pin_name = pin.get("name", "")
+        pin_day = pin.get("dayIndex")  # 0-indexed, optional
+        if not pin_name:
+            continue
+
+        # Find matching attraction
+        match = next((a for a in scored_attractions if a["name"].lower() == pin_name.lower()), None)
+        if not match:
+            # Fuzzy match — check if pin_name is a substring
+            match = next((a for a in scored_attractions if pin_name.lower() in a["name"].lower()), None)
+        if match:
+            pinned_names.add(match["name"])
+            target_day = pin_day if pin_day is not None and 0 <= pin_day < days else 0
+            if target_day not in pinned_by_day:
+                pinned_by_day[target_day] = []
+            pinned_by_day[target_day].append(match)
+
+    # ── Spatial Clustering ───────────────────────────────────────────────────
+    # Remove pinned attractions from pool before clustering
+    unpinned = [a for a in scored_attractions if a["name"] not in pinned_names]
+    day_clusters = _cluster_by_quadrant(unpinned, map_center, days)
+
+    # Merge pinned attractions into their target day clusters
+    for day_idx, pinned_list in pinned_by_day.items():
+        if day_idx < len(day_clusters):
+            # Insert pinned at the front (they have priority)
+            day_clusters[day_idx] = pinned_list + day_clusters[day_idx]
 
     # Score restaurants
     restaurants = list(dest_data.get("restaurants", []))
@@ -316,22 +479,152 @@ def generate_itinerary(ctx: dict, dest_data: dict) -> Optional[dict]:
     weather_data = dest_data.get("weather") or {}
     temp_for_month = weather_data.get(start_month, "20–30°C") if isinstance(weather_data, dict) else "20–30°C"
 
-    # ── Build Day Plans ──────────────────────────────────────────────────────
+    # ── Departure constraint math ────────────────────────────────────────────
+    departure_time_str = ctx.get("departureTime", "")
+    departure_mode = ctx.get("departureMode", "")
+    last_day_hard_stop = 21.0  # default: no special constraint
+
+    if departure_time_str:
+        try:
+            parts = departure_time_str.split(":")
+            departure_hour = int(parts[0]) + int(parts[1]) / 60 if len(parts) >= 2 else float(departure_time_str)
+        except (ValueError, IndexError):
+            departure_hour = 21.0
+
+        buffer_hours = DEPARTURE_BUFFER_HOURS.get(departure_mode, 1.0)
+        transit_hours = DEFAULT_TRANSIT_TO_DEPARTURE
+        # Latest you can be at your last activity:
+        # departure_hour - buffer - transit
+        last_day_hard_stop = departure_hour - buffer_hours - transit_hours
+        print(f"[ItineraryModel] Departure constraint: {departure_time_str} ({departure_mode}) -> last activity by {_to_time_str(last_day_hard_stop)}")
+
+    # ── Arrival time ─────────────────────────────────────────────────────────
+    arrival_time = ctx.get("arrivalTime", "afternoon")
+    arrival_clock = ARRIVAL_CLOCK_MAP.get(arrival_time, 14.0)
+
+    # ── Pace Calibration — maxWalkingKm override ─────────────────────────────
     pace = TRAVELER_PACE.get(ctx.get("travelerType", "comfort"), TRAVELER_PACE["comfort"])
+    max_walking_km = ctx.get("maxWalkingKm")
+    if max_walking_km is not None:
+        try:
+            km = float(max_walking_km)
+            # Map walking km to active hours: ~4 km/h walking speed
+            adjusted_hours = max(3, min(12, km / 4 * 2))  # double because not all time is walking
+            pace = {**pace, "maxActiveHours": adjusted_hours}
+            if km < 5:
+                pace = {**pace, "activitiesPerSlot": [2, 1, 1]}
+            elif km < 10:
+                pace = {**pace, "activitiesPerSlot": [2, 2, 1]}
+        except (ValueError, TypeError):
+            pass
+
+    # ── Dynamic Hotel Check-in/out Times ─────────────────────────────────────
+    checkout_hour = DEFAULT_CHECKOUT_HOUR  # 11:00 AM default
+    if hotels:
+        hotel_checkin = hotels[0].get("checkIn", "")
+        if hotel_checkin:
+            try:
+                # Parse check-in time like "2:00 PM" or "14:00"
+                import re
+                pm_match = re.search(r'(\d{1,2}):?(\d{2})?\s*(AM|PM)', hotel_checkin, re.IGNORECASE)
+                h24_match = re.search(r'(\d{1,2}):(\d{2})', hotel_checkin)
+                if pm_match:
+                    h = int(pm_match.group(1))
+                    if pm_match.group(3).upper() == "PM" and h != 12:
+                        h += 12
+                    elif pm_match.group(3).upper() == "AM" and h == 12:
+                        h = 0
+                    # Checkout is typically check-in time the next day minus 3h or 11 AM
+                    checkout_hour = min(h, 11.0)  # Checkout never later than check-in
+                elif h24_match:
+                    h = int(h24_match.group(1))
+                    checkout_hour = min(h, 11.0)
+            except Exception:
+                pass
+
+    # ── Open Day / Rest Day Support ──────────────────────────────────────────
+    free_days = set(ctx.get("freeDays") or [])  # 0-indexed day numbers
+    
+    # ── Last-Day En-Route Filtering ──────────────────────────────────────────
+    # On last day, boost attractions near the route from hotel to departure point
+    if departure_time_str and departure_mode and days > 1:
+        hotel_lat = hotels[0].get("lat", map_center["lat"]) if hotels else map_center["lat"]
+        hotel_lng = hotels[0].get("lng", map_center["lng"]) if hotels else map_center["lng"]
+        departure_lat = map_center["lat"]  # Assume departure from city center (airport/station)
+        departure_lng = map_center["lng"]
+        
+        # Midpoint of hotel->departure route
+        mid_lat = (hotel_lat + departure_lat) / 2
+        mid_lng = (hotel_lng + departure_lng) / 2
+        
+        # Boost last-day cluster attractions near the midpoint
+        last_day_idx = days - 1
+        if last_day_idx < len(day_clusters):
+            for attr in day_clusters[last_day_idx]:
+                attr_lat = attr.get("lat", map_center["lat"])
+                attr_lng = attr.get("lng", map_center["lng"])
+                dist_to_mid = _haversine_m(attr_lat, attr_lng, mid_lat, mid_lng)
+                if dist_to_mid < 5000:  # Within 5km of route midpoint
+                    attr["score"] = attr.get("score", 50) + 20
+                elif dist_to_mid < 10000:
+                    attr["score"] = attr.get("score", 50) + 10
+            # Re-sort last day cluster by boosted scores
+            day_clusters[last_day_idx].sort(key=lambda a: a.get("score", 0), reverse=True)
+
+    # ── Build Day Plans ──────────────────────────────────────────────────────
     day_plans = []
     used_attractions = set()
     used_restaurants = set()
-    is_arrival_day_light = days > 2
+    is_multi_day = days > 1
 
     for day_index in range(days):
         day_activities = []
         is_first_day = day_index == 0
         is_last_day = day_index == days - 1
 
-        clock = 13.0 if (is_first_day and is_arrival_day_light) else (pace["wakeHour"] + 0.5)
+        # ── Open Day / Rest Day — skip scheduling ────────────────────────────
+        if day_index in free_days:
+            purpose_titles = DAY_TITLES_MAP.get(ctx.get("purpose", "cultural"), DAY_TITLES_MAP["cultural"])
+            weather_idx = day_index % len(WEATHER_CONDITIONS)
+            weather = {"temp": temp_for_month, **WEATHER_CONDITIONS[weather_idx]}
+            day_plans.append({
+                "day": day_index + 1,
+                "title": "Free Day - Explore at Your Own Pace",
+                "weather": weather,
+                "activities": [{
+                    "name": "Free Day",
+                    "desc": "No fixed plans today! Sleep in, explore hidden lanes, try street food, revisit favourites, or simply relax. This is your day.",
+                    "time": "All Day",
+                    "slot": "Morning",
+                    "crowd": "Low",
+                    "crowdTip": "💡 Pro tip: Ask your hotel staff for hidden local gems — they always know the best spots.",
+                    "travelFromPrev": "",
+                    "lat": map_center["lat"],
+                    "lng": map_center["lng"],
+                    "type": "attraction",
+                    "durationMins": 480,
+                }],
+            })
+            continue
+
+        # ── Clock initialization ─────────────────────────────────────────────
+        if is_first_day and is_multi_day:
+            clock = arrival_clock
+        else:
+            clock = pace["wakeHour"] + 0.5
+
+        # Hard stop for the day
         day_end_hour = 21.0
-        max_end = pace["wakeHour"] + 0.5 + pace["maxActiveHours"]
+        day_start = clock  # Use actual start time (arrival or wake)
+        max_end = day_start + pace["maxActiveHours"]
         hard_stop = min(day_end_hour, max_end)
+
+        # Apply last-day departure constraint
+        if is_last_day and departure_time_str:
+            # After checkout, they have until last_day_hard_stop
+            if is_multi_day:
+                clock = checkout_hour  # Uses dynamic checkout_hour from hotel data
+            hard_stop = min(hard_stop, last_day_hard_stop)
 
         prev_lat = map_center["lat"]
         prev_lng = map_center["lng"]
@@ -354,12 +647,55 @@ def generate_itinerary(ctx: dict, dest_data: dict) -> Optional[dict]:
             dist_m = _haversine_m(prev_lat, prev_lng, to_lat, to_lng)
             return _travel_overhead_hours(dist_m), _estimate_travel_time(dist_m)
 
+        # ── Check-in activity on Day 1 ───────────────────────────────────────
+        if is_first_day and is_multi_day:
+            checkin_time = arrival_clock
+            hotel_name = hotels[0]["name"] if hotels else "Hotel"
+            push_activity({
+                "name": f"Check-in at {hotel_name}",
+                "desc": f"Arrive and settle into your accommodation. Freshen up before exploring.",
+                "crowd": "Low",
+                "crowdTip": "🏨 Pro tip: Ask for a room upgrade at check-in — works 30% of the time!",
+                "travelFromPrev": "Arriving in city",
+                "lat": hotels[0].get("lat", map_center["lat"]) if hotels else map_center["lat"],
+                "lng": hotels[0].get("lng", map_center["lng"]) if hotels else map_center["lng"],
+                "type": "hotel",
+                "durationMins": 45,
+            }, 0.75)  # 45 min check-in
+
+        # ── Checkout activity on last day ────────────────────────────────────
+        if is_last_day and is_multi_day and days > 1:
+            if not is_first_day:  # Skip if it's a 1-day trip
+                hotel_name = hotels[0]["name"] if hotels else "Hotel"
+                push_activity({
+                    "name": f"Checkout from {hotel_name}",
+                    "desc": "Pack up, settle bills, and store luggage at reception if needed.",
+                    "crowd": "Low",
+                    "crowdTip": "🧳 Ask the hotel to store your bags — most places do it free until evening.",
+                    "travelFromPrev": "",
+                    "lat": hotels[0].get("lat", map_center["lat"]) if hotels else map_center["lat"],
+                    "lng": hotels[0].get("lng", map_center["lng"]) if hotels else map_center["lng"],
+                    "type": "hotel",
+                    "durationMins": 30,
+                }, 0.5)
+
+        # ── Get this day's attraction cluster ────────────────────────────────
+        day_attraction_pool = day_clusters[day_index] if day_index < len(day_clusters) else scored_attractions
+
         # ── Morning: early temple slot ──
-        morning_slots = 0 if (is_first_day and is_arrival_day_light) else pace["activitiesPerSlot"][0]
+        morning_slots = 0 if (is_first_day and is_multi_day) else pace["activitiesPerSlot"][0]
+
+        # For last day, reduce morning slots based on available window
+        if is_last_day and is_multi_day and departure_time_str:
+            available_hours = max(0, last_day_hard_stop - clock)
+            if available_hours < 2:
+                morning_slots = min(morning_slots, 1)
+            elif available_hours < 4:
+                morning_slots = min(morning_slots, 2)
 
         if not is_first_day and pace["templeEarlyMorning"] and ctx.get("purpose") in ("spiritual", "cultural"):
             temple_attr = next(
-                (a for a in scored_attractions if a["name"] not in used_attractions and
+                (a for a in day_attraction_pool if a["name"] not in used_attractions and
                  any(t in ("Temple", "Spiritual", "Aarti") for t in a.get("tags", []))),
                 None
             )
@@ -385,7 +721,7 @@ def generate_itinerary(ctx: dict, dest_data: dict) -> Optional[dict]:
 
         # Morning attractions
         morning_count = 0
-        for attr in scored_attractions:
+        for attr in day_attraction_pool:
             if morning_count >= morning_slots:
                 break
             if attr["name"] in used_attractions:
@@ -417,32 +753,42 @@ def generate_itinerary(ctx: dict, dest_data: dict) -> Optional[dict]:
                 morning_count += 1
 
         # ── Lunch ──
-        clock = max(clock, 13.5)
-        lunch_restaurant = next((r for r in scored_restaurants if r["name"] not in used_restaurants), None)
-        if lunch_restaurant:
-            used_restaurants.add(lunch_restaurant["name"])
-            overhead, label = travel_between(lunch_restaurant.get("lat", prev_lat), lunch_restaurant.get("lng", prev_lng))
-            clock += overhead
-            push_activity({
-                "name": f"Lunch at {lunch_restaurant['name']}",
-                "desc": f"{lunch_restaurant.get('desc', '')} Must-try: {lunch_restaurant.get('mustTry', '')}. {lunch_restaurant.get('priceRange', '')} per person.",
-                "crowd": "Medium",
-                "crowdTip": "🍽️ Survey says: peak lunch is 1–2 PM. Arrive by 12:30 for same-day service without a wait.",
-                "travelFromPrev": label,
-                "lat": lunch_restaurant.get("lat", map_center["lat"]),
-                "lng": lunch_restaurant.get("lng", map_center["lng"]),
-                "type": "restaurant",
-                "durationMins": pace["lunchBreakMins"],
-            }, pace["lunchBreakMins"] / 60)
+        if clock < hard_stop - 1:
+            clock = max(clock, 13.5)
+            lunch_restaurant = next((r for r in scored_restaurants if r["name"] not in used_restaurants), None)
+            if lunch_restaurant:
+                used_restaurants.add(lunch_restaurant["name"])
+                overhead, label = travel_between(lunch_restaurant.get("lat", prev_lat), lunch_restaurant.get("lng", prev_lng))
+                clock += overhead
+                push_activity({
+                    "name": f"Lunch at {lunch_restaurant['name']}",
+                    "desc": f"{lunch_restaurant.get('desc', '')} Must-try: {lunch_restaurant.get('mustTry', '')}. {lunch_restaurant.get('priceRange', '')} per person.",
+                    "crowd": "Medium",
+                    "crowdTip": "🍽️ Survey says: peak lunch is 1–2 PM. Arrive by 12:30 for same-day service without a wait.",
+                    "travelFromPrev": label,
+                    "lat": lunch_restaurant.get("lat", map_center["lat"]),
+                    "lng": lunch_restaurant.get("lng", map_center["lng"]),
+                    "type": "restaurant",
+                    "durationMins": pace["lunchBreakMins"],
+                }, pace["lunchBreakMins"] / 60)
 
         # ── Afternoon rest ──
-        if pace["afternoonRestMins"] > 0:
+        if pace["afternoonRestMins"] > 0 and clock < hard_stop - 1:
             clock += pace["afternoonRestMins"] / 60
 
         # ── Afternoon attractions ──
+        # Skip afternoon attractions on last day if tight on time
+        afternoon_slots = pace["activitiesPerSlot"][1]
+        if is_last_day and departure_time_str:
+            remaining_time = hard_stop - clock
+            if remaining_time < 2:
+                afternoon_slots = 0
+            elif remaining_time < 3:
+                afternoon_slots = min(afternoon_slots, 1)
+
         afternoon_count = 0
-        for attr in scored_attractions:
-            if afternoon_count >= pace["activitiesPerSlot"][1]:
+        for attr in day_attraction_pool:
+            if afternoon_count >= afternoon_slots:
                 break
             if attr["name"] in used_attractions:
                 continue
@@ -454,6 +800,11 @@ def generate_itinerary(ctx: dict, dest_data: dict) -> Optional[dict]:
 
             if clock + overhead + attr_duration > 20.5:
                 break
+
+            # On last day, check if activity fits before departure
+            if is_last_day and departure_time_str:
+                if clock + overhead + attr_duration > hard_stop:
+                    continue
 
             clock += overhead
             pushed = push_activity({
@@ -473,71 +824,112 @@ def generate_itinerary(ctx: dict, dest_data: dict) -> Optional[dict]:
                 afternoon_count += 1
 
         # ── Evening attractions ──
-        clock = max(clock, 17.0)
-        evening_count = 0
-        for attr in scored_attractions:
-            if evening_count >= pace["activitiesPerSlot"][2]:
-                break
-            if attr["name"] in used_attractions:
-                continue
-            if clock >= 20.0:
-                break
+        # Skip evening on last day if departure is early
+        evening_slots = pace["activitiesPerSlot"][2]
+        if is_last_day and departure_time_str and hard_stop < 18:
+            evening_slots = 0
 
-            overhead, label = travel_between(attr.get("lat", prev_lat), attr.get("lng", prev_lng))
-            attr_duration = _parse_duration_hours(attr.get("duration"))
+        if evening_slots > 0:
+            clock = max(clock, 17.0)
+            evening_count = 0
+            for attr in day_attraction_pool:
+                if evening_count >= evening_slots:
+                    break
+                if attr["name"] in used_attractions:
+                    continue
+                if clock >= 20.0:
+                    break
 
-            if clock + overhead + attr_duration > 20.5:
-                break
+                overhead, label = travel_between(attr.get("lat", prev_lat), attr.get("lng", prev_lng))
+                attr_duration = _parse_duration_hours(attr.get("duration"))
 
-            clock += overhead
-            pushed = push_activity({
-                "name": attr["name"],
-                "desc": attr.get("desc", ""),
-                "crowd": "Medium",
-                "crowdTip": "🌅 Golden hour — best light for photos and the most magical atmosphere",
-                "travelFromPrev": label,
-                "lat": attr.get("lat", map_center["lat"]),
-                "lng": attr.get("lng", map_center["lng"]),
-                "type": "attraction",
-                "durationMins": _parse_duration_hours(attr.get("duration")) * 60,
-            }, attr_duration)
+                if clock + overhead + attr_duration > 20.5:
+                    break
 
-            if pushed:
-                used_attractions.add(attr["name"])
-                evening_count += 1
+                clock += overhead
+                pushed = push_activity({
+                    "name": attr["name"],
+                    "desc": attr.get("desc", ""),
+                    "crowd": "Medium",
+                    "crowdTip": "🌅 Golden hour — best light for photos and the most magical atmosphere",
+                    "travelFromPrev": label,
+                    "lat": attr.get("lat", map_center["lat"]),
+                    "lng": attr.get("lng", map_center["lng"]),
+                    "type": "attraction",
+                    "durationMins": _parse_duration_hours(attr.get("duration")) * 60,
+                }, attr_duration)
+
+                if pushed:
+                    used_attractions.add(attr["name"])
+                    evening_count += 1
 
         # ── Dinner ──
-        clock = max(clock, 19.5)
-        if clock < hard_stop:
-            dinner_restaurant = next(
-                (r for r in scored_restaurants if r["name"] not in used_restaurants),
-                scored_restaurants[0] if scored_restaurants else None
-            )
-            if dinner_restaurant:
-                overhead, label = travel_between(dinner_restaurant.get("lat", prev_lat), dinner_restaurant.get("lng", prev_lng))
-                clock += overhead
-                desc = (
-                    f"End your trip on a delicious note! {dinner_restaurant.get('desc', '')} Try the {dinner_restaurant.get('mustTry', '')}."
-                    if is_last_day
-                    else f"{dinner_restaurant.get('desc', '')} Try the {dinner_restaurant.get('mustTry', '')}."
+        # Skip dinner on last day if departure is before 8 PM
+        skip_dinner = is_last_day and departure_time_str and hard_stop < 19
+        if not skip_dinner:
+            clock = max(clock, 19.5)
+            if clock < hard_stop:
+                dinner_restaurant = next(
+                    (r for r in scored_restaurants if r["name"] not in used_restaurants),
+                    scored_restaurants[0] if scored_restaurants else None
                 )
-                push_activity({
-                    "name": f"Dinner at {dinner_restaurant['name']}",
-                    "desc": desc,
-                    "crowd": "Low",
-                    "crowdTip": "🌙 Evening dining in India peaks 8–9 PM. Arriving at 7:30 PM means you get the best table.",
-                    "travelFromPrev": label,
-                    "lat": dinner_restaurant.get("lat", map_center["lat"]),
-                    "lng": dinner_restaurant.get("lng", map_center["lng"]),
-                    "type": "restaurant",
-                    "durationMins": 75,
-                }, 1.25)
-                if dinner_restaurant["name"] not in used_restaurants:
-                    used_restaurants.add(dinner_restaurant["name"])
+                if dinner_restaurant:
+                    overhead, label = travel_between(dinner_restaurant.get("lat", prev_lat), dinner_restaurant.get("lng", prev_lng))
+                    clock += overhead
+                    desc = (
+                        f"End your trip on a delicious note! {dinner_restaurant.get('desc', '')} Try the {dinner_restaurant.get('mustTry', '')}."
+                        if is_last_day
+                        else f"{dinner_restaurant.get('desc', '')} Try the {dinner_restaurant.get('mustTry', '')}."
+                    )
+                    push_activity({
+                        "name": f"Dinner at {dinner_restaurant['name']}",
+                        "desc": desc,
+                        "crowd": "Low",
+                        "crowdTip": "🌙 Evening dining in India peaks 8–9 PM. Arriving at 7:30 PM means you get the best table.",
+                        "travelFromPrev": label,
+                        "lat": dinner_restaurant.get("lat", map_center["lat"]),
+                        "lng": dinner_restaurant.get("lng", map_center["lng"]),
+                        "type": "restaurant",
+                        "durationMins": 75,
+                    }, 1.25)
+                    if dinner_restaurant["name"] not in used_restaurants:
+                        used_restaurants.add(dinner_restaurant["name"])
+
+        # ── Departure marker on last day ─────────────────────────────────────
+        if is_last_day and departure_time_str and departure_mode:
+            mode_labels = {"flight": "✈️ Head to Airport", "train": "🚆 Head to Railway Station", "bus": "🚌 Head to Bus Stand", "car": "🚗 Begin Drive Home"}
+            mode_label = mode_labels.get(departure_mode, "🚗 Depart")
+            push_activity({
+                "name": mode_label,
+                "desc": f"Allow {DEPARTURE_BUFFER_HOURS.get(departure_mode, 1):.0f}h buffer at the {departure_mode} terminal. Safe travels!",
+                "crowd": "Low",
+                "crowdTip": f"📍 Estimated transit: ~{DEFAULT_TRANSIT_TO_DEPARTURE * 60:.0f} min from city center.",
+                "travelFromPrev": f"~{DEFAULT_TRANSIT_TO_DEPARTURE * 60:.0f} min cab",
+                "lat": map_center["lat"],
+                "lng": map_center["lng"],
+                "type": "attraction",
+                "durationMins": DEPARTURE_BUFFER_HOURS.get(departure_mode, 1) * 60,
+            }, DEPARTURE_BUFFER_HOURS.get(departure_mode, 1))
 
         # Day title
         purpose_titles = DAY_TITLES_MAP.get(ctx.get("purpose", "cultural"), DAY_TITLES_MAP["cultural"])
         day_title = purpose_titles[day_index % len(purpose_titles)] if purpose_titles else f"Day {day_index + 1}"
+
+        # Override titles for first/last day with travel context
+        if is_first_day and is_multi_day:
+            arrival_mode = ctx.get("arrivalMode", "")
+            if arrival_mode:
+                mode_emoji = {"flight": "✈️", "train": "🚆", "bus": "🚌", "car": "🚗"}.get(arrival_mode, "🗺️")
+                day_title = f"{mode_emoji} Arrival & {day_title}"
+            else:
+                day_title = f"🗺️ Arrival & {day_title}"
+
+        if is_last_day and is_multi_day and days > 1:
+            if departure_mode:
+                mode_emoji = {"flight": "✈️", "train": "🚆", "bus": "🚌", "car": "🚗"}.get(departure_mode, "🗺️")
+                day_title = f"{day_title} & {mode_emoji} Departure"
+            else:
+                day_title = f"{day_title} & Farewell"
 
         # Weather
         weather_idx = day_index % len(WEATHER_CONDITIONS)
@@ -558,7 +950,20 @@ def generate_itinerary(ctx: dict, dest_data: dict) -> Optional[dict]:
     total_activities = sum(len(d["activities"]) for d in day_plans)
     print(f"[ItineraryModel] Personalized itinerary built: {len(day_plans)} days, {total_activities} activities")
 
-    return {
+    # Build departure info summary
+    departure_info = None
+    if departure_time_str and departure_mode:
+        available_after_checkout = max(0, last_day_hard_stop - checkout_hour)
+        departure_info = {
+            "departureTime": departure_time_str,
+            "departureMode": departure_mode,
+            "lastActivityBy": _to_time_str(last_day_hard_stop),
+            "checkoutTime": _to_time_str(checkout_hour),
+            "availableHoursAfterCheckout": round(available_after_checkout, 1),
+            "bufferNote": f"You have {available_after_checkout:.0f}h {int((available_after_checkout % 1) * 60)}min after checkout before you need to leave for your {departure_mode}.",
+        }
+
+    result = {
         "destName": ctx.get("destName", ""),
         "description": dest_data.get("description", ""),
         "avgCost": dest_data.get("avgCost", ""),
@@ -587,3 +992,8 @@ def generate_itinerary(ctx: dict, dest_data: dict) -> Optional[dict]:
         "dayPlans": day_plans,
         "mapCenter": map_center,
     }
+
+    if departure_info:
+        result["departureInfo"] = departure_info
+
+    return result

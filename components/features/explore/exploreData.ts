@@ -184,16 +184,16 @@ export const CATEGORIES = ['All', 'Heritage', 'Nature', 'Beach', 'Mountain', 'Ad
 
 // Bento cell layout classes for destination grid — cycles for 62 destinations
 export const BENTO_DEST: string[] = [
-    'col-span-2 row-span-2', // 0: hero card — large
-    'col-span-1 row-span-1', // 1
-    'col-span-1 row-span-1', // 2
-    'col-span-1 row-span-2', // 3: tall
-    'col-span-1 row-span-1', // 4
-    'col-span-1 row-span-1', // 5
-    'col-span-2 row-span-1', // 6: wide
-    'col-span-1 row-span-1', // 7
-    'col-span-1 row-span-2', // 8: tall
-    'col-span-1 row-span-1', // 9
-    'col-span-1 row-span-1', // 10
-    'col-span-1 row-span-1', // 11
+    'md:col-span-2 md:row-span-2', // 0: hero card — large
+    'md:col-span-1 md:row-span-1', // 1
+    'md:col-span-1 md:row-span-1', // 2
+    'md:col-span-1 md:row-span-2', // 3: tall
+    'md:col-span-1 md:row-span-1', // 4
+    'md:col-span-1 md:row-span-1', // 5
+    'md:col-span-2 md:row-span-1', // 6: wide
+    'md:col-span-1 md:row-span-1', // 7
+    'md:col-span-1 md:row-span-2', // 8: tall
+    'md:col-span-1 md:row-span-1', // 9
+    'md:col-span-1 md:row-span-1', // 10
+    'md:col-span-1 md:row-span-1', // 11
 ];

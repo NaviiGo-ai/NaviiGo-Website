@@ -31,9 +31,9 @@ export default function Footer() {
       {/* Top Glow */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-px bg-gradient-to-r from-transparent via-blue-500/50 to-transparent" />
       
-      <div className="max-w-7xl mx-auto px-6 pt-20 pb-10">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-12 sm:pt-20 pb-8 sm:pb-10">
         {/* Main Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-12 mb-16">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 sm:gap-12 mb-10 sm:mb-16">
           {/* Brand Column */}
           <div className="col-span-2 md:col-span-1">
             <Link href="/" className="flex items-center gap-2 mb-4">
@@ -87,7 +87,7 @@ export default function Footer() {
         </div>
 
         {/* Newsletter CTA */}
-        <div className="rounded-2xl bg-gradient-to-r from-slate-900 to-slate-800 border border-slate-700/50 p-8 md:p-10 mb-12">
+        <div className="rounded-2xl bg-gradient-to-r from-slate-900 to-slate-800 border border-slate-700/50 p-5 sm:p-8 md:p-10 mb-8 sm:mb-12">
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
             <div>
               <h3 className="text-lg font-semibold text-white mb-1">Stay in the loop</h3>

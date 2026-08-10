@@ -88,10 +88,10 @@ function ExplorePageContent() {
   const go = (name: string) => { startCityView(name); router.push(`/explore/${encodeURIComponent(name)}`); };
 
   return (
-    <div className="min-h-screen bg-[#f5f5f7] dark:bg-[#000000] overflow-x-hidden">
+    <div className="min-h-screen bg-[#f5f5f7] dark:bg-[#000000] overflow-x-hidden w-full max-w-[100vw]">
 
       {/* ══════════════ HERO ══════════════ */}
-      <section ref={heroRef} className="relative h-[85vh] min-h-[620px] flex items-center justify-center overflow-hidden pt-28">
+      <section ref={heroRef} className="relative h-[60vh] sm:h-[75vh] md:h-[85vh] min-h-[480px] sm:min-h-[560px] md:min-h-[620px] flex items-center justify-center overflow-hidden pt-20 sm:pt-28">
         {/* Parallax background */}
         <motion.div style={{ scale: heroScale, y: heroY }} className="absolute inset-0">
           <div className="absolute inset-0 bg-[url('/destinations/agra.png')] bg-cover bg-center" />
@@ -100,26 +100,26 @@ function ExplorePageContent() {
         </motion.div>
 
         {/* Content */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }} className="relative z-10 max-w-4xl mx-auto px-6 text-center">
-          <h1 className="text-5xl sm:text-6xl md:text-[5.5rem] font-bold text-white mb-6 leading-tight tracking-tight">
-            Every corner of India.<br />
-            <span className="text-white/70 italic font-serif">Told differently.</span>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }} className="relative z-10 w-full max-w-4xl mx-auto px-4 sm:px-6 text-center">
+          <h1 className="text-3xl sm:text-5xl md:text-[5.5rem] font-bold text-white mb-4 sm:mb-6 leading-tight tracking-tight">
+            Every corner of India.
+            <span className="block text-white/70 italic font-serif mt-1 sm:mt-2">Told differently.</span>
           </h1>
-          <p className="text-base sm:text-lg text-white/60 max-w-2xl mx-auto mb-12 font-medium leading-relaxed">
+          <p className="text-sm sm:text-base md:text-lg text-white/60 max-w-2xl mx-auto mb-8 sm:mb-12 font-medium leading-relaxed px-4 whitespace-normal break-words w-full">
             Discover curated stays, hidden beaches, and ancient paths curated for the modern traveler.
           </p>
 
           {/* Search */}
-          <div className="max-w-3xl mx-auto w-full">
+          <div className="max-w-3xl mx-auto w-full px-1">
             <div className="relative group">
-              <div className="relative flex items-center bg-white/10 backdrop-blur-md border border-white/20 hover:border-white/40 hover:bg-white/15 rounded-2xl overflow-hidden transition-all duration-300 shadow-2xl">
-                <Search className="ml-6 w-5 h-5 text-white/50" />
-                <input type="text" placeholder="Search destinations, cuisines, experiences..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
-                  className="flex-1 bg-transparent border-none outline-none px-5 py-5 text-white placeholder:text-white/40 text-base font-medium" />
+              <div className="relative flex items-center bg-white/10 backdrop-blur-md border border-white/20 hover:border-white/40 hover:bg-white/15 rounded-xl sm:rounded-2xl transition-all duration-300 shadow-2xl overflow-visible">
+                <Search className="relative z-10 ml-3 sm:ml-6 w-5 h-5 text-white/50 shrink-0" />
+                <input type="text" placeholder="Search destinations..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
+                  className="relative z-10 flex-1 min-w-0 bg-transparent border-none outline-none px-3 sm:px-5 py-4 sm:py-5 text-white placeholder:text-white/40 text-sm sm:text-base font-medium" />
                 {searchQuery ? (
-                  <button onClick={() => setSearchQuery('')} className="mr-5 text-white/50 hover:text-white text-xs font-semibold px-3 py-1.5 rounded-md hover:bg-white/10 transition-colors flex items-center gap-1"><X className="w-3.5 h-3.5" /> Clear</button>
+                  <button onClick={() => setSearchQuery('')} className="relative z-10 mr-3 sm:mr-5 text-white/50 hover:text-white text-xs font-semibold px-2 sm:px-3 py-1.5 rounded-md hover:bg-white/10 transition-colors flex items-center gap-1 shrink-0"><X className="w-3.5 h-3.5" /> Clear</button>
                 ) : (
-                  <button className="mr-5 bg-white text-black px-6 py-2.5 rounded-xl text-sm font-bold shadow-sm hover:scale-105 active:scale-95 transition-transform">
+                  <button className="relative z-10 mr-3 sm:mr-5 bg-white text-black px-4 sm:px-6 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-xs sm:text-sm font-bold shadow-sm hover:scale-105 active:scale-95 transition-transform shrink-0">
                     Search
                   </button>
                 )}
@@ -127,10 +127,10 @@ function ExplorePageContent() {
             </div>
 
             {/* Category pills */}
-            <div className="flex flex-wrap justify-center gap-2 mt-6">
+            <div className="flex gap-2 mt-6 overflow-x-auto no-scrollbar pb-2 -mx-6 px-6 sm:mx-0 sm:px-0 sm:flex-wrap sm:justify-center sm:overflow-visible">
               {CATEGORIES.map(c => (
                 <button key={c} onClick={() => { setActiveCategory(c); trackCategoryClick(c); }}
-                  className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-semibold tracking-wide transition-colors duration-200 ${activeCategory === c
+                  className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-semibold tracking-wide transition-colors duration-200 whitespace-nowrap shrink-0 ${activeCategory === c
                     ? 'bg-white text-black'
                     : 'bg-transparent text-white/60 hover:text-white hover:bg-white/10 border border-transparent hover:border-white/20'
                     }`}>
@@ -143,22 +143,22 @@ function ExplorePageContent() {
       </section>
 
       {/* ══════════════ BENTO DESTINATIONS ══════════════ */}
-      <section className="max-w-7xl mx-auto px-4 md:px-6 py-12">
-        <h2 className="text-3xl font-bold text-zinc-900 dark:text-white tracking-tight mb-2">Destinations</h2>
-        <p className="text-sm text-zinc-500 dark:text-zinc-500 mb-8">{filtered.length} places to discover</p>
+      <section className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 py-8 sm:py-12">
+        <h2 className="text-2xl sm:text-3xl font-bold text-zinc-900 dark:text-white tracking-tight mb-1 sm:mb-2">Destinations</h2>
+        <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-500 mb-6 sm:mb-8">{filtered.length} places to discover</p>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 auto-rows-[180px] md:auto-rows-[200px] gap-3 md:gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 auto-rows-[200px] sm:auto-rows-[220px] md:auto-rows-[200px] gap-3 md:gap-4">
           <AnimatePresence mode="popLayout">
             {filtered.slice(0, showCount).map((d, i) => {
               const bentoClass = BENTO_DEST[i % BENTO_DEST.length] || '';
               const isLarge = bentoClass.includes('col-span-2') && bentoClass.includes('row-span-2');
               const isTall = !isLarge && bentoClass.includes('row-span-2');
               return (
-                <Link key={d.id} href={`/explore/${encodeURIComponent(d.name)}`} onClick={() => startCityView(d.name)} className="block">
+                <Link key={d.id} href={`/explore/${encodeURIComponent(d.name)}`} onClick={() => startCityView(d.name)} className={`block ${bentoClass}`}>
                 <motion.div layout
                   initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ delay: Math.min(i, 12) * 0.03, duration: 0.35, ease: 'easeOut' }}
-                  className={`${bentoClass} group relative h-full w-full rounded-xl overflow-hidden cursor-pointer bg-black shadow-sm ring-1 ring-black/5 dark:ring-white/10 hover:shadow-lg transition-shadow duration-300`}
+                  className={`group relative h-full w-full rounded-xl overflow-hidden cursor-pointer bg-black shadow-sm ring-1 ring-black/5 dark:ring-white/10 hover:shadow-lg transition-shadow duration-300`}
                 >
                   <motion.div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${d.image})` }} whileHover={{ scale: 1.03 }} transition={{ duration: 0.8, ease: 'easeOut' }} />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/10 transition-opacity duration-300 group-hover:opacity-90" />
@@ -169,28 +169,26 @@ function ExplorePageContent() {
                     <Heart className={`w-4 h-4 transition-all ${liked.has(d.id) || liked.has(String(d.id)) ? 'fill-rose-500 text-rose-500' : 'text-white/90'}`} />
                   </button>
 
-                  {/* Category */}
-                  <div className="absolute top-3 left-3 bg-black/40 backdrop-blur-md border border-white/10 text-white px-2.5 py-1 rounded-md text-[10px] font-semibold tracking-wide">{d.category}</div>
+                  {/* Category badge - top left */}
+                  <div className="absolute top-3 left-3 bg-black/40 backdrop-blur-md border border-white/10 text-white px-2.5 py-1 rounded-md text-[10px] font-semibold tracking-wide z-10">{d.category}</div>
 
-                  {/* Content overlay */}
-                  <div className="absolute bottom-0 left-0 right-0 p-5 transform transition-transform duration-300">
-                    <div className="flex items-center gap-1.5 mb-2">
+                  {/* Content overlay - bottom */}
+                  <div className="absolute bottom-0 left-0 right-0 p-4 md:p-5">
+                    <div className="flex items-center gap-1.5 mb-1.5">
                       <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400" />
                       <span className="text-xs font-semibold text-white/90">{d.rating}</span>
                       <span className="text-xs text-white/50 font-normal ml-1 border-l border-white/20 pl-1">Popular</span>
                     </div>
-                    <h3 className={`font-bold text-white mb-1 tracking-tight ${isLarge ? 'text-3xl lg:text-4xl' : isTall ? 'text-2xl' : 'text-xl'}`}>{d.name}</h3>
-                    <p className={`text-white/70 font-medium ${isLarge ? 'text-sm' : 'text-xs'}`}>{d.state}</p>
+                    <h3 className={`font-bold text-white mb-0.5 tracking-tight leading-tight ${isLarge ? 'text-xl sm:text-3xl lg:text-4xl' : isTall ? 'text-lg sm:text-2xl' : 'text-base sm:text-xl md:text-lg'}`}>{d.name}</h3>
+                    <p className={`text-white/70 font-medium truncate ${isLarge ? 'text-xs sm:text-sm' : 'text-xs'}`}>{d.state}</p>
 
-                    {/* Extra info on large/tall cards */}
-                    {(isLarge || isTall) && (
-                      <div className="flex flex-wrap gap-2 mt-4 pt-3 border-t border-white/10">
-                        <span className="text-xs text-white/80 font-medium">{d.bestTime}</span>
-                        <span className="text-xs text-white/30">•</span>
-                        <span className="text-xs text-white/80 font-medium">{d.duration}</span>
-                        <div className="ml-auto text-xs font-bold text-white">{d.budget}</div>
-                      </div>
-                    )}
+                    {/* Details row - always visible on mobile, conditional on desktop */}
+                    <div className={`flex flex-wrap items-center gap-2 mt-3 pt-2.5 border-t border-white/10 ${!isLarge && !isTall ? 'md:hidden' : ''}`}>
+                      <span className="text-xs text-white/80 font-medium">{d.bestTime}</span>
+                      <span className="text-xs text-white/30">•</span>
+                      <span className="text-xs text-white/80 font-medium">{d.duration}</span>
+                      <div className="ml-auto text-xs font-bold text-white">{d.budget}</div>
+                    </div>
                   </div>
                 </motion.div>
                 </Link>
@@ -224,14 +222,14 @@ function ExplorePageContent() {
 
       {/* ══════════════ HIDDEN GEMS — Editorial Expandable Cards ══════════════ */}
       {visibleSections >= 2 && (
-        <section className="relative py-20 bg-white dark:bg-[#0a0a0a] border-t border-zinc-200 dark:border-zinc-800">
-          <div className="max-w-7xl mx-auto px-4 md:px-8 relative">
+        <section className="relative py-12 sm:py-20 bg-white dark:bg-[#0a0a0a] border-t border-zinc-200 dark:border-zinc-800">
+          <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-8 relative">
             <div className="flex items-end justify-between mb-10">
               <div>
                 <div className="flex items-center gap-2 text-zinc-500 dark:text-zinc-400 text-xs font-semibold tracking-widest uppercase mb-3">
                   <Gem className="w-4 h-4" /> Off the beaten path
                 </div>
-                <h2 className="text-3xl md:text-4xl font-bold text-zinc-900 dark:text-white tracking-tight">Hidden Gems</h2>
+                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-zinc-900 dark:text-white tracking-tight">Hidden Gems</h2>
                 <p className="text-base text-zinc-500 dark:text-zinc-400 mt-2 max-w-lg font-medium">Places most travelers never find — curated for the curious soul.</p>
               </div>
             </div>
@@ -293,23 +291,23 @@ function ExplorePageContent() {
 
       {/* ══════════════ CUISINES — Interactive Tabbed Showcase ══════════════ */}
       {visibleSections >= 3 && (
-        <section className="py-20 border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#0a0a0a]">
-          <div className="max-w-7xl mx-auto px-4 md:px-8">
+        <section className="py-12 sm:py-20 border-t border-zinc-200 dark:border-zinc-800 bg-white dark:bg-[#0a0a0a]">
+          <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-8">
             <div className="flex flex-col md:flex-row md:items-end justify-between mb-10">
               <div>
                 <div className="flex items-center gap-2 text-zinc-500 dark:text-zinc-400 text-xs font-semibold tracking-widest uppercase mb-3">
                   <Utensils className="w-4 h-4" /> A culinary journey
                 </div>
-                <h2 className="text-3xl md:text-4xl font-bold text-zinc-900 dark:text-white tracking-tight">Cuisines of India</h2>
+                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-zinc-900 dark:text-white tracking-tight">Cuisines of India</h2>
                 <p className="text-base text-zinc-500 dark:text-zinc-400 mt-2 font-medium">Every region. Every flavor. One incredible subcontinent.</p>
               </div>
             </div>
 
             {/* Tab buttons */}
-            <div className="flex flex-wrap gap-2 mb-8 border-b border-zinc-200 dark:border-zinc-800 pb-4">
+            <div className="flex gap-2 mb-8 border-b border-zinc-200 dark:border-zinc-800 pb-4 overflow-x-auto no-scrollbar -mx-3 px-3 sm:mx-0 sm:px-0 sm:flex-wrap sm:overflow-visible">
               {CUISINES.map((c, i) => (
                 <button key={c.region} onClick={() => setSelectedCuisine(i)}
-                  className={`flex items-center gap-2 px-5 py-2 rounded-full text-sm font-semibold transition-colors duration-200 border ${selectedCuisine === i
+                  className={`flex items-center gap-2 px-4 sm:px-5 py-2 rounded-full text-xs sm:text-sm font-semibold transition-colors duration-200 border whitespace-nowrap shrink-0 ${selectedCuisine === i
                     ? 'bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 border-transparent shadow-sm'
                     : 'bg-white dark:bg-[#111] text-zinc-600 dark:text-zinc-400 border-zinc-200 dark:border-zinc-800 hover:border-zinc-400 dark:hover:border-zinc-600'
                     }`}>
@@ -368,18 +366,18 @@ function ExplorePageContent() {
 
       {/* ══════════════ TRENDING — Portrait Cards ══════════════ */}
       {visibleSections >= 4 && (
-        <section className="py-16 bg-white dark:bg-[#0a0a0a]">
-          <div className="max-w-7xl mx-auto px-4 md:px-8">
+        <section className="py-10 sm:py-16 bg-white dark:bg-[#0a0a0a]">
+          <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-8">
             <div className="flex items-end justify-between mb-8">
               <div>
                 <div className="flex items-center gap-2 text-zinc-500 dark:text-zinc-400 text-xs font-semibold tracking-widest uppercase mb-3">
                   <Flame className="w-4 h-4" /> Hot right now
                 </div>
-                <h2 className="text-3xl font-bold text-zinc-900 dark:text-white tracking-tight">Trending Destinations</h2>
+                <h2 className="text-2xl sm:text-3xl font-bold text-zinc-900 dark:text-white tracking-tight">Trending Destinations</h2>
               </div>
               <Link href="/itinerary?new=true" className="hidden md:flex items-center gap-1 text-sm font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors">View all <ArrowRight className="w-3.5 h-3.5" /></Link>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
               {TRENDING.map((t, i) => (
                 <div key={t.name}
                   onClick={() => go(t.name)}
@@ -403,7 +401,7 @@ function ExplorePageContent() {
       {/* ══════════════ SEASONAL — Editorial Horizontal Cards ══════════════ */}
       {visibleSections >= 5 && (
         <section className="py-16 bg-zinc-50 dark:bg-black border-t border-zinc-200 dark:border-zinc-800">
-          <div className="max-w-7xl mx-auto px-4 md:px-8">
+          <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-8">
             <div className="mb-10">
               <div className="flex items-center gap-2 text-zinc-500 dark:text-zinc-400 text-xs font-semibold tracking-widest uppercase mb-3">
                 <Calendar className="w-4 h-4" /> Time-limited
@@ -452,9 +450,9 @@ function ExplorePageContent() {
 
       {/* ── CTA ── */}
       {visibleSections >= TOTAL_SECTIONS && (
-        <section className="max-w-4xl mx-auto px-4 md:px-8 py-20">
-          <div className="bg-zinc-900 dark:bg-white rounded-2xl p-10 md:p-14 text-center shadow-lg">
-            <h2 className="text-3xl font-bold text-white dark:text-black mb-3 tracking-tight">Ready to book?</h2>
+        <section className="max-w-4xl mx-auto px-3 sm:px-4 md:px-8 py-12 sm:py-20">
+          <div className="bg-zinc-900 dark:bg-white rounded-2xl p-6 sm:p-10 md:p-14 text-center shadow-lg">
+            <h2 className="text-2xl sm:text-3xl font-bold text-white dark:text-black mb-3 tracking-tight">Ready to book?</h2>
             <p className="text-zinc-400 dark:text-zinc-500 mb-8 text-base font-medium">Use our planning tools to craft the perfect itinerary.</p>
             <Link href="/itinerary?new=true" className="inline-flex items-center gap-2 bg-white dark:bg-black text-black dark:text-white px-8 py-3.5 rounded-xl font-bold text-sm shadow-sm hover:scale-[1.02] transition-transform">
               Start Planning

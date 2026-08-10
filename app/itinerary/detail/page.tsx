@@ -53,7 +53,7 @@ function DetailContent() {
 
     if (!itemData) {
         return (
-            <div className="min-h-screen pt-32 flex flex-col items-center justify-center text-zinc-500">
+            <div className="min-h-screen pt-20 sm:pt-32 flex flex-col items-center justify-center text-zinc-500">
                 <h2 className="text-2xl font-bold mb-4 text-zinc-900 dark:text-white">Item not found</h2>
                 <button onClick={() => router.back()} className="px-6 py-2 bg-emerald-600 text-white rounded-full">Go Back</button>
             </div>
@@ -79,7 +79,7 @@ function DetailContent() {
                         <span className="bg-emerald-500 text-white px-3 py-1 text-xs font-bold uppercase tracking-wider rounded-full shadow-lg">{type}</span>
                         <span className="bg-black/50 backdrop-blur-md text-white px-3 py-1 text-xs font-bold uppercase tracking-wider rounded-full flex gap-1 items-center">📍 {destInfo?.name}</span>
                     </div>
-                    <h1 className="text-4xl md:text-6xl font-bold text-white mb-2 leading-tight">{itemData.name}</h1>
+                    <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold text-white mb-2 leading-tight">{itemData.name}</h1>
                     {type === 'restaurant' && <div className="text-emerald-400 font-bold text-xl flex items-center gap-2">⭐ {itemData.rating} • {itemData.cuisine}</div>}
                     {type === 'hotel' && <div className="text-emerald-400 font-bold text-xl flex items-center gap-2">⭐ {itemData.rating} • {itemData.type}</div>}
                 </div>
@@ -178,7 +178,7 @@ function DetailContent() {
 
 export default function DetailPage() {
     return (
-        <Suspense fallback={<div className="min-h-screen bg-[#f7f8fc] dark:bg-[#0a0a0f] pt-32 text-center">Loading details...</div>}>
+        <Suspense fallback={<div className="min-h-screen bg-[#f7f8fc] dark:bg-[#0a0a0f] pt-20 sm:pt-32 text-center">Loading details...</div>}>
             <DetailContent />
         </Suspense>
     );

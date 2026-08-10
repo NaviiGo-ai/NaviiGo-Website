@@ -143,13 +143,58 @@ export const GROUP_SIZES = [
     { id: 'large', emoji: '👥', label: 'Large Group', note: '10+ people' },
 ];
 
+// ─── TRAVELER TYPES ─────────────────────────────────────────────────────────
+export const TRAVELER_TYPES = [
+    { id: 'backpacker', emoji: '🎒', label: 'Backpacker', desc: 'Early starts, max experiences, budget-friendly' },
+    { id: 'comfort', emoji: '🛋️', label: 'Comfort', desc: 'Balanced — see key highlights without exhaustion' },
+    { id: 'luxury', emoji: '👑', label: 'Luxury', desc: 'Relaxed pace, premium experiences, no rush' },
+    { id: 'family', emoji: '👨‍👩‍👧', label: 'Family', desc: 'Extended rest time, kid-friendly activities' },
+    { id: 'flash', emoji: '⚡', label: 'Flash', desc: 'Squeeze in everything possible — max energy' },
+    { id: 'slow', emoji: '🐢', label: 'Slow Travel', desc: 'Immerse deeply, fewer spots, more time' },
+];
+
+// ─── ARRIVAL / DEPARTURE OPTIONS ────────────────────────────────────────────
+export const ARRIVAL_TIMES = [
+    { id: 'morning', emoji: '🌅', label: 'Morning', desc: 'Before 12 PM', hour: 12.0 },
+    { id: 'afternoon', emoji: '☀️', label: 'Afternoon', desc: '12 – 3 PM', hour: 14.0 },
+    { id: 'evening', emoji: '🌇', label: 'Evening', desc: '3 – 6 PM', hour: 17.0 },
+    { id: 'night', emoji: '🌙', label: 'Night', desc: 'After 6 PM', hour: 20.0 },
+];
+
+export const DEPARTURE_MODES = [
+    { id: 'flight', emoji: '✈️', label: 'Flight' },
+    { id: 'train', emoji: '🚆', label: 'Train' },
+    { id: 'bus', emoji: '🚌', label: 'Bus' },
+    { id: 'car', emoji: '🚗', label: 'Car / Self-drive' },
+];
+
+export const DEPARTURE_TIMES = [
+    { id: '06:00', label: '6:00 AM' },
+    { id: '08:00', label: '8:00 AM' },
+    { id: '10:00', label: '10:00 AM' },
+    { id: '12:00', label: '12:00 PM' },
+    { id: '14:00', label: '2:00 PM' },
+    { id: '16:00', label: '4:00 PM' },
+    { id: '18:00', label: '6:00 PM' },
+    { id: '20:00', label: '8:00 PM' },
+    { id: '22:00', label: '10:00 PM' },
+];
+
+export const HOTEL_AREAS = [
+    { id: 'old-city', emoji: '🏛️', label: 'Old City / Heritage Zone' },
+    { id: 'city-center', emoji: '🏙️', label: 'City Center' },
+    { id: 'beachside', emoji: '🏖️', label: 'Beachside' },
+    { id: 'highway', emoji: '🛣️', label: 'Highway / Outskirts' },
+    { id: 'hill-station', emoji: '⛰️', label: 'Hill Station / Resort Area' },
+];
+
 // ─── LOADING STEPS ──────────────────────────────────────────────────────────
 export const GEN_STEPS = [
-    { label: 'Curating activities', sub: ['Analyzing destination insights', 'Gathering travel information', 'Exploring local attractions'], duration: 2800 },
-    { label: 'Finding restaurants', sub: ['Searching top-rated eateries', 'Matching dietary preferences', 'Adding local cuisine picks'], duration: 2200 },
-    { label: 'Selecting stays', sub: ['Comparing hotels & homestays', 'Checking availability & reviews'], duration: 1800 },
-    { label: 'Building itinerary', sub: ['Creating day-by-day schedule', 'Optimizing route for efficiency'], duration: 2500 },
-    { label: 'Finalizing your trip', sub: ['Applying personal preferences', 'Almost done…'], duration: 1500 },
+    { label: 'Curating activities', sub: ['Analyzing destination insights', 'Gathering travel information', 'Exploring local attractions', 'Researching hidden gems', 'Checking seasonal events'], duration: 20000 },
+    { label: 'Finding restaurants', sub: ['Searching top-rated eateries', 'Matching dietary preferences', 'Adding local cuisine picks', 'Comparing price ranges'], duration: 18000 },
+    { label: 'Selecting stays', sub: ['Comparing hotels & homestays', 'Checking availability & reviews', 'Matching your budget range', 'Verifying amenities'], duration: 18000 },
+    { label: 'Building itinerary', sub: ['Creating day-by-day schedule', 'Optimizing route for efficiency', 'Balancing activities & rest', 'Adding travel times between stops'], duration: 22000 },
+    { label: 'Finalizing your trip', sub: ['Applying personal preferences', 'Running final optimizations', 'Almost done…'], duration: 15000 },
 ];
 
 // ─── BADGE COLORS ─────────────────────────────────────────────────────────────

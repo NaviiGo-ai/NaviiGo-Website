@@ -55,11 +55,15 @@ async def _get_full_gemini_data(dest_name: str, purpose: str, budget: int, days:
   "logistics": {{ "flights": "airport info", "trains": "station info" }},
   "weather": {{}},
   "mapCenter": {{ "lat": number, "lng": number }},
-  "highlights": [{{ "name": "Real Name", "desc": "2 detailed sentences with entry fees, exact timings (e.g., '6:00 AM - 8:00 PM'), and best spots for photos.", "tags": ["Heritage"], "lat": number, "lng": number, "duration": "1-2 hrs" }}],
-  "restaurants": [{{ "name": "Real Name", "desc": "1-2 sentences", "cuisine": "type", "priceRange": "₹X–₹Y", "rating": 4.8, "mustTry": "dish", "lat": number, "lng": number, "tags": ["Local"] }}],
-  "hotels": [{{ "name": "Real Name", "desc": "1-2 sentences", "type": "Hotel/Resort/Hostel/Homestay", "priceRange": "₹X/night", "rating": 4.5, "amenities": ["WiFi"], "lat": number, "lng": number }}]
+  "highlights": [{{ "name": "Real Name", "img": "category_hint", "desc": "2 detailed sentences with entry fees, exact timings (e.g., '6:00 AM - 8:00 PM'), and best spots for photos.", "tags": ["Heritage"], "lat": number, "lng": number, "duration": "1-2 hrs" }}],
+  "restaurants": [{{ "name": "Real Name", "img": "restaurant_scene", "desc": "1-2 sentences", "cuisine": "type", "priceRange": "₹X–₹Y", "rating": 4.8, "mustTry": "dish", "lat": number, "lng": number, "tags": ["Local"] }}],
+  "hotels": [{{ "name": "Real Name", "img": "hotel_exterior", "desc": "1-2 sentences", "type": "Hotel/Resort/Hostel/Homestay", "priceRange": "₹X/night", "rating": 4.5, "amenities": ["WiFi"], "lat": number, "lng": number }}]
 }}
-Rules: Generate exactly 12-15 highlights, 6 restaurants, and 5 hotels to ensure a dense itinerary. Provide extremely realistic names, coordinates, and exact timings."""
+Rules:
+- Generate exactly 12-15 highlights, 6 restaurants, and 5 hotels to ensure a dense itinerary.
+- Provide extremely realistic names, coordinates, and exact timings.
+- For the "img" field, use a category hint from this list: temple_generic, heritage_scene, fort_exterior, palace_interior, beach_scene, nature_landscape, mountain_view, trekking_trail, market_bazaar, lake_view, garden_park, waterfall_cascade, sunset_view, museum_interior, spiritual_site, food_street, restaurant_scene, hotel_exterior, resort_pool.
+- The "img" field helps the frontend resolve the right category of image — pick the most appropriate one for each place."""
 
     try:
         response = await asyncio.to_thread(

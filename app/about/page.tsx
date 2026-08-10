@@ -32,7 +32,7 @@ export default function AboutPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-[#f3f4f6] dark:bg-[#050505] pt-32 text-black dark:text-white pb-32">
+    <div className="min-h-screen bg-[#f3f4f6] dark:bg-[#050505] pt-24 sm:pt-32 text-black dark:text-white pb-32">
       <div className="max-w-6xl mx-auto px-6" ref={textRef}>
         
         <motion.div 
@@ -50,13 +50,13 @@ export default function AboutPage() {
             sizes="100vw"
           />
           <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-            <h1 className="text-white text-5xl md:text-8xl font-bold tracking-tighter">We are NaviiGo.</h1>
+            <h1 className="text-white text-3xl sm:text-5xl md:text-8xl font-bold tracking-tighter">We are NaviiGo.</h1>
           </div>
         </motion.div>
 
         <div className="space-y-32">
           <div className="reveal-text grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-            <h2 className="text-4xl md:text-6xl font-semibold tracking-tight">
+            <h2 className="text-3xl sm:text-4xl md:text-6xl font-semibold tracking-tight">
               Redefining <br/> The Way You <span className="text-blue-600 dark:text-blue-500 italic font-serif">Travel.</span>
             </h2>
             <p className="text-lg md:text-2xl text-zinc-600 dark:text-zinc-400 font-light leading-relaxed">
@@ -70,7 +70,7 @@ export default function AboutPage() {
                 We solve the problem of fragmented, time-consuming, and inefficient trip planning. With our platform, you receive personalized, data-driven itineraries that adapt to your preferences, budget, and time.
               </p>
             </div>
-            <h2 className="text-4xl md:text-6xl font-semibold tracking-tight order-1 md:order-2">
+            <h2 className="text-3xl sm:text-4xl md:text-6xl font-semibold tracking-tight order-1 md:order-2">
               Fragmented Planning. <br/> <span className="text-orange-500 dark:text-orange-400 italic font-serif">Solved.</span>
             </h2>
           </div>
@@ -79,7 +79,7 @@ export default function AboutPage() {
         {/* Team Section */}
         <div className="mt-40 reveal-text">
           <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-6xl font-semibold tracking-tight">
+            <h2 className="text-3xl sm:text-4xl md:text-6xl font-semibold tracking-tight">
               Meet the <span className="text-blue-600 dark:text-blue-500 italic font-serif">Visionaries.</span>
             </h2>
             <p className="mt-6 text-lg md:text-xl text-zinc-600 dark:text-zinc-400 font-light max-w-2xl mx-auto">

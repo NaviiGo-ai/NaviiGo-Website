@@ -111,17 +111,69 @@ export const DEST_IMAGES: Record<string, string> = {
     cherrapunji:    img('cherrapunji.jpg'),  // Wettest place on Earth
 };
 
-// ─── Generic Fallbacks ────────────────────────────────────────────────────────
+// ─── Category Image Pools ─────────────────────────────────────────────────────
+// Used by resolveImgSrc() for deterministic variety — each category has a pool
+// of local images. A hash of the item name selects one, preventing all cards
+// from showing the same fallback image.
+
+export const CATEGORY_IMAGE_POOLS: Record<string, string[]> = {
+    temple:     [img('varanasi.png'), img('madurai.jpg'), img('tirupati.jpg'), img('puri.jpg'), img('haridwar.jpg'), img('amritsar.png'), img('bodhgaya.jpg'), img('ujjain.jpg'), img('mathura.jpg'), img('ayodhya.jpg'), img('shirdi.jpg'), img('dwarka.jpg')],
+    spiritual:  [img('varanasi.png'), img('rishikesh.png'), img('haridwar.jpg'), img('bodhgaya.jpg'), img('amritsar.png'), img('ujjain.jpg'), img('prayagraj.jpg'), img('mathura.jpg')],
+    heritage:   [img('jaipur.png'), img('hampi.jpg'), img('lucknow.png'), img('khajuraho.jpg'), img('orchha.jpg'), img('ajanta.jpg'), img('mysuru.jpg'), img('kolkata.jpg')],
+    fort:       [img('jaipur.png'), img('jaisalmer.png'), img('jodhpur.png'), img('udaipur.png'), img('orchha.jpg'), img('bikaner.jpg')],
+    palace:     [img('udaipur.png'), img('mysuru.jpg'), img('jaipur.png'), img('jodhpur.png')],
+    beach:      [img('goa.jpg'), img('pondicherry.jpg'), img('andaman.png'), img('lakshadweep.jpg'), img('kanyakumari.jpg'), img('rameshwaram.jpg')],
+    nature:     [img('coorg.jpg'), img('ooty.jpg'), img('kodaikanal.jpg'), img('mussoorie.png'), img('nainital.png'), img('darjeeling.jpg'), img('cherrapunji.jpg'), img('shillong.jpg')],
+    mountain:   [img('manali.png'), img('shimla.png'), img('dharamshala.png'), img('ladakh.jpg'), img('spiti.jpg'), img('auli.jpg'), img('chopta.jpg'), img('gulmarg.jpg')],
+    trekking:   [img('manali.png'), img('rishikesh.png'), img('ladakh.jpg'), img('spiti.jpg'), img('chopta.jpg'), img('auli.jpg')],
+    market:     [img('jaipur.png'), img('kolkata.jpg'), img('hyderabad.jpg'), img('mumbai.jpg'), img('lucknow.png')],
+    shopping:   [img('jaipur.png'), img('mumbai.jpg'), img('hyderabad.jpg'), img('kolkata.jpg')],
+    food:       [img('hyderabad.jpg'), img('kolkata.jpg'), img('lucknow.png'), img('chennai.jpg'), img('mumbai.jpg'), img('goa.jpg')],
+    restaurant: [img('hyderabad.jpg'), img('goa.jpg'), img('pondicherry.jpg'), img('kolkata.jpg'), img('lucknow.png'), img('chennai.jpg')],
+    hotel:      [img('udaipur.png'), img('shimla.png'), img('goa.jpg'), img('coorg.jpg'), img('mysuru.jpg'), img('mussoorie.png')],
+    museum:     [img('kolkata.jpg'), img('mumbai.jpg'), img('hyderabad.jpg'), img('jaipur.png'), img('lucknow.png')],
+    lake:       [img('nainital.png'), img('udaipur.png'), img('srinagar.jpg'), img('kodaikanal.jpg'), img('pushkar.png')],
+    garden:     [img('ooty.jpg'), img('coorg.jpg'), img('mussoorie.png'), img('darjeeling.jpg'), img('chandigarh.jpg')],
+    waterfall:  [img('coorg.jpg'), img('cherrapunji.jpg'), img('lonavala.jpg'), img('ooty.jpg')],
+    sunset:     [img('goa.jpg'), img('kanyakumari.jpg'), img('udaipur.png'), img('pondicherry.jpg')],
+    default:    [img('jaipur.png'), img('varanasi.png'), img('goa.jpg'), img('manali.png'), img('udaipur.png'), img('kerala.jpg'), img('mumbai.jpg'), img('coorg.jpg')],
+};
+
+/**
+ * Hash a string to an integer — used for deterministic image selection.
+ * Same name always picks the same image from a pool.
+ */
+export function hashString(str: string): number {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+        hash = ((hash << 5) - hash) + str.charCodeAt(i);
+        hash = hash & hash; // Convert to 32-bit integer
+    }
+    return Math.abs(hash);
+}
+
+/**
+ * Get a deterministic image from a category pool based on the item name.
+ * This ensures each restaurant/hotel/attraction gets a visually different image.
+ */
+export function getCategoryImage(name: string, category?: string): string {
+    const cat = (category || 'default').toLowerCase();
+    const pool = CATEGORY_IMAGE_POOLS[cat] || CATEGORY_IMAGE_POOLS.default;
+    const hash = hashString(name || 'default');
+    return pool[hash % pool.length];
+}
+
+// ─── Generic Fallbacks (Backward Compatibility) ───────────────────────────────
 export const FALLBACK_IMAGES: Record<string, string> = {
-    attraction: img('agra.png'),
-    restaurant: img('delhi.png'),
-    hotel:      img('udaipur.png'),
-    nature:     img('coorg.jpg'),
-    beach:      img('goa.jpg'),
-    mountain:   img('manali.png'),
-    spiritual:  img('varanasi.png'),
-    heritage:   img('jaipur.png'),
-    default:    img('delhi.png'),
+    attraction: CATEGORY_IMAGE_POOLS.heritage[0],
+    restaurant: CATEGORY_IMAGE_POOLS.restaurant[0],
+    hotel:      CATEGORY_IMAGE_POOLS.hotel[0],
+    nature:     CATEGORY_IMAGE_POOLS.nature[0],
+    beach:      CATEGORY_IMAGE_POOLS.beach[0],
+    mountain:   CATEGORY_IMAGE_POOLS.mountain[0],
+    spiritual:  CATEGORY_IMAGE_POOLS.spiritual[0],
+    heritage:   CATEGORY_IMAGE_POOLS.heritage[0],
+    default:    CATEGORY_IMAGE_POOLS.default[0],
 };
 
 export const GRADIENT_FALLBACKS: Record<string, string> = {
@@ -141,10 +193,11 @@ export function getPlaceImage(name: string, category?: string): string {
     for (const [k, v] of Object.entries(DEST_IMAGES)) {
         if (key.includes(k) || k.includes(key)) return v;
     }
-    if (category && FALLBACK_IMAGES[category as keyof typeof FALLBACK_IMAGES]) {
-        return FALLBACK_IMAGES[category as keyof typeof FALLBACK_IMAGES];
+    // Use category-aware hash-based fallback instead of always showing Delhi
+    if (category) {
+        return getCategoryImage(name, category);
     }
-    return FALLBACK_IMAGES.default;
+    return getCategoryImage(name, 'default');
 }
 
 export function handleImgError(e: React.SyntheticEvent<HTMLImageElement | HTMLDivElement>, category?: string): void {
@@ -158,3 +211,4 @@ export function handleImgError(e: React.SyntheticEvent<HTMLImageElement | HTMLDi
         el.style.background = gradient;
     }
 }
+

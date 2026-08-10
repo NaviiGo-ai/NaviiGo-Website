@@ -101,7 +101,7 @@ export default function SmartRecommendations({
 
             {/* Skeletons */}
             {loading && (
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                     {[1, 2, 3, 4].map(i => (
                         <div key={i} className="rounded-2xl overflow-hidden border-2 border-transparent bg-zinc-100 dark:bg-zinc-800/50">
                             <div className="h-28 relative overflow-hidden">
@@ -123,7 +123,7 @@ export default function SmartRecommendations({
 
             {!loading && recs.length > 0 && (
                 <div className="space-y-3">
-                    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                         {recs.slice(0, 4).map((rec, i) => (
                             <motion.div key={rec.id}
                                 initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}

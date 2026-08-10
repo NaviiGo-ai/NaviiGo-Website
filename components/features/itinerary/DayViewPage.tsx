@@ -6,6 +6,7 @@ import dynamic from 'next/dynamic';
 import { saveSharedItinerary, listenToItinerary, saveItineraryToFirestore } from '@/lib/firestore';
 import { useAuth } from '@/lib/AuthContext';
 import { resolveImgSrc } from '@/lib/imageService';
+import PlaceImage from '@/components/shared/PlaceImage';
 import {
     DEST_DATA, FALLBACK_DEST, CROWD_COLOR, CROWD_DOT,
     type DayPlan, type CrowdLevel,
@@ -34,7 +35,7 @@ interface DayViewPageProps {
 export default function DayViewPage({ form, generatedData, onBack }: DayViewPageProps) {
     const router = useRouter();
     const { user } = useAuth();
-    const { registerItinerary } = useAI();
+    const { registerItinerary, unregisterItinerary } = useAI();
     const [isSaved, setIsSaved] = useState(false);
     const destId = form.destination as string, destName = form.destName as string;
     const staticData = DEST_DATA[destId] ?? FALLBACK_DEST;
@@ -113,8 +114,13 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
         registerItinerary({ ...data, dayPlans: customPlans }, (newData: any) => {
             if (newData.dayPlans) setCustomPlans(newData.dayPlans);
         });
+        
+        return () => {
+            unregisterItinerary();
+            registeredRef.current = false;
+        };
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    }, [registerItinerary, unregisterItinerary]);
 
     const [isSharing, setIsSharing] = useState(false);
     const [collaborators, setCollaborators] = useState(1);
@@ -230,15 +236,15 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
     const isRaining = plan.weather.rain > 20;
 
     return (
-        <div className="min-h-screen bg-[#f7f8fc] dark:bg-[#0a0a0f] pt-20">
+        <div className="min-h-screen bg-[#f7f8fc] dark:bg-[#0a0a0f] pt-16 sm:pt-20">
             {/* Top bar */}
-            <div className="sticky top-20 z-40 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-lg border-b border-zinc-100 dark:border-white/5 px-4 py-3 flex items-center gap-4">
+            <div className="sticky top-16 sm:top-20 z-40 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-lg border-b border-zinc-100 dark:border-white/5 px-3 sm:px-4 py-2.5 sm:py-3 flex items-center gap-2 sm:gap-4">
                 <button onClick={onBack} className="w-9 h-9 rounded-full border border-zinc-200 dark:border-zinc-700 flex items-center justify-center hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors text-sm text-zinc-600 dark:text-zinc-300">←</button>
-                <button onClick={() => router.push('/itinerary?new=true')} className="w-9 h-9 rounded-full border border-emerald-500/30 flex items-center justify-center hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-colors text-emerald-600 dark:text-emerald-400" title="Create New Itinerary">
+                <button onClick={() => router.push('/itinerary?new=true')} className="hidden sm:flex w-9 h-9 rounded-full border border-emerald-500/30 items-center justify-center hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-colors text-emerald-600 dark:text-emerald-400" title="Create New Itinerary">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"/></svg>
                 </button>
                 <div className="flex-1">
-                    <h1 className="font-bold text-zinc-900 dark:text-white text-sm">{destName} — Day-by-Day Itinerary</h1>
+                    <h1 className="font-bold text-zinc-900 dark:text-white text-sm truncate">{destName} — <span className="hidden sm:inline">Day-by-Day </span>Itinerary</h1>
                     <p className="text-xs text-zinc-400 hidden sm:block">Full plan with crowd & weather alerts</p>
                 </div>
                 <ShareDropdown onCopyLink={handleShare} destName={destName} isSharing={isSharing} collaborators={collaborators} planData={{ ...data, dayPlans: customPlans }} />
@@ -253,7 +259,8 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                         }`}
                     >
                         <Rocket className="w-3.5 h-3.5" />
-                        {isTripActive ? 'End Trip' : 'Start Trip'}
+                        <span className="hidden sm:inline">{isTripActive ? 'End Trip' : 'Start Trip'}</span>
+                        <span className="sm:hidden">{isTripActive ? '⏹' : '▶'}</span>
                     </motion.button>
                 )}
                 <motion.button whileTap={{ scale: 0.98 }} onClick={async () => {
@@ -269,7 +276,7 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
             </div>
 
             {/* Day tabs */}
-            <div className="sticky top-[120px] z-10 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-lg border-b border-zinc-100 dark:border-white/5 px-4 py-2 overflow-x-auto no-scrollbar">
+            <div className="sticky top-[104px] sm:top-[120px] z-10 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-lg border-b border-zinc-100 dark:border-white/5 px-3 sm:px-4 py-2 overflow-x-auto no-scrollbar">
                 <div className="flex gap-2">
                     {data.dayPlans.map((dp: DayPlan, i: number) => (
                         <button key={dp.day} onClick={() => {
@@ -322,7 +329,7 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                                 {/* DAY DASHBOARD */}
                                 <div className="mb-8">
                             <div className="flex items-center justify-between mb-4">
-                                <h2 className="text-3xl md:text-4xl font-bold text-zinc-900 dark:text-white">Day {plan.day}: {plan.title}</h2>
+                                <h2 className="text-xl sm:text-3xl md:text-4xl font-bold text-zinc-900 dark:text-white truncate">Day {plan.day}: {plan.title}</h2>
                                 <motion.button whileTap={{ scale: 0.98 }} onClick={() => {
                                     const baseDate = form.startDate ? new Date(form.startDate as string) : new Date();
                                     baseDate.setDate(baseDate.getDate() + activeDay);
@@ -344,7 +351,7 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                                     ics += "END:VCALENDAR";
                                     const url = URL.createObjectURL(new Blob([ics], { type: 'text/calendar' }));
                                     const a = document.createElement('a'); a.href = url; a.download = `NaviiGo_Day${plan.day}.ics`; a.click();
-                                }} className="text-xs bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 px-3 py-1.5 rounded-full font-bold shadow-sm hover:scale-105 transition-transform flex items-center gap-1.5 shrink-0">
+                                }} className="text-xs bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 px-3 py-1.5 rounded-full font-bold shadow-sm hover:scale-105 transition-transform hidden sm:flex items-center gap-1.5 shrink-0">
                                     <span>📅</span> Add to Calendar
                                 </motion.button>
                             </div>
@@ -442,7 +449,7 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                                         {data.hotels.slice(0, 3).map((hotel: any, i: number) => (
                                             <div key={i} className="group relative bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-100 dark:border-zinc-800 overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all flex flex-col">
-                                                <div className="h-28 bg-cover bg-center shrink-0" style={{ backgroundImage: `url(${resolveImgSrc(hotel.img, 400)})` }} />
+                                                <PlaceImage name={hotel.name} city={destName} fallbackSrc={resolveImgSrc(hotel.img, 400, hotel.name, hotel.type || 'hotel')} className="h-28 w-full shrink-0" asBackground />
                                                 <div className="p-3 flex-1 flex flex-col">
                                                     <div className="font-bold text-sm text-zinc-900 dark:text-white line-clamp-1 mb-0.5">{hotel.name}</div>
                                                     <div className="text-[11px] text-zinc-500 line-clamp-2 mb-3 flex-1">{hotel.desc}</div>
@@ -527,6 +534,22 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                                         <span>😌</span> Make it Relaxed
                                     </motion.button>
                                 </div>
+
+                                {/* Last Day Departure Buffer Banner */}
+                                {activeDay === customPlans.length - 1 && data.departureInfo && (
+                                    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+                                        className="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-500/5 dark:to-amber-500/5 rounded-2xl p-4 border border-orange-200/50 dark:border-orange-500/20 flex items-center gap-3 mt-2 mb-4">
+                                        <div className="text-2xl">
+                                            {data.departureInfo.departureMode === 'flight' ? '✈️' : data.departureInfo.departureMode === 'train' ? '🚆' : data.departureInfo.departureMode === 'bus' ? '🚌' : '🚗'}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="text-xs font-bold text-orange-600 dark:text-orange-400">Departure Day</div>
+                                            <div className="text-[11px] text-zinc-600 dark:text-zinc-300 mt-0.5">
+                                                Checkout {data.departureInfo.checkoutTime} · Depart {data.departureInfo.departureTime} · {data.departureInfo.availableHoursAfterCheckout}h free window
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                )}
 
                                 {/* Timeline */}
                                 <Reorder.Group axis="y" values={plan.activities} onReorder={(newOrder) => {
@@ -626,7 +649,7 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                                                         <div className="text-[11px] font-semibold px-2.5 py-1.5 rounded-lg bg-blue-50/80 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400 border border-blue-100 dark:border-blue-500/20 inline-flex items-center gap-1.5 mb-4">
                                                             {act.slot === 'Morning' ? '👍 Best time: Early' : (act.desc.toLowerCase().includes('rain') ? '⚠️ Skip if raining' : '☕ Pair with nearby cafe')}
                                                         </div>
-                                                        <div className="flex items-center justify-between pt-3 border-t border-zinc-100 dark:border-zinc-800/80">
+                                                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pt-3 border-t border-zinc-100 dark:border-zinc-800/80 gap-2">
                                                             <div className="flex gap-2">
                                                                 <div className="flex items-center gap-1.5 text-xs font-medium bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 rounded-lg px-3 py-1">
                                                                     <span>💡</span> {act.crowdTip}
@@ -717,7 +740,7 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                                                     }}>
                                                     <div className="flex items-center gap-3 mb-2 text-xs font-bold text-zinc-400 uppercase tracking-widest"><span className="text-base leading-none">🏨</span> Place to stay</div>
                                                     <div className="flex gap-4">
-                                                        <div className="w-16 h-16 rounded-xl shrink-0 bg-cover bg-center" style={{ backgroundImage: `url(${resolveImgSrc(data.hotels[0].img, 150, data.hotels[0].name, data.hotels[0].type)})` }} />
+                                                        <PlaceImage name={data.hotels[0].name} city={destName} fallbackSrc={resolveImgSrc(data.hotels[0].img, 150, data.hotels[0].name, data.hotels[0].type)} className="w-16 h-16 rounded-xl shrink-0" asBackground />
                                                         <div className="flex flex-col justify-center">
                                                             <div className="font-bold text-base text-zinc-900 dark:text-white line-clamp-1 group-hover:text-emerald-500 transition-colors">{data.hotels[0].name}</div>
                                                             <div className="text-xs text-zinc-500 mt-0.5">{data.hotels[0].type} • {data.hotels[0].priceRange}</div>
@@ -734,7 +757,7 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                                                     }}>
                                                     <div className="flex items-center gap-3 mb-2 text-xs font-bold text-zinc-400 uppercase tracking-widest"><span className="text-base leading-none">🍽️</span> Where to eat</div>
                                                     <div className="flex gap-4">
-                                                        <div className="w-16 h-16 rounded-xl shrink-0 bg-cover bg-center" style={{ backgroundImage: `url(${resolveImgSrc(data.restaurants[0].img, 150, data.restaurants[0].name, data.restaurants[0].cuisine)})` }} />
+                                                        <PlaceImage name={data.restaurants[0].name} city={destName} fallbackSrc={resolveImgSrc(data.restaurants[0].img, 150, data.restaurants[0].name, data.restaurants[0].cuisine)} className="w-16 h-16 rounded-xl shrink-0" asBackground />
                                                         <div className="flex flex-col justify-center">
                                                             <div className="font-bold text-base text-zinc-900 dark:text-white line-clamp-1 group-hover:text-amber-500 transition-colors">{data.restaurants[0].name}</div>
                                                             <div className="text-xs text-zinc-500 mt-0.5">{data.restaurants[0].cuisine}</div>
@@ -779,7 +802,7 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                                             {data.highlights?.filter((a: any) => !plan.activities.find((pa: any) => pa.name === a.name)).slice(0, 4).map((sug: any) => (
                                                 <div key={sug.name} className="bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl p-2.5 flex gap-3 group cursor-pointer hover:border-emerald-400 hover:shadow-md transition-all"
                                                     onClick={() => addCustomActivity({ name: sug.name, display_name: sug.desc, lat: sug.lat || data.mapCenter.lat, lon: sug.lng || data.mapCenter.lng })}>
-                                                    <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 bg-cover bg-center" style={{ backgroundImage: `url(${resolveImgSrc(sug.img, 150, sug.name, sug.tags?.[0])})` }} />
+                                                    <PlaceImage name={sug.name} city={destName} fallbackSrc={resolveImgSrc(sug.img, 150, sug.name, sug.tags?.[0])} className="w-10 h-10 rounded-lg shrink-0" asBackground />
                                                     <div className="min-w-0 flex flex-col justify-center">
                                                         <div className="text-[11px] font-bold text-zinc-900 dark:text-white truncate group-hover:text-emerald-600 transition-colors">{sug.name}</div>
                                                         <div className="text-[9px] text-zinc-500 truncate mt-0.5">{sug.desc}</div>
@@ -795,7 +818,7 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                 </div>
 
                 {/* Right Column: Sticky Map */}
-                <div className="hidden lg:block lg:w-[460px] xl:w-[500px] shrink-0 self-start sticky top-[100px] z-10 pb-4">
+                <div className="hidden lg:block lg:w-[400px] xl:w-[500px] shrink-0 self-start sticky top-[100px] z-10 pb-4">
                     <div className="h-[calc(100vh-140px)] min-h-[500px] rounded-[2rem] overflow-hidden border-4 border-white dark:border-zinc-800 shadow-xl bg-zinc-100 dark:bg-zinc-900">
                         <ItineraryMap
                             pins={mapPins}

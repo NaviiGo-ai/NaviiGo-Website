@@ -56,7 +56,7 @@ export default function SavedPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f7f8fc] dark:bg-[#0a0a0f] pt-32 px-6 md:px-12 pb-24">
+    <div className="min-h-screen bg-[#f7f8fc] dark:bg-[#0a0a0f] pt-20 sm:pt-32 px-4 sm:px-6 md:px-12 pb-24">
       <div className="max-w-7xl mx-auto">
         <motion.div
           initial={{ opacity: 0, x: -30 }}
@@ -65,7 +65,7 @@ export default function SavedPage() {
           className="mb-16 border-b border-zinc-200 dark:border-white/5 pb-8 flex justify-between items-end"
         >
           <div>
-            <h1 className="text-5xl md:text-7xl font-bold tracking-tighter text-zinc-900 dark:text-white">Your <span className="italic font-serif text-emerald-500">Saved</span> Trips.</h1>
+            <h1 className="text-3xl sm:text-5xl md:text-7xl font-bold tracking-tighter text-zinc-900 dark:text-white">Your <span className="italic font-serif text-emerald-500">Saved</span> Trips.</h1>
             <p className="text-zinc-500 dark:text-zinc-400 mt-4 text-lg">Pick up right where you left off.</p>
           </div>
           {savedItems.length > 0 && (

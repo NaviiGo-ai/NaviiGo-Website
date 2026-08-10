@@ -105,7 +105,7 @@ export default function DestinationDeepDive() {
         <div className="min-h-screen bg-[#f5f5f7] dark:bg-[#000000] pb-24 overflow-x-hidden">
             
             {/* HERO HEADER */}
-            <div className="relative h-[50vh] min-h-[400px] w-full bg-zinc-900 border-b border-zinc-200 dark:border-white/10 flex items-center justify-center">
+            <div className="relative h-[45vh] sm:h-[50vh] min-h-[360px] sm:min-h-[400px] w-full bg-zinc-900 border-b border-zinc-200 dark:border-white/10 flex items-center justify-center">
                 <div 
                     className="absolute inset-0 bg-cover bg-center opacity-40 mix-blend-overlay" 
                     style={{ backgroundImage: `url('${resolveImgSrc(destination, 1920)}')` }}
@@ -116,15 +116,15 @@ export default function DestinationDeepDive() {
                     <button onClick={() => router.push('/explore')} className="mb-6 flex items-center justify-center gap-2 text-white/70 hover:text-white mx-auto text-sm font-semibold transition-colors">
                         <span>←</span> Back to Explore
                     </button>
-                    <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-white mb-4">
+                    <h1 className="text-3xl sm:text-5xl md:text-7xl font-bold tracking-tight text-white mb-3 sm:mb-4">
                         {destination}
                     </h1>
-                    <p className="text-xl text-white/80 font-serif italic mb-8">
+                    <p className="text-base sm:text-xl text-white/80 font-serif italic mb-6 sm:mb-8">
                         The Authentic Guide
                     </p>
 
                     {/* Preference Selectors */}
-                    <div className="bg-white/10 backdrop-blur-md border border-white/20 p-2 rounded-2xl inline-flex flex-wrap items-center justify-center gap-2 shadow-2xl">
+                    <div className="bg-white/10 backdrop-blur-md border border-white/20 p-2 rounded-xl sm:rounded-2xl inline-flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center justify-center gap-2 shadow-2xl w-full sm:w-auto">
                         <select 
                             value={companion} 
                             onChange={(e) => setCompanion(e.target.value)}
@@ -156,7 +156,7 @@ export default function DestinationDeepDive() {
             </div>
 
             {/* CONTENT GRID */}
-            <div className="max-w-6xl mx-auto px-4 md:px-8 -mt-10 relative z-20">
+            <div className="max-w-6xl mx-auto px-3 sm:px-4 md:px-8 -mt-10 relative z-20">
                 {error && (
                     <div className="bg-red-500/10 border border-red-500/30 text-red-500 p-4 rounded-xl text-center mb-8 font-semibold">
                         {error}
@@ -173,7 +173,7 @@ export default function DestinationDeepDive() {
                     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         
                         {/* REDDIT CONSENSUS */}
-                        <div className="md:col-span-2 bg-gradient-to-br from-orange-50 to-amber-50 dark:from-[#1a1400] dark:to-[#110d00] border border-orange-100 dark:border-orange-900/30 p-8 rounded-[2rem] shadow-sm">
+                        <div className="md:col-span-2 bg-gradient-to-br from-orange-50 to-amber-50 dark:from-[#1a1400] dark:to-[#110d00] border border-orange-100 dark:border-orange-900/30 p-5 sm:p-8 rounded-2xl sm:rounded-[2rem] shadow-sm">
                             <div className="flex items-center gap-3 mb-4">
                                 <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center text-white shadow-lg">
                                     <MessageSquare className="w-5 h-5" />
@@ -189,7 +189,7 @@ export default function DestinationDeepDive() {
                         </div>
 
                         {/* HIDDEN GEMS */}
-                        <div className="bg-white dark:bg-[#111] border border-zinc-200 dark:border-white/10 p-8 rounded-[2rem] shadow-sm flex flex-col">
+                        <div className="bg-white dark:bg-[#111] border border-zinc-200 dark:border-white/10 p-5 sm:p-8 rounded-2xl sm:rounded-[2rem] shadow-sm flex flex-col">
                             <div className="flex items-center gap-3 mb-6">
                                 <Sparkles className="w-6 h-6 text-emerald-500" />
                                 <h3 className="text-2xl font-bold text-zinc-900 dark:text-white">Hidden Gems</h3>
@@ -205,7 +205,7 @@ export default function DestinationDeepDive() {
                         </div>
 
                         {/* TOURIST TRAPS */}
-                        <div className="bg-rose-50/50 dark:bg-rose-950/10 border border-rose-100 dark:border-rose-900/20 p-8 rounded-[2rem] shadow-sm flex flex-col">
+                        <div className="bg-rose-50/50 dark:bg-rose-950/10 border border-rose-100 dark:border-rose-900/20 p-5 sm:p-8 rounded-2xl sm:rounded-[2rem] shadow-sm flex flex-col">
                             <div className="flex items-center gap-3 mb-6">
                                 <AlertTriangle className="w-6 h-6 text-rose-500" />
                                 <h3 className="text-2xl font-bold text-rose-900 dark:text-rose-400">Skip the Traps</h3>
@@ -225,7 +225,7 @@ export default function DestinationDeepDive() {
                         </div>
 
                         {/* FOOD */}
-                        <div className="bg-white dark:bg-[#111] border border-zinc-200 dark:border-white/10 p-8 rounded-[2rem] shadow-sm">
+                        <div className="bg-white dark:bg-[#111] border border-zinc-200 dark:border-white/10 p-5 sm:p-8 rounded-2xl sm:rounded-[2rem] shadow-sm">
                             <div className="flex items-center gap-3 mb-6">
                                 <Utensils className="w-6 h-6 text-amber-500" />
                                 <h3 className="text-2xl font-bold text-zinc-900 dark:text-white">Local Bites</h3>
@@ -246,7 +246,7 @@ export default function DestinationDeepDive() {
                         </div>
 
                         {/* INSTA SPOTS */}
-                        <div className="bg-white dark:bg-[#111] border border-zinc-200 dark:border-white/10 p-8 rounded-[2rem] shadow-sm">
+                        <div className="bg-white dark:bg-[#111] border border-zinc-200 dark:border-white/10 p-5 sm:p-8 rounded-2xl sm:rounded-[2rem] shadow-sm">
                             <div className="flex items-center gap-3 mb-6">
                                 <Camera className="w-6 h-6 text-blue-500" />
                                 <h3 className="text-2xl font-bold text-zinc-900 dark:text-white">Aesthetic Spots</h3>

@@ -31,6 +31,14 @@ class ItineraryRequest(BaseModel):
     travelerType: Optional[str] = "comfort"
     preferences: Optional[Dict[str, Any]] = None
     browsingSignals: Optional[Dict[str, Any]] = None
+    # ── New: Travel logistics ──
+    arrivalTime: Optional[str] = None     # "morning" / "afternoon" / "evening" / "night"
+    arrivalMode: Optional[str] = None     # "flight" / "train" / "bus" / "car"
+    departureTime: Optional[str] = None   # "08:00" / "10:00" / "14:00" etc.
+    departureMode: Optional[str] = None   # "flight" / "train" / "bus" / "car"
+    hotelArea: Optional[str] = None       # "old-city" / "city-center" / "beachside" etc.
+    originCity: Optional[str] = None      # User's departure city
+    mustDo: Optional[List[Dict[str, Any]]] = None  # Pinned activities
 
 
 class FromLinkRequest(BaseModel):
@@ -78,6 +86,14 @@ async def generate(payload: ItineraryRequest, request: Request):
             "preferences": preferences,
             "pastTrips": [],
             "browsingSignals": browsing_signals,
+            # ── New: Travel logistics ──
+            "arrivalTime": request.arrivalTime or "afternoon",
+            "arrivalMode": request.arrivalMode or "",
+            "departureTime": request.departureTime or "",
+            "departureMode": request.departureMode or "",
+            "hotelArea": request.hotelArea or "",
+            "originCity": request.originCity or "",
+            "mustDo": request.mustDo or [],
         }
 
         # ── Step 1: Get destination data from cache (memory → file → CSV → Gemini) ──

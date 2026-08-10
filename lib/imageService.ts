@@ -3,7 +3,10 @@
 // - Local destination images (primary)
 // - Unsplash ID → full URL (legacy fallback)
 // - Google Places photo reference → URL
+// - Category-aware fallback with name-based hashing for variety
 // - Fallback gradient for broken images
+
+import { CATEGORY_IMAGE_POOLS, getCategoryImage, hashString } from './imageMap';
 
 // ─── Unsplash ─────────────────────────────────────────────────────────────────
 
@@ -43,42 +46,50 @@ export function getFallbackGradient(category?: string): string {
 }
 
 // ─── Local Image Fallback Map ─────────────────────────────────────────────────
-// Maps legacy Unsplash IDs to local destination images for reliability.
-// This ensures all itinerary images render even without Unsplash.
+// DEPRECATED: We now use dynamic hash-based local images for everything.
 
-const UNSPLASH_TO_LOCAL: Record<string, string> = {
-    // Nature / Backwaters
-    '1593693397690-362cb9666fc2': '/destinations/kerala.jpg',
-    '1602216056096-3b40cc0c9944': '/destinations/kerala.jpg',
-    // Tea / Hills
-    '1626621341517-bbf3d9990a23': '/destinations/ooty.jpg',
-    // Heritage / Forts
-    '1524492412937-b28074a5d7da': '/destinations/agra.png',
-    '1599661502283-a44ea24dfc74': '/destinations/jaipur.png',
-    // Beaches
-    '1512343779784-a1d53b98b8ef': '/destinations/goa.jpg',
-    '1507525428034-b723cf961d3e': '/destinations/goa.jpg',
-    // Temples / Spiritual
-    '1582283925565-d053709d3bdf': '/destinations/varanasi.png',
-    '1585409677983-0f6c41ca9c3b': '/destinations/rishikesh.png',
-    '1590132840509-3286380695c0': '/destinations/varanasi.png',
-    // Waterfall / Wildlife
-    '1549366021-d6d0bdb29a8b': '/destinations/coorg.jpg',
-    // Food
-    '1567521464027-f127ff144326': '/destinations/delhi.png',
-    '1631515243349-e0cb75fb8d4a': '/destinations/hyderabad.jpg',
-    '1555396273-367ea4eb4db5': '/destinations/goa.jpg',
-    '1517248135467-4c7edcad34c4': '/destinations/manali.png',
-    // Hotels
-    '1571896349842-33c89424de2d': '/destinations/udaipur.png',
-    '1564501049412-61c2a3083791': '/destinations/rishikesh.png',
-    '1582719508461-905c673c825d': '/destinations/coorg.jpg',
-    '1566073771259-6a6300d73351': '/destinations/mumbai.jpg',
-    // Mountains
-    '1477587458883-47145ed94245': '/destinations/jaisalmer.png',
-    // Agra
-    '1564507592333-c60657eea523': '/destinations/agra.png',
+// ─── Tag-to-Category Mapper ──────────────────────────────────────────────────
+// Maps common Gemini/activity tags to image pool categories
+const TAG_TO_CATEGORY: Record<string, string> = {
+    'temple': 'temple', 'spiritual': 'spiritual', 'aarti': 'spiritual',
+    'heritage': 'heritage', 'fort': 'fort', 'palace': 'palace', 'museum': 'museum',
+    'beach': 'beach', 'nature': 'nature', 'lake': 'lake', 'garden': 'garden',
+    'mountain': 'mountain', 'trekking': 'trekking', 'adventure': 'trekking',
+    'market': 'market', 'shopping': 'shopping', 'bazaar': 'market',
+    'food': 'food', 'restaurant': 'restaurant', 'cafe': 'food', 'street food': 'food',
+    'hotel': 'hotel', 'resort': 'hotel', 'homestay': 'hotel', 'hostel': 'hotel',
+    'waterfall': 'waterfall', 'sunset': 'sunset',
+    'buddhist': 'spiritual', 'culture': 'heritage', 'history': 'heritage',
+    'unesco': 'heritage', 'walk': 'nature',
+    // Extended mappings for Gemini-generated tags
+    'mosque': 'heritage', 'ghat': 'spiritual', 'church': 'heritage',
+    'cave': 'heritage', 'ruins': 'heritage', 'architecture': 'heritage',
+    'wildlife': 'nature', 'safari': 'nature', 'national park': 'nature',
+    'valley': 'mountain', 'river': 'nature', 'hill': 'mountain',
+    'yoga': 'spiritual', 'meditation': 'spiritual', 'pilgrimage': 'spiritual',
+    'island': 'beach', 'coastal': 'beach', 'snorkeling': 'beach', 'diving': 'beach',
+    'local': 'food', 'thali': 'food', 'biryani': 'food', 'seafood': 'food',
+    'park': 'garden', 'botanical': 'garden', 'zoo': 'nature',
+    'camping': 'trekking', 'rafting': 'trekking', 'paragliding': 'trekking',
 };
+
+/**
+ * Infer image category from tags array or explicit category string.
+ */
+function inferCategory(tags?: string[], category?: string): string {
+    if (category) {
+        const lower = category.toLowerCase();
+        if (TAG_TO_CATEGORY[lower]) return TAG_TO_CATEGORY[lower];
+        return lower;
+    }
+    if (tags && tags.length > 0) {
+        for (const tag of tags) {
+            const lower = tag.toLowerCase();
+            if (TAG_TO_CATEGORY[lower]) return TAG_TO_CATEGORY[lower];
+        }
+    }
+    return 'default';
+}
 
 // ─── Smart Image Resolver ─────────────────────────────────────────────────────
 // Returns the best image URL given a name and category.
@@ -88,18 +99,11 @@ export function resolveImage(
     placesPhotoRef?: string,
     category?: string
 ): { url: string; type: 'unsplash' | 'places' | 'fallback' } {
-    if (unsplashId) {
-        // Check local mapping first
-        if (UNSPLASH_TO_LOCAL[unsplashId]) {
-            return { url: UNSPLASH_TO_LOCAL[unsplashId], type: 'fallback' };
-        }
-        return { url: unsplashUrl(unsplashId), type: 'unsplash' };
-    }
     if (placesPhotoRef) {
         const url = placesPhotoUrl(placesPhotoRef);
         if (url) return { url, type: 'places' };
     }
-    return { url: '/destinations/delhi.png', type: 'fallback' };
+    return { url: getCategoryImage(category || 'place', category || 'default'), type: 'fallback' };
 }
 
 // ─── Image Error Handler ──────────────────────────────────────────────────────
@@ -110,17 +114,19 @@ export function handleImageError(
     fallbackCategory?: string
 ): void {
     const img = event.currentTarget;
-    img.src = '/destinations/delhi.png';
+    img.src = getCategoryImage(img.alt || 'place', fallbackCategory || 'default');
     img.onerror = null; // prevent infinite loop
 }
 
 // ─── Universal Image Source Resolver ──────────────────────────────────────────
 // Handles full URLs, local paths, and legacy Unsplash IDs.
+// Now with category-aware fallbacks and name-based hashing for variety.
 // Use this everywhere: resolveImgSrc(item.img, 800, item.name, item.cuisine)
 
 export function resolveImgSrc(src: string, width: number = 800, name?: string, _category?: string): string {
     if (!src || src === 'placeholder') {
-        return '/destinations/delhi.png';
+        // Category-aware fallback instead of always showing Delhi
+        return getCategoryImage(name || 'activity', inferCategory(undefined, _category));
     }
     // Already a full URL — use it directly
     if (src.startsWith('http://') || src.startsWith('https://')) return src;
@@ -130,22 +136,30 @@ export function resolveImgSrc(src: string, width: number = 800, name?: string, _
     if (!src.includes('/') && (src.endsWith('.png') || src.endsWith('.jpg') || src.endsWith('.jpeg') || src.endsWith('.webp'))) {
         return `/destinations/${src}`;
     }
-    // Legacy Unsplash ID format (e.g. '1567521464027-f127ff144326')
-    // When name is provided (restaurant/hotel cards), use the Unsplash CDN for unique images per ID
-    // When no name (destination hero), use the local mapping for reliability
-    if (/^\d+-[a-f0-9]+$/.test(src)) {
-        if (name) {
-            // Use Unsplash CDN — each ID is a unique photo
-            return `https://images.unsplash.com/photo-${src}?auto=format&fit=crop&w=${width}&q=80`;
+    // Category hint from Gemini (e.g. "temple_generic", "beach_scene", "heritage_scene")
+    if (src.includes('_')) {
+        const parts = src.split('_');
+        // Try each part as a category key (handles "heritage_scene", "spiritual_site", etc.)
+        for (const part of parts) {
+            const catHint = part.toLowerCase();
+            if (CATEGORY_IMAGE_POOLS[catHint]) {
+                return getCategoryImage(name || src, catHint);
+            }
+            // Also check TAG_TO_CATEGORY for indirect matches
+            if (TAG_TO_CATEGORY[catHint]) {
+                return getCategoryImage(name || src, TAG_TO_CATEGORY[catHint]);
+            }
         }
-        // For hero/destination backgrounds, use local mapping if available
-        if (UNSPLASH_TO_LOCAL[src]) return UNSPLASH_TO_LOCAL[src];
-        return `https://images.unsplash.com/photo-${src}?auto=format&fit=crop&w=${width}&q=80`;
+        // Fallback: use first part as category hint
+        return getCategoryImage(name || src, inferCategory(undefined, parts[0]));
     }
-    // Check local mapping
-    if (UNSPLASH_TO_LOCAL[src]) return UNSPLASH_TO_LOCAL[src];
-    // Final fallback
-    return '/destinations/delhi.png';
+    // Legacy Unsplash ID format (e.g. '1567521464027-f127ff144326')
+    // Completely bypass Unsplash and use local dynamic images instead
+    if (/^\d+-[a-f0-9]+$/.test(src)) {
+        return getCategoryImage(name || src, inferCategory(undefined, _category));
+    }
+    // Final fallback — use category-aware hash
+    return getCategoryImage(name || src, inferCategory(undefined, _category));
 }
 
 

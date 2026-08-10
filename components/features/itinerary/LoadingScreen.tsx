@@ -94,10 +94,17 @@ export default function LoadingScreen({ form, uuid, onDone }: LoadingScreenProps
                         days: form.days,
                         budget: form.budget,
                         startDate: form.startDate,
-                        travelerType: form.travelerType,
+                        travelerType: form.travelerType || 'comfort',
                         browsingSignals: getBrowsingSignals(),
                         userId: form.userId ?? null,
                         uuid: uuid ?? null,
+                        // Travel logistics (Step 5)
+                        arrivalTime: form.arrivalTime || 'afternoon',
+                        arrivalMode: form.arrivalMode || '',
+                        departureTime: form.departureTime || '',
+                        departureMode: form.departureMode || '',
+                        hotelArea: form.hotelArea || '',
+                        originCity: form.originCity || '',
                     }),
                 });
                 const result = await res.json();
@@ -110,7 +117,7 @@ export default function LoadingScreen({ form, uuid, onDone }: LoadingScreenProps
                                 generatedData: result.itinerary,
                                 destName: destName,
                             }));
-                        } catch (e) {}
+                        } catch (e) { }
                     }
                 }
             } catch (err) {
@@ -123,10 +130,10 @@ export default function LoadingScreen({ form, uuid, onDone }: LoadingScreenProps
         generate();
     }, [destId, destName, form]);
 
-    // Step animation — when both animation and API are done, call onDone
+    // Step animation — sync with API: pause on last step's last sub if API isn't done
     useEffect(() => {
         if (currentStep >= GEN_STEPS.length) {
-            // Wait for API if still loading
+            // Animation fully done, waiting for API
             if (apiDone) {
                 setTimeout(() => onDone(apiData), 600);
             }
@@ -134,17 +141,44 @@ export default function LoadingScreen({ form, uuid, onDone }: LoadingScreenProps
         }
         const step = GEN_STEPS[currentStep];
         const subInterval = step.duration / (step.sub.length + 1);
-        if (currentSub < step.sub.length) {
-            const t = setTimeout(() => { setCurrentSub(s => s + 1); setRevealedPins(p => Math.min(p + 1, activeHighlights.length)); }, subInterval);
+        const isLastStep = currentStep === GEN_STEPS.length - 1;
+        const isLastSub = currentSub >= step.sub.length;
+
+        if (!isLastSub) {
+            // Still revealing sub-steps
+            const t = setTimeout(() => {
+                setCurrentSub(s => s + 1);
+                setRevealedPins(p => Math.min(p + 1, activeHighlights.length));
+            }, subInterval);
             return () => clearTimeout(t);
+        } else if (isLastStep && !apiDone) {
+            // Last step, last sub, API not done — hold here and pulse
+            // Don't advance. The useEffect below will resume when apiDone flips.
+            return;
         } else {
-            const t = setTimeout(() => { setCurrentStep(s => s + 1); setCurrentSub(0); }, subInterval);
+            // Advance to next step
+            const t = setTimeout(() => {
+                setCurrentStep(s => s + 1);
+                setCurrentSub(0);
+            }, subInterval);
             return () => clearTimeout(t);
         }
     }, [currentStep, currentSub, apiDone, apiData, onDone, activeHighlights.length]);
 
-    // If API finishes after animation, trigger onDone
+    // When API finishes and animation is paused on last step, auto-complete
     useEffect(() => {
+        if (apiDone && currentStep < GEN_STEPS.length) {
+            // API returned while animation is still going — fast-forward remaining steps
+            const remaining = GEN_STEPS.length - currentStep;
+            if (remaining <= 1) {
+                // On last step already — just advance
+                setTimeout(() => {
+                    setCurrentStep(GEN_STEPS.length);
+                    setCurrentSub(0);
+                }, 800);
+            }
+            // If still on earlier steps, let them play out naturally
+        }
         if (apiDone && currentStep >= GEN_STEPS.length) {
             setTimeout(() => onDone(apiData), 600);
         }

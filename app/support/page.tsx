@@ -100,7 +100,7 @@ export default function SupportPage() {
   const [open, setOpen] = useState<number | null>(null);
 
   return (
-    <div className="min-h-screen bg-white dark:bg-[#070c16] pt-32 pb-24 px-6 md:px-12">
+    <div className="min-h-screen bg-white dark:bg-[#070c16] pt-20 sm:pt-32 pb-24 px-4 sm:px-6 md:px-12">
       <div className="max-w-4xl mx-auto">
 
         {/* Hero */}
@@ -115,7 +115,7 @@ export default function SupportPage() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 20.25c4.97 0 9-3.694 9-8.25s-4.03-8.25-9-8.25S3 7.444 3 12c0 2.104.859 4.023 2.273 5.48.432.447.74 1.04.586 1.641a4.483 4.483 0 01-.923 1.785A5.969 5.969 0 006 21c1.282 0 2.47-.402 3.445-1.067a1.736 1.736 0 012.008.13c.82.596 1.82 1.187 2.547 1.187z" />
             </svg>
           </div>
-          <h1 className="text-5xl md:text-7xl font-bold tracking-tighter mb-4">
+          <h1 className="text-3xl sm:text-5xl md:text-7xl font-bold tracking-tighter mb-4">
             How can we <span className="italic font-serif text-blue-600 dark:text-blue-500">help?</span>
           </h1>
           <p className="text-xl text-zinc-500">Our support team is here to ensure your journey is seamless.</p>

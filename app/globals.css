@@ -63,6 +63,115 @@ body {
   color: rgb(var(--fg-rgb));
 }
 
+/* ── Global Mobile Responsiveness ─────────────────────────────── */
+/* Prevent ANY element from causing horizontal overflow */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* Ensure images and media never exceed container */
+img, video, canvas, svg {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Force mobile menu full-width on phones (bypasses hydration mismatch) */
+@media (max-width: 639px) {
+  #mobile-menu {
+    width: 100% !important;
+  }
+  
+  /* Prevent text from causing overflow */
+  h1, h2, h3, h4, h5, h6 {
+    overflow-wrap: break-word;
+    word-break: break-word;
+  }
+
+  /* ── Hero Slider ── */
+  /* Fix the heading box height for mobile — 2.2rem text needs ~44px height */
+  section > div > div > div > .relative.overflow-hidden {
+    min-height: 42px;
+  }
+
+  /* ── Setup Wizard ── */
+  /* Ensure wizard content doesn't overflow and is scrollable */
+  .flex.flex-col.h-full > .flex-1 {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: env(safe-area-inset-bottom, 16px);
+  }
+
+  /* Budget slider doesn't overflow */
+  input[type="range"] {
+    max-width: 100%;
+  }
+
+  /* ── Sticky Buttons (Wizard, DayView) ── */
+  /* Add safe-area padding for phones with home indicators */
+  .sticky.bottom-0 {
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
+  }
+
+  /* ── Calendar Picker ── */
+  /* Prevent calendar from overflowing on small screens */
+  .grid.grid-cols-7 {
+    gap: 1px;
+  }
+  .grid.grid-cols-7 button {
+    min-width: 0;
+    padding-left: 2px;
+    padding-right: 2px;
+  }
+
+  /* ── ResultPage / DayViewPage Cards ── */
+  /* Ensure itinerary cards don't overflow */
+  .grid.grid-cols-1.sm\:grid-cols-2 {
+    grid-template-columns: 1fr;
+  }
+
+  /* ── Horizontal Scroll section height ── */
+  /* Reduce height on mobile for better experience */
+  [data-scroll-section] {
+    min-height: 60vh;
+  }
+
+  /* ── Explore Page ── */
+  /* 2-column grid on mobile for destination cards */
+  .grid.sm\:grid-cols-2.lg\:grid-cols-3.xl\:grid-cols-4 {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  /* ── About / Support / Saved pages ── */
+  /* Reduce bloated text sizes */
+  .text-5xl, .text-6xl {
+    font-size: 2rem !important;
+    line-height: 1.15 !important;
+  }
+
+  /* ── Footer ── */
+  /* Stack footer columns vertically */
+  footer .grid {
+    grid-template-columns: 1fr !important;
+    gap: 24px;
+  }
+}
+
+/* Tablet-specific fixes */
+@media (min-width: 640px) and (max-width: 1023px) {
+  /* Hero heading size */
+  section > div > div > div > .relative.overflow-hidden {
+    min-height: 84px;
+  }
+
+  /* Navbar search doesn't overflow */
+  .fixed.inset-0.z-50 input {
+    max-width: 90vw;
+  }
+}
+
 @layer utilities {
 
   /*

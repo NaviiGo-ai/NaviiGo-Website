@@ -16,28 +16,28 @@ const panels = [
     title: "AI Itineraries",
     subtitle: "Tell us your vibe, budget & dates — our AI builds the perfect day-by-day plan in seconds.",
     accent: "from-blue-600/40 to-indigo-900/60",
-    image: "https://images.unsplash.com/photo-1524492412937-b28074a5d7da?auto=format&fit=crop&w=1280&q=80" // Taj Mahal
+    image: "/destinations/agra.png" // Taj Mahal
   },
   {
     id: "panel-2",
     title: "Temple Circuits",
     subtitle: "Curated spiritual routes across India — from Char Dham to the Jyotirlinga trail.",
     accent: "from-orange-600/40 to-amber-900/60",
-    image: "https://images.unsplash.com/photo-1548013146-72479768bada?auto=format&fit=crop&w=1280&q=80" // Golden Temple
+    image: "/destinations/varanasi.png" // Varanasi Ghats/Temples
   },
   {
     id: "panel-3",
     title: "Hidden Gems",
     subtitle: "Go beyond the guidebook. Discover off-beat villages, secret waterfalls & local favorites.",
     accent: "from-emerald-600/40 to-teal-900/60",
-    image: "https://images.unsplash.com/photo-1506461883276-594a12b11cf3?auto=format&fit=crop&w=1280&q=80" // Misty mountains
+    image: "/destinations/manali.png" // Mountains/Nature
   },
   {
     id: "panel-4",
     title: "Digital Passport",
     subtitle: "Collect stamps, earn badges & build a shareable travel logbook as you explore India.",
     accent: "from-purple-600/40 to-violet-900/60",
-    image: "https://images.unsplash.com/photo-1570168007204-dfb528c6958f?auto=format&fit=crop&w=1280&q=80" // India Gate
+    image: "/destinations/jaipur.png" // Heritage
   }
 ];
 
@@ -74,7 +74,7 @@ export default function HorizontalScroll() {
         {panels.map((panel, index) => (
           <div 
             key={panel.id} 
-            className="horizontal-panel relative w-screen h-full flex flex-col justify-end px-10 md:px-24 pb-24"
+            className="horizontal-panel relative w-screen h-full flex flex-col justify-end px-4 sm:px-10 md:px-24 pb-16 sm:pb-24"
           >
             {/* Background Image */}
             <div className="absolute inset-0 z-0">
@@ -108,7 +108,7 @@ export default function HorizontalScroll() {
                 whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
                 transition={{ duration: 1, ease: "easeOut" }}
                 viewport={{ once: false, amount: 0.5 }}
-                className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tighter mb-4"
+                className="text-3xl sm:text-5xl md:text-7xl lg:text-8xl font-bold tracking-tighter mb-3 sm:mb-4"
               >
                 {panel.title}
               </motion.h2>
@@ -117,7 +117,7 @@ export default function HorizontalScroll() {
                 whileInView={{ opacity: 1, y: 0, filter: "blur(0px)" }}
                 transition={{ duration: 1, delay: 0.2, ease: "easeOut" }}
                 viewport={{ once: false, amount: 0.5 }}
-                className="text-lg md:text-xl text-zinc-300 font-light max-w-xl"
+                className="text-sm sm:text-lg md:text-xl text-zinc-300 font-light max-w-xl"
               >
                 {panel.subtitle}
               </motion.p>

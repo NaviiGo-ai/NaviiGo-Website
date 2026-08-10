@@ -41,13 +41,19 @@ function getStorageKey(tripId: string): string {
 
 // ─── Hook ────────────────────────────────────────────────────────────────────
 
+import { createTrackingSession, updateActivityStatus, stopTrackingSession } from '@/lib/firestore';
+import { useAuth } from '@/lib/AuthContext';
+
+// ─── Hook ────────────────────────────────────────────────────────────────────
+
 export function useCheckpoints(
     destId: string,
     destName: string,
     stateName: string,
     purpose: string,
-    dayPlans: { day: number; activities: { name: string }[] }[]
+    dayPlans: { day: number; activities: { name: string; lat?: number; lng?: number }[] }[]
 ) {
+    const { user } = useAuth();
     const [isTripActive, setIsTripActive] = useState(false);
     const [checkpoint, setCheckpoint] = useState<CheckpointState | null>(null);
     const [justCompleted, setJustCompleted] = useState<string | null>(null);
@@ -82,13 +88,26 @@ export function useCheckpoints(
     const startTrip = useCallback(() => {
         const dayTotals: Record<number, number> = {};
         let total = 0;
+        const allActivities: { name: string; dayIndex: number; lat?: number; lng?: number; status: 'completed' | 'active' | 'upcoming' }[] = [];
+
         dayPlans.forEach((dp, i) => {
             dayTotals[i] = dp.activities.length;
             total += dp.activities.length;
+            dp.activities.forEach(act => {
+                allActivities.push({
+                    name: act.name,
+                    dayIndex: i,
+                    lat: act.lat,
+                    lng: act.lng,
+                    status: 'upcoming',
+                });
+            });
         });
 
+        const tripId = buildTripId(destId);
+
         const newState: CheckpointState = {
-            tripId: buildTripId(destId),
+            tripId,
             destId,
             destName,
             state: stateName,
@@ -101,18 +120,39 @@ export function useCheckpoints(
         };
         setCheckpoint(newState);
         setIsTripActive(true);
-    }, [destId, destName, stateName, purpose, dayPlans]);
+
+        if (user?.uid) {
+            createTrackingSession(user.uid, {
+                tripId,
+                itineraryId: destId,
+                destName,
+                activities: allActivities.map((a, idx) => ({
+                    index: idx,
+                    name: a.name,
+                    lat: a.lat ?? 0,
+                    lng: a.lng ?? 0,
+                    status: a.status,
+                    completedAt: null,
+                    completionMethod: null,
+                    timeSpentMinutes: null,
+                })),
+            }).catch(err => console.warn('Live tracking session create failed:', err));
+        }
+    }, [destId, destName, stateName, purpose, dayPlans, user?.uid]);
 
     const stopTrip = useCallback(() => {
         if (checkpoint) {
             localStorage.removeItem(getStorageKey(checkpoint.tripId));
+            if (user?.uid) {
+                stopTrackingSession(user.uid, checkpoint.tripId).catch(err => console.warn('Live tracking stop failed:', err));
+            }
         }
         setCheckpoint(null);
         setIsTripActive(false);
         setJustCompleted(null);
         setDayJustCompleted(null);
         setTripJustCompleted(false);
-    }, [checkpoint]);
+    }, [checkpoint, user?.uid]);
 
     const toggleCheckpoint = useCallback((dayIndex: number, activityName: string) => {
         if (!checkpoint) return;
@@ -120,6 +160,7 @@ export function useCheckpoints(
         setCheckpoint(prev => {
             if (!prev) return prev;
             const completed = new Set(prev.completedSet);
+            const isNowChecked = !completed.has(key);
             if (completed.has(key)) {
                 completed.delete(key);
                 setJustCompleted(null);
@@ -142,9 +183,28 @@ export function useCheckpoints(
                     setTripJustCompleted(true);
                 }
             }
+
+            // Sync with Firestore tracking
+            if (user?.uid) {
+                const actFlatIndex = dayPlans
+                    .slice(0, dayIndex)
+                    .reduce((acc, dp) => acc + dp.activities.length, 0)
+                    + (dayPlans[dayIndex]?.activities.findIndex(a => a.name === activityName) ?? 0);
+                
+                if (actFlatIndex >= 0) {
+                    updateActivityStatus(
+                        user.uid,
+                        prev.tripId,
+                        actFlatIndex,
+                        isNowChecked ? 'completed' : 'upcoming',
+                        'manual'
+                    ).catch(err => console.warn('Live tracking activity update failed:', err));
+                }
+            }
+
             return { ...prev, completedSet: Array.from(completed) };
         });
-    }, [checkpoint, dayPlans]);
+    }, [checkpoint, dayPlans, user?.uid]);
 
     const isChecked = useCallback((dayIndex: number, activityName: string): boolean => {
         if (!checkpoint) return false;

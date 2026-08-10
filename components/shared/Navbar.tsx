@@ -34,6 +34,7 @@ export default function Navbar() {
   const navRef = useRef<HTMLElement | null>(null);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   const router = useRouter();
+  const [mounted, setMounted] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -97,6 +98,7 @@ export default function Navbar() {
   }, [selectedIndex, totalResults, navigateToResult]);
 
   useEffect(() => {
+    setMounted(true);
     const handleScroll = () => {
       if (typeof window === 'undefined') return;
       const scrollPosition = window.scrollY;
@@ -248,7 +250,7 @@ export default function Navbar() {
                 <Search className="w-5 h-5" />
               </motion.button>
 
-              <ThemeToggle />
+              {/* <ThemeToggle /> */}
 
               {user ? (
                 <div className="flex items-center gap-3 pl-2">
@@ -304,14 +306,16 @@ export default function Navbar() {
         </div>
       </motion.nav>
 
-      {/* Mobile Menu Overlay */}
+      {/* Mobile Menu Overlay — only rendered client-side to avoid hydration mismatch */}
+      {mounted && (
       <motion.div
+        suppressHydrationWarning
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: isOpen ? 1 : 0, y: isOpen ? 0 : -20, pointerEvents: isOpen ? 'auto' as const : 'none' as const }}
         transition={{ duration: 0.3 }}
         className="fixed inset-0 z-40 md:hidden"
       >
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: isOpen ? 1 : 0 }} transition={{ duration: 0.3 }} className="absolute inset-0 bg-black/25 backdrop-blur-sm" onClick={toggleMenu} />
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: isOpen ? 1 : 0 }} transition={{ duration: 0.3 }} className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={toggleMenu} />
         <motion.div
           id="mobile-menu"
           role="dialog"
@@ -320,10 +324,17 @@ export default function Navbar() {
           initial={{ x: '100%' }}
           animate={{ x: isOpen ? 0 : '100%' }}
           transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-          className="absolute right-0 top-0 bottom-0 w-72 bg-white/90 backdrop-blur-md shadow-2xl ring-1 ring-black/5 dark:bg-slate-950/70 dark:ring-white/10 overflow-y-auto"
+          style={{ width: '100%' }}
+          className="absolute right-0 top-0 bottom-0 bg-white/95 backdrop-blur-xl shadow-2xl ring-1 ring-black/5 dark:bg-slate-950/95 dark:ring-white/10 overflow-y-auto"
         >
-          <div className="p-6 space-y-6">
-            <div className="flex justify-end">
+          <div className="p-6 pt-5 space-y-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="relative h-9 w-9 overflow-hidden rounded-full">
+                  <Image src="/content.png" alt="NaviiGo" fill sizes="36px" className="object-cover" />
+                </div>
+                <span className="font-bold text-slate-800 dark:text-white text-lg tracking-tight">NaviiGo</span>
+              </div>
               <motion.button onClick={toggleMenu} className="p-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/10" whileTap={{ scale: 0.9 }}>
                 <X className="w-6 h-6 text-slate-700 dark:text-slate-200" />
               </motion.button>
@@ -377,7 +388,7 @@ export default function Navbar() {
 
             <div className="flex items-center justify-between pt-2">
               <div className="text-xs text-slate-500 dark:text-slate-400">Theme</div>
-              <ThemeToggle />
+              {/* <ThemeToggle /> */}
             </div>
 
             <div className="space-y-3 pt-6 border-t border-gray-200 dark:border-slate-800" suppressHydrationWarning>
@@ -416,6 +427,7 @@ export default function Navbar() {
           </div>
         </motion.div>
       </motion.div>
+      )}
 
       {/* Search Overlay */}
       <AnimatePresence>

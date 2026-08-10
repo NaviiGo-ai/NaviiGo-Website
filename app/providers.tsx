@@ -22,8 +22,8 @@ import { ReactLenis } from 'lenis/react';
       <ReactLenis root>
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
-          enableSystem
+          defaultTheme="dark"
+          forcedTheme="dark"
           disableTransitionOnChange={false}
         >
           <AuthProvider>

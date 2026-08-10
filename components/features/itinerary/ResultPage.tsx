@@ -7,6 +7,7 @@ import Image from 'next/image';
 import { saveSharedItinerary, listenToItinerary, saveItineraryToFirestore, updateSharedPlans } from '@/lib/firestore';
 import { useAuth } from '@/lib/AuthContext';
 import { resolveImgSrc } from '@/lib/imageService';
+import PlaceImage from '@/components/shared/PlaceImage';
 import {
     PURPOSES, DESTINATIONS, GROUP_SIZES,
     DEST_DATA, FALLBACK_DEST, CROWD_COLOR, WALK_COLOR,
@@ -31,7 +32,7 @@ interface ResultPageProps {
 export default function ResultPage({ form, generatedData, shareId, onDayView, onReset }: ResultPageProps) {
     const router = useRouter();
     const { user, signInWithGoogle } = useAuth();
-    const { registerItinerary, applyAction, isEditPanelOpen, openEditPanel, closeEditPanel,
+    const { registerItinerary, unregisterItinerary, applyAction, isEditPanelOpen, openEditPanel, closeEditPanel,
         editMessages, sendEditMessage, lastAction, clearLastAction } = useAI();
     const [isSaved, setIsSaved] = useState(false);
     const [collaborators, setCollaborators] = useState(1);
@@ -74,7 +75,11 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                 updateSharedPlans(shareId, newData.dayPlans).catch(console.error);
             }
         });
-    }, [data, registerItinerary, shareId, user, form, destId, destName, destInfo]);
+        
+        return () => {
+            unregisterItinerary();
+        };
+    }, [data, registerItinerary, unregisterItinerary, shareId, user, form, destId, destName, destInfo]);
 
     // Live Sync Listener
     useEffect(() => {
@@ -235,9 +240,9 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
     }, [data, applyAction]);
 
     return (
-        <div className="min-h-screen bg-[#f7f8fc] dark:bg-[#0a0a0f] pt-20">
+        <div className="min-h-screen bg-[#f7f8fc] dark:bg-[#0a0a0f] pt-16 sm:pt-20">
             {/* Top bar */}
-            <div className="sticky top-20 z-40 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-lg border-b border-zinc-100 dark:border-white/5 px-4 py-3 flex items-center gap-4">
+            <div className="sticky top-16 sm:top-20 z-40 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-lg border-b border-zinc-100 dark:border-white/5 px-3 sm:px-4 py-2.5 sm:py-3 flex items-center gap-2 sm:gap-4">
                 <button onClick={onReset} className="w-9 h-9 rounded-full border border-zinc-200 dark:border-zinc-700 flex items-center justify-center hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors text-sm text-zinc-600 dark:text-zinc-300">←</button>
                 <div className="flex-1 flex items-center gap-4 overflow-x-auto no-scrollbar text-xs text-zinc-500">
                     <div><div className="text-[10px] font-bold text-zinc-400 uppercase tracking-wide">Where</div><div className="font-semibold text-zinc-900 dark:text-white">{destName}</div></div>
@@ -249,7 +254,7 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                 <div className="flex items-center gap-2">
                     {/* Surprise Me button */}
                     <button onClick={handleSurpriseMe}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border border-amber-200 dark:border-amber-500/30 text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-colors">
+                        className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border border-amber-200 dark:border-amber-500/30 text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-colors">
                         🎲 Surprise Me
                     </button>
                     <ShareDropdown onCopyLink={handleShare} destName={destName} isSharing={isSharing} collaborators={collaborators} planData={data} />
@@ -279,7 +284,7 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                                         {form.days as number} Days • {groupLabel}
                                     </span>
                                 </div>
-                                <h1 className="text-4xl md:text-5xl font-bold text-white mb-2 tracking-tight">{destName}</h1>
+                                <h1 className="text-2xl sm:text-4xl md:text-5xl font-bold text-white mb-2 tracking-tight">{destName}</h1>
                                 <p className="text-white/90 text-sm md:text-base max-w-2xl">{data.description}</p>
                             </div>
                             <div className="flex flex-col sm:flex-row gap-3 shrink-0">
@@ -296,8 +301,8 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                                         <span className="text-lg">{isSaved ? '✓' : '💾'}</span> {isSaved ? 'Saved to Profile' : 'Save to Profile'}
                                     </button>
                                 )}
-                                <button onClick={onDayView} className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white transition-all px-8 py-4 rounded-2xl font-bold text-sm shadow-xl shadow-emerald-500/20 flex items-center justify-center gap-2 active:scale-95">
-                                    <span className="text-lg">✨</span> View Full Day-by-Day Itinerary
+                                <button onClick={onDayView} className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white transition-all px-6 sm:px-8 py-3 sm:py-4 rounded-2xl font-bold text-sm shadow-xl shadow-emerald-500/20 flex items-center justify-center gap-2 active:scale-95 w-full sm:w-auto">
+                                    <span className="text-lg">✨</span> <span className="hidden sm:inline">View Full </span>Day-by-Day Itinerary
                                 </button>
                             </div>
                         </div>
@@ -319,6 +324,27 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                                 <div className="text-xs text-zinc-500 mt-2">{data.crowdNote}</div>
                             </div>
                         </div>
+
+                        {/* Departure Buffer Info */}
+                        {data.departureInfo && (
+                            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
+                                className="mt-4 bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-500/5 dark:to-amber-500/5 rounded-2xl p-5 border border-orange-200/60 dark:border-orange-500/20 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                                <div className="w-12 h-12 rounded-2xl bg-orange-100 dark:bg-orange-500/10 flex items-center justify-center text-2xl shrink-0">
+                                    {data.departureInfo.departureMode === 'flight' ? '✈️' : data.departureInfo.departureMode === 'train' ? '🚆' : data.departureInfo.departureMode === 'bus' ? '🚌' : '🚗'}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <div className="text-xs font-bold uppercase tracking-wider text-orange-600 dark:text-orange-400 mb-1">Last Day Buffer</div>
+                                    <div className="text-sm font-semibold text-zinc-900 dark:text-white">
+                                        Checkout by {data.departureInfo.checkoutTime} · Depart at {data.departureInfo.departureTime}
+                                    </div>
+                                    <div className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">{data.departureInfo.bufferNote}</div>
+                                </div>
+                                <div className="bg-orange-100 dark:bg-orange-500/10 rounded-xl px-3 py-2 text-center shrink-0">
+                                    <div className="text-lg font-black text-orange-600 dark:text-orange-400">{data.departureInfo.availableHoursAfterCheckout}h</div>
+                                    <div className="text-[9px] font-bold text-orange-500/70 uppercase">Free Window</div>
+                                </div>
+                            </motion.div>
+                        )}
                     </div>
                 </div>
 
@@ -411,7 +437,7 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                                         onClick={() => router.push(`/itinerary/detail?type=attraction&dest=${destId}&name=${encodeURIComponent(a.name)}`)}
                                         className="bg-white dark:bg-zinc-900 rounded-2xl overflow-hidden border border-zinc-100 dark:border-zinc-800 shadow-sm hover:shadow-md transition-all cursor-pointer hover:-translate-y-1">
                                         <div className="relative h-36">
-                                            <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${resolveImgSrc(a.img, 500, a.name, a.tags?.[0])})` }} />
+                                            <PlaceImage name={a.name} city={destName} fallbackSrc={resolveImgSrc(a.img, 500, a.name, a.tags?.[0])} className="absolute inset-0 w-full h-full" asBackground />
                                             <div className="absolute top-2 left-2 w-7 h-7 rounded-full bg-emerald-500 text-white text-xs font-bold flex items-center justify-center shadow-md">{i + 1}</div>
                                             <div className="absolute bottom-2 left-2 flex gap-1">{a.tags?.slice(0, 2).map((t: string, tIdx: number) => <span key={`hl-tag-${i}-${tIdx}`} className="text-[10px] bg-black/50 text-white backdrop-blur px-2 py-0.5 rounded-full font-medium">{t}</span>)}</div>
                                         </div>
@@ -444,7 +470,7 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                                             onClick={() => router.push(`/itinerary/detail?type=restaurant&dest=${destId}&name=${encodeURIComponent(r.name)}`)}
                                             className="bg-white dark:bg-zinc-900 rounded-2xl overflow-hidden border border-zinc-100 dark:border-zinc-800 shadow-sm hover:shadow-md transition-all cursor-pointer hover:-translate-y-1">
                                             <div className="relative h-32">
-                                                <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${resolveImgSrc(r.img, 500, r.name, r.cuisine)})` }} />
+                                                <PlaceImage name={r.name} city={destName} fallbackSrc={resolveImgSrc(r.img, 500, r.name, r.cuisine)} className="absolute inset-0 w-full h-full" asBackground />
                                                 <div className="absolute bottom-2 left-2 flex gap-1"><span className="text-[10px] bg-black/60 text-white backdrop-blur px-2 py-0.5 rounded-full font-medium">{r.cuisine}</span></div>
                                             </div>
                                             <div className="p-3">
@@ -471,7 +497,7 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                                             onClick={() => router.push(`/itinerary/detail?type=hotel&dest=${destId}&name=${encodeURIComponent(h.name)}`)}
                                             className="bg-white dark:bg-zinc-900 rounded-2xl overflow-hidden border border-zinc-100 dark:border-zinc-800 shadow-sm hover:shadow-md transition-all cursor-pointer hover:-translate-y-1">
                                             <div className="relative h-32">
-                                                <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${resolveImgSrc(h.img, 500, h.name, h.type)})` }} />
+                                                <PlaceImage name={h.name} city={destName} fallbackSrc={resolveImgSrc(h.img, 500, h.name, h.type)} className="absolute inset-0 w-full h-full" asBackground />
                                                 <div className="absolute bottom-2 left-2 flex gap-1"><span className="text-[10px] bg-black/60 text-white backdrop-blur px-2 py-0.5 rounded-full font-medium">{h.type}</span></div>
                                                 <div className="absolute top-2 right-2 text-[10px] font-bold text-white bg-black/50 backdrop-blur px-1.5 py-0.5 rounded">{h.priceRange}</div>
                                             </div>

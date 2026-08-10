@@ -27,30 +27,26 @@ const slides: Slide[] = [
     name: 'RAJASTHAN',
     blurb:
       'Step into the land of Kings. Rajasthan features golden deserts, majestic forts, opulent palaces, and a vibrant culture that echoes tales of historic grandeur.',
-    background:
-      'https://images.unsplash.com/photo-1599661046289-e31897846e41?auto=format&fit=crop&w=1280&q=80',
+    background: '/destinations/jaipur.png',
   },
   {
     name: 'HIMALAYAS',
     blurb:
       'Ascend to the breathtaking peaks. The Indian Himalayas offer snow-clad mountains, spiritual retreats, and thrilling adventures in a landscape of pristine beauty.',
-    background:
-      'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?auto=format&fit=crop&w=1280&q=80',
+    background: '/destinations/manali.png',
   },
   {
     name: 'KERALA',
     blurb:
-      'Kerala offers serene backwaters, lush tea-covered hills, heritage architecture, and tropical beaches, creating a slower and deeply scenic travel experience along India’s southwestern coast.',
-    background:
-      'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?auto=format&fit=crop&w=1280&q=80',
+      'Kerala offers serene backwaters, lush tea-covered hills, heritage architecture, and tropical beaches, creating a slower and deeply scenic travel experience along India\'s southwestern coast.',
+    background: '/destinations/kerala.jpg',
   },
 ];
 
 const fallbackSlide: Slide = {
   name: 'INDIA',
   blurb: 'Discover the diverse, deeply spiritual, and culturally rich landscapes of India.',
-  background:
-    'https://images.unsplash.com/photo-1564507592333-c60657eea523?auto=format&fit=crop&w=1280&q=80',
+  background: '/destinations/agra.png',
 };
 
 const spotCards: SpotCard[] = [
@@ -60,18 +56,15 @@ const spotCards: SpotCard[] = [
   },
   {
     title: 'Hawa Mahal, Jaipur',
-    image:
-      'https://images.unsplash.com/photo-1599661046289-e31897846e41?auto=format&fit=crop&w=1280&q=80',
+    image: '/destinations/jaipur.png',
   },
   {
     title: 'Himalayan Peaks',
-    image:
-      'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?auto=format&fit=crop&w=1280&q=80',
+    image: '/destinations/shimla.png',
   },
   {
     title: 'Backwaters, Kerala',
-    image:
-      'https://images.unsplash.com/photo-1593693397690-362cb9666fc2?auto=format&fit=crop&w=800&q=80',
+    image: '/destinations/kerala.jpg',
   },
 ];
 
@@ -120,9 +113,9 @@ export default function HeroSlider() {
           />
         </div>
         <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/50 to-slate-950/20 backdrop-blur-[2px]" />
-        <div className="relative z-10 mx-auto flex min-h-dvh w-full max-w-[1500px] items-center px-6 py-10 lg:px-10">
+        <div className="relative z-10 mx-auto flex min-h-dvh w-full max-w-[1500px] items-center px-4 sm:px-6 py-10 lg:px-10">
           <div className="max-w-2xl">
-            <h1 className="text-6xl font-extrabold tracking-tight sm:text-7xl lg:text-8xl leading-none drop-shadow-2xl">
+            <h1 className="text-4xl font-extrabold tracking-tight sm:text-7xl lg:text-8xl leading-none drop-shadow-2xl">
               {slides[0].name}
             </h1>
             <p className="mt-6 max-w-lg text-sm leading-relaxed text-white/60 sm:text-base font-light">
@@ -164,7 +157,7 @@ export default function HeroSlider() {
       {/* Background with darker gradient overlay for better text visibility */}
       <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/50 to-slate-950/20 backdrop-blur-[2px]" />
 
-      <div className="relative z-10 mx-auto flex min-h-dvh w-full max-w-[1500px] items-center px-6 py-10 lg:px-10">
+      <div className="relative z-10 mx-auto flex min-h-dvh w-full max-w-[1500px] items-center px-4 sm:px-6 py-10 lg:px-10">
 
         {/* Left Pagination Sidebar */}
         <div className="mr-6 hidden h-[78vh] items-center gap-4 lg:flex">
@@ -189,13 +182,13 @@ export default function HeroSlider() {
 
           <div className="max-w-2xl">
             {/* Heading: Simultaneous Box Roll Effect */}
-            <div className="relative h-[72px] w-full sm:h-[84px] lg:h-[108px] overflow-hidden">
+            <div className="relative h-[44px] w-full sm:h-[84px] lg:h-[108px] overflow-hidden">
               {/* Removed mode="wait" to allow the old text and new text to move at the same time */}
               <AnimatePresence>
                 <motion.h1
                   key={currentSlide.name}
                   // Restored 'absolute' so the text lines overlap perfectly during the transition
-                  className="absolute left-0 top-0 text-6xl font-extrabold tracking-tight sm:text-7xl lg:text-8xl leading-none drop-shadow-2xl"
+                  className="absolute left-0 top-0 text-[2.2rem] font-extrabold tracking-tight sm:text-7xl lg:text-8xl leading-none drop-shadow-2xl"
                   initial={{ y: "100%", opacity: 0 }}
                   animate={{ y: "0%", opacity: 1 }}
                   exit={{ y: "-100%", opacity: 0 }}
@@ -220,7 +213,7 @@ export default function HeroSlider() {
             </motion.p>
             <Link
               href={`/explore?q=${currentSlide.name === 'VARANASI' ? 'Varanasi' : currentSlide.name === 'RAJASTHAN' ? 'Rajasthan' : currentSlide.name === 'HIMALAYAS' ? 'Himachal' : 'Kerala'}`}
-              className="mt-10 inline-flex items-center gap-4 rounded-xl bg-blue-600/90 px-10 py-4 text-sm font-bold text-white shadow-xl transition-all hover:scale-[1.05] hover:bg-blue-600"
+              className="mt-8 sm:mt-10 inline-flex items-center gap-3 sm:gap-4 rounded-xl bg-blue-600/90 px-7 sm:px-10 py-3 sm:py-4 text-sm font-bold text-white shadow-xl transition-all hover:scale-[1.05] hover:bg-blue-600"
             >
               Explore
               <span className="text-xl">→</span>
@@ -229,7 +222,7 @@ export default function HeroSlider() {
 
           {/* Right Column: Masked Card Rail */}
           <div
-            className="relative min-w-0"
+            className="relative min-w-0 hidden xl:block"
             style={{
               WebkitMaskImage: 'linear-gradient(to right, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 75%, rgba(0,0,0,0) 100%)',
               maskImage: 'linear-gradient(to right, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 75%, rgba(0,0,0,0) 100%)',

@@ -15,6 +15,7 @@ interface AIContextType {
   closeAI: () => void;
   sendMessage: (text: string) => Promise<void>;
   registerItinerary: (data: any, updater: (newData: any) => void) => void;
+  unregisterItinerary: () => void;
   applyAction: (action: { type: string; payload: any }) => void;
   isEditPanelOpen: boolean;
   openEditPanel: () => void;
@@ -52,6 +53,11 @@ export function AIProvider({ children }: { children: ReactNode }) {
   const registerItinerary = useCallback((data: any, updater: (newData: any) => void) => {
     setItinerary(data);
     setItineraryUpdater(() => updater);
+  }, []);
+
+  const unregisterItinerary = useCallback(() => {
+    setItinerary(null);
+    setItineraryUpdater(null);
   }, []);
 
   /** Apply a structured action from AI to the itinerary data */
@@ -212,6 +218,7 @@ export function AIProvider({ children }: { children: ReactNode }) {
       closeAI,
       sendMessage,
       registerItinerary,
+      unregisterItinerary,
       applyAction,
       isEditPanelOpen,
       openEditPanel,

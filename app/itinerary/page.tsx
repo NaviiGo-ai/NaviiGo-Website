@@ -35,7 +35,7 @@ function ItineraryPageContent() {
     }, [searchParams, router]);
 
     // No-op: SetupWizard now handles navigation itself via router.push('/itinerary/[uuid]')
-    const handleDone = () => {};
+    const handleDone = () => { };
 
     return <SetupWizard onDone={handleDone} />;
 }
@@ -44,7 +44,7 @@ export default function ItineraryPage() {
     return (
         <Suspense
             fallback={
-                <div className="min-h-screen bg-[#f7f8fc] dark:bg-[#0a0a0f] pt-20 flex items-center justify-center">
+                <div className="min-h-screen bg-[#f7f8fc] dark:bg-[#0a0a0f] pt-16 sm:pt-20 flex items-center justify-center">
                     <div className="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" />
                 </div>
             }
