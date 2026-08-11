@@ -230,7 +230,7 @@ export default function SetupWizard({ onDone }: SetupWizardProps) {
         sessionStorage.setItem(`navii_form_${uuid}`, JSON.stringify(formWithMeta));
         // Also call the legacy onDone so parent can still hook in if needed
         onDone({ ...formWithMeta, uuid });
-        router.push(`/itinerary/${uuid}`);
+        router.push(`/itinerary/plan/${uuid}`);
     }, [form, user, onDone, router]);
 
     // Pre-fill destination from URL query params (e.g. from Explore deep-dive CTA)

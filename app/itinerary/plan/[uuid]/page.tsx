@@ -7,7 +7,7 @@ import ResultPage from '@/components/features/itinerary/ResultPage';
 import { listenToItineraryByUUID } from '@/lib/firestore';
 
 /**
- * /itinerary/[uuid]
+ * /itinerary/plan/[uuid]
  *
  * Each generated itinerary has a unique UUID URL.
  * Flow:
@@ -117,7 +117,7 @@ function ItineraryUUIDContent() {
     }, [router]);
 
     const handleDayView = useCallback(() => {
-        router.push(`/itinerary/${uuid}/day/1`);
+        router.push(`/itinerary/plan/${uuid}/day/1`);
     }, [uuid, router]);
 
     if (phase === 'loading-data') {
