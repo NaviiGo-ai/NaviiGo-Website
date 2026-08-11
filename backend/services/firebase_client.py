@@ -42,34 +42,35 @@ def _init():
             cred = credentials.Certificate(cred_dict)
             _app = firebase_admin.initialize_app(cred)
             print(f"[Firebase] Initialized with service account from FIREBASE_SERVICE_ACCOUNT_JSON environment variable.")
-            return
         except Exception as e:
             print(f"[Firebase] Error parsing FIREBASE_SERVICE_ACCOUNT_JSON: {e}")
 
-    # Priority 2: Service account key file
-    sa_path = os.getenv("FIREBASE_SERVICE_ACCOUNT_KEY")
-    if not sa_path:
-        backend_dir = Path(__file__).resolve().parent.parent
-        project_dir = backend_dir.parent
-        candidates = [
-            backend_dir / "firebase-service-account.json",
-            backend_dir / "serviceAccountKey.json",
-            project_dir / "firebase-service-account.json",
-        ]
-        # Also search for any firebase admin SDK key file (auto-downloaded names)
-        for pattern in ["*firebase*adminsdk*.json", "*service*account*.json"]:
-            candidates.extend(backend_dir.glob(pattern))
-        
-        for c in candidates:
-            if c.exists():
-                sa_path = str(c)
-                break
+    if _app is None:
+        # Priority 2: Service account key file
+        sa_path = os.getenv("FIREBASE_SERVICE_ACCOUNT_KEY")
+        if not sa_path:
+            backend_dir = Path(__file__).resolve().parent.parent
+            project_dir = backend_dir.parent
+            candidates = [
+                backend_dir / "firebase-service-account.json",
+                backend_dir / "serviceAccountKey.json",
+                project_dir / "firebase-service-account.json",
+            ]
+            # Also search for any firebase admin SDK key file (auto-downloaded names)
+            for pattern in ["*firebase*adminsdk*.json", "*service*account*.json"]:
+                candidates.extend(backend_dir.glob(pattern))
+            
+            for c in candidates:
+                if c.exists():
+                    sa_path = str(c)
+                    break
 
-    if sa_path and Path(sa_path).exists():
-        print(f"[Firebase] Initializing with service account: {Path(sa_path).name}")
-        cred = credentials.Certificate(sa_path)
-        _app = firebase_admin.initialize_app(cred)
-    else:
+        if sa_path and Path(sa_path).exists():
+            print(f"[Firebase] Initializing with service account: {Path(sa_path).name}")
+            cred = credentials.Certificate(sa_path)
+            _app = firebase_admin.initialize_app(cred)
+    
+    if _app is None:
         # Priority 3: Application Default Credentials (works natively on GCP/Cloud Run)
         try:
             _app = firebase_admin.initialize_app(options={"projectId": project_id})

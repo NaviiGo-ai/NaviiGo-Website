@@ -87,13 +87,13 @@ async def generate(payload: ItineraryRequest, request: Request):
             "pastTrips": [],
             "browsingSignals": browsing_signals,
             # ── New: Travel logistics ──
-            "arrivalTime": request.arrivalTime or "afternoon",
-            "arrivalMode": request.arrivalMode or "",
-            "departureTime": request.departureTime or "",
-            "departureMode": request.departureMode or "",
-            "hotelArea": request.hotelArea or "",
-            "originCity": request.originCity or "",
-            "mustDo": request.mustDo or [],
+            "arrivalTime": payload.arrivalTime or "afternoon",
+            "arrivalMode": payload.arrivalMode or "",
+            "departureTime": payload.departureTime or "",
+            "departureMode": payload.departureMode or "",
+            "hotelArea": payload.hotelArea or "",
+            "originCity": payload.originCity or "",
+            "mustDo": payload.mustDo or [],
         }
 
         # ── Step 1: Get destination data from cache (memory → file → CSV → Gemini) ──
