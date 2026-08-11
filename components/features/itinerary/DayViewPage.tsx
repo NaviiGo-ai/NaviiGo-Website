@@ -645,14 +645,66 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                                                                 <button onClick={(e) => { e.stopPropagation(); removeActivity(i); }} className="w-8 h-8 flex items-center justify-center hover:bg-red-500 hover:text-white transition-colors border-l border-zinc-200 dark:border-zinc-700">✕</button>
                                                             </div>
                                                         </div>
-                                                        <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-4 leading-relaxed line-clamp-3">{act.desc}</p>
-                                                        <div className="text-[11px] font-semibold px-2.5 py-1.5 rounded-lg bg-blue-50/80 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400 border border-blue-100 dark:border-blue-500/20 inline-flex items-center gap-1.5 mb-4">
-                                                            {act.slot === 'Morning' ? '👍 Best time: Early' : (act.desc.toLowerCase().includes('rain') ? '⚠️ Skip if raining' : '☕ Pair with nearby cafe')}
+                                                        <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-3 leading-relaxed line-clamp-3">{act.desc}</p>
+
+                                                        {/* V2: Category badge */}
+                                                        <div className="flex flex-wrap items-center gap-2 mb-3">
+                                                            {act.category === 'hidden-gem' && (
+                                                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-purple-50 text-purple-700 dark:bg-purple-500/15 dark:text-purple-400 border border-purple-200 dark:border-purple-500/30">
+                                                                    💎 Hidden Gem
+                                                                </span>
+                                                            )}
+                                                            {act.category === 'local-secret' && (
+                                                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-rose-50 text-rose-700 dark:bg-rose-500/15 dark:text-rose-400 border border-rose-200 dark:border-rose-500/30">
+                                                                    🤫 Local Secret
+                                                                </span>
+                                                            )}
+                                                            {act.category === 'experience' && (
+                                                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-50 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400 border border-amber-200 dark:border-amber-500/30">
+                                                                    ✨ Experience
+                                                                </span>
+                                                            )}
+                                                            {act.entryFee && (
+                                                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20">
+                                                                    🎟️ {act.entryFee}
+                                                                </span>
+                                                            )}
+                                                            {act.openingHours && (
+                                                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-medium bg-zinc-50 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700">
+                                                                    🕐 {act.openingHours}
+                                                                </span>
+                                                            )}
                                                         </div>
+
+                                                        {/* V2: Insider tip (replaces generic blue tip when available) */}
+                                                        {act.insiderTip ? (
+                                                            <div className="text-[11px] font-semibold px-3 py-2 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-500/10 dark:to-orange-500/10 text-amber-800 dark:text-amber-300 border border-amber-200/60 dark:border-amber-500/20 mb-3 leading-relaxed">
+                                                                🤫 <span className="font-bold">Insider:</span> {act.insiderTip}
+                                                            </div>
+                                                        ) : (
+                                                            <div className="text-[11px] font-semibold px-2.5 py-1.5 rounded-lg bg-blue-50/80 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400 border border-blue-100 dark:border-blue-500/20 inline-flex items-center gap-1.5 mb-3">
+                                                                {act.slot === 'Morning' ? '👍 Best time: Early' : (act.desc.toLowerCase().includes('rain') ? '⚠️ Skip if raining' : '☕ Pair with nearby cafe')}
+                                                            </div>
+                                                        )}
+
+                                                        {/* V2: Best photo spot */}
+                                                        {act.bestPhotoSpot && (
+                                                            <div className="text-[11px] px-3 py-1.5 rounded-lg bg-sky-50/80 text-sky-700 dark:bg-sky-500/10 dark:text-sky-400 border border-sky-100 dark:border-sky-500/20 inline-flex items-center gap-1.5 mb-3">
+                                                                📸 <span className="font-bold">Photo spot:</span> {act.bestPhotoSpot}
+                                                            </div>
+                                                        )}
+
+                                                        {/* V2: What to wear advisory */}
+                                                        {act.whatToWear && (
+                                                            <div className="text-[11px] px-3 py-1.5 rounded-lg bg-zinc-50 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700 inline-flex items-center gap-1.5 mb-3">
+                                                                👔 {act.whatToWear}
+                                                            </div>
+                                                        )}
+
                                                         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pt-3 border-t border-zinc-100 dark:border-zinc-800/80 gap-2">
-                                                            <div className="flex gap-2">
-                                                                <div className="flex items-center gap-1.5 text-xs font-medium bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 rounded-lg px-3 py-1">
-                                                                    <span>💡</span> {act.crowdTip}
+                                                            <div className="flex flex-wrap gap-2">
+                                                                <div className="flex items-center gap-1.5 text-xs font-medium bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 rounded-lg px-3 py-1 max-w-[300px]">
+                                                                    <span className="shrink-0">💡</span> <span className="line-clamp-2">{act.crowdTip}</span>
                                                                 </div>
                                                                 <div className="flex items-center gap-1.5 text-xs font-bold text-zinc-700 dark:text-zinc-300 bg-zinc-50 dark:bg-zinc-800 rounded-lg px-3 py-1 border border-zinc-200 dark:border-zinc-700 shadow-sm">
                                                                     <span>💳</span> ₹{act.priceBase || [250, 400, 800, 1500][i % 4]}
@@ -680,6 +732,19 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                                                                 </motion.button>
                                                             </div>
                                                         </div>
+
+                                                        {/* V2: Nearby gem mini-card */}
+                                                        {act.nearbyGem && (
+                                                            <div className="mt-3 pt-3 border-t border-dashed border-zinc-200 dark:border-zinc-700/50">
+                                                                <div className="flex items-start gap-2 text-xs text-zinc-600 dark:text-zinc-400 bg-zinc-50/80 dark:bg-zinc-800/50 rounded-xl px-3 py-2 border border-zinc-100 dark:border-zinc-700/50">
+                                                                    <span className="text-sm shrink-0 mt-0.5">📍</span>
+                                                                    <div>
+                                                                        <span className="font-bold text-zinc-700 dark:text-zinc-300">While you&apos;re here:</span>{' '}
+                                                                        {act.nearbyGem}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </div>
                                             </Reorder.Item>

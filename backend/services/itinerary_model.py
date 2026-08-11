@@ -125,6 +125,42 @@ ARRIVAL_CLOCK_MAP = {
     "night":     20.0,   # Arrive night → check-in only, no activities
 }
 
+# ─── V2: Category Score Boosts ──────────────────────────────────────────────
+# Hidden gems and local secrets get a significant boost so they compete with
+# famous must-sees. Experiences get a moderate boost.
+
+CATEGORY_SCORE_BOOST = {
+    "must-see":      0,    # No extra boost — they already score high on tags
+    "hidden-gem":    25,   # Strong boost to surface hidden gems
+    "local-secret":  30,   # Strongest boost — these are gold
+    "experience":    20,   # Experiences (food walks, workshops) get a solid boost
+}
+
+# ─── V2: Best Time → Clock Slot Mapping ─────────────────────────────────────
+# Maps the Gemini "bestTimeToVisit" field to fractional hour ranges.
+# Used for time-fit scoring: if an attraction's best time aligns with its
+# scheduled slot, it gets a bonus.
+
+BEST_TIME_SLOTS = {
+    "sunrise":   (5.5, 7.5),
+    "morning":   (7.0, 11.0),
+    "afternoon": (12.0, 16.0),
+    "sunset":    (16.5, 19.0),
+    "evening":   (17.0, 21.0),
+    "night":     (19.0, 23.0),
+    "any":       (0.0, 23.0),
+}
+
+# ─── V2: Day Name Abbreviations ────────────────────────────────────────────
+# Used to check openDays against the actual travel date.
+
+DAY_ABBREVS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+
+# ─── V2: Category diversity caps ───────────────────────────────────────────
+# Maximum attractions of the same tag-type per day before penalty kicks in.
+TAG_DIVERSITY_CAP = 2
+TAG_DIVERSITY_PENALTY = -15
+
 
 # ─── Utility Functions ──────────────────────────────────────────────────────
 
@@ -277,9 +313,10 @@ def _nearest_neighbor_sort(attractions: List[dict], center: dict):
 
 # ─── Scoring Engine ──────────────────────────────────────────────────────────
 
-def _score_attraction(attr: dict, index: int, ctx: dict, budget_tier: str) -> dict:
+def _score_attraction(attr: dict, index: int, ctx: dict, budget_tier: str, tag_counts: Optional[Dict[str, int]] = None) -> dict:
     score = 50
     tags = attr.get("tags", [])
+    category = attr.get("category", "must-see")  # V2 field
 
     # 1. Purpose-tag alignment
     tag_weights = PURPOSE_TAG_MAP.get(ctx.get("purpose", ""), {})
@@ -375,10 +412,32 @@ def _score_attraction(attr: dict, index: int, ctx: dict, budget_tier: str) -> di
             crowd_preferred_slot = "Evening"   # Markets: peak in evening but electric
         elif tag in ("Beach", "Nature"):
             crowd_preferred_slot = "Morning"   # Avoid midday UV
-    
+
+    # ── V2: Category boost (hidden gems, local secrets, experiences) ──
+    score += CATEGORY_SCORE_BOOST.get(category, 0)
+
+    # ── V2: Tag diversity penalty ──
+    # If too many attractions of the same type already scored high, penalize.
+    if tag_counts:
+        for tag in tags:
+            if tag_counts.get(tag, 0) >= TAG_DIVERSITY_CAP:
+                score += TAG_DIVERSITY_PENALTY
+                break
+
+    # ── V2: Time-fit hint from bestTimeToVisit ──
+    best_time = attr.get("bestTimeToVisit", "any")
+    if best_time in ("sunrise", "sunset"):
+        # Force-schedule hint — stored for day-builder to use
+        if best_time == "sunrise":
+            crowd_preferred_slot = "Morning"
+        elif best_time == "sunset":
+            crowd_preferred_slot = "Evening"
+
     result = {**attr, "score": score, "originalIndex": index}
     if crowd_preferred_slot:
         result["preferredSlot"] = crowd_preferred_slot
+    if best_time:
+        result["bestTimeToVisit"] = best_time
     return result
 
 
@@ -405,11 +464,44 @@ def generate_itinerary(ctx: dict, dest_data: dict) -> Optional[dict]:
 
     map_center = dest_data.get("mapCenter", {"lat": 20.5937, "lng": 78.9629})
 
-    # Score all attractions
+    # Score all attractions with diversity tracking
     highlights = dest_data.get("highlights", [])
-    scored_attractions = [_score_attraction(a, i, ctx, budget_tier) for i, a in enumerate(highlights)]
+    tag_counts: Dict[str, int] = {}
+    scored_attractions = []
+    for i, a in enumerate(highlights):
+        scored = _score_attraction(a, i, ctx, budget_tier, tag_counts)
+        scored_attractions.append(scored)
+        # Track tag frequency for diversity penalty on subsequent items
+        for tag in a.get("tags", []):
+            tag_counts[tag] = tag_counts.get(tag, 0) + 1
     scored_attractions.sort(key=lambda a: a["score"], reverse=True)
     scored_attractions = _geo_filter_and_snap(scored_attractions, map_center)
+
+    # ── V2: Day-of-week filtering ────────────────────────────────────────────
+    # Remove attractions that are closed on the travel dates.
+    start_date = ctx.get("startDate", "")
+    travel_day_names: List[str] = []
+    if start_date:
+        try:
+            from datetime import datetime, timedelta
+            start_dt = datetime.fromisoformat(start_date)
+            travel_day_names = [DAY_ABBREVS[((start_dt + timedelta(days=d)).weekday())] for d in range(days)]
+        except Exception:
+            pass
+
+    if travel_day_names:
+        # Don't remove — just heavily penalize closed attractions so they fall to the bottom
+        for attr in scored_attractions:
+            open_days = attr.get("openDays")
+            if open_days and isinstance(open_days, list) and len(open_days) < 7:
+                # This attraction has restricted days — mark which travel days it's open
+                attr["_openOnDays"] = [i for i, day_name in enumerate(travel_day_names) if day_name in open_days]
+                if not attr["_openOnDays"]:
+                    attr["score"] -= 100  # Closed for entire trip
+
+    # ── V2: Separate pools by category ───────────────────────────────────────
+    hidden_gems = [a for a in scored_attractions if a.get("category") in ("hidden-gem", "local-secret")]
+    experiences = [a for a in scored_attractions if a.get("category") == "experience"]
 
     # ── Must-Do Pinning ──────────────────────────────────────────────────────
     must_do_list = ctx.get("mustDo") or []
@@ -445,10 +537,50 @@ def generate_itinerary(ctx: dict, dest_data: dict) -> Optional[dict]:
             # Insert pinned at the front (they have priority)
             day_clusters[day_idx] = pinned_list + day_clusters[day_idx]
 
-    # Score restaurants
+    # ── V2: Hidden gem guarantee — inject 1-2 hidden gems per day ────────────
+    used_gem_names = set()
+    for day_idx in range(len(day_clusters)):
+        cluster = day_clusters[day_idx]
+        cluster_names = {a["name"] for a in cluster}
+        gems_in_cluster = sum(1 for a in cluster if a.get("category") in ("hidden-gem", "local-secret"))
+        
+        # Need at least 1 hidden gem per day, ideally 2
+        gems_needed = max(0, 2 - gems_in_cluster)
+        for gem in hidden_gems:
+            if gems_needed <= 0:
+                break
+            if gem["name"] not in cluster_names and gem["name"] not in used_gem_names and gem["name"] not in pinned_names:
+                # Check day-of-week: skip if closed on this day
+                open_on = gem.get("_openOnDays")
+                if open_on is not None and day_idx not in open_on:
+                    continue
+                cluster.append(gem)
+                cluster_names.add(gem["name"])
+                used_gem_names.add(gem["name"])
+                gems_needed -= 1
+
+    # ── V2: Experience slot — inject 1 experience per day ────────────────────
+    used_exp_names = set()
+    for day_idx in range(len(day_clusters)):
+        cluster = day_clusters[day_idx]
+        cluster_names = {a["name"] for a in cluster}
+        has_experience = any(a.get("category") == "experience" for a in cluster)
+        
+        if not has_experience:
+            for exp in experiences:
+                if exp["name"] not in cluster_names and exp["name"] not in used_exp_names and exp["name"] not in pinned_names:
+                    open_on = exp.get("_openOnDays")
+                    if open_on is not None and day_idx not in open_on:
+                        continue
+                    cluster.append(exp)
+                    used_exp_names.add(exp["name"])
+                    break
+
+    # Score restaurants — separate street food for trail injection
     restaurants = list(dest_data.get("restaurants", []))
     restaurants.sort(key=lambda r: r.get("rating", 0) * 10, reverse=True)
     scored_restaurants = _geo_filter_and_snap(restaurants, map_center)
+    street_food_restaurants = [r for r in scored_restaurants if r.get("category") == "street-food"]
 
     # Score hotels by budget fit
     hotels = list(dest_data.get("hotels", []))
@@ -572,6 +704,60 @@ def generate_itinerary(ctx: dict, dest_data: dict) -> Optional[dict]:
             day_clusters[last_day_idx].sort(key=lambda a: a.get("score", 0), reverse=True)
 
     # ── Build Day Plans ──────────────────────────────────────────────────────
+
+    # V2: Helper to build enriched activity dicts
+    def _build_activity(attr: dict, travel_label: str, crowd: str = "Medium") -> dict:
+        """Build a day activity dict enriched with V2 fields."""
+        act = {
+            "name": attr["name"],
+            "desc": attr.get("desc", ""),
+            "crowd": crowd,
+            "crowdTip": attr.get("insiderTip") or _get_survey_tip(attr.get("tags", [])),
+            "travelFromPrev": travel_label,
+            "lat": attr.get("lat", map_center["lat"]),
+            "lng": attr.get("lng", map_center["lng"]),
+            "type": "attraction",
+            "durationMins": _parse_duration_hours(attr.get("duration")) * 60,
+        }
+        # V2 enrichment fields
+        if attr.get("category"):
+            act["category"] = attr["category"]
+        if attr.get("insiderTip"):
+            act["insiderTip"] = attr["insiderTip"]
+        if attr.get("entryFee"):
+            act["entryFee"] = attr["entryFee"]
+        if attr.get("bestPhotoSpot"):
+            act["bestPhotoSpot"] = attr["bestPhotoSpot"]
+        if attr.get("nearbyGem"):
+            act["nearbyGem"] = attr["nearbyGem"]
+        if attr.get("whatToWear"):
+            act["whatToWear"] = attr["whatToWear"]
+        if attr.get("openingHours"):
+            act["openingHours"] = attr["openingHours"]
+        return act
+
+    # V2: Helper to inject nearby gem as a micro-activity
+    def _maybe_inject_nearby_gem(attr: dict, day_acts: list, clock_val: float, hard_stop_val: float) -> float:
+        """If the attraction has a nearbyGem, inject a 15-min micro-activity. Returns new clock value."""
+        nearby = attr.get("nearbyGem")
+        if nearby and clock_val + 0.25 <= hard_stop_val:
+            day_acts.append({
+                "name": f"📍 Nearby: {nearby.split('—')[0].strip() if '—' in nearby else nearby[:40]}",
+                "desc": nearby,
+                "time": _to_time_str(clock_val),
+                "slot": _slot_for(clock_val),
+                "crowd": "Low",
+                "crowdTip": "🤫 A local micro-detour — most tourists walk right past this!",
+                "travelFromPrev": "1 min walk",
+                "lat": attr.get("lat", map_center["lat"]),
+                "lng": attr.get("lng", map_center["lng"]),
+                "type": "attraction",
+                "durationMins": 15,
+                "category": "local-secret",
+            })
+            clock_val += 0.25  # 15 minutes
+        return clock_val
+
     day_plans = []
     used_attractions = set()
     used_restaurants = set()
@@ -729,6 +915,11 @@ def generate_itinerary(ctx: dict, dest_data: dict) -> Optional[dict]:
             if clock >= 15.5:
                 break
 
+            # V2: Skip if closed on this day
+            open_on = attr.get("_openOnDays")
+            if open_on is not None and day_index not in open_on:
+                continue
+
             overhead, label = travel_between(attr.get("lat", prev_lat), attr.get("lng", prev_lng))
             attr_duration = min(2.5, _parse_duration_hours(attr.get("duration")))
 
@@ -736,41 +927,68 @@ def generate_itinerary(ctx: dict, dest_data: dict) -> Optional[dict]:
                 break
 
             clock += overhead
-            pushed = push_activity({
-                "name": attr["name"],
-                "desc": attr.get("desc", ""),
-                "crowd": "Low" if attr.get("walking") == "Easy" else "Medium",
-                "crowdTip": _get_survey_tip(attr.get("tags", [])),
-                "travelFromPrev": label,
-                "lat": attr.get("lat", map_center["lat"]),
-                "lng": attr.get("lng", map_center["lng"]),
-                "type": "attraction",
-                "durationMins": _parse_duration_hours(attr.get("duration")) * 60,
-            }, attr_duration)
+            crowd = "Low" if attr.get("walking") == "Easy" else "Medium"
+            pushed = push_activity(_build_activity(attr, label, crowd), attr_duration)
 
             if pushed:
                 used_attractions.add(attr["name"])
                 morning_count += 1
+                # V2: Inject nearby gem micro-activity
+                clock = _maybe_inject_nearby_gem(attr, day_activities, clock, hard_stop)
 
         # ── Lunch ──
+        # V2: On one middle day, try a street food trail instead of formal lunch
+        use_street_food_trail = (
+            not is_first_day and not is_last_day
+            and street_food_restaurants
+            and day_index == days // 2  # Middle day of the trip
+            and budget_tier != "luxury"
+        )
+
         if clock < hard_stop - 1:
             clock = max(clock, 13.5)
-            lunch_restaurant = next((r for r in scored_restaurants if r["name"] not in used_restaurants), None)
-            if lunch_restaurant:
-                used_restaurants.add(lunch_restaurant["name"])
-                overhead, label = travel_between(lunch_restaurant.get("lat", prev_lat), lunch_restaurant.get("lng", prev_lng))
-                clock += overhead
-                push_activity({
-                    "name": f"Lunch at {lunch_restaurant['name']}",
-                    "desc": f"{lunch_restaurant.get('desc', '')} Must-try: {lunch_restaurant.get('mustTry', '')}. {lunch_restaurant.get('priceRange', '')} per person.",
-                    "crowd": "Medium",
-                    "crowdTip": "🍽️ Survey says: peak lunch is 1–2 PM. Arrive by 12:30 for same-day service without a wait.",
-                    "travelFromPrev": label,
-                    "lat": lunch_restaurant.get("lat", map_center["lat"]),
-                    "lng": lunch_restaurant.get("lng", map_center["lng"]),
-                    "type": "restaurant",
-                    "durationMins": pace["lunchBreakMins"],
-                }, pace["lunchBreakMins"] / 60)
+            if use_street_food_trail:
+                # Street food trail — pick 2-3 street food spots
+                sf_used = 0
+                for sf in street_food_restaurants:
+                    if sf["name"] in used_restaurants or sf_used >= 2:
+                        break
+                    overhead, label = travel_between(sf.get("lat", prev_lat), sf.get("lng", prev_lng))
+                    clock += overhead
+                    trail_desc = f"🍜 Street Food Trail! {sf.get('desc', '')} Must-try: {sf.get('mustTry', '')}."
+                    push_activity({
+                        "name": f"Street Food: {sf['name']}",
+                        "desc": trail_desc,
+                        "crowd": "Medium",
+                        "crowdTip": sf.get("insiderTip") or "🤤 Pro tip: Follow the longest queue — locals know best!",
+                        "travelFromPrev": label,
+                        "lat": sf.get("lat", map_center["lat"]),
+                        "lng": sf.get("lng", map_center["lng"]),
+                        "type": "restaurant",
+                        "durationMins": 30,
+                        "category": "experience",
+                    }, 0.5)
+                    used_restaurants.add(sf["name"])
+                    sf_used += 1
+            else:
+                lunch_restaurant = next((r for r in scored_restaurants if r["name"] not in used_restaurants), None)
+                if lunch_restaurant:
+                    used_restaurants.add(lunch_restaurant["name"])
+                    overhead, label = travel_between(lunch_restaurant.get("lat", prev_lat), lunch_restaurant.get("lng", prev_lng))
+                    clock += overhead
+                    lunch_tip = lunch_restaurant.get("insiderTip") or "🍽️ Peak lunch is 1–2 PM. Arrive by 12:30 for quick service."
+                    push_activity({
+                        "name": f"Lunch at {lunch_restaurant['name']}",
+                        "desc": f"{lunch_restaurant.get('desc', '')} Must-try: {lunch_restaurant.get('mustTry', '')}. {lunch_restaurant.get('priceRange', '')} per person.",
+                        "crowd": "Medium",
+                        "crowdTip": lunch_tip,
+                        "travelFromPrev": label,
+                        "lat": lunch_restaurant.get("lat", map_center["lat"]),
+                        "lng": lunch_restaurant.get("lng", map_center["lng"]),
+                        "type": "restaurant",
+                        "durationMins": pace["lunchBreakMins"],
+                        "category": lunch_restaurant.get("category", "casual"),
+                    }, pace["lunchBreakMins"] / 60)
 
         # ── Afternoon rest ──
         if pace["afternoonRestMins"] > 0 and clock < hard_stop - 1:
@@ -795,6 +1013,15 @@ def generate_itinerary(ctx: dict, dest_data: dict) -> Optional[dict]:
             if clock >= 19.5:
                 break
 
+            # V2: Skip if closed on this day
+            open_on = attr.get("_openOnDays")
+            if open_on is not None and day_index not in open_on:
+                continue
+
+            # V2: Prefer sunset-tagged attractions for late afternoon
+            if attr.get("bestTimeToVisit") == "sunset" and clock < 16.0:
+                continue  # Save sunset spots for later
+
             overhead, label = travel_between(attr.get("lat", prev_lat), attr.get("lng", prev_lng))
             attr_duration = min(2.5, _parse_duration_hours(attr.get("duration")))
 
@@ -807,21 +1034,13 @@ def generate_itinerary(ctx: dict, dest_data: dict) -> Optional[dict]:
                     continue
 
             clock += overhead
-            pushed = push_activity({
-                "name": attr["name"],
-                "desc": attr.get("desc", ""),
-                "crowd": "Medium",
-                "crowdTip": _get_survey_tip(attr.get("tags", [])),
-                "travelFromPrev": label,
-                "lat": attr.get("lat", map_center["lat"]),
-                "lng": attr.get("lng", map_center["lng"]),
-                "type": "attraction",
-                "durationMins": _parse_duration_hours(attr.get("duration")) * 60,
-            }, attr_duration)
+            pushed = push_activity(_build_activity(attr, label), attr_duration)
 
             if pushed:
                 used_attractions.add(attr["name"])
                 afternoon_count += 1
+                # V2: Inject nearby gem micro-activity
+                clock = _maybe_inject_nearby_gem(attr, day_activities, clock, hard_stop)
 
         # ── Evening attractions ──
         # Skip evening on last day if departure is early
@@ -831,6 +1050,28 @@ def generate_itinerary(ctx: dict, dest_data: dict) -> Optional[dict]:
 
         if evening_slots > 0:
             clock = max(clock, 17.0)
+
+            # V2: Force-schedule sunset attractions first
+            sunset_attrs = [
+                a for a in day_attraction_pool
+                if a["name"] not in used_attractions
+                and a.get("bestTimeToVisit") == "sunset"
+            ]
+            for sunset_attr in sunset_attrs[:1]:  # At most 1 sunset activity
+                if clock >= 20.0 or evening_slots <= 0:
+                    break
+                overhead, label = travel_between(sunset_attr.get("lat", prev_lat), sunset_attr.get("lng", prev_lng))
+                attr_duration = _parse_duration_hours(sunset_attr.get("duration"))
+                if clock + overhead + attr_duration <= 20.5:
+                    clock += overhead
+                    sunset_act = _build_activity(sunset_attr, label)
+                    sunset_act["crowdTip"] = sunset_attr.get("insiderTip") or "🌅 Golden hour — the light here is absolutely magical. Arrive 15 min early for the best spot."
+                    pushed = push_activity(sunset_act, attr_duration)
+                    if pushed:
+                        used_attractions.add(sunset_attr["name"])
+                        evening_slots -= 1
+                        clock = _maybe_inject_nearby_gem(sunset_attr, day_activities, clock, hard_stop)
+
             evening_count = 0
             for attr in day_attraction_pool:
                 if evening_count >= evening_slots:
@@ -840,6 +1081,11 @@ def generate_itinerary(ctx: dict, dest_data: dict) -> Optional[dict]:
                 if clock >= 20.0:
                     break
 
+                # V2: Skip if closed on this day
+                open_on = attr.get("_openOnDays")
+                if open_on is not None and day_index not in open_on:
+                    continue
+
                 overhead, label = travel_between(attr.get("lat", prev_lat), attr.get("lng", prev_lng))
                 attr_duration = _parse_duration_hours(attr.get("duration"))
 
@@ -847,21 +1093,12 @@ def generate_itinerary(ctx: dict, dest_data: dict) -> Optional[dict]:
                     break
 
                 clock += overhead
-                pushed = push_activity({
-                    "name": attr["name"],
-                    "desc": attr.get("desc", ""),
-                    "crowd": "Medium",
-                    "crowdTip": "🌅 Golden hour — best light for photos and the most magical atmosphere",
-                    "travelFromPrev": label,
-                    "lat": attr.get("lat", map_center["lat"]),
-                    "lng": attr.get("lng", map_center["lng"]),
-                    "type": "attraction",
-                    "durationMins": _parse_duration_hours(attr.get("duration")) * 60,
-                }, attr_duration)
+                pushed = push_activity(_build_activity(attr, label), attr_duration)
 
                 if pushed:
                     used_attractions.add(attr["name"])
                     evening_count += 1
+                    clock = _maybe_inject_nearby_gem(attr, day_activities, clock, hard_stop)
 
         # ── Dinner ──
         # Skip dinner on last day if departure is before 8 PM
@@ -881,16 +1118,18 @@ def generate_itinerary(ctx: dict, dest_data: dict) -> Optional[dict]:
                         if is_last_day
                         else f"{dinner_restaurant.get('desc', '')} Try the {dinner_restaurant.get('mustTry', '')}."
                     )
+                    dinner_tip = dinner_restaurant.get("insiderTip") or "🌙 Evening dining in India peaks 8–9 PM. Arriving at 7:30 PM means you get the best table."
                     push_activity({
                         "name": f"Dinner at {dinner_restaurant['name']}",
                         "desc": desc,
                         "crowd": "Low",
-                        "crowdTip": "🌙 Evening dining in India peaks 8–9 PM. Arriving at 7:30 PM means you get the best table.",
+                        "crowdTip": dinner_tip,
                         "travelFromPrev": label,
                         "lat": dinner_restaurant.get("lat", map_center["lat"]),
                         "lng": dinner_restaurant.get("lng", map_center["lng"]),
                         "type": "restaurant",
                         "durationMins": 75,
+                        "category": dinner_restaurant.get("category", "casual"),
                     }, 1.25)
                     if dinner_restaurant["name"] not in used_restaurants:
                         used_restaurants.add(dinner_restaurant["name"])

@@ -38,6 +38,14 @@ export interface DayActivity {
     priceBase?: number;
     durationMins?: number;
     bookingLink?: string;
+    // V2: Enrichment fields for curated itineraries
+    insiderTip?: string;
+    category?: 'must-see' | 'hidden-gem' | 'local-secret' | 'experience' | 'fine-dining' | 'casual' | 'street-food' | 'cafe' | 'rooftop';
+    entryFee?: string;
+    bestPhotoSpot?: string;
+    nearbyGem?: string;
+    whatToWear?: string;
+    openingHours?: string;
 }
 
 export interface DayPlan {
