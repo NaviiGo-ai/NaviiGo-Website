@@ -434,7 +434,7 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 {data.highlights.map((a: any, i: number) => (
                                     <motion.div key={`hl-card-${i}-${a.name || 'item'}`} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}
-                                        onClick={() => router.push(`/itinerary/detail?type=attraction&dest=${destId}&name=${encodeURIComponent(a.name)}`)}
+                                        onClick={(e) => { e.stopPropagation(); window.location.href = `/itinerary/detail?type=attraction&dest=${destId}&name=${encodeURIComponent(a.name)}`; }}
                                         className="bg-white dark:bg-zinc-900 rounded-2xl overflow-hidden border border-zinc-100 dark:border-zinc-800 shadow-sm hover:shadow-md transition-all cursor-pointer hover:-translate-y-1">
                                         <div className="relative h-36">
                                             <PlaceImage name={a.name} city={destName} fallbackSrc={resolveImgSrc(a.img, 500, a.name, a.tags?.[0])} className="absolute inset-0 w-full h-full" asBackground />
@@ -467,7 +467,7 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     {data.restaurants.map((r: any, i: number) => (
                                         <motion.div key={`rest-card-${i}-${r.id || r.name || 'item'}`} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
-                                            onClick={() => router.push(`/itinerary/detail?type=restaurant&dest=${destId}&name=${encodeURIComponent(r.name)}`)}
+                                            onClick={(e) => { e.stopPropagation(); window.location.href = `/itinerary/detail?type=restaurant&dest=${destId}&name=${encodeURIComponent(r.name)}`; }}
                                             className="bg-white dark:bg-zinc-900 rounded-2xl overflow-hidden border border-zinc-100 dark:border-zinc-800 shadow-sm hover:shadow-md transition-all cursor-pointer hover:-translate-y-1">
                                             <div className="relative h-32">
                                                 <PlaceImage name={r.name} city={destName} fallbackSrc={resolveImgSrc(r.img, 500, r.name, r.cuisine)} className="absolute inset-0 w-full h-full" asBackground />
@@ -494,7 +494,7 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     {data.hotels.map((h: any, i: number) => (
                                         <motion.div key={`hotel-card-${i}-${h.id || h.name || 'item'}`} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
-                                            onClick={() => router.push(`/itinerary/detail?type=hotel&dest=${destId}&name=${encodeURIComponent(h.name)}`)}
+                                            onClick={(e) => { e.stopPropagation(); window.location.href = `/itinerary/detail?type=hotel&dest=${destId}&name=${encodeURIComponent(h.name)}`; }}
                                             className="bg-white dark:bg-zinc-900 rounded-2xl overflow-hidden border border-zinc-100 dark:border-zinc-800 shadow-sm hover:shadow-md transition-all cursor-pointer hover:-translate-y-1">
                                             <div className="relative h-32">
                                                 <PlaceImage name={h.name} city={destName} fallbackSrc={resolveImgSrc(h.img, 500, h.name, h.type)} className="absolute inset-0 w-full h-full" asBackground />

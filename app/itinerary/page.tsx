@@ -25,16 +25,16 @@ function ItineraryPageContent() {
         const shareId = searchParams.get('shareId');
         const loadId = searchParams.get('load');
         if (shareId) {
-            router.replace(`/itinerary/${shareId}`);
+            router.replace(`/itinerary/plan/${shareId}`);
             return;
         }
         if (loadId) {
-            router.replace(`/itinerary/${loadId}`);
+            router.replace(`/itinerary/plan/${loadId}`);
             return;
         }
     }, [searchParams, router]);
 
-    // No-op: SetupWizard now handles navigation itself via router.push('/itinerary/[uuid]')
+    // No-op: SetupWizard now handles navigation itself via router.push('/itinerary/plan/[uuid]')
     const handleDone = () => { };
 
     return <SetupWizard onDone={handleDone} />;

@@ -6,13 +6,13 @@ import DayViewPage from '@/components/features/itinerary/DayViewPage';
 import { getItineraryByUUID } from '@/lib/firestore';
 
 /**
- * /itinerary/[uuid]/day/[dayNumber]
+ * /itinerary/plan/[uuid]/day/[dayNumber]
  *
  * Renders the day-by-day view for a specific day of a UUID-keyed itinerary.
  * dayNumber is 1-indexed (day/1, day/2, ...).
  *
  * Navigation:
- *   ← Back  →  /itinerary/[uuid]  (result overview)
+ *   ← Back  →  /itinerary/plan/[uuid]  (result overview)
  *   Day tabs → updates dayNumber in URL via router.push
  */
 function DayViewContent() {
@@ -58,7 +58,7 @@ function DayViewContent() {
             if (data?.generatedData) {
                 const totalDays = data.generatedData?.dayPlans?.length ?? 0;
                 if (dayNumber > totalDays) {
-                    router.replace(`/itinerary/${uuid}/day/1`);
+                    router.replace(`/itinerary/plan/${uuid}/day/1`);
                     return;
                 }
                 setForm(data.form ?? {});
@@ -74,7 +74,7 @@ function DayViewContent() {
 
 
     const handleBack = useCallback(() => {
-        router.push(`/itinerary/${uuid}`);
+        router.push(`/itinerary/plan/${uuid}`);
     }, [router, uuid]);
 
     if (phase === 'loading') {
