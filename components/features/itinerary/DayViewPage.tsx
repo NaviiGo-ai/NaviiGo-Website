@@ -25,6 +25,7 @@ import CheckpointToast, { useCheckpointToast } from '@/components/features/passp
 import StampCelebration from '@/components/features/passport/StampCelebration';
 import { DESTINATIONS } from '@/app/itinerary/data';
 import { CheckCircle2, Circle, Rocket } from 'lucide-react';
+import { itineraryPlaceHref } from '@/lib/placeLinks';
 
 interface DayViewPageProps {
     form: Record<string, unknown>;
@@ -727,8 +728,7 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                                                                 )}
                                                                 <motion.button whileTap={{ scale: 0.98 }} onClick={(e) => { 
                                                                     e.stopPropagation(); 
-                                                                    localStorage.setItem('navii_detail_item', JSON.stringify(act));
-                                                                    window.location.href = `/itinerary/detail?type=${act.type || 'attraction'}&dest=${destId}&name=${encodeURIComponent(act.name)}&fromLocal=true`; 
+                                                                    router.push(itineraryPlaceHref((act.type === 'restaurant' || act.type === 'hotel') ? act.type : 'attraction', destId, act));
                                                                 }}
                                                                     className="text-xs font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 px-4 py-1.5 rounded-xl hover:bg-emerald-100 dark:hover:bg-emerald-500/20 transition-colors">
                                                                     Explorer ➔
@@ -803,8 +803,7 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                                             {data.hotels && data.hotels.length > 0 && (
                                                 <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 shadow-sm group cursor-pointer hover:shadow-md transition-all"
                                                     onClick={() => {
-                                                        localStorage.setItem('navii_detail_item', JSON.stringify(data.hotels[0]));
-                                                        window.location.href = `/itinerary/detail?type=hotel&dest=${destId}&name=${encodeURIComponent(data.hotels[0].name)}&fromLocal=true`;
+                                                        router.push(itineraryPlaceHref('hotel', destId, data.hotels[0]));
                                                     }}>
                                                     <div className="flex items-center gap-3 mb-2 text-xs font-bold text-zinc-400 uppercase tracking-widest"><span className="text-base leading-none">🏨</span> Place to stay</div>
                                                     <div className="flex gap-4">
@@ -820,8 +819,7 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                                             {data.restaurants && data.restaurants.length > 0 && (
                                                 <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 shadow-sm group cursor-pointer hover:shadow-md transition-all"
                                                     onClick={() => {
-                                                        localStorage.setItem('navii_detail_item', JSON.stringify(data.restaurants[0]));
-                                                        window.location.href = `/itinerary/detail?type=restaurant&dest=${destId}&name=${encodeURIComponent(data.restaurants[0].name)}&fromLocal=true`;
+                                                        router.push(itineraryPlaceHref('restaurant', destId, data.restaurants[0]));
                                                     }}>
                                                     <div className="flex items-center gap-3 mb-2 text-xs font-bold text-zinc-400 uppercase tracking-widest"><span className="text-base leading-none">🍽️</span> Where to eat</div>
                                                     <div className="flex gap-4">

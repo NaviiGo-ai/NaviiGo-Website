@@ -21,19 +21,24 @@ import { listenToItineraryByUUID } from '@/lib/firestore';
 function ItineraryUUIDContent() {
     const params = useParams();
     const router = useRouter();
-    const uuid = params?.uuid as string;
+    const rawUuid = (params?.uuid as string) ?? '';
+    const uuid = decodeURIComponent(rawUuid).trim().replace(/\s+/g, '-').toLowerCase();
 
     const [phase, setPhase] = useState<'loading-data' | 'generating' | 'result' | 'not-found'>('loading-data');
     const [form, setForm] = useState<Record<string, unknown>>({});
     const [generatedData, setGeneratedData] = useState<any>(null);
 
     // Validate UUID format on mount to prevent Firebase path injection
-    const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(uuid ?? '');
+    const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(uuid);
 
     useEffect(() => {
         if (!uuid || !isValidUUID) {
             setPhase('not-found');
             return;
+        }
+
+        if (rawUuid !== uuid && typeof window !== 'undefined') {
+            window.history.replaceState(null, '', `/itinerary/plan/${uuid}`);
         }
 
         let isMounted = true;
@@ -59,7 +64,7 @@ function ItineraryUUIDContent() {
             if (!isMounted) return;
 
             // 2. Fallback: check sessionStorage for generated itinerary
-            const localItin = sessionStorage.getItem(`navii_itin_${uuid}`);
+            const localItin = sessionStorage.getItem(`navii_itin_${uuid}`) || (rawUuid ? sessionStorage.getItem(`navii_itin_${rawUuid}`) : null);
             if (localItin) {
                 try {
                     const parsed = JSON.parse(localItin);
@@ -73,7 +78,7 @@ function ItineraryUUIDContent() {
             }
 
             // 3. Fallback: check sessionStorage for form to trigger generation
-            const storedForm = sessionStorage.getItem(`navii_form_${uuid}`);
+            const storedForm = sessionStorage.getItem(`navii_form_${uuid}`) || (rawUuid ? sessionStorage.getItem(`navii_form_${rawUuid}`) : null);
             if (storedForm) {
                 try {
                     setForm(JSON.parse(storedForm));

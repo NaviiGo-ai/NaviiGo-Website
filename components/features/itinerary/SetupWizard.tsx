@@ -11,6 +11,7 @@ import BuildFromLink from './BuildFromLink';
 import SmartRecommendations from './SmartRecommendations';
 import VibeMatch from './VibeMatch';
 import { useAuth } from '@/lib/AuthContext';
+import AuthRequiredModal from '@/components/shared/AuthRequiredModal';
 
 /** Resolve a city name to its DEST_DATA key (e.g. 'Jaipur' → 'jaipur') */
 function resolveDestKey(name: string): { id: string; name: string } | null {
@@ -204,10 +205,27 @@ export default function SetupWizard({ onDone }: SetupWizardProps) {
         group: '', budget: 15000, originCity: '', travelerType: 'comfort',
         arrivalTime: 'afternoon', arrivalMode: '', departureTime: '', departureMode: '', hotelArea: '',
         mustDo: [] as { name: string; dayIndex: number | null }[],
+        routeStops: [] as { name: string; stayDays: number; travelMode: string; travelTime: string }[],
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isTransitioning, setIsTransitioning] = useState(false);
+    const [showAuthRequired, setShowAuthRequired] = useState(false);
     const set = (k: string, v: string | number) => setForm(p => ({ ...p, [k]: v }));
+    const selectRouteCity = useCallback((id: string, name: string) => {
+        setForm(previous => {
+            if (!previous.destination) return { ...previous, destination: id, destName: name };
+            if (previous.destination === id || previous.routeStops.some(stop => stop.name.toLowerCase() === name.toLowerCase())) return previous;
+            return { ...previous, routeStops: [...previous.routeStops, { name, stayDays: 1, travelMode: 'train', travelTime: 'morning' }] };
+        });
+    }, []);
+    const removeRouteCity = useCallback((index: number) => {
+        setForm(previous => {
+            if (index > 0) return { ...previous, routeStops: previous.routeStops.filter((_, stopIndex) => stopIndex !== index - 1) };
+            const [nextCity, ...remainingStops] = previous.routeStops;
+            if (!nextCity) return { ...previous, destination: '', destName: '', routeStops: [] };
+            return { ...previous, destination: nextCity.name.toLowerCase().replace(/\s+/g, '-'), destName: nextCity.name, routeStops: remainingStops };
+        });
+    }, []);
     const next = () => { setDir(1); setStep(s => s + 1); };
     const back = () => { setDir(-1); setStep(s => s - 1); };
     const canNext = [
@@ -225,8 +243,13 @@ export default function SetupWizard({ onDone }: SetupWizardProps) {
      * then navigate to /itinerary/[uuid]. The [uuid] page handles generation.
      */
     const handleSubmit = useCallback(() => {
+        if (!user) {
+            setShowAuthRequired(true);
+            return;
+        }
+        setIsSubmitting(true);
         const uuid = crypto.randomUUID();
-        const formWithMeta = { ...form, userId: user?.uid ?? null };
+        const formWithMeta = { ...form, userId: user.uid };
         sessionStorage.setItem(`navii_form_${uuid}`, JSON.stringify(formWithMeta));
         // Also call the legacy onDone so parent can still hook in if needed
         onDone({ ...formWithMeta, uuid });
@@ -263,6 +286,7 @@ export default function SetupWizard({ onDone }: SetupWizardProps) {
 
     return (
         <div className="min-h-screen bg-[#f7f8fc] dark:bg-[#0a0a0f] pt-16 sm:pt-20">
+            <AuthRequiredModal open={showAuthRequired} onClose={() => setShowAuthRequired(false)} />
             <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md border-b border-zinc-200 dark:border-white/5 sticky top-16 sm:top-20 z-40 py-2.5 sm:py-3 flex items-center px-3 sm:px-6 md:px-12 lg:px-16 justify-between gap-2">
                 {step > 1 && !buildFromReel && !vibeMatchMode && <button onClick={back} className="w-9 h-9 rounded-full border border-zinc-200 dark:border-zinc-700 flex items-center justify-center hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors text-zinc-600 dark:text-zinc-300 text-sm">←</button>}
                 <div className="flex-1 min-w-0">
@@ -382,26 +406,34 @@ export default function SetupWizard({ onDone }: SetupWizardProps) {
                                                         group={form.group || 'solo'}
                                                         budget={form.budget}
                                                         userId={user?.uid}
-                                                        onSelect={(destId, destName) => {
-                                                            set('destination', destId);
-                                                            set('destName', destName);
-                                                        }}
-                                                        onSelectAndNext={(destId, destName) => {
-                                                            set('destination', destId);
-                                                            set('destName', destName);
-                                                            setIsTransitioning(true);
-                                                            setTimeout(() => {
-                                                                setIsTransitioning(false);
-                                                                next();
-                                                            }, 400);
-                                                        }}
+                                                        onSelect={selectRouteCity}
+                                                        onSelectAndNext={selectRouteCity}
                                                     />
                                                 )}
                                                 <CitySearch
                                                     value={form.destination}
                                                     destName={form.destName}
-                                                    onSelect={(id, name) => { set('destination', id); set('destName', name); }}
+                                                    onSelect={selectRouteCity}
                                                 />
+
+                                                {form.destination && (
+                                                    <div className="mt-6 max-w-4xl rounded-2xl border border-violet-200 bg-violet-50/70 p-4 dark:border-violet-500/20 dark:bg-violet-500/5">
+                                                        <div className="flex items-center justify-between gap-3 mb-3">
+                                                            <div><h3 className="text-sm font-bold text-zinc-900 dark:text-white">Your route</h3><p className="text-xs text-zinc-500 dark:text-zinc-400">Select every city here. NaviiGo reserves one transit day between consecutive cities.</p></div>
+                                                            <span className="rounded-full bg-violet-600 px-2.5 py-1 text-xs font-bold text-white">{form.routeStops.length + 1} cities</span>
+                                                        </div>
+                                                        <div className="space-y-2">
+                                                            {[{ name: form.destName, primary: true }, ...form.routeStops.map(stop => ({ name: stop.name, primary: false }))].map((city, index) => (
+                                                                <div key={`${city.name}-${index}`} className="flex flex-wrap items-center gap-2 rounded-xl bg-white px-3 py-2.5 shadow-sm dark:bg-zinc-800">
+                                                                    <span className="w-6 text-center text-xs font-black text-violet-600">{index + 1}</span>
+                                                                    <span className="min-w-[130px] flex-1 text-sm font-bold text-zinc-900 dark:text-white">{city.name}</span>
+                                                                    <button type="button" onClick={() => removeRouteCity(index)} className="text-xs font-bold text-rose-600 hover:text-rose-500">Remove</button>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                        {form.routeStops.length > 0 && <p className="mt-3 text-xs font-medium text-violet-700 dark:text-violet-300">Next, choose dates and then add the travel details for every city-to-city leg.</p>}
+                                                    </div>
+                                                )}
 
                                                 {/* Must-Do Pinning */}
                                                 {form.destination && (
@@ -547,6 +579,23 @@ export default function SetupWizard({ onDone }: SetupWizardProps) {
 
                                         {step === 5 && (
                                             <div className="space-y-8 max-w-2xl">
+                                                {form.routeStops.length > 0 && (
+                                                    <div className="rounded-2xl border border-violet-200 bg-gradient-to-br from-violet-50 to-indigo-50 p-5 dark:border-violet-500/20 dark:from-violet-900/10 dark:to-indigo-900/10">
+                                                        <div className="mb-1 flex items-center gap-2"><span className="text-lg">Route</span><span className="text-sm font-bold text-zinc-900 dark:text-white">Inter-city travel</span></div>
+                                                        <p className="mb-5 text-xs text-zinc-500 dark:text-zinc-400">Set how and when you will travel between each pair of cities. NaviiGo will make these dedicated transit days.</p>
+                                                        <div className="space-y-5">
+                                                            {form.routeStops.map((stop, index) => {
+                                                                const fromCity = index === 0 ? form.destName : form.routeStops[index - 1].name;
+                                                                return <div key={`${fromCity}-${stop.name}`} className="rounded-xl border border-violet-100 bg-white p-4 dark:border-violet-500/15 dark:bg-zinc-800/80">
+                                                                    <div className="mb-4 flex items-center justify-between gap-3"><div><p className="text-xs font-bold uppercase tracking-wider text-violet-600 dark:text-violet-300">Leg {index + 1}</p><h3 className="text-base font-bold text-zinc-900 dark:text-white">{fromCity} to {stop.name}</h3></div><span className="rounded-full bg-violet-100 px-2.5 py-1 text-[10px] font-bold text-violet-700 dark:bg-violet-500/15 dark:text-violet-300">Transit day</span></div>
+                                                                    <div className="mb-4"><p className="mb-2 text-xs font-semibold text-zinc-600 dark:text-zinc-400">How will you travel?</p><div className="flex flex-wrap gap-2">{DEPARTURE_MODES.map(mode => <button type="button" key={mode.id} onClick={() => setForm(previous => ({ ...previous, routeStops: previous.routeStops.map((routeStop, stopIndex) => stopIndex === index ? { ...routeStop, travelMode: mode.id } : routeStop) }))} className={`rounded-xl border-2 px-3 py-2 text-xs font-bold transition-all ${stop.travelMode === mode.id ? 'border-violet-500 bg-violet-50 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300' : 'border-zinc-200 bg-white text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300'}`}><span className="mr-1">{mode.emoji}</span>{mode.label}</button>)}</div></div>
+                                                                    <div className="mb-4"><p className="mb-2 text-xs font-semibold text-zinc-600 dark:text-zinc-400">When will you leave {fromCity}?</p><div className="grid grid-cols-2 gap-2 sm:grid-cols-4">{ARRIVAL_TIMES.map(time => <button type="button" key={time.id} onClick={() => setForm(previous => ({ ...previous, routeStops: previous.routeStops.map((routeStop, stopIndex) => stopIndex === index ? { ...routeStop, travelTime: time.id } : routeStop) }))} className={`rounded-xl border-2 p-2 text-center transition-all ${stop.travelTime === time.id ? 'border-violet-500 bg-violet-50 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300' : 'border-zinc-200 bg-white text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300'}`}><span className="block text-base">{time.emoji}</span><span className="text-[10px] font-bold">{time.label}</span></button>)}</div></div>
+                                                                    <label className="flex items-center justify-between gap-3 text-xs font-semibold text-zinc-600 dark:text-zinc-400">How many days will you stay in {stop.name}?<input aria-label={`Days in ${stop.name}`} type="number" min="1" max="14" value={stop.stayDays} onChange={event => setForm(previous => ({ ...previous, routeStops: previous.routeStops.map((routeStop, stopIndex) => stopIndex === index ? { ...routeStop, stayDays: Math.max(1, Number(event.target.value) || 1) } : routeStop) }))} className="w-16 rounded-lg border border-zinc-200 bg-white px-2 py-1.5 text-center text-sm font-bold text-zinc-900 outline-none focus:border-violet-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white" /></label>
+                                                                </div>;
+                                                            })}
+                                                        </div>
+                                                    </div>
+                                                )}
                                                 {/* Arrival Info */}
                                                 <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/10 dark:to-indigo-900/10 rounded-2xl p-5 border border-blue-100 dark:border-blue-500/20">
                                                     <div className="flex items-center gap-2 mb-4">
@@ -673,7 +722,7 @@ export default function SetupWizard({ onDone }: SetupWizardProps) {
                             <div className="sticky bottom-0 left-0 right-0 p-4 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md border-t border-zinc-200 dark:border-zinc-800 lg:relative lg:bg-transparent lg:dark:bg-transparent lg:border-t-0 lg:p-0 z-[100] lg:z-auto">
                                 <div className="flex gap-3 max-w-2xl mx-auto lg:mx-0 lg:pt-4 lg:border-t lg:border-zinc-100 lg:dark:border-zinc-800 lg:mt-4">
                                     {step > 1 && <motion.button whileTap={{ scale: 0.98 }} onClick={back} className="flex-1 py-3.5 rounded-2xl border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 font-medium hover:bg-zinc-50 dark:hover:bg-white/5 transition-colors">← Back</motion.button>}
-                                    <motion.button whileTap={canNext && !isSubmitting && !isTransitioning ? { scale: 0.98 } : {}} onClick={step < TOTAL_STEPS ? () => { setIsTransitioning(true); setTimeout(() => { setIsTransitioning(false); next(); }, 300); } : () => { setIsSubmitting(true); handleSubmit(); }} disabled={!canNext || isSubmitting || isTransitioning}
+                                    <motion.button whileTap={canNext && !isSubmitting && !isTransitioning ? { scale: 0.98 } : {}} onClick={step < TOTAL_STEPS ? () => { setIsTransitioning(true); setTimeout(() => { setIsTransitioning(false); next(); }, 300); } : handleSubmit} disabled={!canNext || isSubmitting || isTransitioning}
                                         className={`flex-[2] py-3.5 rounded-2xl font-bold text-base transition-all flex items-center justify-center gap-2 ${canNext && !isSubmitting && !isTransitioning ? 'bg-emerald-600 text-white hover:bg-emerald-500 shadow-lg shadow-emerald-500/25' : 'bg-zinc-200 dark:bg-zinc-700 text-zinc-400 cursor-not-allowed'}`}>
                                         {isSubmitting || isTransitioning ? (
                                             <>

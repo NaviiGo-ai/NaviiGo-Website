@@ -24,6 +24,10 @@ export async function POST(req: NextRequest) {
     if (limited) return limited;
 
     try {
+        const authorization = req.headers.get('authorization') || '';
+        if (!authorization.startsWith('Bearer ')) {
+            return NextResponse.json({ success: false, error: 'Sign in is required to create an itinerary.' }, { status: 401 });
+        }
         const body = await req.json();
 
         // ── Validation ────────────────────────────────────────────────
@@ -53,8 +57,10 @@ export async function POST(req: NextRequest) {
         }
 
         // uuid — optional, validated when present (must be standard UUID v4 format)
-        const uuid = typeof body.uuid === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(body.uuid)
-            ? body.uuid
+        const rawUuid = typeof body.uuid === 'string' ? body.uuid : '';
+        const cleanUuid = decodeURIComponent(rawUuid).trim().replace(/\s+/g, '-').toLowerCase();
+        const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(cleanUuid)
+            ? cleanUuid
             : null;
 
         const safeBody = {
@@ -66,11 +72,19 @@ export async function POST(req: NextRequest) {
             budget,
             startDate: body.startDate ?? null,
             endDate: body.endDate ?? null,
-            userId: typeof body.userId === 'string' ? body.userId : null,
+            // The FastAPI service verifies the bearer token and sets the UID itself.
+            // Never trust a UID supplied by the browser.
+            userId: null,
             preferences: body.preferences ?? null,
             browsingSignals: body.browsingSignals ?? null,
             travelerType: body.travelerType ?? null,
             originCity: validateString(body.originCity, 'originCity', 100) ?? null,
+            routeStops: Array.isArray(body.routeStops) ? body.routeStops.slice(0, 4).map((stop: any) => ({
+                name: validateString(stop?.name, 'route stop name', 100),
+                stayDays: validateNumber(stop?.stayDays, 1, 14) ?? 1,
+                travelMode: ['flight', 'train', 'bus', 'car'].includes(stop?.travelMode) ? stop.travelMode : 'train',
+                travelTime: ['morning', 'afternoon', 'evening', 'night'].includes(stop?.travelTime) ? stop.travelTime : 'morning',
+            })).filter((stop: { name: string | null }) => Boolean(stop.name)) : [],
         };
         // ─────────────────────────────────────────────────────────────
 
@@ -79,7 +93,7 @@ export async function POST(req: NextRequest) {
 
         const pythonResponse = await fetch(`${baseUrl}/api/itinerary/generate`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', Authorization: authorization },
             body: JSON.stringify(safeBody),
         });
 
@@ -103,7 +117,7 @@ export async function POST(req: NextRequest) {
                     form: safeBody as any,
                     generatedData: data.itinerary,
                     destName: safeBody.destName,
-                    userId: safeBody.userId,
+                    userId: data.userId ?? null,
                     isPublic: true,
                 });
                 console.log(`[Generate] Saved to itineraries/${uuid}`);

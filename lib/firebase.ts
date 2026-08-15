@@ -25,19 +25,15 @@ const auth: Auth | null = isBrowser ? getAuth(app) : null;
 
 
 
-// Firestore: use named database 'naviigo-db'.
-function getDb(): Firestore | null {
-  if (!isBrowser) return null;
-  // Initialize explicitly for the named database to ensure correct routing
-  // Otherwise, some operations might fall back to '(default)'
+// Firestore: use named database 'naviigo-db' (available on both server and client)
+function getDb(): Firestore {
   try {
-    return initializeFirestore(app, { localCache: memoryLocalCache() }, 'naviigo-db');
-  } catch (e) {
-    // If it's already initialized, fallback to getFirestore
     return getFirestore(app, 'naviigo-db');
+  } catch (e) {
+    return initializeFirestore(app, typeof window !== 'undefined' ? { localCache: memoryLocalCache() } : {}, 'naviigo-db');
   }
 }
-const db: Firestore = (getDb() ?? null!) as Firestore;
+const db: Firestore = getDb();
 const storage: FirebaseStorage | null = isBrowser ? getStorage(app) : null;
 
 let analytics: ReturnType<typeof getAnalytics> | null = null;

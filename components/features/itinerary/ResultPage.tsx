@@ -16,6 +16,7 @@ import {
 import { Badge, genShareId } from './helpers';
 import ShareDropdown from './ShareDropdown';
 import { useAI } from '@/context/AIContext';
+import { destinationExploreHref, itineraryPlaceHref } from '@/lib/placeLinks';
 
 const ItineraryMap = dynamic(() => import('@/components/shared/ItineraryMap'), { ssr: false });
 const VideoCard = dynamic(() => import('@/components/shared/VideoCard'), { ssr: false });
@@ -244,8 +245,8 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
             {/* Top bar */}
             <div className="sticky top-16 sm:top-20 z-40 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-lg border-b border-zinc-100 dark:border-white/5 px-3 sm:px-4 py-2.5 sm:py-3 flex items-center gap-2 sm:gap-4">
                 <button onClick={onReset} className="w-9 h-9 rounded-full border border-zinc-200 dark:border-zinc-700 flex items-center justify-center hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors text-sm text-zinc-600 dark:text-zinc-300">←</button>
-                <div className="flex-1 flex items-center gap-4 overflow-x-auto no-scrollbar text-xs text-zinc-500">
-                    <div><div className="text-[10px] font-bold text-zinc-400 uppercase tracking-wide">Where</div><div className="font-semibold text-zinc-900 dark:text-white">{destName}</div></div>
+                    <div className="flex-1 flex items-center gap-4 overflow-x-auto no-scrollbar text-xs text-zinc-500">
+                    <button onClick={() => router.push(destinationExploreHref(destName))} className="text-left group"><div className="text-[10px] font-bold text-zinc-400 uppercase tracking-wide">Where</div><div className="font-semibold text-zinc-900 dark:text-white group-hover:text-emerald-600">{destName} ↗</div></button>
                     <div className="w-px h-6 bg-zinc-200 dark:bg-zinc-700" />
                     <div><div className="text-[10px] font-bold text-zinc-400 uppercase tracking-wide">Dates</div><div className="font-semibold text-zinc-900 dark:text-white">{form.startDate ? new Date(form.startDate as string).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : ''} - {form.endDate ? new Date(form.endDate as string).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : ''}</div></div>
                     <div className="w-px h-6 bg-zinc-200 dark:bg-zinc-700" />
@@ -434,7 +435,7 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 {data.highlights.map((a: any, i: number) => (
                                     <motion.div key={`hl-card-${i}-${a.name || 'item'}`} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}
-                                        onClick={(e) => { e.stopPropagation(); window.location.href = `/itinerary/detail?type=attraction&dest=${destId}&name=${encodeURIComponent(a.name)}`; }}
+                                        onClick={(e) => { e.stopPropagation(); router.push(itineraryPlaceHref('attraction', destId, a)); }}
                                         className="bg-white dark:bg-zinc-900 rounded-2xl overflow-hidden border border-zinc-100 dark:border-zinc-800 shadow-sm hover:shadow-md transition-all cursor-pointer hover:-translate-y-1">
                                         <div className="relative h-36">
                                             <PlaceImage name={a.name} city={destName} fallbackSrc={resolveImgSrc(a.img, 500, a.name, a.tags?.[0])} className="absolute inset-0 w-full h-full" asBackground />
@@ -467,7 +468,7 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     {data.restaurants.map((r: any, i: number) => (
                                         <motion.div key={`rest-card-${i}-${r.id || r.name || 'item'}`} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
-                                            onClick={(e) => { e.stopPropagation(); window.location.href = `/itinerary/detail?type=restaurant&dest=${destId}&name=${encodeURIComponent(r.name)}`; }}
+                                            onClick={(e) => { e.stopPropagation(); router.push(itineraryPlaceHref('restaurant', destId, r)); }}
                                             className="bg-white dark:bg-zinc-900 rounded-2xl overflow-hidden border border-zinc-100 dark:border-zinc-800 shadow-sm hover:shadow-md transition-all cursor-pointer hover:-translate-y-1">
                                             <div className="relative h-32">
                                                 <PlaceImage name={r.name} city={destName} fallbackSrc={resolveImgSrc(r.img, 500, r.name, r.cuisine)} className="absolute inset-0 w-full h-full" asBackground />
@@ -494,7 +495,7 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     {data.hotels.map((h: any, i: number) => (
                                         <motion.div key={`hotel-card-${i}-${h.id || h.name || 'item'}`} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
-                                            onClick={(e) => { e.stopPropagation(); window.location.href = `/itinerary/detail?type=hotel&dest=${destId}&name=${encodeURIComponent(h.name)}`; }}
+                                            onClick={(e) => { e.stopPropagation(); router.push(itineraryPlaceHref('hotel', destId, h)); }}
                                             className="bg-white dark:bg-zinc-900 rounded-2xl overflow-hidden border border-zinc-100 dark:border-zinc-800 shadow-sm hover:shadow-md transition-all cursor-pointer hover:-translate-y-1">
                                             <div className="relative h-32">
                                                 <PlaceImage name={h.name} city={destName} fallbackSrc={resolveImgSrc(h.img, 500, h.name, h.type)} className="absolute inset-0 w-full h-full" asBackground />

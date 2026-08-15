@@ -13,6 +13,8 @@ function DetailContent() {
     const type = searchParams.get('type') || '';
     const encodedName = searchParams.get('name') || '';
     const name = decodeURIComponent(encodedName);
+    const lat = Number(searchParams.get('lat'));
+    const lng = Number(searchParams.get('lng'));
 
     const data = DEST_DATA[destId] ?? FALLBACK_DEST;
     const destInfo = DESTINATIONS.find(d => d.id === destId);
@@ -20,6 +22,7 @@ function DetailContent() {
     const isFromLocal = searchParams.get('fromLocal') === 'true';
     const [itemData, setItemData] = useState<any>(null);
     const [mounted, setMounted] = useState(false);
+    const [lookupComplete, setLookupComplete] = useState(false);
 
     useEffect(() => {
         setMounted(true);
@@ -49,7 +52,45 @@ function DetailContent() {
         setItemData(dataToSet);
     }, [isFromLocal, type, name, data]);
 
+    // Generated itinerary items are not always present in static destination data.
+    // Enrich (or resolve) them through the existing Google Places proxy so the link
+    // remains useful after refresh and in another browser.
+    useEffect(() => {
+        const placeType = type === 'hotel' ? 'lodging' : type === 'restaurant' ? 'restaurant' : 'tourist_attraction';
+        if (!name || !Number.isFinite(lat) || !Number.isFinite(lng)) {
+            setLookupComplete(true);
+            return;
+        }
+
+        fetch(`/api/places/details?lat=${encodeURIComponent(String(lat))}&lng=${encodeURIComponent(String(lng))}&type=${placeType}&query=${encodeURIComponent(name)}`)
+            .then(response => response.json())
+            .then(json => {
+                const results = json.results || [];
+                const place = results.find((result: any) => result.name?.toLowerCase() === name.toLowerCase()) || results[0];
+                if (!place) return;
+                setItemData((current: any) => ({
+                    ...current,
+                    id: place.id || current?.id,
+                    name: place.name || current?.name || name,
+                    rating: place.rating || current?.rating,
+                    desc: current?.desc || place.vicinity || `Recommended ${type} in ${destInfo?.name || destId}.`,
+                    img: place.photo || current?.img,
+                    lat: place.lat || current?.lat || lat,
+                    lng: place.lng || current?.lng || lng,
+                    timing: current?.timing || (place.isOpen === null ? '' : place.isOpen ? 'Open now' : 'Currently closed'),
+                    address: place.vicinity || current?.address,
+                    userRatingsTotal: place.userRatingsTotal || current?.userRatingsTotal,
+                }));
+            })
+            .catch(() => undefined)
+            .finally(() => setLookupComplete(true));
+    }, [type, name, lat, lng, destId, destInfo?.name]);
+
     if (!mounted) return null; // Avoid hydration mismatch on initial render
+
+    if (!itemData && !lookupComplete) {
+        return <div className="min-h-screen pt-20 sm:pt-32 flex items-center justify-center text-zinc-500">Loading place detailsâ€¦</div>;
+    }
 
     if (!itemData) {
         return (

@@ -6,6 +6,7 @@ import { GEN_STEPS, DEST_DATA, GROUP_SIZES, PURPOSES } from '@/app/itinerary/dat
 
 const ItineraryMap = dynamic(() => import('@/components/shared/ItineraryMap'), { ssr: false });
 import { getBrowsingSignals } from '@/lib/browsingSignals';
+import { useAuth } from '@/lib/AuthContext';
 
 // Generic India center — used when destination has no hardcoded data
 // This prevents Kerala's data from bleeding into Ladakh / other new destinations
@@ -18,6 +19,7 @@ interface LoadingScreenProps {
 }
 
 export default function LoadingScreen({ form, uuid, onDone }: LoadingScreenProps) {
+    const { user } = useAuth();
     const destId = form.destination as string;
     const destName = form.destName as string;
     const groupLabel = GROUP_SIZES.find(g => g.id === form.group)?.label ?? '';
@@ -82,10 +84,12 @@ export default function LoadingScreen({ form, uuid, onDone }: LoadingScreenProps
 
         const generate = async () => {
             try {
+                if (!user) throw new Error('Sign in is required to generate an itinerary.');
+                const idToken = await user.getIdToken();
                 const baseUrl = '';
                 const res = await fetch(`${baseUrl}/api/itinerary/generate`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
                     body: JSON.stringify({
                         destination: destId,
                         destName: destName,
@@ -96,7 +100,7 @@ export default function LoadingScreen({ form, uuid, onDone }: LoadingScreenProps
                         startDate: form.startDate,
                         travelerType: form.travelerType || 'comfort',
                         browsingSignals: getBrowsingSignals(),
-                        userId: form.userId ?? null,
+                        userId: user.uid,
                         uuid: uuid ?? null,
                         // Travel logistics (Step 5)
                         arrivalTime: form.arrivalTime || 'afternoon',
@@ -105,6 +109,7 @@ export default function LoadingScreen({ form, uuid, onDone }: LoadingScreenProps
                         departureMode: form.departureMode || '',
                         hotelArea: form.hotelArea || '',
                         originCity: form.originCity || '',
+                        routeStops: form.routeStops || [],
                     }),
                 });
                 const result = await res.json();
@@ -117,6 +122,16 @@ export default function LoadingScreen({ form, uuid, onDone }: LoadingScreenProps
                                 generatedData: result.itinerary,
                                 destName: destName,
                             }));
+                            // Save to Firestore from client as well for instant cross-device/browser link sharing
+                            import('@/lib/firestore').then(({ saveItineraryByUUID }) => {
+                                saveItineraryByUUID(uuid, {
+                                    form,
+                                    generatedData: result.itinerary,
+                                    destName,
+                                    userId: (form.userId as string) ?? null,
+                                    isPublic: true,
+                                }).catch(err => console.warn('[LoadingScreen] Firestore save fallback error:', err));
+                            });
                         } catch (e) { }
                     }
                 }
@@ -128,7 +143,7 @@ export default function LoadingScreen({ form, uuid, onDone }: LoadingScreenProps
         };
 
         generate();
-    }, [destId, destName, form]);
+    }, [destId, destName, form, user, uuid]);
 
     // Step animation — sync with API: pause on last step's last sub if API isn't done
     useEffect(() => {

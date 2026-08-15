@@ -11,11 +11,23 @@ import { ReactLenis } from 'lenis/react';
     children,
   }: Readonly<{ children: React.ReactNode }>) {
     useEffect(() => {
-      if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/sw.js').catch((err) => {
-          console.error('Service Worker registration failed:', err);
+      if (!('serviceWorker' in navigator)) return;
+
+      // A service worker must never cache Turbopack/HMR chunks. Unregister old
+      // workers in development so source changes cannot be masked by stale JS.
+      if (process.env.NODE_ENV !== 'production') {
+        navigator.serviceWorker.getRegistrations().then(registrations => {
+          registrations.forEach(registration => registration.unregister());
         });
+        caches.keys().then(keys => {
+          keys.filter(key => key.startsWith('naviigo-')).forEach(key => caches.delete(key));
+        });
+        return;
       }
+
+      navigator.serviceWorker.register('/sw.js').catch((err) => {
+        console.error('Service Worker registration failed:', err);
+      });
     }, []);
 
     return (

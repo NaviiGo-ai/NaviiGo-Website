@@ -1,4 +1,4 @@
-const CACHE_NAME = 'naviigo-v7-offline';
+const CACHE_NAME = 'naviigo-v8-offline';
 const TILE_CACHE = 'naviigo-tiles-v3';
 
 // Critical static routes to pre-cache (public pages only)
@@ -46,6 +46,10 @@ self.addEventListener('fetch', (event) => {
     // Skip API routes so they fail gracefully if offline
     if (url.pathname.startsWith('/api/')) return;
 
+    // Next.js build and development chunks must always come from the network.
+    // Caching them causes hydration errors after a deployment or Turbopack edit.
+    if (url.pathname.startsWith('/_next/')) return;
+
     // Skip the deals page — third-party widgets must always be fetched fresh
     if (url.pathname.startsWith('/deals')) return;
 
@@ -76,8 +80,8 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    // 2. Cache First for Next.js Static Assets (JS, CSS, Images in /_next/static)
-    if (url.pathname.startsWith('/_next/static/') || url.pathname.startsWith('/assets/') || url.pathname.startsWith('/destinations/')) {
+    // 2. Cache First for app-owned images and other non-JS static assets.
+    if (url.pathname.startsWith('/assets/') || url.pathname.startsWith('/destinations/')) {
         event.respondWith(
             caches.match(request).then(cached => cached ?? fetch(request).then(res => {
                 if (res.ok) {

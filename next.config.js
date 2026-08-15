@@ -1,5 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  turbopack: {
+    root: __dirname,
+  },
   reactStrictMode: true,
   allowedDevOrigins: ['127.0.0.1'],
   serverExternalPackages: ['@pinecone-database/pinecone'],

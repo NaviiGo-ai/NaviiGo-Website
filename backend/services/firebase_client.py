@@ -18,7 +18,7 @@ from typing import Optional
 
 # pyrefly: ignore [missing-import]
 import firebase_admin
-from firebase_admin import credentials, firestore
+from firebase_admin import auth as firebase_auth, credentials, firestore
 
 _app: Optional[firebase_admin.App] = None
 _db = None
@@ -87,7 +87,9 @@ def _init():
     except Exception as e:
         print(f"[Firebase] WARNING: Could not initialize Firestore Client: {e}")
         print(f"[Firebase] User data persistence is DISABLED. Place a service account JSON at backend/firebase-service-account.json")
-        _app = None
+        # Keep the Admin app alive: Firebase Auth token verification must not
+        # silently stop working just because the optional named Firestore
+        # database is unavailable or misconfigured.
         _db = None
         return
 
@@ -102,3 +104,15 @@ def is_firebase_configured() -> bool:
     """Check if Firebase is properly initialized."""
     _init()
     return _db is not None
+
+
+def verify_firebase_id_token(id_token: str) -> dict:
+    """Verify a Firebase Auth bearer token and return its trusted claims.
+
+    Itinerary generation is an authenticated operation. This makes the server the
+    authority for the UID instead of accepting a browser-supplied ``userId``.
+    """
+    _init()
+    if _app is None:
+        raise RuntimeError("Firebase Admin is not configured on the backend")
+    return firebase_auth.verify_id_token(id_token, app=_app)

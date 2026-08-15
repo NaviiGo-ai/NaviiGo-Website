@@ -18,14 +18,15 @@ import { getItineraryByUUID } from '@/lib/firestore';
 function DayViewContent() {
     const params = useParams();
     const router = useRouter();
-    const uuid = params?.uuid as string;
+    const rawUuid = (params?.uuid as string) ?? '';
+    const uuid = decodeURIComponent(rawUuid).trim().replace(/\s+/g, '-').toLowerCase();
     const dayNumber = parseInt(params?.dayNumber as string, 10);
 
     const [phase, setPhase] = useState<'loading' | 'ready' | 'not-found'>('loading');
     const [form, setForm] = useState<Record<string, unknown>>({});
     const [generatedData, setGeneratedData] = useState<any>(null);
 
-    const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(uuid ?? '');
+    const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(uuid);
 
     useEffect(() => {
         if (!uuid || !isValidUUID || isNaN(dayNumber) || dayNumber < 1) {
