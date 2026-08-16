@@ -49,6 +49,7 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
     const [activeActivity, setActiveActivity] = useState(-1);
     const [showAddActivity, setShowAddActivity] = useState(false);
     const [dayRouteInfo, setDayRouteInfo] = useState<{ distance: string, time: string } | null>(null);
+    const [customPlans, setCustomPlans] = useState<DayPlan[]>(() => (form.customPlans as DayPlan[]) || JSON.parse(JSON.stringify(data.dayPlans)));
     const plan: DayPlan | undefined = customPlans[activeDay] ?? customPlans[0];
     const activities = plan?.activities ?? [];
 
