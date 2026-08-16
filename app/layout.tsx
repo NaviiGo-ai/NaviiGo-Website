@@ -15,12 +15,15 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://naviigo.com'),
-  title: 'NaviiGo | The Ultimate Indian Spiritual Travel Tech & Aggregator',
-  description: 'AI-Powered temple itineraries, digital pilgrim passports, and universal booking hub for cheap travel options across India.',
-  keywords: 'India travel, seamless spiritual journey, digital passport, automatic temple stamps, AI itinerary generator, darshan timings planner, NaviiGO travel aggregator',
+  title: {
+    default: 'NaviiGo | The Ultimate Indian Travel Tech & AI Aggregator',
+    template: '%s | NaviiGo',
+  },
+  description: 'AI-Powered itineraries, digital pilgrim passports, and universal booking hub for cheap travel options across India.',
+  keywords: 'India travel, spiritual journey, digital passport, automatic stamps, AI itinerary generator, darshan timings planner, NaviiGO travel aggregator',
   openGraph: {
-    title: 'NaviiGo | Indian Spiritual Travel Planner',
-    description: 'Transform your journey with our Digital Pilgrim Passport and AI-powered temple itineraries.',
+    title: 'NaviiGo | Indian Travel Planner & AI Aggregator',
+    description: 'Transform your journey with our Digital Pilgrim Passport and AI-powered itineraries.',
     url: 'https://naviigo.com',
     siteName: 'NaviiGo',
     images: [
@@ -35,7 +38,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'NaviiGO Spiritual Travel Planner',
+    title: 'NaviiGO Travel Planner',
     description: 'Start your ultimate Indian journey with an AI agent specifically built for Darshan timings and seamless cabs.',
     images: ['https://images.unsplash.com/photo-1564507592333-c60657eea523?auto=format&fit=crop&w=1280&q=80'],
   },
@@ -53,7 +56,6 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${inter.variable}`}
-      suppressHydrationWarning
     >
       <body className="font-sans antialiased overflow-x-hidden">
         <Providers>

@@ -88,6 +88,14 @@ export async function POST(req: NextRequest) {
         };
         // ─────────────────────────────────────────────────────────────
 
+        if (process.env.NODE_ENV === 'production' && !process.env.NEXT_PUBLIC_PYTHON_API_URL) {
+            console.error('[Proxy] NEXT_PUBLIC_PYTHON_API_URL is missing in production!');
+            return NextResponse.json(
+                { success: false, error: 'Server configuration error: NEXT_PUBLIC_PYTHON_API_URL is missing' },
+                { status: 500 }
+            );
+        }
+
         const baseUrl = process.env.NEXT_PUBLIC_PYTHON_API_URL || 'http://localhost:8000';
 
 
