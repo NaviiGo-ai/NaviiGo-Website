@@ -12,6 +12,7 @@ import ReviewSection from '@/components/features/reviews/ReviewSection';
 import { getUpcomingFestivals, type Festival } from '@/lib/festivalCalendar';
 import { resolveImgSrc } from '@/lib/imageService';
 import { LocalEvent } from '@/lib/api/googleEvents';
+import { safeLocalStorage } from '@/lib/utils/storage';
 
 interface DeepDiveData {
     redditConsensus: string;
@@ -37,9 +38,9 @@ export default function DestinationDeepDive() {
 
     // Pre-fill from local storage if available from previous builds
     useEffect(() => {
-        try {
-            const saved = localStorage.getItem('naviigo_form_data');
-            if (saved) {
+        const saved = safeLocalStorage.getItem('naviigo_form_data');
+        if (saved) {
+            try {
                 const parsed = JSON.parse(saved);
                 if (parsed.companions) {
                     if (parsed.companions.toLowerCase().includes('couple')) setCompanion('Couple');
@@ -47,8 +48,10 @@ export default function DestinationDeepDive() {
                     else if (parsed.companions.toLowerCase().includes('friends')) setCompanion('Group of Friends');
                     else setCompanion('Solo');
                 }
+            } catch (e) {
+                console.warn('[Explore] Error parsing saved form data:', e);
             }
-        } catch (e) {}
+        }
         
         // Track city view start
         startCityView(destination);

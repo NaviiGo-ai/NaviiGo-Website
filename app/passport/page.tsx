@@ -5,6 +5,7 @@ import { useRef, useLayoutEffect, useState, useEffect } from 'react';
 import Image from 'next/image';
 import gsap from 'gsap';
 import { X, MapPin, Calendar, CheckCircle2, Trophy, Flame, Star, Target, ChevronRight, Zap, Globe2, TrendingUp, Award, Heart, Lock, ArrowRight, Activity, Plane } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/AuthContext';
 import { getPassportStats, getPassportStamps, getUserBucketList } from '@/lib/firestore';
 import { getLeaderboard, type LeaderboardEntry } from '@/lib/leaderboard';
@@ -41,6 +42,7 @@ const DEMO_STATS: PassportStats = {
 };
 
 export default function PassportPage() {
+    const router = useRouter();
     const containerRef = useRef<HTMLDivElement>(null);
     const [selectedStamp, setSelectedStamp] = useState<PassportStamp | null>(null);
     const [activeTab, setActiveTab] = useState<'stamps' | 'achievements' | 'stats' | 'leaderboard' | 'bucketlist'>('stamps');
@@ -130,7 +132,7 @@ export default function PassportPage() {
             <motion.div animate={{ y: [0, -10, 0] }} transition={{ repeat: Infinity, duration: 3 }} className="text-6xl mb-6">✈️</motion.div>
             <h2 className="text-2xl font-bold text-zinc-900 dark:text-white mb-3">Passport is Empty!</h2>
             <p className="text-zinc-500 max-w-md mx-auto mb-8">You haven't completed any trips yet. Generate an itinerary, pack your bags, and earn your first stamp!</p>
-            <button onClick={() => window.location.href = '/explore'} className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold py-3 px-8 rounded-full shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50 transition-all hover:scale-105">
+            <button onClick={() => router.push('/explore')} className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold py-3 px-8 rounded-full shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50 transition-all hover:scale-105">
                 Explore Destinations
             </button>
         </div>
@@ -430,7 +432,7 @@ export default function PassportPage() {
                                 <Heart className="w-16 h-16 text-rose-300 dark:text-rose-900/50 mx-auto mb-4" />
                                 <h3 className="text-2xl font-black text-zinc-900 dark:text-white mb-2">Your bucket list is empty</h3>
                                 <p className="text-zinc-500 max-w-md mx-auto">Explore destinations and tap the heart icon to save places you want to visit.</p>
-                                <button onClick={() => window.location.href = '/explore'} className="mt-6 font-bold text-emerald-500 bg-emerald-50 dark:bg-emerald-500/10 px-6 py-2 rounded-full">Go Explore</button>
+                                <button onClick={() => router.push('/explore')} className="mt-6 font-bold text-emerald-500 bg-emerald-50 dark:bg-emerald-500/10 px-6 py-2 rounded-full">Go Explore</button>
                             </div>
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -441,7 +443,7 @@ export default function PassportPage() {
                                         animate={{ opacity: 1, y: 0 }}
                                         transition={{ delay: i * 0.05 }}
                                         className="group relative rounded-[2rem] overflow-hidden border border-zinc-200 dark:border-zinc-800 shadow-md hover:shadow-xl transition-all cursor-pointer"
-                                        onClick={() => window.location.href = `/itinerary?load=${item.id}`}
+                                        onClick={() => router.push(`/itinerary?load=${item.id}`)}
                                     >
                                         <div className="relative h-56 bg-zinc-100 dark:bg-zinc-800">
                                             {item.image && (

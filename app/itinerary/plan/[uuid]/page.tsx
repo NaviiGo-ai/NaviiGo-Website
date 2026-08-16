@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import LoadingScreen from '@/components/features/itinerary/LoadingScreen';
 import ResultPage from '@/components/features/itinerary/ResultPage';
 import { listenToItineraryByUUID } from '@/lib/firestore';
+import { safeSessionStorage } from '@/lib/utils/storage';
 
 /**
  * /itinerary/plan/[uuid]
@@ -64,7 +65,7 @@ function ItineraryUUIDContent() {
             if (!isMounted) return;
 
             // 2. Fallback: check sessionStorage for generated itinerary
-            const localItin = sessionStorage.getItem(`navii_itin_${uuid}`) || (rawUuid ? sessionStorage.getItem(`navii_itin_${rawUuid}`) : null);
+            const localItin = safeSessionStorage.getItem(`navii_itin_${uuid}`) || (rawUuid ? safeSessionStorage.getItem(`navii_itin_${rawUuid}`) : null);
             if (localItin) {
                 try {
                     const parsed = JSON.parse(localItin);
@@ -74,17 +75,21 @@ function ItineraryUUIDContent() {
                         setPhase('result');
                         return;
                     }
-                } catch (e) {}
+                } catch (e) {
+                    console.warn('[UUID Page] Error parsing local itinerary cache:', e);
+                }
             }
 
             // 3. Fallback: check sessionStorage for form to trigger generation
-            const storedForm = sessionStorage.getItem(`navii_form_${uuid}`) || (rawUuid ? sessionStorage.getItem(`navii_form_${rawUuid}`) : null);
+            const storedForm = safeSessionStorage.getItem(`navii_form_${uuid}`) || (rawUuid ? safeSessionStorage.getItem(`navii_form_${rawUuid}`) : null);
             if (storedForm) {
                 try {
                     setForm(JSON.parse(storedForm));
                     setPhase('generating');
                     return;
-                } catch (e) {}
+                } catch (e) {
+                    console.warn('[UUID Page] Error parsing stored form:', e);
+                }
             }
 
             // 4. If nothing found at all
@@ -106,13 +111,11 @@ function ItineraryUUIDContent() {
             setGeneratedData(data);
             setPhase('result');
             // Save to sessionStorage as a client fallback for offline/non-Firebase mode
-            try {
-                sessionStorage.setItem(`navii_itin_${uuid}`, JSON.stringify({
-                    form,
-                    generatedData: data,
-                    destName: form.destName || '',
-                }));
-            } catch (e) {}
+            safeSessionStorage.setItem(`navii_itin_${uuid}`, JSON.stringify({
+                form,
+                generatedData: data,
+                destName: form.destName || '',
+            }));
         }
     }, [uuid, form]);
 
