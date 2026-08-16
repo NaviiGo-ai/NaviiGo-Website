@@ -32,6 +32,7 @@ const flightFilters = ['Non-stop', 'Morning Dep', 'Evening Dep', 'Under ₹5k', 
 const trainFilters = ['Sleeper', '3A', '2A', '1A', 'CC', 'Non-stop', 'Daily'];
 const cabFilters = ['Sedan', 'SUV', 'Self-Drive', 'AC', 'Top Rated'];
 const hotelFilters = ['Staycations & Resorts', '5 Star', '4 Star', '3 Star', 'Pool', 'Breakfast', 'Free Cancellation'];
+const SORT_OPTIONS = ['Price: Low to High', 'Price: High to Low', 'Duration', 'Departure Time', 'Rating'];
 
 // ─── MAIN PAGE ────────────────────────────────────────────────────────────────
 
@@ -181,13 +182,6 @@ function HotelForm({ onTravelersChange }: { onTravelersChange: (val: string) => 
   );
 }
 
-            )}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 // ─── MAIN PAGE ────────────────────────────────────────────────────────────────
 
@@ -439,10 +433,10 @@ export default function BookingsPage() {
 
     const paginated = list.slice(0, resultsPage * 10);
 
-    if (activeTab === 'flights') return paginated.map((f, i) => <FlightCard key={f.id || i} f={f} onBook={(item) => handleOpenPortal(item, 'flights')} />);
-    if (activeTab === 'trains') return paginated.map((t, i) => <TrainCard key={t.id || i} t={t} onBook={(item) => handleOpenPortal(item, 'trains')} />);
-    if (activeTab === 'cabs') return paginated.map((c, i) => <CabCard key={c.id || i} c={c} onBook={(item) => handleOpenPortal(item, 'cabs')} />);
-    return paginated.map((h, i) => <HotelCard key={h.id || i} h={h} onBook={(item) => handleOpenPortal(item, 'hotels')} />);
+    if (activeTab === 'flights') return paginated.map((f, i) => <FlightCard key={f.id || i} flight={f} onBook={(item: any) => handleOpenPortal(item, 'flights')} />);
+    if (activeTab === 'trains') return paginated.map((t, i) => <TrainCard key={t.id || i} train={t} onBook={(item: any) => handleOpenPortal(item, 'trains')} />);
+    if (activeTab === 'cabs') return paginated.map((c, i) => <CabCard key={c.id || i} cab={c} onBook={(item: any) => handleOpenPortal(item, 'cabs')} />);
+    return paginated.map((h, i) => <HotelCard key={h.id || i} hotel={h} onBook={(item: any) => handleOpenPortal(item, 'hotels')} />);
   };
 
   const sectionLabel = () => {
