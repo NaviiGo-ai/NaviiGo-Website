@@ -198,7 +198,7 @@ export default function DestinationDeepDive() {
                                 <h3 className="text-2xl font-bold text-zinc-900 dark:text-white">Hidden Gems</h3>
                             </div>
                             <div className="space-y-5 flex-1">
-                                {data.hiddenGems.map((gem, i) => (
+                                {(data?.hiddenGems ?? []).map((gem, i) => (
                                     <div key={i} className="group">
                                         <h4 className="text-base font-bold text-zinc-900 dark:text-white group-hover:text-emerald-500 transition-colors">{gem.name}</h4>
                                         <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1 leading-relaxed">{gem.desc}</p>
@@ -214,7 +214,7 @@ export default function DestinationDeepDive() {
                                 <h3 className="text-2xl font-bold text-rose-900 dark:text-rose-400">Skip the Traps</h3>
                             </div>
                             <div className="space-y-6 flex-1">
-                                {data.touristTrapsToAvoid.map((trap, i) => (
+                                {(data?.touristTrapsToAvoid ?? []).map((trap, i) => (
                                     <div key={i} className="bg-white dark:bg-black/40 border border-rose-100 dark:border-rose-900/20 rounded-2xl p-4">
                                         <div className="flex items-center gap-2 text-rose-600 dark:text-rose-400 font-bold mb-1 line-through opacity-70 flex-wrap">
                                             <span className="text-sm">❌</span> {trap.trap}
@@ -234,7 +234,7 @@ export default function DestinationDeepDive() {
                                 <h3 className="text-2xl font-bold text-zinc-900 dark:text-white">Local Bites</h3>
                             </div>
                             <div className="space-y-4">
-                                {data.localFoodMustHaves.map((food, i) => (
+                                {(data?.localFoodMustHaves ?? []).map((food, i) => (
                                     <div key={i} className="flex gap-4 items-start border-b border-zinc-100 dark:border-white/5 pb-4 last:border-0 last:pb-0">
                                         <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold shrink-0">
                                             {i + 1}
@@ -255,7 +255,7 @@ export default function DestinationDeepDive() {
                                 <h3 className="text-2xl font-bold text-zinc-900 dark:text-white">Aesthetic Spots</h3>
                             </div>
                             <div className="grid grid-cols-1 gap-3">
-                                {data.instagramWorthy.map((spot, i) => (
+                                {(data?.instagramWorthy ?? []).map((spot, i) => (
                                     <div key={i} className="bg-zinc-50 dark:bg-zinc-900/50 rounded-xl p-4 flex flex-col gap-2 hover:shadow-md transition-shadow cursor-default">
                                         <div className="font-bold text-sm text-zinc-900 dark:text-white">{spot.spot}</div>
                                         <div className="text-[10px] font-bold bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400 px-2 py-1.5 rounded w-fit leading-relaxed">

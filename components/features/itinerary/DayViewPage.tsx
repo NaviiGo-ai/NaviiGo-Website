@@ -49,8 +49,8 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
     const [activeActivity, setActiveActivity] = useState(-1);
     const [showAddActivity, setShowAddActivity] = useState(false);
     const [dayRouteInfo, setDayRouteInfo] = useState<{ distance: string, time: string } | null>(null);
-    const [customPlans, setCustomPlans] = useState<DayPlan[]>(() => (form.customPlans as DayPlan[]) || JSON.parse(JSON.stringify(data.dayPlans)));
-    const plan: DayPlan = customPlans[activeDay] ?? customPlans[0];
+    const plan: DayPlan | undefined = customPlans[activeDay] ?? customPlans[0];
+    const activities = plan?.activities ?? [];
 
     // Sync activeDay with browser history navigation (back/forward)
     useEffect(() => {
@@ -204,13 +204,14 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
 
     const slotEmoji: Record<string, string> = { Morning: '🌅', Afternoon: '☀️', Evening: '🌙' };
 
-    const mapPins = useMemo(() => plan.activities.map((a, i) => ({
+    const mapPins = useMemo(() => activities.map((a, i) => ({
         lat: a.lat, lng: a.lng, label: a.name, number: i + 1,
-    })), [plan]);
+    })), [activities]);
 
     let totalHours = 0;
-    plan.activities.forEach(a => {
-        const parts = a.time.split('–').map(s => s.trim());
+    activities.forEach(a => {
+        const timeStr = a.time || '';
+        const parts = timeStr.includes('–') ? timeStr.split('–').map(s => s.trim()) : [];
         if (parts.length === 2 && parts[0].includes(':') && parts[1].includes(':')) {
             const parse = (s: string) => {
                 const m = s.match(/(\d+):(\d+)\s*(AM|PM)/i);
@@ -233,8 +234,8 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
         : 0;
     const routeIsSane = routeDistanceKm > 0 && routeDistanceKm <= 200;
 
-    const isExhausting = plan.activities.length > 6;
-    const isRaining = plan.weather.rain > 20;
+    const isExhausting = activities.length > 6;
+    const isRaining = (plan?.weather?.rain ?? 0) > 20;
 
     return (
         <div className="min-h-screen bg-[#f7f8fc] dark:bg-[#0a0a0f] pt-16 sm:pt-20">

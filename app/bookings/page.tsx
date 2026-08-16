@@ -690,7 +690,11 @@ export default function BookingsPage() {
         <p className="text-zinc-400 text-sm">No results found. Try a different route or date.</p>
       </motion.div>
     );
-    const parsePrice = (p: string) => parseInt((p||'').replace(/[^0-9]/g, '')) || 0;
+    const parsePrice = (p: any) => {
+      if (typeof p === 'number') return p;
+      if (!p) return 0;
+      return parseInt(String(p).replace(/[^0-9]/g, '')) || 0;
+    };
     const parseDuration = (d: string) => {
       const match = (d||'').match(/(\d+)h(?:\s*(\d+)m)?/);
       if (!match) return 0;

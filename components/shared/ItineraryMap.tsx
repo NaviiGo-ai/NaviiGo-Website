@@ -128,14 +128,18 @@ export default function ItineraryMap({
         const coords: [number, number][] = [];
 
         pins.forEach((pin, i) => {
-            const isActive = activePin !== undefined && activePin === i;
+            const lat = Number(pin.lat);
+            const lng = Number(pin.lng);
+            if (isNaN(lat) || isNaN(lng) || lat === 0 || lng === 0) return;
 
+            const isActive = activePin !== undefined && activePin === i;
             const icon = L.divIcon({
-                className: 'custom-map-marker',
-                html: `<div style="position:relative; width:${isActive ? 42 : 36}px; height:${isActive ? 42 : 36}px; transform: ${isActive ? 'scale(1.15) translateY(-5px)' : 'scale(1)'}; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); display:flex; flex-direction:column; align-items:center;">
+                className: 'custom-map-pin',
+                html: `
+                <div style="display:flex; flex-direction:column; align-items:center;">
                     <div style="
-                        width: 100%; height: 100%;
-                        background: ${isActive ? 'linear-gradient(135deg, #059669 0%, #047857 100%)' : 'linear-gradient(135deg, #10b981 0%, #059669 100%)'};
+                        width: ${isActive ? 42 : 36}px; height: ${isActive ? 42 : 36}px;
+                        background: ${isActive ? 'linear-gradient(135deg, #10b981, #0d9488)' : 'linear-gradient(135deg, #6366f1, #4f46e5)'};
                         border-radius: 50% 50% 50% 0;
                         transform: rotate(-45deg);
                         display: flex; align-items: center; justify-content: center;
@@ -150,7 +154,7 @@ export default function ItineraryMap({
                 iconAnchor: [isActive ? 21 : 18, isActive ? 42 : 36],
             });
 
-            const marker = L.marker([pin.lat, pin.lng], { icon }).addTo(map);
+            const marker = L.marker([lat, lng], { icon }).addTo(map);
             const imgSrc = pin.img ? (pin.img.startsWith('http') ? pin.img : pin.img.startsWith('/') ? pin.img : `/destinations/delhi.png`) : '';
             const imgHtml = imgSrc ? `<img src="${imgSrc}" style="width:100%;height:80px;object-fit:cover;border-radius:8px;margin-bottom:6px;" onerror="this.style.display='none'" />` : '';
             marker.bindPopup(`
@@ -162,7 +166,7 @@ export default function ItineraryMap({
 
             if (isActive) marker.openPopup();
             markersRef.current.push(marker);
-            coords.push([pin.lat, pin.lng]);
+            coords.push([lat, lng]);
         });
 
         if (showRoute && coords.length > 1) {
