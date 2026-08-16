@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import { ItineraryData } from '@/types';
 
 export type AIMessage = {
   role: 'ai' | 'user';
@@ -10,11 +11,11 @@ export type AIMessage = {
 interface AIContextType {
   isOpen: boolean;
   messages: AIMessage[];
-  itineraryContext: any | null;
+  itineraryContext: ItineraryData | null;
   openAI: () => void;
   closeAI: () => void;
   sendMessage: (text: string) => Promise<void>;
-  registerItinerary: (data: any, updater: (newData: any) => void) => void;
+  registerItinerary: (data: ItineraryData, updater: (newData: ItineraryData) => void) => void;
   unregisterItinerary: () => void;
   applyAction: (action: { type: string; payload: any }) => void;
   isEditPanelOpen: boolean;
@@ -40,8 +41,8 @@ export function AIProvider({ children }: { children: ReactNode }) {
   const [editMessages, setEditMessages] = useState<AIMessage[]>([
     { role: 'ai', text: "Hi! ✈️ Tell me how you'd like to change your itinerary. Try: \"Remove the temple on day 2\", \"Add a local food market\", or \"Make day 1 more relaxing\"." }
   ]);
-  const [itinerary, setItinerary] = useState<any | null>(null);
-  const [itineraryUpdater, setItineraryUpdater] = useState<((data: any) => void) | null>(null);
+  const [itinerary, setItinerary] = useState<ItineraryData | null>(null);
+  const [itineraryUpdater, setItineraryUpdater] = useState<((data: ItineraryData) => void) | null>(null);
   const [lastAction, setLastAction] = useState<{ type: string; payload: any; description: string } | null>(null);
 
   const openAI = useCallback(() => setIsOpen(true), []);
