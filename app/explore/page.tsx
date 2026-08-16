@@ -64,12 +64,14 @@ function ExplorePageContent() {
     }
   }, [user?.uid]);
 
-  const filtered = ALL_DESTINATIONS.filter(d => {
-    const q = searchQuery.toLowerCase();
-    const ms = !searchQuery || d.name.toLowerCase().includes(q) || d.state.toLowerCase().includes(q) || d.tagline.toLowerCase().includes(q);
-    const mc = activeCategory === 'All' || d.category === activeCategory;
-    return ms && mc;
-  });
+  const filtered = useMemo(() => {
+    return ALL_DESTINATIONS.filter(d => {
+      const q = searchQuery.toLowerCase();
+      const ms = !searchQuery || d.name.toLowerCase().includes(q) || d.state.toLowerCase().includes(q) || d.tagline.toLowerCase().includes(q);
+      const mc = activeCategory === 'All' || d.category === activeCategory;
+      return ms && mc;
+    });
+  }, [searchQuery, activeCategory]);
 
   const toggleLike = useCallback(async (d: any) => {
     if (!user) {
