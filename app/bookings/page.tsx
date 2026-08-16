@@ -472,14 +472,6 @@ const filtersByTab = { flights: flightFilters, trains: trainFilters, cabs: cabFi
 
 export default function BookingsPage() {
   const [activeTab, setActiveTab] = useState<TabType>('flights');
-
-  // Clear results when switching tabs so stale data doesn't show
-  useEffect(() => {
-    setSearchResults([]);
-    setHasSearched(false);
-    setFormError(null);
-    setLastQuery(null);
-  }, [activeTab]);
   const [isSearching, setIsSearching] = useState(false);
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
   const [searchResults, setSearchResults] = useState<any[]>([]);
