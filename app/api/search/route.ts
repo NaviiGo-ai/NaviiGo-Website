@@ -1,9 +1,6 @@
 import { NextResponse } from 'next/server';
 import { SearchParams, searchFlights, searchTrains, searchCabs, searchHotels } from '@/lib/api/travel-search';
 
-const cache = new Map<string, { timestamp: number; data: any[] }>();
-const CACHE_TTL_MS = 10 * 60 * 1000; 
-
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -14,12 +11,6 @@ export async function POST(req: Request) {
 
     const { type, from, to, date, travelers = 1, page = 1 } = body;
     const params: SearchParams = { type, from, to, date, travelers };
-
-    const cacheKey = `${type}-${from}-${to}-${date}-${travelers}-p${page}`;
-    const cachedEntry = cache.get(cacheKey);
-    if (cachedEntry && Date.now() - cachedEntry.timestamp < CACHE_TTL_MS) {
-      return NextResponse.json({ success: true, results: cachedEntry.data, cached: true });
-    }
 
     let results: any[] = [];
     switch (type) {
@@ -39,9 +30,14 @@ export async function POST(req: Request) {
     
     results.sort((a, b) => b.score - a.score);
 
-    cache.set(cacheKey, { timestamp: Date.now(), data: results });
-
-    return NextResponse.json({ success: true, results });
+    return NextResponse.json(
+      { success: true, results },
+      {
+        headers: {
+          'Cache-Control': 'public, s-maxage=600, stale-while-revalidate=59',
+        },
+      }
+    );
   } catch (error: any) {
     console.error("Search API Error:", error);
     return NextResponse.json({ success: false, error: error.message || "Internal server error" }, { status: 500 });

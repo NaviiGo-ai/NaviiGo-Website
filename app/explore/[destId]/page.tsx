@@ -55,17 +55,23 @@ export default function DestinationDeepDive() {
         
         // Track city view start
         startCityView(destination);
+        
+        const controller = new AbortController();
+
         // Fetch immediately on mount
-        fetchDeepDive();
-        fetchEvents();
+        fetchDeepDive(controller.signal);
+        fetchEvents(controller.signal);
         // Load upcoming festivals for this destination
         setFestivals(getUpcomingFestivals(destination));
 
-        // Flush city view on unmount
-        return () => { flushCityView(); };
-    }, [destination]); // eslint-disable-line react-hooks/exhaustive-deps
+        // Flush city view and abort pending fetches on unmount or destination change
+        return () => {
+            controller.abort();
+            flushCityView();
+        };
+    }, [destination]);
 
-    const fetchDeepDive = async () => {
+    const fetchDeepDive = async (signal?: AbortSignal) => {
         setLoading(true);
         setError('');
         // Track the vibe selection for personalization
@@ -75,32 +81,40 @@ export default function DestinationDeepDive() {
             const res = await fetch(`${baseUrl}/api/explore/deep-dive`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ destination, companion, vibe })
+                body: JSON.stringify({ destination, companion, vibe }),
+                signal,
             });
             const json = await res.json();
             if (res.ok) setData(json);
             else setError(json.error || 'Failed to analyze destination.');
         } catch (e: any) {
-            setError(e.message);
+            if (e.name !== 'AbortError') {
+                setError(e.message || 'Error fetching destination deep dive');
+            }
         } finally {
-            setLoading(false);
+            if (!signal?.aborted) {
+                setLoading(false);
+            }
         }
     };
 
-    const fetchEvents = async () => {
+    const fetchEvents = async (signal?: AbortSignal) => {
         try {
             const baseUrl = '';
             const res = await fetch(`${baseUrl}/api/explore/events`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ destination })
+                body: JSON.stringify({ destination }),
+                signal,
             });
             const json = await res.json();
             if (res.ok && json.events) {
                 setLiveEvents(json.events);
             }
-        } catch (e) {
-            console.error('Failed to fetch live events:', e);
+        } catch (e: any) {
+            if (e.name !== 'AbortError') {
+                console.error('Failed to fetch live events:', e);
+            }
         }
     };
 

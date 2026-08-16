@@ -57,7 +57,7 @@ async function serpMapsSearch(query: string, lat: number, lng: number, type?: st
         ll: `@${lat},${lng},13z`,
     });
     try {
-        const res = await fetch(`${SERP_BASE}?${params}`);
+        const res = await fetch(`${SERP_BASE}?${params}`, { next: { revalidate: 86400 } });
         const data = await res.json();
         return data.local_results || [];
     } catch (e) {
@@ -76,7 +76,7 @@ async function getDestCoords(destName: string): Promise<{ lat: number; lng: numb
         type: 'search',
     });
     try {
-        const res = await fetch(`${SERP_BASE}?${params}`);
+        const res = await fetch(`${SERP_BASE}?${params}`, { next: { revalidate: 86400 } });
         const data = await res.json();
         const gps = data.search_information?.gps_coordinates || 
                      data.local_results?.[0]?.gps_coordinates;
