@@ -1,3 +1,5 @@
+import { CITY_CODES_MAP } from '@/lib/constants/destinations';
+
 export interface SearchParams {
   type: "flights" | "hotels" | "cabs" | "trains";
   from: string;
@@ -6,51 +8,7 @@ export interface SearchParams {
   travelers: number;
 }
 
-const CITY_MAP: Record<string, { iata: string; station: string }> = {
-  'mumbai': { iata: 'BOM', station: 'CSMT' },
-  'delhi': { iata: 'DEL', station: 'NDLS' },
-  'bangalore': { iata: 'BLR', station: 'SBC' },
-  'chennai': { iata: 'MAA', station: 'MAS' },
-  'kolkata': { iata: 'CCU', station: 'HWH' },
-  'hyderabad': { iata: 'HYD', station: 'SC' },
-  'pune': { iata: 'PNQ', station: 'PUNE' },
-  'ahmedabad': { iata: 'AMD', station: 'ADI' },
-  'jaipur': { iata: 'JAI', station: 'JP' },
-  'varanasi': { iata: 'VNS', station: 'BSB' },
-  'goa': { iata: 'GOI', station: 'MAO' },
-  'kochi': { iata: 'COK', station: 'ERS' },
-  'udaipur': { iata: 'UDR', station: 'UDZ' },
-  'agra': { iata: 'AGR', station: 'AGC' },
-  'rishikesh': { iata: 'DED', station: 'HW' },
-  'manali': { iata: 'KUU', station: 'CDG' },
-  'amritsar': { iata: 'ATQ', station: 'ASR' },
-  'jodhpur': { iata: 'JDH', station: 'JU' },
-  'jharsuguda': { iata: 'JRG', station: 'JSG' },
-  'patna': { iata: 'PAT', station: 'PNBE' },
-  'lucknow': { iata: 'LKO', station: 'LKO' },
-  'bhubaneswar': { iata: 'BBI', station: 'BBS' },
-  'guwahati': { iata: 'GAU', station: 'GHY' },
-  'chandigarh': { iata: 'IXC', station: 'CDG' },
-  'dehradun': { iata: 'DED', station: 'DDN' },
-  'indore': { iata: 'IDR', station: 'INDB' },
-  'bhopal': { iata: 'BHO', station: 'BPL' },
-  'ranchi': { iata: 'IXR', station: 'RNC' },
-  'raipur': { iata: 'RPR', station: 'R' },
-  'surat': { iata: 'STV', station: 'ST' },
-  'vadodara': { iata: 'BDQ', station: 'BRC' },
-  'visakhapatnam': { iata: 'VTZ', station: 'VSKP' },
-  'vijayawada': { iata: 'VGA', station: 'BZA' },
-  'tirupati': { iata: 'TIR', station: 'TPTY' },
-  'madurai': { iata: 'IXM', station: 'MDU' },
-  'coimbatore': { iata: 'CJB', station: 'CBE' },
-  'trivandrum': { iata: 'TRV', station: 'TVC' },
-  'shillong': { iata: 'SHL', station: 'GHY' },
-  'haridwar': { iata: 'DED', station: 'HW' },
-  'gaya': { iata: 'GAY', station: 'GAYA' },
-  'prayagraj': { iata: 'IXD', station: 'PRYJ' },
-  'gorakhpur': { iata: 'GOP', station: 'GKP' },
-  'kanpur': { iata: 'KNU', station: 'CNB' },
-};
+const CITY_MAP = CITY_CODES_MAP;
 
 function getCodes(cityName: string) {
   const normalized = cityName?.toLowerCase().trim();
