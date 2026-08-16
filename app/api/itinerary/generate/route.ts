@@ -3,7 +3,7 @@ import {
     badRequest, validateString, validateNumber,
     KNOWN_GROUPS, KNOWN_PURPOSES,
 } from '@/lib/validation';
-import { applyRateLimit } from '@/lib/rateLimit';
+import { applyRateLimit, getProxyHeaders } from '@/lib/rateLimit';
 
 /**
  * POST /api/itinerary/generate
@@ -93,7 +93,7 @@ export async function POST(req: NextRequest) {
 
         const pythonResponse = await fetch(`${baseUrl}/api/itinerary/generate`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', Authorization: authorization },
+            headers: { ...getProxyHeaders(req), Authorization: authorization },
             body: JSON.stringify(safeBody),
         });
 

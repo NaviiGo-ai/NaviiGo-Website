@@ -104,3 +104,15 @@ export function getClientIP(request: any): string {
   if (forwarded) return forwarded.split(',')[0].trim();
   return request.headers?.get('x-real-ip') || '0.0.0.0';
 }
+
+/**
+ * Helper to generate headers for proxying requests to backend services,
+ * preserving client IP in X-Forwarded-For.
+ */
+export function getProxyHeaders(request: any): Record<string, string> {
+  return {
+    'Content-Type': 'application/json',
+    'X-Forwarded-For': getClientIP(request),
+  };
+}
+
