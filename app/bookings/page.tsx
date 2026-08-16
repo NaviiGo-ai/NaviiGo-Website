@@ -16,6 +16,13 @@ import {
 import PlaceAutocomplete from '@/components/shared/PlaceAutocomplete';
 import TravelersSelector from '@/components/shared/TravelersSelector';
 import BookingPortal from '@/components/features/bookings/BookingPortal';
+import BookingTabs from '@/components/features/bookings/BookingTabs';
+import FlightCard from '@/components/features/bookings/FlightCard';
+import TrainCard from '@/components/features/bookings/TrainCard';
+import CabCard from '@/components/features/bookings/CabCard';
+import HotelCard from '@/components/features/bookings/HotelCard';
+import FilterChips from '@/components/features/bookings/FilterChips';
+import SortBar from '@/components/features/bookings/SortBar';
 
 type TabType = 'flights' | 'trains' | 'cabs' | 'hotels';
 

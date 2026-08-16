@@ -13,6 +13,9 @@ import {
     xpProgress, getLevelTitle, ACHIEVEMENTS, getDefaultStats,
     type PassportStats, type PassportStamp
 } from '@/lib/gamification';
+import PassportHeader from '@/components/features/passport/PassportHeader';
+import StampGrid from '@/components/features/passport/StampGrid';
+import Leaderboard from '@/components/features/passport/Leaderboard';
 
 // ─── Indian States Map Data ─────────────────────
 const INDIAN_STATES = [

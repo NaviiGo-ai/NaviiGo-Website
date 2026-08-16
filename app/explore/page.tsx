@@ -11,6 +11,9 @@ import {
 import { startCityView, trackCategoryClick } from '@/lib/browsingSignals';
 import { useAuth } from '@/lib/AuthContext';
 import { toggleBucketListItem, getUserBucketList } from '@/lib/firestore';
+import ExploreHero from '@/components/features/explore/ExploreHero';
+import BentoGrid from '@/components/features/explore/BentoGrid';
+import CuisineSection from '@/components/features/explore/CuisineSection';
 
 const CATEGORY_ICONS: Record<string, React.ReactNode> = {
   'All': <Globe className="w-3.5 h-3.5" />,
