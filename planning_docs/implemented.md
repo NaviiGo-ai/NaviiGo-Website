@@ -2,7 +2,42 @@
 
 > **Purpose:** Complete record of all features, code functionalities, and systems that are implemented and working in the NaviiGo platform. This serves as the source of truth for what's live.
 >
-> **Last Updated:** 2026-08-11
+> **Last Updated:** 2026-08-16 (Branch: `kartikey-reviewed`)
+
+---
+
+## 🚀 Branch `kartikey-reviewed` — Audit, Security & Modularization Log (2026-08-16)
+
+All 14 atomic commits executed, verified, and live on branch `kartikey-reviewed`:
+
+1. `9f57a0a` — `fix(backend): resolve proxy IP rate-limiting between Next.js & FastAPI`
+   - Fixed `SlowAPI` client IP detection by extracting `X-Forwarded-For` headers in `backend/limiter.py` and adding `getProxyHeaders()` in `lib/rateLimit.ts`.
+2. `a3e887f` — `fix(ux): eliminate window reloads & secure local/session storage calls`
+   - Created `lib/utils/storage.ts` safe storage utility handling `QuotaExceededError` and private browsing; replaced `window.location.href` in `app/passport/page.tsx` with Next.js `useRouter().push()`.
+3. `567ee43` — `fix(ui): add defensive rendering, crash guards & error boundary wrappers`
+   - Added React `ErrorBoundary` wrapper, optional chaining on array maps in `explore/[destId]/page.tsx`, and numeric coordinate validation in `ItineraryMap.tsx`.
+4. `c40b386` — `fix(perf): add AbortController on async fetches & HTTP cache headers`
+   - Implemented `AbortController` signal in destination deep dive and events fetching; added HTTP `Cache-Control` headers to search proxy API.
+5. `300f8dc` — `fix(seo): configure title template, dynamic route metadata & env fallbacks`
+   - Added `title.template` (`%s | NaviiGo`) in `app/layout.tsx` and validated production `NEXT_PUBLIC_PYTHON_API_URL`.
+6. `80c1104` — `refactor(types): establish centralized TypeScript interface definitions`
+   - Built `@/types` domain directory (`api.ts`, `booking.ts`, `itinerary.ts`, `explore.ts`, `passport.ts`, `index.ts`) and removed explicit `any` types.
+7. `3d2e7c1` — `refactor(data): consolidate destination data into Master Destination Registry`
+   - Created `lib/constants/destinations.ts` as the single authoritative destination and IATA/station code registry.
+8. `86305a2` — `refactor(backend): modularize FastAPI services & remove client AI prompt duplication`
+   - Extracted prompt construction logic into `backend/services/prompt_builder.py`.
+9. `43b3bf8` — `refactor(bookings): decompose monolithic booking page into feature components`
+   - Extracted `BookingTabs`, `FlightCard`, `TrainCard`, `CabCard`, `HotelCard`, `FilterChips`, `SortBar` components in `components/features/bookings/`.
+10. `aa7f674` — `refactor(explore, passport): decompose monoliths & optimize image assets`
+    - Extracted `ExploreHero`, `BentoGrid`, `CuisineSection`, `PassportHeader`, `StampGrid`, `Leaderboard` components.
+11. `abec83e` — `feat(hooks): introduce custom data fetching hooks with SWR client caching`
+    - Built `useDeepDive`, `useEvents`, `useSearchResults` hooks with in-memory caching.
+12. `70dfeff` — `refactor: integrate modular subcomponents across bookings, explore & passport pages`
+    - Integrated feature subcomponents directly into `app/bookings/page.tsx`, `app/explore/page.tsx`, and `app/passport/page.tsx`.
+13. `774ef2d` — `fix(itinerary): restore customPlans state definition in DayViewPage.tsx`
+    - Resolved `customPlans is not defined` runtime error in `components/features/itinerary/DayViewPage.tsx`.
+14. `3359c5c` — `fix(explore): import useMemo hook in app/explore/page.tsx`
+    - Resolved `useMemo is not defined` runtime error in `app/explore/page.tsx`.
 
 ---
 

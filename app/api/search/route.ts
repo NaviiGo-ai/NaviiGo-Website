@@ -22,13 +22,17 @@ export async function POST(req: Request) {
     }
 
     // Enrich results with metadata for deep link builders
-    results.forEach(res => {
-      const baseRating = res.rating || (res.stars ? res.stars : 4.0);
-      res.score = (baseRating * 1000) - (res.priceNum || Number.MAX_SAFE_INTEGER);
-      res._date = date; // Pass search date to booking portal for OTA deep links
-    });
-    
-    results.sort((a, b) => b.score - a.score);
+    if (Array.isArray(results)) {
+      results.forEach(res => {
+        if (!res) return;
+        const baseRating = res.rating || (res.stars ? res.stars : 4.0);
+        res.score = (baseRating * 1000) - (res.priceNum || Number.MAX_SAFE_INTEGER);
+        res._date = date; // Pass search date to booking portal for OTA deep links
+      });
+      results.sort((a, b) => (b.score || 0) - (a.score || 0));
+    } else {
+      results = [];
+    }
 
     return NextResponse.json(
       { success: true, results },
