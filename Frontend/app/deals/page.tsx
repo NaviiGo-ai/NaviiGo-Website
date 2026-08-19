@@ -168,10 +168,10 @@ export default function MetasearchDealsPage() {
   return (
     <>
       <style>{pulse}</style>
-      <div className="min-h-screen bg-black pt-20 sm:pt-28 pb-12 relative overflow-hidden">
+      <div className="min-h-screen bg-background text-foreground pt-20 sm:pt-28 pb-12 relative overflow-hidden font-sans">
         {/* Background Ornaments */}
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-orange-500/10 rounded-full blur-[120px] pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-emerald-500/10 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[120px] pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[120px] pointer-events-none" />
 
         <div className="max-w-7xl mx-auto px-4 relative z-10">
           {/* Header */}
@@ -180,17 +180,17 @@ export default function MetasearchDealsPage() {
             animate={{ opacity: 1, y: 0 }}
             className="text-center mb-16"
           >
-            <div className="inline-block px-4 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-400 text-xs font-black uppercase tracking-widest mb-6 backdrop-blur-md">
+            <div className="inline-block px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-bold uppercase tracking-widest mb-6 backdrop-blur-md">
               Global MetaSearch Partner
             </div>
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-6 uppercase tracking-tight leading-[1.1]">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-foreground mb-6 uppercase tracking-tight leading-[1.1] font-serif">
               Global Travel
               <br />
-              <span className="bg-gradient-to-r from-orange-400 to-amber-500 bg-clip-text text-transparent">
+              <span className="text-primary">
                 Deals &amp; Aggregator
               </span>
             </h1>
-            <p className="text-zinc-400 max-w-2xl mx-auto text-lg">
+            <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
               Compare prices across 500+ airlines and top hotels. Engineered by TravelPayouts &amp; NaviiGo.
             </p>
 

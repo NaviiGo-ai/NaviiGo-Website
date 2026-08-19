@@ -212,62 +212,9 @@ export default function BookingsPage() {
 
   useEffect(() => {
     setMounted(true);
-
-    // Performance Fix: Avoid heavy querySelectorAll DOM polling. Inject CSS directly instead.
-    let attempts = 0;
-    const applyTheme = () => {
-      const tpwl = document.getElementById('tpwl-search');
-      if (!tpwl) return false;
-      const isDark = document.documentElement.classList.contains('dark');
-      if (!isDark) return false;
-
-      // Overwrite Native TravelPayouts CSS Variables that leak the white highlights
-      tpwl.style.setProperty('--border-color', '#27272a', 'important');
-      tpwl.style.setProperty('--ticket-cards-background', '#18181b', 'important');
-      tpwl.style.setProperty('--main-accent-contrast-color', '#18181b', 'important');
-
-      // 1. Inject into Shadow DOM if exists
-      const sRoot = tpwl.shadowRoot || tpwl.children[0]?.shadowRoot;
-      if (sRoot && !sRoot.getElementById('naviigo-shadow-override')) {
-        const styleTag = document.createElement('style');
-        styleTag.id = 'naviigo-shadow-override';
-        styleTag.innerHTML = `
-            div[class*="Passengers"], div[class*="passengers" i] { background: #18181b !important; color: white !important; }
-            input { background: transparent !important; box-shadow: none !important; }
-            div { border-color: #27272a !important; outline: none !important; gap: 0 !important; }
-            div[class*="divider"], div[class*="separator"] { background: transparent !important; }
-            *::before, *::after { background-color: #18181b !important; border-color: #27272a !important; box-shadow: none !important; }
-        `;
-        sRoot.appendChild(styleTag);
-        return true; // Successfully patched shadow DOM
-      }
-
-      // 2. Inject global light DOM overrides once
-      if (!document.getElementById('naviigo-light-override')) {
-        const styleTag = document.createElement('style');
-        styleTag.id = 'naviigo-light-override';
-        styleTag.innerHTML = `
-            #tpwl-search div[class*="passengers" i], #tpwl-search div[class*="Passengers"] { background-color: #18181b !important; background: #18181b !important; color: #ffffff !important; }
-            #tpwl-search input { background-color: transparent !important; box-shadow: none !important; }
-            #tpwl-search * { border-color: #27272a !important; }
-            #tpwl-search [class*="divider"], #tpwl-search [class*="separator"] { background-color: transparent !important; }
-        `;
-        document.head.appendChild(styleTag);
-      }
-      return false; // Waiting for shadow dom
-    };
-
-    const interval = setInterval(() => {
-      const patched = applyTheme();
-      attempts++;
-      if (patched || attempts > 40) clearInterval(interval);
-    }, 150);
-
-    return () => clearInterval(interval);
   }, []);
 
   const handleOpenPortal = (item: any, type: any) => {
-    // Enrich item with search context for deep link pre-filling
     const enrichedItem = {
       ...item,
       _travelers: travelers,
@@ -289,12 +236,10 @@ export default function BookingsPage() {
 
     const formData = e?.currentTarget ? Object.fromEntries(new FormData(e.currentTarget)) : {};
 
-    // Unify date for hotels (checkin -> date)
     const normalizedDate = formData.date || formData.checkin || "";
     const from = (formData.from as string) || '';
     const to = (formData.to as string) || '';
 
-    // Validation — hotels only need destination + date, others need from + to + date
     if (activeTab === 'hotels') {
       if (!to || !normalizedDate) {
         setFormError("Please fill in destination and check-in date.");
@@ -313,7 +258,7 @@ export default function BookingsPage() {
 
     const query = {
       ...formData,
-      from: from || to, // Hotels don't have 'from', use destination
+      from: from || to,
       to,
       date: normalizedDate,
       type: activeTab,
@@ -380,8 +325,6 @@ export default function BookingsPage() {
     return () => ctx.revert();
   }, [activeTab, isSearching, searchResults.length]);
 
-  const tab = tabConfig.find(t => t.id === activeTab)!;
-
   const renderForm = () => {
     if (activeTab === 'flights') return <FlightForm onTravelersChange={(val) => setTravelers(parseInt(val))} />;
     if (activeTab === 'trains') return <TrainForm onTravelersChange={(val) => setTravelers(parseInt(val))} />;
@@ -392,10 +335,8 @@ export default function BookingsPage() {
   const renderResults = () => {
     let list = searchResults;
 
-    // Apply basic frontend filtering if Staycations is selected
     if (activeTab === 'hotels' && activeFilters.includes('Staycations & Resorts')) {
         list = list.filter((h: any) => h.stars >= 4 || h.tags?.includes('Luxury') || h.name?.toLowerCase().includes('resort'));
-        // If list becomes empty, we just show a curated fallback
         if (list.length === 0) {
             list = [{ id: 'staycation-1', name: 'Curated Weekend Resort & Spa', area: lastQuery?.to || 'City Center', stars: 5, price: '₹12,000', priceNum: 12000, perNight: '/night', rating: 4.9, reviews: 120, amenities: ['Spa', 'Pool', 'Breakfast'], tags: ['Staycation', 'Luxury'], image: '🌴', refundable: true, distance: 'Secluded getaway', badge: 'bestvalue', deepLink: `https://www.agoda.com/search?text=${encodeURIComponent('Resorts in ' + (lastQuery?.to || 'India'))}` }];
         }
@@ -403,7 +344,7 @@ export default function BookingsPage() {
 
     if (list.length === 0) return (
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-12">
-        <p className="text-zinc-400 text-sm">No results found. Try a different route or date.</p>
+        <p className="text-muted-foreground text-sm">No results found. Try a different route or date.</p>
       </motion.div>
     );
     const parsePrice = (p: any) => {
@@ -428,7 +369,7 @@ export default function BookingsPage() {
       if (sortOption === 'Rating') {
         return (parseFloat(b.rating) || 0) - (parseFloat(a.rating) || 0);
       }
-      return 0; // Default or Departure Time
+      return 0;
     });
 
     const paginated = list.slice(0, resultsPage * 10);
@@ -451,24 +392,22 @@ export default function BookingsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-[#050505] pt-20 sm:pt-24 pb-24 px-4 sm:px-6 md:px-10 font-sans">
+    <div className="min-h-screen bg-background text-foreground pt-20 sm:pt-24 pb-24 px-4 sm:px-6 md:px-10 font-sans">
       <style>{`
         .input-field {
           width: 100%;
-          background: rgb(244 244 245);
-          border: 2px solid;
-          border-color: rgb(244 244 245);
+          background: var(--input);
+          border: 1px solid var(--border);
           border-radius: 0.875rem;
           padding: 0.875rem 1rem;
           outline: none;
           font-size: 0.9rem;
           font-weight: 500;
           transition: all 0.2s;
-          color: inherit;
+          color: var(--foreground);
         }
-        /* Fix for date input native icons overlap and padding */
         input[type="date"] {
-          padding-left: 2.75rem !important; /* pl-11 equivalent to clear icon */
+          padding-left: 2.75rem !important;
           display: flex;
           align-items: center;
         }
@@ -489,29 +428,26 @@ export default function BookingsPage() {
           display: none;
           -webkit-appearance: none;
         }
-        .dark .input-field { background: rgb(24 24 27); border-color: rgb(24 24 27); }
-        .input-field:focus { border-color: rgb(249 115 22); background: white; }
-        .dark .input-field:focus { background: black; }
+        .input-field:focus { border-color: var(--primary); background: var(--card); }
         
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #e4e4e7; border-radius: 10px; }
-        .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #27272a; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
       `}</style>
 
       <div className="max-w-6xl mx-auto">
 
         {/* Hero Header */}
         <motion.div initial={{ opacity: 0, y: -16 }} animate={{ opacity: 1, y: 0 }} className="mb-8 text-center">
-          <h1 className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight">
-            Book Your <span className="bg-gradient-to-r from-orange-500 to-rose-500 bg-clip-text text-transparent">Travel</span>
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-foreground tracking-tight font-serif">
+            Book Your <span className="text-primary">Travel</span>
           </h1>
-          <p className="text-zinc-500 mt-2 text-sm">Compare prices across <span className="font-semibold text-slate-700 dark:text-zinc-300">50+ travel platforms</span> · Powered by NaviiGo</p>
+          <p className="text-muted-foreground mt-2 text-sm">Compare prices across <span className="font-semibold text-foreground">50+ travel platforms</span> · Powered by NaviiGo</p>
         </motion.div>
 
         {/* Navigation Tabs */}
         <div className="flex justify-center mb-8">
-          <div className="inline-flex flex-wrap justify-center items-center p-1.5 bg-white dark:bg-[#111] border border-zinc-100 dark:border-white/5 rounded-2xl shadow-sm gap-1 sm:gap-0">
+          <div className="inline-flex flex-wrap justify-center items-center p-1.5 bg-card border border-border rounded-2xl shadow-sm gap-1 sm:gap-0">
             {tabConfig.map(t => {
               const isActive = activeTab === t.id;
               const Icon = t.icon;
@@ -519,15 +455,10 @@ export default function BookingsPage() {
                 <button
                   key={t.id}
                   onClick={() => setActiveTab(t.id)}
-                  className={`relative flex items-center gap-2 px-4 sm:px-6 py-2.5 rounded-xl font-bold text-sm transition-all duration-300 ${isActive ? `bg-zinc-100 dark:bg-white/10 ${t.color}` : 'text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300'}`}
+                  className={`relative flex items-center gap-2 px-4 sm:px-6 py-2.5 rounded-xl font-bold text-sm transition-all duration-300 ${isActive ? 'bg-primary text-primary-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground hover:bg-accent'}`}
                 >
                   <Icon className="w-4 h-4" />
                   {t.label}
-                  {(t.id === 'trains' || t.id === 'cabs') && (
-                    <span className="absolute -top-2 -right-2 bg-rose-500 text-white text-[9px] font-black uppercase px-1.5 py-0.5 rounded shadow-sm">
-                      Demo
-                    </span>
-                  )}
                 </button>
               );
             })}
@@ -538,34 +469,34 @@ export default function BookingsPage() {
         <motion.div
           initial={{ opacity: 0, y: -12 }}
           animate={{ opacity: 1, y: 0 }}
-          className="mb-8 rounded-[1.75rem] overflow-hidden bg-white dark:bg-[#111] border border-zinc-100 dark:border-white/5 shadow-xl shadow-black/5 dark:shadow-black/20 p-4 sm:p-6"
+          className="mb-8 rounded-[1.75rem] overflow-hidden bg-card border border-border shadow-xl p-4 sm:p-6"
         >
-          {/* TravelPayouts Metasearch Widget (Always in DOM for Script, visually hidden if not flights) */}
+          {/* TravelPayouts Metasearch Widget */}
           <div className={activeTab === 'flights' ? 'block' : 'hidden'}>
             <div id="tpwl-search">
-              <div className="w-full h-[300px] flex flex-col items-center justify-center text-zinc-500 bg-white/50 dark:bg-black/20 rounded-2xl animate-pulse">
-                <Plane className="w-8 h-8 mb-3 opacity-50" />
+              <div className="w-full h-[300px] flex flex-col items-center justify-center text-muted-foreground bg-muted/30 rounded-2xl animate-pulse">
+                <Plane className="w-8 h-8 mb-3 opacity-50 text-primary" />
                 <p>Initializing Global Flight Search Engine...</p>
               </div>
             </div>
           </div>
 
-          {/* Native NaviiGo Forms (For Trains, Cabs, Hotels) */}
+          {/* Native NaviiGo Forms */}
           {activeTab !== 'flights' && (
             <form onSubmit={handleSearch}>
               {renderForm()}
               <FilterChips options={filtersByTab[activeTab]} active={activeFilters} onToggle={toggleFilter} />
 
               {formError && (
-                <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mt-6 p-4 rounded-xl bg-rose-50 border border-rose-200 dark:bg-rose-900/10 dark:border-rose-800/30 text-rose-600 dark:text-rose-400 text-sm font-semibold flex items-center justify-center gap-2">
+                <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mt-6 p-4 rounded-xl bg-destructive/10 border border-destructive/30 text-destructive text-sm font-semibold flex items-center justify-center gap-2">
                   <AlertTriangle className="w-4 h-4" />
                   {formError}
                 </motion.div>
               )}
 
               <div className="mt-6 flex justify-center">
-                <button type="submit" disabled={isSearching} className={`group relative flex items-center justify-center gap-2 w-full sm:w-auto px-10 py-3.5 rounded-xl bg-gradient-to-r ${tabConfig.find(t => t.id === activeTab)?.accent} text-white font-black text-lg hover:shadow-xl hover:-translate-y-1 transition-all duration-300 disabled:opacity-50 overflow-hidden`}>
-                  {isSearching ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Search className="w-5 h-5" />}
+                <button type="submit" disabled={isSearching} className="group relative flex items-center justify-center gap-2 w-full sm:w-auto px-10 py-3.5 rounded-xl bg-primary text-primary-foreground font-bold text-lg hover:bg-primary/90 transition-all duration-300 disabled:opacity-50 shadow-md">
+                  {isSearching ? <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" /> : <Search className="w-5 h-5" />}
                   {isSearching ? 'Searching...' : `Search ${tabConfig.find(t => t.id === activeTab)?.label}`}
                 </button>
               </div>

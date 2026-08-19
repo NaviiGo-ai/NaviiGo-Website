@@ -56,37 +56,38 @@ export default function SavedPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f7f8fc] dark:bg-[#0a0a0f] pt-20 sm:pt-32 px-4 sm:px-6 md:px-12 pb-24">
+  return (
+    <div className="min-h-screen bg-background text-foreground pt-20 sm:pt-32 px-4 sm:px-6 md:px-12 pb-24 font-sans">
       <div className="max-w-7xl mx-auto">
         <motion.div
           initial={{ opacity: 0, x: -30 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.8 }}
-          className="mb-16 border-b border-zinc-200 dark:border-white/5 pb-8 flex justify-between items-end"
+          className="mb-16 border-b border-border pb-8 flex justify-between items-end"
         >
           <div>
-            <h1 className="text-3xl sm:text-5xl md:text-7xl font-bold tracking-tighter text-zinc-900 dark:text-white">Your <span className="italic font-serif text-emerald-500">Saved</span> Trips.</h1>
-            <p className="text-zinc-500 dark:text-zinc-400 mt-4 text-lg">Pick up right where you left off.</p>
+            <h1 className="text-3xl sm:text-5xl md:text-7xl font-extrabold tracking-tighter text-foreground font-serif">Your <span className="italic text-primary">Saved</span> Trips.</h1>
+            <p className="text-muted-foreground mt-4 text-lg">Pick up right where you left off.</p>
           </div>
           {savedItems.length > 0 && (
-            <button onClick={handleClearAll} className="hidden md:block text-sm font-medium uppercase tracking-widest text-zinc-400 hover:text-red-500 transition-colors">Clear All</button>
+            <button onClick={handleClearAll} className="hidden md:block text-sm font-bold uppercase tracking-widest text-muted-foreground hover:text-destructive transition-colors">Clear All</button>
           )}
         </motion.div>
 
         {/* Not logged in */}
         {!user && (
           <div className="text-center py-20">
-            <LogIn className="w-12 h-12 text-zinc-300 dark:text-zinc-600 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-zinc-800 dark:text-zinc-200 mb-2">Sign in to see your saved trips</h3>
-            <p className="text-zinc-500 mb-6">Your itineraries are saved to the cloud and sync across devices.</p>
-            <button onClick={signInWithGoogle} className="px-6 py-3 bg-emerald-600 text-white rounded-full font-semibold hover:bg-emerald-500 transition-colors">Sign In with Google</button>
+            <LogIn className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+            <h3 className="text-xl font-bold text-foreground mb-2">Sign in to see your saved trips</h3>
+            <p className="text-muted-foreground mb-6">Your itineraries are saved to the cloud and sync across devices.</p>
+            <button onClick={signInWithGoogle} className="px-6 py-3 bg-primary text-primary-foreground rounded-full font-bold hover:bg-primary/90 transition-colors shadow-sm">Sign In with Google</button>
           </div>
         )}
 
         {/* Loading */}
         {user && loading && (
           <div className="flex items-center justify-center py-20">
-            <div className="w-8 h-8 border-3 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+            <div className="w-8 h-8 border-3 border-primary border-t-transparent rounded-full animate-spin" />
           </div>
         )}
 
@@ -94,9 +95,9 @@ export default function SavedPage() {
         {user && !loading && savedItems.length === 0 && (
           <div className="text-center py-20">
             <div className="text-6xl mb-4">🧳</div>
-            <h3 className="text-xl font-semibold text-zinc-800 dark:text-zinc-200 mb-2">No saved trips yet</h3>
-            <p className="text-zinc-500 mb-6">Start planning your next adventure to save it here.</p>
-            <button onClick={() => router.push('/itinerary')} className="px-6 py-3 bg-emerald-600 text-white rounded-full font-semibold hover:bg-emerald-500 transition-colors">Start Planning</button>
+            <h3 className="text-xl font-bold text-foreground mb-2">No saved trips yet</h3>
+            <p className="text-muted-foreground mb-6">Start planning your next adventure to save it here.</p>
+            <button onClick={() => router.push('/itinerary')} className="px-6 py-3 bg-primary text-primary-foreground rounded-full font-bold hover:bg-primary/90 transition-colors shadow-sm">Start Planning</button>
           </div>
         )}
 
@@ -119,33 +120,33 @@ export default function SavedPage() {
               return (
                 <motion.div key={saved.id} variants={itemAnim}
                   onClick={() => router.push(`/itinerary?load=${saved.id}`)}
-                  className="group cursor-pointer bg-white dark:bg-zinc-900 rounded-3xl p-3 border border-zinc-100 dark:border-white/5 shadow-sm hover:shadow-xl transition-all"
+                  className="group cursor-pointer bg-card text-card-foreground rounded-3xl p-3 border border-border shadow-sm hover:shadow-xl transition-all"
                 >
-                  <div className="relative h-48 rounded-2xl overflow-hidden mb-4">
+                  <div className="relative h-48 rounded-2xl overflow-hidden mb-4 border border-border">
                     {imgUrl ? (
                       <Image src={imgUrl} alt={title} fill className="object-cover group-hover:scale-105 transition-transform duration-700 ease-out" sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" />
                     ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
-                        <Plane className="w-12 h-12 text-white/40" />
+                      <div className="w-full h-full bg-primary/20 flex items-center justify-center">
+                        <Plane className="w-12 h-12 text-primary" />
                       </div>
                     )}
-                    <div className="absolute top-3 left-3 bg-white/90 dark:bg-black/80 backdrop-blur-sm px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider text-zinc-800 dark:text-zinc-200 shadow-sm">
+                    <div className="absolute top-3 left-3 bg-background/90 backdrop-blur-sm px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider text-foreground border border-border shadow-xs">
                       {typeLabel}
                     </div>
-                    <button onClick={(e) => handleDelete(e, saved.id)} className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 dark:bg-black/80 flex items-center justify-center text-red-500 opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500 hover:text-white shadow-sm z-10">✕</button>
+                    <button onClick={(e) => handleDelete(e, saved.id)} className="absolute top-3 right-3 w-8 h-8 rounded-full bg-background/90 flex items-center justify-center text-destructive opacity-0 group-hover:opacity-100 transition-all hover:bg-destructive hover:text-destructive-foreground shadow-xs z-10">✕</button>
                   </div>
                   <div className="px-2 pb-2">
-                    <h3 className="text-xl font-bold mb-1 text-zinc-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">{title}</h3>
+                    <h3 className="text-xl font-bold mb-1 text-card-foreground group-hover:text-primary transition-colors font-serif">{title}</h3>
                     <div className="flex justify-between items-center mt-2">
-                      <p className="text-zinc-500 font-medium text-sm">{dates}</p>
-                      {form.budget && <p className="text-emerald-600 dark:text-emerald-400 font-bold text-sm">₹{Number(form.budget).toLocaleString('en-IN')}</p>}
+                      <p className="text-muted-foreground font-medium text-sm">{dates}</p>
+                      {form.budget && <p className="text-primary font-bold text-sm">₹{Number(form.budget).toLocaleString('en-IN')}</p>}
                     </div>
                   </div>
                 </motion.div>
               );
             })}
 
-            <motion.div variants={itemAnim} onClick={() => router.push('/itinerary')} className="h-full min-h-[280px] rounded-3xl border-2 border-dashed border-zinc-200 dark:border-zinc-800 flex flex-col items-center justify-center text-zinc-400 hover:text-emerald-500 hover:border-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-colors cursor-pointer group">
+            <motion.div variants={itemAnim} onClick={() => router.push('/itinerary')} className="h-full min-h-[280px] rounded-3xl border-2 border-dashed border-border flex flex-col items-center justify-center text-muted-foreground hover:text-primary hover:border-primary hover:bg-primary/5 transition-colors cursor-pointer group">
               <span className="text-4xl mb-3 group-hover:scale-110 transition-transform">➕</span>
               <span className="font-bold">Plan New Trip</span>
             </motion.div>

@@ -5,12 +5,12 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import React from "react";
 import { useClickOutside } from "./use-click-outside";
 import { useAI } from "@/context/AIContext";
-import { Sparkles, X, Send, Bot, Calendar, Trash2, ArrowRight } from "lucide-react";
+import { Sparkles, X, Send, Bot } from "lucide-react";
 
 const SiriOrb = ({ size }: { size?: string }) => (
   <div 
-    style={{ width: size, height: size, background: 'linear-gradient(45deg, #0ba360 0%, #3cba92 100%)', borderRadius: '50%' }} 
-    className="animate-pulse shadow-lg shadow-emerald-500/20" 
+    style={{ width: size, height: size, background: 'linear-gradient(45deg, var(--primary) 0%, oklch(0.60 0.14 165) 100%)', borderRadius: '50%' }} 
+    className="animate-pulse shadow-md shadow-primary/20" 
   />
 );
 
@@ -27,14 +27,14 @@ const CLOSE_DELAY = 0.08;
 
 export function MorphSurface() {
   const rootRef = React.useRef<HTMLDivElement>(null);
-  const { isOpen, openAI, closeAI, itineraryContext } = useAI();
+  const { isOpen, closeAI } = useAI();
   const shouldReduceMotion = useReducedMotion();
 
   useClickOutside(rootRef, closeAI);
 
   return (
     <div
-      className="flex items-center justify-center fixed bottom-6 left-1/2 -translate-x-1/2 z-[100]"
+      className="flex items-center justify-center fixed bottom-4 right-4 sm:bottom-6 sm:right-8 z-[100] max-w-[calc(100vw-32px)]"
       style={{
         width: isOpen ? CHAT_WIDTH : 'auto',
         height: isOpen ? CHAT_HEIGHT : DOCK_HEIGHT,
@@ -51,10 +51,10 @@ export function MorphSurface() {
             }
         }
         className={cx(
-          "relative z-3 flex flex-col overflow-hidden border shadow-2xl transition-shadow backdrop-blur-2xl px-1",
+          "relative z-3 flex flex-col overflow-hidden border shadow-2xl transition-all backdrop-blur-2xl px-1",
           isOpen
-            ? "bg-zinc-950/95 border-white/10"
-            : "bg-black/90 border-white/10 hover:border-emerald-500/30"
+            ? "bg-card/95 border-border text-card-foreground"
+            : "bg-card/90 border-border hover:border-primary/40 text-card-foreground"
         )}
         data-footer
         initial={false}
@@ -95,11 +95,11 @@ function Dock() {
     >
       <div className="flex items-center gap-2.5 px-5">
         <SiriOrb size="20px" />
-        <span className="font-bold text-xs tracking-wide text-zinc-300 uppercase">
+        <span className="font-bold text-xs tracking-wide text-foreground uppercase">
           {itineraryContext ? 'Plan Assistant' : 'Ask AI'}
         </span>
         {itineraryContext && (
-          <div className="flex items-center gap-1 bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-tighter">
+          <div className="flex items-center gap-1 bg-primary/20 text-primary px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-tighter">
             <Sparkles className="w-2.5 h-2.5" /> Live
           </div>
         )}
@@ -138,11 +138,9 @@ function ChatPanel() {
 
   // Detect if an AI message suggests adding/removing something
   const detectSuggestion = React.useCallback((text: string): { type: 'add' | 'remove' | null; name: string; dayIndex: number } => {
-    // Extract day number if mentioned (default to 0)
     const dayMatch = text.match(/Day\s*(\d+)/i);
-    const dayIndex = dayMatch ? parseInt(dayMatch[1], 10) - 1 : 0; // Day 1 = index 0
+    const dayIndex = dayMatch ? parseInt(dayMatch[1], 10) - 1 : 0;
 
-    // Broad add detection
     const addPatterns = [
       /(?:add|include|insert|try adding)\s+(?:a\s+)?(.+?)(?:\s+to\s+(?:your|the)\s+(?:Day|itinerary))/i,
       /I'?d\s+love\s+to\s+add\s+(.+?)(?:\s+to\s+your)/i,
@@ -156,7 +154,6 @@ function ChatPanel() {
       if (m) return { type: 'add', name: m[1].replace(/["""*_]/g, '').trim(), dayIndex };
     }
 
-    // Broad remove detection
     const removePatterns = [
       /(?:remove|drop|skip|cut|take out)\s+(?:the\s+)?(.+?)(?:\s+(?:from|on)\s+(?:your|the|Day))/i,
       /(?:removing|remove)\s+(.+?)(?:\s+(?:would|could|will|to))/i,
@@ -171,7 +168,6 @@ function ChatPanel() {
 
   const handleQuickAdd = React.useCallback((name: string, dayIndex: number) => {
     if (!itineraryContext?.dayPlans) return;
-    // Clamp dayIndex to valid range
     const di = Math.min(dayIndex, (itineraryContext.dayPlans.length || 1) - 1);
     if (!itineraryContext.dayPlans[di]) return;
     applyAction({
@@ -209,20 +205,20 @@ function ChatPanel() {
       transition={{ duration: 0.2 }}
     >
       {/* Header */}
-      <div className="flex items-center gap-3 px-5 py-4 border-b border-white/5 shrink-0">
-        <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
-          <Bot className="w-5 h-5 text-emerald-500" />
+      <div className="flex items-center gap-3 px-5 py-4 border-b border-border shrink-0">
+        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center border border-primary/20 text-primary">
+          <Bot className="w-5 h-5" />
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="font-black text-xs uppercase tracking-widest text-white">NaviiGo AI</h3>
+          <h3 className="font-bold text-xs uppercase tracking-widest text-foreground font-sans">NaviiGo AI</h3>
           <div className="flex items-center gap-1.5">
-            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            <p className="text-[10px] text-emerald-500 font-bold uppercase tracking-tight">Active Awareness</p>
+            <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+            <p className="text-[10px] text-primary font-bold uppercase tracking-tight">Active Awareness</p>
           </div>
         </div>
         <button
           onClick={closeAI}
-          className="w-8 h-8 rounded-full hover:bg-white/5 flex items-center justify-center text-zinc-500 hover:text-white transition-colors"
+          className="w-8 h-8 rounded-full hover:bg-accent flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
         >
           <X className="w-4 h-4" />
         </button>
@@ -236,16 +232,16 @@ function ChatPanel() {
           <div key={i} className="space-y-2">
             <div className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
             {msg.role === 'ai' && (
-              <div className="w-7 h-7 rounded-full bg-emerald-500/20 flex items-center justify-center flex-shrink-0 mt-0.5 border border-emerald-500/30">
-                <Sparkles className="w-3.5 h-3.5 text-emerald-500" />
+              <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0 mt-0.5 border border-primary/30 text-primary">
+                <Sparkles className="w-3.5 h-3.5" />
               </div>
             )}
             <div
               className={cx(
-                "max-w-[85%] rounded-2xl px-4 py-3 text-[13px] leading-relaxed shadow-sm",
+                "max-w-[85%] rounded-2xl px-4 py-3 text-[13px] leading-relaxed shadow-xs",
                 msg.role === 'ai'
-                  ? "bg-zinc-900 border border-white/5 text-zinc-300 rounded-tl-md"
-                  : "bg-emerald-600 text-white rounded-tr-md ml-auto font-medium"
+                  ? "bg-muted border border-border text-foreground rounded-tl-md"
+                  : "bg-primary text-primary-foreground rounded-tr-md ml-auto font-medium"
               )}
             >
               {msg.text}
@@ -257,7 +253,7 @@ function ChatPanel() {
               {suggestion.type === 'add' && (
                 <button
                   onClick={() => handleQuickAdd(suggestion.name, suggestion.dayIndex)}
-                  className="flex items-center gap-1.5 text-[11px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-xl px-3 py-1.5 hover:bg-emerald-500/30 transition-colors"
+                  className="flex items-center gap-1.5 text-[11px] font-bold bg-primary/20 text-primary border border-primary/30 rounded-xl px-3 py-1.5 hover:bg-primary/30 transition-colors"
                 >
                   <span className="text-sm">➕</span> Add {suggestion.name.length > 20 ? suggestion.name.slice(0, 20) + '…' : suggestion.name}
                 </button>
@@ -265,7 +261,7 @@ function ChatPanel() {
               {suggestion.type === 'remove' && (
                 <button
                   onClick={() => handleQuickRemove(suggestion.name)}
-                  className="flex items-center gap-1.5 text-[11px] font-bold bg-red-500/20 text-red-400 border border-red-500/30 rounded-xl px-3 py-1.5 hover:bg-red-500/30 transition-colors"
+                  className="flex items-center gap-1.5 text-[11px] font-bold bg-destructive/20 text-destructive border border-destructive/30 rounded-xl px-3 py-1.5 hover:bg-destructive/30 transition-colors"
                 >
                   <span className="text-sm">➖</span> Remove {suggestion.name.length > 20 ? suggestion.name.slice(0, 20) + '…' : suggestion.name}
                 </button>
@@ -280,18 +276,18 @@ function ChatPanel() {
         <AnimatePresence>
             {lastAction && (
                 <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
-                    className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-4 mt-2 shadow-sm">
-                    <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+                    className="bg-primary/10 border border-primary/20 rounded-2xl p-4 mt-2 shadow-xs">
+                    <p className="text-[10px] text-primary font-bold uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
                         <Sparkles className="w-3.5 h-3.5" /> AI Suggests a Change
                     </p>
-                    <p className="text-xs font-semibold text-zinc-200 mb-3">{lastAction.description}</p>
+                    <p className="text-xs font-semibold text-foreground mb-3">{lastAction.description}</p>
                     <div className="flex gap-2">
                         <button onClick={handleAcceptAction}
-                            className="flex-1 bg-emerald-500 hover:bg-emerald-400 text-white text-[11px] font-bold rounded-xl py-2 transition-colors">
+                            className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground text-[11px] font-bold rounded-xl py-2 transition-colors">
                             ✓ Apply Change
                         </button>
                         <button onClick={clearLastAction}
-                            className="flex-1 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-[11px] font-bold rounded-xl py-2 transition-colors">
+                            className="flex-1 bg-muted hover:bg-accent text-foreground text-[11px] font-bold rounded-xl py-2 transition-colors border border-border">
                             ✕ Skip
                         </button>
                     </div>
@@ -309,7 +305,7 @@ function ChatPanel() {
             <button
               key={q}
               onClick={() => sendMessage(q)}
-              className="text-[10px] font-bold uppercase tracking-wide bg-zinc-900 border border-white/5 rounded-full px-3.5 py-2 text-zinc-400 hover:border-emerald-500/50 hover:text-emerald-400 transition-all"
+              className="text-[10px] font-bold uppercase tracking-wide bg-secondary text-secondary-foreground border border-border rounded-full px-3.5 py-2 hover:bg-accent hover:text-accent-foreground transition-all"
             >
               {q}
             </button>
@@ -318,21 +314,21 @@ function ChatPanel() {
       </div>
 
       {/* Input */}
-      <div className="p-4 border-t border-white/5 shrink-0">
+      <div className="p-4 border-t border-border shrink-0">
         <form
           onSubmit={handleSubmit}
-          className="flex items-center gap-2 bg-zinc-900 border border-white/10 rounded-2xl pl-4 pr-1.5 py-1.5 focus-within:border-emerald-500/50 transition-colors"
+          className="flex items-center gap-2 bg-input border border-border rounded-2xl pl-4 pr-1.5 py-1.5 focus-within:ring-2 focus-within:ring-ring transition-all"
         >
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Help me with my trip..."
-            className="flex-1 bg-transparent text-sm outline-none text-zinc-200 placeholder:text-zinc-600 font-medium"
+            className="flex-1 bg-transparent text-sm outline-none text-foreground placeholder:text-muted-foreground font-medium"
           />
           <button
             type="submit"
-            className="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center hover:bg-emerald-500 transition-all flex-shrink-0 disabled:opacity-40 disabled:scale-95"
+            className="w-9 h-9 rounded-xl bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/90 transition-all flex-shrink-0 disabled:opacity-40 disabled:scale-95"
             disabled={!input.trim()}
           >
             <Send className="w-4 h-4" />

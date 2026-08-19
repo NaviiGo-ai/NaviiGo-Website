@@ -93,7 +93,7 @@ function ExplorePageContent() {
   const go = (name: string) => { startCityView(name); router.push(`/explore/${encodeURIComponent(name)}`); };
 
   return (
-    <div className="min-h-screen bg-[#f5f5f7] dark:bg-[#000000] overflow-x-hidden w-full max-w-[100vw]">
+    <div className="min-h-screen bg-background text-foreground overflow-x-hidden w-full max-w-[100vw] font-sans">
 
       {/* ══════════════ HERO ══════════════ */}
       <section ref={heroRef} className="relative h-[60vh] sm:h-[75vh] md:h-[85vh] min-h-[480px] sm:min-h-[560px] md:min-h-[620px] flex items-center justify-center overflow-hidden pt-20 sm:pt-28">
@@ -101,7 +101,7 @@ function ExplorePageContent() {
         <motion.div style={{ scale: heroScale, y: heroY }} className="absolute inset-0">
           <div className="absolute inset-0 bg-[url('/destinations/agra.png')] bg-cover bg-center" />
           <div className="absolute inset-0 bg-black/40" />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#f5f5f7] dark:from-black via-transparent to-black/30" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-black/30" />
         </motion.div>
 
         {/* Content */}

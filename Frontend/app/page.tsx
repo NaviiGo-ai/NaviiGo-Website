@@ -1,354 +1,700 @@
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
-import HeroSlider from '@/components/features/home/HeroSlider';
-import HorizontalScroll from '@/components/features/gsap-scroll/HorizontalScroll';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
+import {
+  Compass,
+  Sparkles,
+  Navigation,
+  MapPin,
+  Calendar,
+  Layers,
+  ArrowRight,
+  ShieldCheck,
+  Award,
+  BookOpen,
+  Search,
+  Plane,
+  Train,
+  Building2,
+  Car,
+  Bot,
+  CheckCircle2,
+  Clock,
+  Sun,
+  Users,
+  Utensils,
+  Mountain,
+  Waves,
+  Landmark,
+  ExternalLink,
+  Milestone
+} from 'lucide-react';
+import { useAI } from '@/context/AIContext';
 
-/* ------------------------------------------------------------------ */
-/* Data — emojis use JSX dangerouslySetInnerHTML to avoid SSR/client   */
-/* hydration mismatches caused by multi-codepoint emoji rendering.     */
-/* ------------------------------------------------------------------ */
-
-const stats = [
-  { value: '50+', label: 'Destinations', icon: '\u{1F5FA}\uFE0F' },
-  { value: '500+', label: 'OTA Partners', icon: '\u2708\uFE0F' },
-  { value: '10K+', label: 'Itineraries Created', icon: '\u{1F4CB}' },
-  { value: '24/7', label: 'AI Travel Guide', icon: '\u{1F916}' },
-];
-
+// Fade in animation helper
 const fadeUp = {
-  hidden: (i: number) => ({ opacity: 0, y: 30, transition: { delay: i * 0.12 } }),
-  visible: (i: number) => ({ opacity: 1, y: 0, transition: { delay: i * 0.12, duration: 0.6 } }),
+  hidden: { opacity: 0, y: 25 },
+  visible: (i: number = 0) => ({
+    opacity: 1,
+    y: 0,
+    transition: { delay: i * 0.1, duration: 0.5, ease: 'easeOut' }
+  })
 };
 
-const destinations = [
-  { name: 'Varanasi', tag: 'Spiritual Capital', img: '/destinations/varanasi.png' },
-  { name: 'Rajasthan', tag: 'Land of Kings', img: '/destinations/jaipur.png' },
-  { name: 'Himalayas', tag: 'Peak Serenity', img: '/destinations/manali.png' },
-  { name: 'Kerala', tag: "God's Own Country", img: '/destinations/kerala.jpg' },
-];
-
-const testimonials = [
-  {
-    quote: 'NaviiGo planned our entire Char Dham Yatra in under a minute. The AI knew every darshan timing and even suggested local dhabas. Incredible!',
-    author: 'Priya Sharma',
-    location: 'Delhi \u2192 Char Dham',
-    initials: 'PS',
-    gradient: 'from-pink-500 to-rose-600',
-  },
-  {
-    quote: 'The booking comparison saved us \u20B912,000 on our family trip to Kerala. We found trains, hotels and cabs all in one place.',
-    author: 'Rahul Mehta',
-    location: 'Mumbai \u2192 Kerala',
-    initials: 'RM',
-    gradient: 'from-blue-500 to-indigo-600',
-  },
-  {
-    quote: 'My kids love collecting passport stamps at every temple we visit. It turned our pilgrimage into an adventure they actually enjoy!',
-    author: 'Anita Verma',
-    location: 'Lucknow \u2192 Varanasi',
-    initials: 'AV',
-    gradient: 'from-emerald-500 to-teal-600',
-  },
-];
-
 export default function Home() {
+  const { openAI } = useAI();
+  const [selectedVibe, setSelectedVibe] = useState('Spiritual');
+
+  const travelVibes = [
+    { name: 'Spiritual', icon: Sparkles, detail: 'Ghats, Aarti & Sacred Temples' },
+    { name: 'Adventure', icon: Mountain, detail: 'High-Altitude Trails & Valleys' },
+    { name: 'Heritage', icon: Landmark, detail: 'Palaces, Forts & History' },
+    { name: 'Coastal', icon: Waves, detail: 'Backwaters, Palms & Beaches' }
+  ];
+
   return (
-    <main className="relative min-h-screen bg-white dark:bg-slate-950">
-      <HeroSlider />
+    <main className="relative min-h-screen bg-background text-foreground font-sans overflow-x-hidden">
 
-      <HorizontalScroll />
+      {/* —————————————————————————————————————————————————────────────────
+          SECTION 01 — HERO
+         ————————————————————————————————————————————————───────────────── */}
+      <section className="relative min-h-screen min-h-dvh flex items-center justify-center border-b border-border overflow-hidden">
+        {/* Mobile / Android Dedicated Background Image (Maximum Visibility in Light & Dark Theme) */}
+        <div
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-100 dark:opacity-85 dark:invert dark:hue-rotate-180 mix-blend-multiply dark:mix-blend-luminosity pointer-events-none transition-all duration-500 sm:hidden"
+          style={{ backgroundImage: "url('/home_Assets/android.png')" }}
+        />
 
-      {/* ——— Stats Bar ————————————————————————————————————————————————— */}
-      <section className="relative z-10 bg-slate-950 border-y border-slate-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
-            {stats.map((stat, i) => (
-              <motion.div
-                key={stat.label}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1 }}
-                viewport={{ once: true }}
-                className="text-center"
-              >
-                <span className="text-2xl sm:text-3xl mb-2 block" suppressHydrationWarning>{stat.icon}</span>
-                <div className="text-2xl sm:text-3xl md:text-4xl font-bold text-white tracking-tight">{stat.value}</div>
-                <div className="text-xs sm:text-sm text-slate-400 mt-1">{stat.label}</div>
-              </motion.div>
-            ))}
+        {/* Desktop / Tablet Background Image */}
+        <div
+          className="hidden sm:block absolute inset-0 bg-cover bg-center bg-no-repeat opacity-95 dark:opacity-60 dark:invert dark:hue-rotate-180 mix-blend-multiply dark:mix-blend-luminosity pointer-events-none transition-all duration-500"
+          style={{ backgroundImage: "url('/home_bg.png')" }}
+        />
+        {/* Ultra-Light Vignette Mask for Maximum Android Background Visibility */}
+        <div className="absolute inset-0 bg-gradient-to-r from-background/35 via-background/15 to-transparent sm:from-background/75 sm:via-background/45 dark:from-background/45 dark:via-background/20 pointer-events-none" />
+
+        {/* Dotted Flight Paths & Animated Plane Icons (Mobile Only — Hidden on Desktop View) */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden z-[5] sm:hidden">
+          <svg className="w-full h-full opacity-55 dark:opacity-35" viewBox="0 0 1200 800" fill="none">
+            {/* Dotted Flight Path 1 */}
+            <path d="M-50 420 C 250 180, 550 520, 1250 220" stroke="currentColor" strokeWidth="2.5" strokeDasharray="8 8" className="text-primary/75" />
+            {/* Dotted Flight Path 2 */}
+            <path d="M80 720 C 380 380, 780 620, 1150 120" stroke="currentColor" strokeWidth="2" strokeDasharray="6 6" className="text-secondary/65" />
+          </svg>
+          {/* Floating Plane Icon 1 */}
+          <div className="absolute top-[22%] right-[12%] text-primary animate-pulse transform rotate-45">
+            <Plane className="w-6 h-6 drop-shadow-md" />
+          </div>
+          {/* Floating Plane Icon 2 */}
+          <div className="absolute bottom-[28%] left-[6%] text-secondary transform -rotate-12">
+            <Plane className="w-5 h-5 drop-shadow-sm" />
           </div>
         </div>
-      </section>
 
-      {/* ——— Features — Bento Grid ————————————————————————————————————— */}
-      <section className="relative z-10 py-12 sm:py-24 px-4 sm:px-6 bg-slate-950 overflow-hidden">
-        <div className="absolute top-0 left-1/3 w-[500px] h-[500px] bg-blue-500/5 rounded-full blur-[120px]" />
-        <div className="max-w-7xl mx-auto relative">
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-10 sm:mb-16">
-            <span className="text-xs font-semibold uppercase tracking-[0.3em] text-blue-400 mb-3 block">Why NaviiGo</span>
-            <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold tracking-tight text-white">
-              Everything You Need.{' '}
-              <span className="bg-gradient-to-r from-blue-400 to-emerald-400 bg-clip-text text-transparent">One Platform.</span>
-            </h2>
-          </motion.div>
+        <div className="relative z-10 mx-auto w-full max-w-7xl px-4 sm:px-6 pt-20 sm:pt-24 lg:pt-28 pb-12 sm:pb-12 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-12 items-center gap-10">
+            
+            {/* Hero Left Column — Messaging */}
+            <div className="lg:col-span-7">
+              <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }} className="text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-extrabold tracking-tight text-foreground font-serif leading-[1.02]">
+                Your Journey.{' '}
+                <span className="text-primary block sm:inline">Intelligently Navigated.</span>
+              </motion.h1>
 
-          <div className="grid gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {/* Main Feature — Large Card */}
-            <motion.div custom={0} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}
-              className="md:col-span-2 lg:col-span-2 relative overflow-hidden rounded-3xl border border-blue-500/20 bg-gradient-to-br from-blue-600/20 via-slate-900 to-slate-950 p-6 sm:p-10 min-h-[260px] sm:min-h-[320px] group">
-              <div className="absolute top-0 right-0 w-2/3 h-full bg-gradient-to-l from-blue-500/10 to-transparent" />
-              <div className="absolute -bottom-20 -right-20 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl group-hover:bg-blue-500/15 transition-all duration-700" />
-              <div className="relative z-10">
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-xs font-bold mb-4 sm:mb-6">
-                  <span suppressHydrationWarning>{'\u{1F9E0}'}</span> Core Feature
-                </div>
-                <h3 className="text-xl sm:text-3xl font-bold text-white mb-3">AI-Powered Itineraries</h3>
-                <p className="text-slate-400 text-sm sm:text-base leading-relaxed max-w-lg mb-6">
-                  Share your destination, budget &amp; vibe. Our AI builds a complete day-by-day plan with hidden gems, local food spots &amp; darshan timings &mdash; in under 60 seconds.
-                </p>
-                <Link href="/itinerary?new=true" className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-blue-600 text-white font-semibold text-sm hover:bg-blue-500 transition-all hover:scale-[1.03] shadow-lg shadow-blue-600/20">
-                  Plan Your Trip <span className="text-lg">&rarr;</span>
+              <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }} className="mt-7 sm:mt-10 max-w-xl text-lg sm:text-xl leading-relaxed text-muted-foreground font-sans font-semibold">
+                Plan complete trips in 60 seconds with AI, compare 500+ travel deals, and navigate India like a local.
+              </motion.p>
+
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }} className="mt-7 sm:mt-6 flex flex-col sm:flex-row items-stretch sm:items-center gap-4 sm:gap-4">
+                <Link href="/itinerary?new=true" className="inline-flex items-center justify-center gap-3.5 rounded-2xl bg-primary px-7 sm:px-8 py-3.5 text-lg sm:text-xl font-extrabold text-primary-foreground shadow-md transition-all hover:scale-[1.02] hover:bg-primary/90">
+                  <Navigation className="w-5.5 h-5.5" />
+                  <span>Plan My Journey</span>
                 </Link>
+
+                <Link href="/explore" className="inline-flex items-center justify-center gap-3 rounded-2xl bg-card/90 border border-border px-7 py-3.5 text-lg sm:text-xl font-extrabold text-card-foreground hover:bg-accent transition-all shadow-xs backdrop-blur-xs">
+                  <Compass className="w-5.5 h-5.5 text-primary" />
+                  <span>Explore India</span>
+                </Link>
+              </motion.div>
+
+              {/* Ecosystem Quick Indicators — 2 Above, 1 Below on Desktop */}
+              <div className="mt-8 sm:mt-7 flex flex-col gap-4 sm:gap-3.5 pt-6 border-t border-border/60">
+                {/* Top Row: 2 items side-by-side on desktop */}
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3.5 sm:gap-8">
+                  <div className="flex items-center gap-3 text-base sm:text-lg font-extrabold text-foreground tracking-wide">
+                    <div className="w-7 h-7 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
+                      <CheckCircle2 className="w-4.5 h-4.5 text-primary" />
+                    </div>
+                    <span>60s AI Itineraries</span>
+                  </div>
+                  <div className="flex items-center gap-3 text-base sm:text-lg font-extrabold text-foreground tracking-wide">
+                    <div className="w-7 h-7 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
+                      <CheckCircle2 className="w-4.5 h-4.5 text-primary" />
+                    </div>
+                    <span>500+ OTA Comparison</span>
+                  </div>
+                </div>
+
+                {/* Bottom Row: 1 item below on desktop */}
+                <div className="flex items-center gap-3 text-base sm:text-lg font-extrabold text-foreground tracking-wide">
+                  <div className="w-7 h-7 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
+                    <CheckCircle2 className="w-4.5 h-4.5 text-primary" />
+                  </div>
+                  <span>Digital Pilgrim Passport</span>
+                </div>
               </div>
-            </motion.div>
-
-            {/* Passport Card */}
-            <motion.div custom={1} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}>
-              <Link href="/passport" className="block h-full">
-                <div className="relative overflow-hidden rounded-3xl border border-orange-500/20 bg-gradient-to-br from-orange-500/15 via-slate-900 to-slate-950 p-6 sm:p-8 min-h-[260px] group hover:scale-[1.02] transition-all duration-300">
-                  <div className="absolute -bottom-16 -right-16 w-48 h-48 bg-orange-500/10 rounded-full blur-3xl group-hover:bg-orange-500/15 transition-all duration-700" />
-                  <div className="relative z-10">
-                    <span className="text-4xl sm:text-5xl mb-4 block" suppressHydrationWarning>{'\u{1F4DC}'}</span>
-                    <h3 className="text-lg sm:text-xl font-bold text-white mb-2">Digital Passport</h3>
-                    <p className="text-slate-400 text-sm leading-relaxed">Collect stamps, earn XP, climb leaderboards. Gamified travel exploration.</p>
-                    <span className="inline-flex items-center gap-1 text-sm text-orange-400 mt-4 font-medium">
-                      Start Collecting <span className="text-lg">&rarr;</span>
-                    </span>
-                  </div>
-                </div>
-              </Link>
-            </motion.div>
-
-            {/* Booking Card */}
-            <motion.div custom={2} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}>
-              <Link href="/bookings" className="block h-full">
-                <div className="relative overflow-hidden rounded-3xl border border-emerald-500/20 bg-gradient-to-br from-emerald-500/15 via-slate-900 to-slate-950 p-6 sm:p-8 min-h-[200px] group hover:scale-[1.02] transition-all duration-300">
-                  <div className="absolute -bottom-16 -right-16 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl group-hover:bg-emerald-500/15 transition-all duration-700" />
-                  <div className="relative z-10">
-                    <span className="text-4xl sm:text-5xl mb-4 block" suppressHydrationWarning>{'\u{1F50D}'}</span>
-                    <h3 className="text-lg sm:text-xl font-bold text-white mb-2">Booking Hub</h3>
-                    <p className="text-slate-400 text-sm leading-relaxed">Flights, trains, cabs &amp; hotels &mdash; compare across 500+ platforms in one search.</p>
-                    <span className="inline-flex items-center gap-1 text-sm text-emerald-400 mt-4 font-medium">
-                      Compare Prices <span className="text-lg">&rarr;</span>
-                    </span>
-                  </div>
-                </div>
-              </Link>
-            </motion.div>
-
-            {/* Explore Card */}
-            <motion.div custom={3} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}>
-              <Link href="/explore" className="block h-full">
-                <div className="relative overflow-hidden rounded-3xl border border-cyan-500/20 bg-gradient-to-br from-cyan-500/15 via-slate-900 to-slate-950 p-6 sm:p-8 min-h-[200px] group hover:scale-[1.02] transition-all duration-300">
-                  <div className="absolute -bottom-16 -right-16 w-48 h-48 bg-cyan-500/10 rounded-full blur-3xl group-hover:bg-cyan-500/15 transition-all duration-700" />
-                  <div className="relative z-10">
-                    <span className="text-4xl sm:text-5xl mb-4 block" suppressHydrationWarning>{'\u{1F30D}'}</span>
-                    <h3 className="text-lg sm:text-xl font-bold text-white mb-2">Deep Dive Explore</h3>
-                    <p className="text-slate-400 text-sm leading-relaxed">Browse 50+ destinations with local insights, crowd data &amp; seasonal weather.</p>
-                    <span className="inline-flex items-center gap-1 text-sm text-cyan-400 mt-4 font-medium">
-                      Explore Now <span className="text-lg">&rarr;</span>
-                    </span>
-                  </div>
-                </div>
-              </Link>
-            </motion.div>
-
-            {/* Saved / Collection Card */}
-            <motion.div custom={4} initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp}>
-              <Link href="/saved" className="block h-full">
-                <div className="relative overflow-hidden rounded-3xl border border-amber-500/20 bg-gradient-to-br from-amber-500/15 via-slate-900 to-slate-950 p-6 sm:p-8 min-h-[200px] group hover:scale-[1.02] transition-all duration-300">
-                  <div className="absolute -bottom-16 -right-16 w-48 h-48 bg-amber-500/10 rounded-full blur-3xl group-hover:bg-amber-500/15 transition-all duration-700" />
-                  <div className="relative z-10">
-                    <span className="text-4xl sm:text-5xl mb-4 block" suppressHydrationWarning>{'\u{1F4BE}'}</span>
-                    <h3 className="text-lg sm:text-xl font-bold text-white mb-2">Your Collection</h3>
-                    <p className="text-slate-400 text-sm leading-relaxed">Save trips, track progress &amp; get weather/crowd alerts for upcoming journeys.</p>
-                    <span className="inline-flex items-center gap-1 text-sm text-amber-400 mt-4 font-medium">
-                      View Saved <span className="text-lg">&rarr;</span>
-                    </span>
-                  </div>
-                </div>
-              </Link>
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
-      {/* ——— Destinations ———————————————————————————————————————————— */}
-      <section className="relative z-10 py-12 sm:py-24 px-4 sm:px-6 bg-slate-900/50">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row items-start md:items-end justify-between mb-8 sm:mb-12 gap-4">
-            <div>
-              <span className="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-400 mb-3 block">Destinations</span>
-              <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold tracking-tight text-white">Explore Incredible India</h2>
-              <p className="mt-3 text-base sm:text-lg text-slate-400 max-w-lg">
-                Ancient temples, majestic forts, spiritual riverfronts &mdash; curated with local insights you won&apos;t find in guidebooks.
-              </p>
             </div>
-            <Link href="/explore" className="shrink-0 px-6 py-2.5 rounded-full bg-slate-800 text-white hover:bg-slate-700 transition-colors font-medium text-sm border border-slate-700">
-              View All &rarr;
-            </Link>
-          </div>
 
-          <div className="grid gap-4 sm:gap-5 grid-cols-2 lg:grid-cols-4">
-            {destinations.map((place, i) => (
-              <Link href={`/explore/${place.name}`} key={place.name} className="block">
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: i * 0.1 }}
-                  viewport={{ once: true }}
-                  className="group relative h-64 sm:h-96 rounded-2xl overflow-hidden cursor-pointer"
-                >
-                  <Image
-                    src={place.img}
-                    alt={`${place.name} destination`}
-                    fill
-                    className="object-cover transition-transform duration-700 group-hover:scale-110"
-                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 50vw, 25vw"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent z-10" />
-                  <div className="absolute bottom-0 left-0 p-4 sm:p-6 z-20">
-                    <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-emerald-400 mb-1 block">{place.tag}</span>
-                    <h3 className="text-lg sm:text-2xl font-bold text-white group-hover:translate-x-1 transition-transform">{place.name}</h3>
+            {/* Hero Right Column — Layered Product Interface Mockup (Desktop/Tablet Only) */}
+            <div className="lg:col-span-5 relative hidden sm:block -mt-4 sm:-mt-8 lg:-mt-12 w-full max-w-md mx-auto">
+              <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.6, delay: 0.2 }} className="relative mx-auto max-w-md">
+                
+                {/* Main Product Card Preview */}
+                <div className="rounded-[32px] border-2 border-primary/25 bg-card backdrop-blur-xl p-5 sm:p-7 pb-8 sm:pb-9 shadow-2xl shadow-primary/10 flex flex-col justify-between gap-4 sm:gap-5 hover:border-primary/40 transition-all duration-300 relative z-10">
+                  
+                  {/* Top Header */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center font-bold shadow-md shrink-0">
+                        <MapPin className="w-5 h-5 sm:w-5.5 sm:h-5.5" />
+                      </div>
+                      <div>
+                        <div className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-primary font-mono">NEXT TRIP PREVIEW</div>
+                        <div className="text-lg sm:text-2xl font-extrabold text-card-foreground font-serif leading-snug">Varanasi Heritage Circuit</div>
+                      </div>
+                    </div>
+                    <span className="px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-secondary text-secondary-foreground text-xs sm:text-sm font-extrabold border border-secondary/30 shadow-xs shrink-0 dark:bg-white dark:text-slate-950 dark:border-white/90">3 Days</span>
                   </div>
-                </motion.div>
-              </Link>
-            ))}
-          </div>
-        </div>
-      </section>
 
-      {/* ——— Saved Section ——————————————————————————————————————————— */}
-      <section id="saved" className="relative z-10 py-16 sm:py-28 px-4 sm:px-6 bg-slate-950 overflow-hidden">
-        <div className="absolute inset-0 bg-cover bg-center opacity-[0.03] mix-blend-luminosity" style={{ backgroundImage: "url('/destinations/agra.png')" }} />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/80 to-slate-950" />
-        <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-orange-500/5 rounded-full blur-[100px]" />
+                  {/* Middle Item Box */}
+                  <div className="p-3.5 sm:p-4.5 rounded-2xl bg-muted/40 border border-border/80 space-y-1.5 text-card-foreground shadow-xs">
+                    <div className="flex items-center justify-between font-bold">
+                      <span className="text-foreground text-xs sm:text-base font-bold">Day 01 • Evening Aarti</span>
+                      <span className="text-primary text-[11px] sm:text-sm font-mono font-bold">18:00 IST</span>
+                    </div>
+                    <p className="text-muted-foreground text-xs sm:text-sm leading-relaxed font-medium">Dashashwamedh Ghat Ganga Aarti ceremony with reserved boat viewing.</p>
+                  </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="relative max-w-4xl mx-auto text-center"
-        >
-          <span className="text-xs font-semibold uppercase tracking-[0.3em] text-orange-400 mb-4 block">Your Collection</span>
-          <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold tracking-tight text-white mb-4 sm:mb-6">Save Your Epic Journeys</h2>
-          <p className="text-base sm:text-lg text-slate-400 max-w-2xl mx-auto mb-8 sm:mb-10 leading-relaxed">
-            Found a bucket list trip you want to complete? Save it to your itinerary and we&apos;ll keep you updated on the best times, weather, and seamless transit options.
-          </p>
-          <Link href="/saved" className="inline-block px-8 py-3.5 rounded-2xl bg-orange-500/10 border border-orange-500/30 text-orange-400 font-semibold hover:bg-orange-500 hover:text-white transition-all hover:scale-105 shadow-[0_0_20px_rgba(249,115,22,0.1)] hover:shadow-[0_0_30px_rgba(249,115,22,0.3)]">
-            View Saved Routes &rarr;
-          </Link>
-        </motion.div>
-      </section>
-
-      {/* ——— Support Section ————————————————————————————————————————— */}
-      <section id="support" className="relative z-10 py-16 sm:py-28 px-4 sm:px-6 bg-slate-900/50 border-y border-slate-800">
-        <div className="max-w-4xl mx-auto text-center">
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }}>
-            <div className="inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-400 mb-8 text-2xl" suppressHydrationWarning>
-              {'\u{1F91D}'}
-            </div>
-            <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold tracking-tight text-white mb-4 sm:mb-6">Guiding Your Path</h2>
-            <p className="text-base sm:text-lg text-slate-400 max-w-2xl mx-auto mb-8 sm:mb-10 leading-relaxed">
-              Have questions about your spiritual journey or itinerary? Our AI Guide and expert support team are available 24/7 to assist you.
-            </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4">
-              <Link href="/support" className="inline-block px-8 py-3.5 rounded-2xl bg-slate-800 text-white font-semibold hover:bg-slate-700 transition-all border border-slate-700 hover:border-slate-600 w-full sm:w-auto text-center">
-                Help Center
-              </Link>
-              <button className="px-8 py-3.5 rounded-2xl bg-white text-slate-900 font-semibold hover:bg-slate-100 transition-all shadow-lg w-full sm:w-auto">
-                Contact Support
-              </button>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* ——— Testimonials ——————————————————————————————————————————— */}
-      <section className="relative z-10 py-12 sm:py-24 px-4 sm:px-6 bg-slate-950 overflow-hidden">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-purple-500/5 rounded-full blur-[120px]" />
-        <div className="max-w-7xl mx-auto relative">
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-10 sm:mb-16">
-            <span className="text-xs font-semibold uppercase tracking-[0.3em] text-purple-400 mb-3 block">Travelers Love Us</span>
-            <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold tracking-tight text-white">Hear From Our Community</h2>
-          </motion.div>
-
-          <div className="flex gap-4 sm:gap-6 overflow-x-auto snap-x snap-mandatory pb-4 -mx-4 px-4 md:mx-0 md:px-0 md:grid md:grid-cols-3 md:overflow-visible no-scrollbar">
-            {testimonials.map((t, i) => (
-              <motion.div
-                key={t.author}
-                custom={i}
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true }}
-                variants={fadeUp}
-                className="relative rounded-2xl sm:rounded-3xl bg-slate-900/80 backdrop-blur-sm border border-slate-800 p-5 sm:p-8 flex flex-col min-w-[80vw] sm:min-w-[320px] md:min-w-0 snap-center"
-              >
-                <div className="absolute top-5 right-5 sm:top-8 sm:right-8 text-4xl sm:text-5xl text-slate-800 font-serif select-none">&ldquo;</div>
-                <div className="flex gap-1 mb-4">
-                  {[...Array(5)].map((_, j) => (
-                    <span key={j} className="text-yellow-400 text-xs sm:text-sm">{'\u2605'}</span>
-                  ))}
+                  {/* Passport Stamp Badge Preview */}
+                  <div className="flex items-center justify-between pt-3 border-t border-border">
+                    <div className="flex items-center gap-2 text-xs sm:text-sm font-bold text-card-foreground">
+                      <Award className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-primary shrink-0" />
+                      <span>Kashi Vishwanath Stamp</span>
+                    </div>
+                    <span className="text-xs sm:text-sm font-mono font-bold text-primary bg-primary/10 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg border border-primary/20">+150 XP</span>
+                  </div>
                 </div>
-                <p className="text-slate-300 text-sm leading-relaxed flex-1 relative z-10">{t.quote}</p>
-                <div className="flex items-center gap-3 mt-5 pt-5 border-t border-slate-800">
-                  <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${t.gradient} flex items-center justify-center text-white text-xs font-bold shrink-0`}>
-                    {t.initials}
+
+                {/* Floating AI Bubble Pill */}
+                <div className="absolute -bottom-5 -left-2 sm:-left-4 rounded-2xl border-2 border-primary/30 bg-primary text-primary-foreground p-3 sm:p-4 shadow-2xl shadow-primary/30 flex items-center gap-3 backdrop-blur-md z-20 max-w-[calc(100%-16px)]">
+                  <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-primary-foreground/20 text-primary-foreground flex items-center justify-center font-bold shrink-0">
+                    <Bot className="w-4 h-4 sm:w-5 sm:h-5" />
                   </div>
                   <div>
-                    <div className="text-sm font-semibold text-white">{t.author}</div>
-                    <div className="text-xs text-slate-500">{t.location}</div>
+                    <div className="text-xs sm:text-sm font-extrabold tracking-wide text-primary-foreground">Ask NaviiGo AI</div>
+                    <div className="text-primary-foreground/90 text-[11px] sm:text-xs font-medium truncate">"Best time for Morning Boat Ride?"</div>
                   </div>
                 </div>
+
               </motion.div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      {/* —————————————————————————————————————————————————————————————————
+          SECTION 02 — THE PROBLEM (FRAGMENTED vs UNIFIED)
+         ————————————————————————————————————————————————————————————————─ */}
+      <section className="relative z-10 py-20 sm:py-28 px-4 sm:px-6 bg-card border-b border-border">
+        <div className="max-w-6xl mx-auto text-center">
+          <motion.span initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} className="text-xs font-bold uppercase tracking-[0.3em] text-primary mb-3 block">
+            THE FRAGMENTATION PROBLEM
+          </motion.span>
+          <motion.h2 initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={1} className="text-3xl sm:text-5xl font-bold tracking-tight text-foreground font-serif max-w-3xl mx-auto">
+            Travel shouldn't feel like a research project.
+          </motion.h2>
+          <motion.p initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={2} className="mt-4 text-base sm:text-lg text-muted-foreground max-w-xl mx-auto">
+            One trip currently means dozens of browser tabs, scattered train apps, unverified dhabas, and conflicting advice.
+          </motion.p>
+
+          {/* Problem vs Solution Visual Flow */}
+          <div className="mt-14 grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch text-left">
+            {/* The Old Fragmented Way */}
+            <div className="rounded-3xl border border-destructive/20 bg-background/50 p-6 sm:p-8 space-y-4">
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-xs font-bold uppercase tracking-wider text-destructive font-mono">OLD FRAGMENTED WAY</span>
+                <span className="text-xs text-muted-foreground">10+ Tabs Open</span>
+              </div>
+              <div className="flex flex-wrap gap-2 text-xs font-medium text-muted-foreground">
+                <span className="px-3 py-1.5 rounded-lg bg-muted border border-border">Google Search</span>
+                <span className="px-3 py-1.5 rounded-lg bg-muted border border-border">Instagram Reels</span>
+                <span className="px-3 py-1.5 rounded-lg bg-muted border border-border">Maps App</span>
+                <span className="px-3 py-1.5 rounded-lg bg-muted border border-border">IRCTC Train App</span>
+                <span className="px-3 py-1.5 rounded-lg bg-muted border border-border">Hotel Booking</span>
+                <span className="px-3 py-1.5 rounded-lg bg-muted border border-border">Cab App</span>
+                <span className="px-3 py-1.5 rounded-lg bg-muted border border-border">Notes App</span>
+              </div>
+              <p className="text-xs sm:text-sm text-muted-foreground pt-2 border-t border-border/40 leading-relaxed">
+                Result: Confusion, missed Aarti timings, price inflation, and zero travel memories saved.
+              </p>
+            </div>
+
+            {/* The NaviiGo Unified Way */}
+            <div className="rounded-3xl border border-primary/40 bg-primary/5 p-6 sm:p-8 space-y-4 relative overflow-hidden">
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-xs font-bold uppercase tracking-wider text-primary font-mono">THE NAVIIGO UNIFIED WAY</span>
+                <span className="text-xs font-bold text-primary">1 Intelligent Platform</span>
+              </div>
+              <div className="p-4 rounded-2xl bg-card border border-border space-y-2">
+                <div className="flex items-center gap-2 text-sm font-bold text-card-foreground font-serif">
+                  <Sparkles className="w-4 h-4 text-primary" />
+                  <span>Discover → Plan → Book → Navigate → Remember</span>
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Your entire journey unified into one intelligent dashboard with AI timing accuracy and digital passport stamps.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* —————————————————————————————————————————————————————————————————
+          SECTION 03 — THE NAVIIGO PROMISE (FIVE INTELLIGENT LAYERS)
+         ————————————————————————————————————————————————————————————————─ */}
+      <section className="relative z-10 py-20 sm:py-28 px-4 sm:px-6 bg-background">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <span className="text-xs font-bold uppercase tracking-[0.3em] text-primary mb-3 block">THE NAVIIGO PROMISE</span>
+            <h2 className="text-3xl sm:text-5xl font-bold tracking-tight text-foreground font-serif">
+              One journey. Five intelligent layers.
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 sm:gap-6">
+            {[
+              { num: '01', title: 'DISCOVER', desc: 'Find places worth going with verified local intelligence.', link: '/explore' },
+              { num: '02', title: 'PLAN', desc: 'Build 60s day-by-day itineraries tailored to your vibe.', link: '/itinerary?new=true' },
+              { num: '03', title: 'BOOK', desc: 'Compare flights, IRCTC trains, cabs & stays across 500+ OTAs.', link: '/bookings' },
+              { num: '04', title: 'NAVIGATE', desc: 'Contextual AI assistance when weather or timings change.', link: '/support' },
+              { num: '05', title: 'REMEMBER', desc: 'Collect digital stamps and XP badges in your Passport.', link: '/passport' },
+            ].map((layer, idx) => (
+              <Link href={layer.link} key={layer.num} className="group">
+                <div className="h-full rounded-3xl border border-border bg-card p-6 flex flex-col justify-between hover:border-primary/50 transition-all duration-300 shadow-xs">
+                  <div>
+                    <span className="text-xs font-mono font-bold text-primary block mb-3">{layer.num}</span>
+                    <h3 className="text-lg font-bold text-card-foreground font-serif mb-2 group-hover:text-primary transition-colors">{layer.title}</h3>
+                    <p className="text-xs text-muted-foreground leading-relaxed">{layer.desc}</p>
+                  </div>
+                  <span className="inline-flex items-center gap-1 text-xs text-primary font-bold mt-6">
+                    Learn More <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                  </span>
+                </div>
+              </Link>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ——— Final CTA ——————————————————————————————————————————————— */}
-      <section className="relative z-10 py-16 sm:py-28 px-4 sm:px-6 bg-slate-950 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-blue-600/10 via-transparent to-transparent" />
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] sm:w-[800px] h-[400px] bg-blue-500/10 rounded-full blur-[120px]" />
+      {/* —————————————————————————————————————————————————————————————————
+          SECTION 04 — AI ITINERARY EXPERIENCE
+         ————————————————————————————————————————————————————————————————─ */}
+      <section className="relative z-10 py-20 sm:py-28 px-4 sm:px-6 bg-muted/30 border-y border-border">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+            
+            <div className="lg:col-span-5">
+              <span className="text-xs font-bold uppercase tracking-[0.3em] text-primary mb-3 block">AI TRAVEL ORCHESTRATION</span>
+              <h2 className="text-3xl sm:text-5xl font-bold tracking-tight text-foreground font-serif leading-tight">
+                Tell us where you want to go.{' '}
+                <span className="text-primary">We'll figure out the journey.</span>
+              </h2>
+              <p className="mt-4 text-base sm:text-lg text-muted-foreground leading-relaxed">
+                Select your travel style and let our cultural AI engine build an optimized itinerary complete with temple Aarti timings, local food spots, and weather windows.
+              </p>
 
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="relative max-w-3xl mx-auto text-center"
-        >
-          <h2 className="text-3xl sm:text-4xl md:text-6xl font-bold tracking-tight text-white mb-4 sm:mb-6">
-            Ready to explore{' '}
-            <span className="bg-gradient-to-r from-orange-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
-              India?
-            </span>
+              {/* Vibe Selectors */}
+              <div className="mt-8 space-y-2.5">
+                <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Select Travel Vibe:</div>
+                {travelVibes.map((vibe) => {
+                  const VIcon = vibe.icon;
+                  const isSel = selectedVibe === vibe.name;
+                  return (
+                    <button
+                      key={vibe.name}
+                      onClick={() => setSelectedVibe(vibe.name)}
+                      className={`w-full p-3.5 rounded-2xl border text-left flex items-center justify-between transition-all ${
+                        isSel
+                          ? 'border-primary bg-primary/10 text-primary font-bold shadow-xs'
+                          : 'border-border bg-card text-card-foreground hover:bg-accent'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <VIcon className="w-4 h-4" />
+                        <span className="text-sm">{vibe.name}</span>
+                      </div>
+                      <span className="text-xs text-muted-foreground font-normal">{vibe.detail}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="mt-8">
+                <Link href="/itinerary?new=true" className="inline-flex items-center gap-3 rounded-2xl bg-primary px-8 py-4 text-base font-bold text-primary-foreground shadow-md hover:bg-primary/90 transition-all">
+                  <span>Build My Itinerary</span>
+                  <ArrowRight className="w-5 h-5" />
+                </Link>
+              </div>
+            </div>
+
+            {/* Generated Result Preview */}
+            <div className="lg:col-span-7">
+              <div className="rounded-3xl border border-border bg-card p-6 sm:p-8 shadow-xl space-y-6">
+                <div className="flex items-center justify-between pb-4 border-b border-border">
+                  <div>
+                    <span className="text-xs font-mono font-bold text-primary uppercase">GENERATED ITINERARY</span>
+                    <h3 className="text-2xl font-bold text-card-foreground font-serif">{selectedVibe} Exploration Circuit</h3>
+                  </div>
+                  <span className="px-3.5 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-bold border border-primary/20">
+                    60s AI Generation
+                  </span>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="p-4 rounded-2xl bg-background border border-border space-y-2">
+                    <div className="flex items-center justify-between text-xs font-bold text-primary">
+                      <span>DAY 01 • ARRIVAL & HERITAGE WALK</span>
+                      <span>09:00 AM</span>
+                    </div>
+                    <p className="text-sm font-semibold text-card-foreground">Morning Ghat Walk &amp; Traditional Kachori Breakfast</p>
+                    <p className="text-xs text-muted-foreground">Explore 300-year-old narrow heritage lanes guided by local cultural notes.</p>
+                  </div>
+
+                  <div className="p-4 rounded-2xl bg-background border border-border space-y-2">
+                    <div className="flex items-center justify-between text-xs font-bold text-primary">
+                      <span>DAY 02 • SACRED CEREMONIES</span>
+                      <span>05:30 PM</span>
+                    </div>
+                    <p className="text-sm font-semibold text-card-foreground">Dashashwamedh Ghat Evening Aarti</p>
+                    <p className="text-xs text-muted-foreground">Reserved riverboat position for optimal ceremonial viewing and photo lighting.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      {/* —————————————————————————————————————————————————————————————————
+          SECTION 05 — INDIA THROUGH NAVIIGO (EDITORIAL REGIONS)
+         ————————————————————————————————————————————————————————————————─ */}
+      <section className="relative z-10 py-20 sm:py-28 px-4 sm:px-6 bg-background">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <span className="text-xs font-bold uppercase tracking-[0.3em] text-primary mb-3 block">CULTURAL DIVERSITY</span>
+            <h2 className="text-3xl sm:text-5xl font-bold tracking-tight text-foreground font-serif max-w-3xl mx-auto">
+              India changes with every journey.{' '}
+              <span className="text-primary">NaviiGo understands the difference.</span>
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">
+            {[
+              { title: 'Spiritual India', desc: 'Varanasi, Haridwar, Rishikesh', tag: 'Aarti & Ghats', link: '/explore/Varanasi' },
+              { title: 'Himalayan India', desc: 'Manali, Himachal, Ladakh', tag: 'Peak Trails', link: '/explore/Himalayas' },
+              { title: 'Heritage India', desc: 'Jaipur, Rajasthan, Amber', tag: 'Forts & Palaces', link: '/explore/Rajasthan' },
+              { title: 'Coastal India', desc: 'Kerala, Backwaters, Varkala', tag: 'Palms & Waters', link: '/explore/Kerala' },
+              { title: 'Northeast India', desc: 'Meghalaya, Sikkim, Tawang', tag: 'Living Roots', link: '/explore' },
+            ].map((region, i) => (
+              <Link href={region.link} key={region.title} className="group">
+                <div className="h-56 rounded-3xl border border-border bg-card p-6 flex flex-col justify-between hover:border-primary/50 transition-all duration-300 shadow-xs">
+                  <span className="text-xs font-bold text-primary uppercase tracking-wider">{region.tag}</span>
+                  <div>
+                    <h3 className="text-xl font-bold text-card-foreground font-serif mb-1 group-hover:translate-x-1 transition-transform">{region.title}</h3>
+                    <p className="text-xs text-muted-foreground">{region.desc}</p>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* —————————————————————————————————————————————————————————————————
+          SECTION 06 — DEEP DESTINATION INTELLIGENCE
+         ————————————————————————————————————————————————————————————————─ */}
+      <section className="relative z-10 py-20 sm:py-28 px-4 sm:px-6 bg-muted/30 border-y border-border">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col md:flex-row items-start md:items-end justify-between mb-12 gap-6">
+            <div>
+              <span className="text-xs font-bold uppercase tracking-[0.3em] text-primary mb-3 block">DESTINATION INTELLIGENCE</span>
+              <h2 className="text-3xl sm:text-5xl font-bold tracking-tight text-foreground font-serif">
+                Don't just know where to go.{' '}
+                <span className="text-primary block sm:inline">Know what it feels like to be there.</span>
+              </h2>
+            </div>
+            <Link href="/explore" className="px-7 py-3 rounded-full bg-primary text-primary-foreground font-bold text-sm hover:bg-primary/90 transition-all shrink-0">
+              Explore All Destinations &rarr;
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[
+              {
+                name: 'RISHIKESH',
+                vibe: 'Adventure • Spirituality • Nature',
+                window: 'October — March',
+                highlight: 'Triveni Ghat Evening Aarti',
+                tip: 'Start early at 06:00 AM for quiet riverbank trails.'
+              },
+              {
+                name: 'VARANASI',
+                vibe: 'Heritage • Culture • Ghats',
+                window: 'November — February',
+                highlight: 'Kashi Vishwanath Corridor',
+                tip: 'Book wooden boat rides at sunrise for morning prayers.'
+              },
+              {
+                name: 'JAIPUR',
+                vibe: 'Royal Forts • Food • Architecture',
+                window: 'October — March',
+                highlight: 'Amber Fort Elephant Ramparts',
+                tip: 'Visit Hawa Mahal during morning light for best photos.'
+              }
+            ].map((card) => (
+              <div key={card.name} className="rounded-3xl border border-border bg-card p-6 sm:p-8 space-y-4 shadow-xs hover:border-primary/50 transition-all">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-2xl font-bold text-card-foreground font-serif">{card.name}</h3>
+                  <span className="text-xs font-bold text-primary bg-primary/10 px-3 py-1 rounded-full">{card.window}</span>
+                </div>
+                <div className="text-xs text-muted-foreground font-semibold">{card.vibe}</div>
+                <div className="pt-3 border-t border-border/50 space-y-2 text-xs">
+                  <div><strong className="text-card-foreground">Must Experience:</strong> {card.highlight}</div>
+                  <div><strong className="text-card-foreground">Local Insight:</strong> {card.tip}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* —————————————————————————————————————————————————————————————————
+          SECTION 07 — UNIVERSAL BOOKING ENGINE
+         ————————————————————————————————————————————————————————————————─ */}
+      <section className="relative z-10 py-20 sm:py-28 px-4 sm:px-6 bg-background">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <span className="text-xs font-bold uppercase tracking-[0.3em] text-primary mb-3 block">UNIVERSAL BOOKING ENGINE</span>
+            <h2 className="text-3xl sm:text-5xl font-bold tracking-tight text-foreground font-serif">
+              From "Let's go" to "Booked."
+            </h2>
+            <p className="mt-3 text-base sm:text-lg text-muted-foreground max-w-lg mx-auto">
+              Compare flights, IRCTC train options, intercity cabs and hotels across 500+ OTA platforms in one search window.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+            {[
+              { icon: Plane, label: 'Flights', desc: 'Direct & Layover Price Match' },
+              { icon: Train, label: 'IRCTC Trains', desc: 'Tatkal & Route Availability' },
+              { icon: Building2, label: 'Hotels & Stays', desc: 'Heritage Havellis & Resorts' },
+              { icon: Car, label: 'Intercity Cabs', desc: 'Verified Drivers & Flat Rates' }
+            ].map((item) => {
+              const BIcon = item.icon;
+              return (
+                <div key={item.label} className="rounded-3xl border border-border bg-card p-6 space-y-3 shadow-xs">
+                  <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto">
+                    <BIcon className="w-6 h-6" />
+                  </div>
+                  <h3 className="text-lg font-bold text-card-foreground font-serif">{item.label}</h3>
+                  <p className="text-xs text-muted-foreground">{item.desc}</p>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="mt-12 text-center">
+            <Link href="/bookings" className="inline-flex items-center gap-3 px-9 py-4 rounded-2xl bg-primary text-primary-foreground font-bold text-base hover:bg-primary/90 transition-all shadow-md">
+              <span>Find My Way There</span>
+              <ArrowRight className="w-5 h-5" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* —————————————————————————————————————————————————————————————————
+          SECTION 08 — DIGITAL PILGRIM / TRAVEL PASSPORT
+         ————————————————————————————————————————————————————————————————─ */}
+      <section className="relative z-10 py-20 sm:py-28 px-4 sm:px-6 bg-muted/30 border-y border-border">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+            
+            <div className="lg:col-span-5">
+              <span className="text-xs font-bold uppercase tracking-[0.3em] text-primary mb-3 block">GAMIFIED EXPLORATION</span>
+              <h2 className="text-3xl sm:text-5xl font-bold tracking-tight text-foreground font-serif leading-tight">
+                Your journeys deserve a passport of their own.
+              </h2>
+              <p className="mt-4 text-base sm:text-lg text-muted-foreground leading-relaxed">
+                Collect digital stamps when visiting temples, national parks and mountain passes. Earn XP, climb leaderboards and unlock exclusive rewards.
+              </p>
+
+              {/* Progression Levels */}
+              <div className="mt-8 space-y-3">
+                {['Explorer', 'Trail Seeker', 'Journey Maker', 'Master Navigator'].map((lvl, idx) => (
+                  <div key={lvl} className="flex items-center gap-3 text-xs sm:text-sm font-bold text-card-foreground">
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${idx === 0 ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
+                      {idx + 1}
+                    </div>
+                    <span>{lvl}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-8">
+                <Link href="/passport" className="inline-flex items-center gap-3 rounded-2xl bg-primary px-8 py-4 text-base font-bold text-primary-foreground shadow-md hover:bg-primary/90 transition-all">
+                  <span>Start My Passport</span>
+                  <ArrowRight className="w-5 h-5" />
+                </Link>
+              </div>
+            </div>
+
+            {/* Digital Passport UI Card */}
+            <div className="lg:col-span-7">
+              <div className="rounded-3xl border border-border bg-card p-6 sm:p-8 shadow-xl space-y-6">
+                <div className="flex items-center justify-between pb-4 border-b border-border">
+                  <div>
+                    <div className="text-xs font-mono font-bold text-primary">NAVIIGO DIGITAL PASSPORT</div>
+                    <div className="text-xl font-extrabold text-card-foreground font-serif">Explorer ID #8492</div>
+                  </div>
+                  <span className="px-3.5 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-bold">
+                    Level 07 • 2,480 XP
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+                  {[
+                    { stamp: '🛕 Varanasi', place: 'Kashi Vishwanath' },
+                    { stamp: '🏔️ Manali', place: 'Solang Pass' },
+                    { stamp: '🌊 Kerala', place: 'Alleppey Backwaters' },
+                    { stamp: '🏛️ Jaipur', place: 'Amber Fort' }
+                  ].map((s) => (
+                    <div key={s.stamp} className="p-3 rounded-2xl bg-background border border-border space-y-1">
+                      <div className="text-base font-bold text-card-foreground">{s.stamp}</div>
+                      <div className="text-[10px] text-muted-foreground">{s.place}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+      {/* —————————————————————————————————————————————————————————————————
+          SECTION 09 — FLOATING AI COMPANION
+         ————————————————————————————————————————————————————————————————─ */}
+      <section className="relative z-10 py-20 sm:py-28 px-4 sm:px-6 bg-background">
+        <div className="max-w-6xl mx-auto text-center">
+          <span className="text-xs font-bold uppercase tracking-[0.3em] text-primary mb-3 block">CONTEXTUAL AI ASSISTANCE</span>
+          <h2 className="text-3xl sm:text-5xl font-bold tracking-tight text-foreground font-serif max-w-3xl mx-auto">
+            And when plans change, NaviiGo changes with you.
           </h2>
-          <p className="text-base sm:text-lg text-slate-400 max-w-xl mx-auto mb-8 sm:mb-10">
-            Let our AI plan your perfect trip &mdash; from spiritual circuits to hidden gems, booked at the best prices.
+
+          <div className="mt-14 grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
+            {[
+              {
+                q: '"My train is delayed by 2 hours."',
+                ans: 'Your arrival is now 2 hours later. I have adjusted your evening Aarti timing accordingly.'
+              },
+              {
+                q: '"It started raining in Manali."',
+                ans: 'Skipping outdoor trekking trails. Here is a nearby heritage café & indoor museum route.'
+              },
+              {
+                q: '"Where can I get authentic food nearby?"',
+                ans: 'Found 3 verified local dhabas within 800m serving fresh local thalis.'
+              }
+            ].map((scen, idx) => (
+              <div key={idx} className="rounded-3xl border border-border bg-card p-6 space-y-4 shadow-xs">
+                <div className="text-sm font-bold text-primary font-mono">{scen.q}</div>
+                <div className="text-xs text-muted-foreground leading-relaxed pt-3 border-t border-border/50">
+                  <strong className="text-card-foreground block mb-1">NaviiGo AI Response:</strong>
+                  {scen.ans}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-10">
+            <button onClick={openAI} className="inline-flex items-center gap-2.5 px-8 py-4 rounded-2xl bg-primary text-primary-foreground font-bold text-base hover:bg-primary/90 transition-all shadow-md">
+              <Bot className="w-5 h-5" />
+              <span>Ask NaviiGo</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* —————————————————————————————————————————————————————————————————
+          SECTION 11 — TRUST & PRODUCT PRINCIPLES
+         ————————————————————————————————————————————————————————————————─ */}
+      <section className="relative z-10 py-20 sm:py-28 px-4 sm:px-6 bg-background">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <span className="text-xs font-bold uppercase tracking-[0.3em] text-primary mb-3 block">OUR PRINCIPLES</span>
+            <h2 className="text-3xl sm:text-5xl font-bold tracking-tight text-foreground font-serif">
+              Built for the way India travels.
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              { title: 'Cultural Intelligence', desc: 'Understands temple darshan schedules, regional festivals & local etiquette.' },
+              { title: 'Transparent Planning', desc: 'No hidden booking markups or artificial price inflation.' },
+              { title: 'Smarter Discovery', desc: 'Highlighting authentic local experiences alongside major landmarks.' },
+              { title: 'Human-Centered AI', desc: 'Assists your journey without taking away the joy of real exploration.' }
+            ].map((prin) => (
+              <div key={prin.title} className="rounded-3xl border border-border bg-card p-6 space-y-3 shadow-xs">
+                <div className="w-10 h-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center font-bold">
+                  <CheckCircle2 className="w-5 h-5" />
+                </div>
+                <h3 className="text-lg font-bold text-card-foreground font-serif">{prin.title}</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">{prin.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* —————————————————————————————————————————————————————————————————
+          SECTION 12 — FINAL CTA
+         ————————————————————————————————————————————————————————————————─ */}
+      <section className="relative z-10 py-24 sm:py-36 px-4 sm:px-6 bg-muted/40 border-t border-border overflow-hidden text-center">
+        <motion.div initial={{ opacity: 0, y: 25 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="max-w-3xl mx-auto">
+          <h2 className="text-4xl sm:text-6xl md:text-7xl font-bold tracking-tight text-foreground font-serif mb-6">
+            Your next story is waiting.
+          </h2>
+          <p className="text-lg sm:text-xl text-muted-foreground max-w-xl mx-auto mb-10">
+            Tell NaviiGo where you're going. We'll help you figure out the rest.
           </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 w-full">
-            <Link href="/itinerary?new=true" className="px-8 sm:px-10 py-3.5 sm:py-4 rounded-2xl bg-blue-600 text-white font-semibold text-sm sm:text-base hover:bg-blue-500 transition-all hover:scale-105 shadow-xl shadow-blue-600/20 w-full sm:w-auto text-center">
-              Plan Your Trip with AI
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Link href="/itinerary?new=true" className="w-full sm:w-auto px-10 py-4.5 rounded-2xl bg-primary text-primary-foreground font-bold text-lg hover:bg-primary/90 transition-all hover:scale-105 shadow-md">
+              Plan My Journey
             </Link>
-            <Link href="/explore" className="px-8 sm:px-10 py-3.5 sm:py-4 rounded-2xl bg-slate-800 text-white font-semibold text-sm sm:text-base hover:bg-slate-700 transition-all border border-slate-700 w-full sm:w-auto text-center">
-              Browse Destinations
+            <Link href="/explore" className="w-full sm:w-auto px-10 py-4.5 rounded-2xl bg-card border border-border text-card-foreground font-bold text-lg hover:bg-accent transition-all">
+              Explore India
             </Link>
+          </div>
+          <div className="mt-14 text-sm font-bold tracking-[0.3em] text-primary uppercase font-mono">
+            WE NAVIGATE, YOU GO.
           </div>
         </motion.div>
       </section>
+
     </main>
   );
 }

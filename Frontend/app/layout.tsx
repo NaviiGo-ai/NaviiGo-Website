@@ -1,5 +1,5 @@
-import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import type { Metadata, Viewport } from 'next';
+import { Amaranth, Playfair_Display } from 'next/font/google';
 import './globals.css';
 import Navbar from '@/components/shared/Navbar';
 import Footer from '@/components/shared/Footer';
@@ -7,11 +7,30 @@ import Providers from './providers';
 import { LazySocialButton, LazyMorphSurface, LazyWebGLBackground } from '@/components/shared/LazyComponents';
 import Script from 'next/script';
 
-const inter = Inter({
+const amaranth = Amaranth({
+  weight: ['400', '700'],
   subsets: ['latin'],
-  variable: '--font-inter',
+  variable: '--font-sans',
   display: 'swap',
 });
+
+const playfair = Playfair_Display({
+  subsets: ['latin'],
+  variable: '--font-serif',
+  display: 'swap',
+});
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: 'cover',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#fbfbf9' },
+    { media: '(prefers-color-scheme: dark)', color: '#1a1a1a' },
+  ],
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://naviigo.com'),
@@ -55,7 +74,8 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable}`}
+      className={`${amaranth.variable} ${playfair.variable}`}
+      suppressHydrationWarning
     >
       <body className="font-sans antialiased overflow-x-hidden">
         <Providers>
@@ -66,6 +86,12 @@ export default function RootLayout({
           <Footer />
           <LazyMorphSurface />
         </Providers>
+
+        {/* Locomotive Scroll v3.5.4 CDN Fallback Script */}
+        <Script
+          src="https://cdn.jsdelivr.net/npm/locomotive-scroll@3.5.4/dist/locomotive-scroll.js"
+          strategy="beforeInteractive"
+        />
 
         {/* TravelPayouts White Label Script */}
         <Script

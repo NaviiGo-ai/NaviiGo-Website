@@ -142,7 +142,7 @@ export default function PassportPage() {
     );
 
     return (
-        <div ref={containerRef} className="min-h-screen relative bg-[#f8f9fa] dark:bg-[#0a0a0a] pt-20 sm:pt-28 pb-24 px-4 md:px-8 overflow-hidden font-sans">
+        <div ref={containerRef} className="min-h-screen relative bg-background text-foreground pt-20 sm:pt-28 pb-24 px-4 md:px-8 overflow-hidden font-sans">
             {!user && renderNotLoggedIn()}
 
             {/* Decorative Background Effects */}

@@ -3,38 +3,109 @@
 @tailwind utilities;
 
 :root {
-  --color-primary: #0066cc;
-  --color-secondary: #ff9900;
-  --motion-ease: cubic-bezier(0.22, 0.61, 0.36, 1);
-  --motion-duration: 850ms;
+  --background: oklch(0.9840 0.0201 118.9236);
+  --foreground: oklch(0.2930 0.0660 243.1570);
+  --card: oklch(0.9860 0.0310 120.7570);
+  --card-foreground: oklch(0.2930 0.0660 243.1570);
+  --popover: oklch(0.9911 0 0);
+  --popover-foreground: oklch(0 0 0);
+  --primary: oklch(0.4320 0.0950 166.9130);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.2930 0.0660 243.1570);
+  --secondary-foreground: oklch(1 0 0);
+  --muted: oklch(0.9840 0.0201 118.9236);
+  --muted-foreground: oklch(0.3910 0.0900 240.8760);
+  --accent: oklch(0.9350 0.0250 166.9130);
+  --accent-foreground: oklch(0.2930 0.0660 243.1570);
+  --destructive: oklch(0.4440 0.1770 26.8990);
+  --destructive-foreground: oklch(0.9934 0.0032 17.2118);
+  --border: oklch(0.5856 0.0076 97.4302);
+  --input: oklch(0.9731 0 0);
+  --ring: oklch(1 0 0);
+  --chart-1: oklch(0.3910 0.0900 240.8760);
+  --chart-2: oklch(0 0 0);
+  --chart-3: oklch(0.6056 0.2189 292.7172);
+  --chart-4: oklch(0.7686 0.1647 70.0804);
+  --chart-5: oklch(0.6959 0.1491 162.4796);
+  --sidebar: oklch(0.9840 0.0201 118.9236);
+  --sidebar-foreground: oklch(0.2930 0.0660 243.1570);
+  --sidebar-primary: oklch(0.8348 0.1302 160.9080);
+  --sidebar-primary-foreground: oklch(0 0 0);
+  --sidebar-accent: oklch(0.9461 0 0);
+  --sidebar-accent-foreground: oklch(0.2930 0.0660 243.1570);
+  --sidebar-border: oklch(0.5856 0.0076 97.4302);
+  --sidebar-ring: oklch(0 0 0);
 
-  /* Base palette */
-  --bg-rgb: 247 249 252;
-  --fg-rgb: 15 23 42;
-  --surface-rgb: 255 255 255;
-  --ring-rgb: 15 23 42;
+  --font-sans: Amaranth, ui-sans-serif, sans-serif, system-ui;
+  --font-serif: Playfair Display, ui-serif, serif;
+  --font-mono: monospace;
 
-  /* Glass tuning */
-  --glass-alpha: 0.7;
-  --glass-strong-alpha: 0.85;
-  --ring-alpha: 0.08;
+  --radius: 0.5rem;
 
-  /* Editorial background accents */
-  --accent-primary-rgb: 0 102 204;
-  --accent-secondary-rgb: 255 153 0;
+  --tracking-normal: 0.08em;
+  letter-spacing: 0.08em;
+
+  --shadow-2xs: 0px 1px 3px 0px hsl(0 0% 0% / 0.05);
+  --shadow-xs: 0px 1px 3px 0px hsl(0 0% 0% / 0.05);
+  --shadow-sm: 0px 1px 3px 0px hsl(0 0% 0% / 0.10), 0px 1px 2px -1px hsl(0 0% 0% / 0.10);
+  --shadow: 0px 1px 3px 0px hsl(0 0% 0% / 0.10), 0px 1px 2px -1px hsl(0 0% 0% / 0.10);
+  --shadow-md: 0px 1px 3px 0px hsl(0 0% 0% / 0.10), 0px 2px 4px -1px hsl(0 0% 0% / 0.10);
+  --shadow-lg: 0px 1px 3px 0px hsl(0 0% 0% / 0.10), 0px 4px 6px -1px hsl(0 0% 0% / 0.10);
+  --shadow-xl: 0px 1px 3px 0px hsl(0 0% 0% / 0.10), 0px 8px 10px -1px hsl(0 0% 0% / 0.10);
+  --shadow-2xl: 0px 1px 3px 0px hsl(0 0% 0% / 0.25);
 }
 
 .dark {
-  --bg-rgb: 7 12 22;
-  --fg-rgb: 226 232 240;
-  --surface-rgb: 10 18 34;
-  --ring-rgb: 255 255 255;
+  --background: oklch(0.1822 0 0);
+  --foreground: oklch(0.9288 0.0126 255.5078);
+  --card: oklch(0.2046 0 0);
+  --card-foreground: oklch(0.9288 0.0126 255.5078);
+  --popover: oklch(0.2603 0 0);
+  --popover-foreground: oklch(0.7348 0 0);
+  --primary: oklch(0.4365 0.1044 156.7556);
+  --primary-foreground: oklch(0.9213 0.0135 167.1556);
+  --secondary: oklch(0.2603 0 0);
+  --secondary-foreground: oklch(0.9851 0 0);
+  --muted: oklch(0.2393 0 0);
+  --muted-foreground: oklch(0.7122 0 0);
+  --accent: oklch(0.2603 0 0);
+  --accent-foreground: oklch(0.9851 0 0);
+  --destructive: oklch(0.3123 0.0852 29.7877);
+  --destructive-foreground: oklch(0.9368 0.0045 34.3092);
+  --border: oklch(0.2809 0 0);
+  --input: oklch(0.2603 0 0);
+  --ring: oklch(0.8003 0.1821 151.7110);
+  --chart-1: oklch(0.8003 0.1821 151.7110);
+  --chart-2: oklch(0 0 0);
+  --chart-3: oklch(0.6056 0.2189 292.7172);
+  --chart-4: oklch(0.8369 0.1644 84.4286);
+  --chart-5: oklch(0.7845 0.1325 181.9120);
+  --sidebar: oklch(0.1822 0 0);
+  --sidebar-foreground: oklch(0.6301 0 0);
+  --sidebar-primary: oklch(0.4365 0.1044 156.7556);
+  --sidebar-primary-foreground: oklch(0.9213 0.0135 167.1556);
+  --sidebar-accent: oklch(0.3132 0 0);
+  --sidebar-accent-foreground: oklch(0.9851 0 0);
+  --sidebar-border: oklch(0.2809 0 0);
+  --sidebar-ring: oklch(0.8003 0.1821 151.7110);
 
-  --glass-alpha: 0.48;
-  --glass-strong-alpha: 0.62;
-  --ring-alpha: 0.12;
+  --tracking-normal: 0.08em;
+  letter-spacing: 0.08em;
 }
 
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-sans);
+    letter-spacing: var(--tracking-normal, 0.08em);
+  }
+}
+
+/* ── Lenis & Mobile Helper Utilities ── */
 html.lenis,
 html.lenis body {
   height: auto;
@@ -59,507 +130,108 @@ html.lenis body {
 html,
 body {
   overflow-x: hidden;
-  background-color: rgb(var(--bg-rgb));
-  color: rgb(var(--fg-rgb));
+  background-color: var(--background);
+  color: var(--foreground);
+  letter-spacing: 0.08em;
 }
 
-/* ── Global Mobile Responsiveness ─────────────────────────────── */
-/* Prevent ANY element from causing horizontal overflow */
 *,
 *::before,
 *::after {
   box-sizing: border-box;
 }
 
-/* Ensure images and media never exceed container */
 img, video, canvas, svg {
   max-width: 100%;
   height: auto;
 }
 
-/* Force mobile menu full-width on phones (bypasses hydration mismatch) */
-@media (max-width: 639px) {
-  #mobile-menu {
-    width: 100% !important;
-  }
-  
-  /* Prevent text from causing overflow */
-  h1, h2, h3, h4, h5, h6 {
-    overflow-wrap: break-word;
-    word-break: break-word;
-  }
-
-  /* ── Hero Slider ── */
-  /* Fix the heading box height for mobile — 2.2rem text needs ~44px height */
-  section > div > div > div > .relative.overflow-hidden {
-    min-height: 42px;
-  }
-
-  /* ── Setup Wizard ── */
-  /* Ensure wizard content doesn't overflow and is scrollable */
-  .flex.flex-col.h-full > .flex-1 {
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    padding-bottom: env(safe-area-inset-bottom, 16px);
-  }
-
-  /* Budget slider doesn't overflow */
-  input[type="range"] {
-    max-width: 100%;
-  }
-
-  /* ── Sticky Buttons (Wizard, DayView) ── */
-  /* Add safe-area padding for phones with home indicators */
-  .sticky.bottom-0 {
-    padding-bottom: max(16px, env(safe-area-inset-bottom));
-  }
-
-  /* ── Calendar Picker ── */
-  /* Prevent calendar from overflowing on small screens */
-  .grid.grid-cols-7 {
-    gap: 1px;
-  }
-  .grid.grid-cols-7 button {
-    min-width: 0;
-    padding-left: 2px;
-    padding-right: 2px;
-  }
-
-  /* ── ResultPage / DayViewPage Cards ── */
-  /* Ensure itinerary cards don't overflow */
-  .grid.grid-cols-1.sm\:grid-cols-2 {
-    grid-template-columns: 1fr;
-  }
-
-  /* ── Horizontal Scroll section height ── */
-  /* Reduce height on mobile for better experience */
-  [data-scroll-section] {
-    min-height: 60vh;
-  }
-
-  /* ── Explore Page ── */
-  /* 2-column grid on mobile for destination cards */
-  .grid.sm\:grid-cols-2.lg\:grid-cols-3.xl\:grid-cols-4 {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
-  }
-
-  /* ── About / Support / Saved pages ── */
-  /* Reduce bloated text sizes */
-  .text-5xl, .text-6xl {
-    font-size: 2rem !important;
-    line-height: 1.15 !important;
-  }
-
-  /* ── Footer ── */
-  /* Stack footer columns vertically */
-  footer .grid {
-    grid-template-columns: 1fr !important;
-    gap: 24px;
-  }
+/* ── Android & Mobile Touch Optimizations ── */
+* {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
 }
 
-/* Tablet-specific fixes */
-@media (min-width: 640px) and (max-width: 1023px) {
-  /* Hero heading size */
-  section > div > div > div > .relative.overflow-hidden {
-    min-height: 84px;
-  }
-
-  /* Navbar search doesn't overflow */
-  .fixed.inset-0.z-50 input {
-    max-width: 90vw;
-  }
+html {
+  -webkit-text-size-adjust: 100%;
 }
 
-@layer utilities {
-
-  /*
-    Hides native scrollbars while maintaining scroll functionality.
-    Used for the cinematic card rail.
-  */
-  .no-scrollbar {
-    -ms-overflow-style: none;
-    scrollbar-width: none;
-  }
-
-  .no-scrollbar::-webkit-scrollbar {
-    display: none;
-  }
-
-  /*
-    Glass effects for UI elements
-  */
-  .glass {
-    background-color: rgb(var(--surface-rgb) / var(--glass-alpha));
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgb(var(--ring-rgb) / var(--ring-alpha));
-  }
+body {
+  -webkit-overflow-scrolling: touch;
 }
 
-/* THE NUCLEAR OVERRIDE: 
-   Specifically targets and nukes the rogue injected scrollbars 
-   caused by browser-level 'overflow-x-auto' on containers.
-*/
-.overflow-x-auto.pb-3::-webkit-scrollbar {
-  display: none !important;
-  height: 0 !important;
-  background: transparent !important;
+button, a, input, select {
+  touch-action: manipulation;
 }
 
-.overflow-x-auto.pb-3 {
-  -ms-overflow-style: none !important;
-  scrollbar-width: none !important;
-  /* Aggressively forces clipping to stop native scroll UI */
-  overflow-x: clip !important;
+/* ── Locomotive Scroll v3.5.4 Styles ── */
+html.has-scroll-smooth {
+  overflow: hidden;
 }
 
-/* ─── TravelPayouts Widget Dark Theme Overrides ──────────────────────────── */
-
-/* Widget root containers - CSS Variable Native Overrides */
-.dark #tpwl-search,
-.dark #tpwl-search *,
-.dark #tpwl-tickets,
-.dark #tpwl-tickets * {
-  color-scheme: dark;
+html.has-scroll-dragging {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
-.dark #tpwl-search,
-.dark #tpwl-tickets {
-  /* Override TravelPayouts' inline CSS variables directly */
-  --font-color: #808080 !important;
-  --font-color-light: #e4e4e7 !important;
-  --ticket-cards-background: #18181b !important;
-  --border-color: #27272a !important;
-  --main-accent-contrast-color: #18181b !important;
-  --search-form-icon-color: #a1a1aa !important;
-  --search-form-link-color: #f97316 !important;
-  --link-color: #f97316 !important;
-  --link-color-darken: #ea580c !important;
-  --main-accent: #f97316 !important;
-  --main-accent-darken: #e11d48 !important;
-  --main-accent-opacified: rgba(249, 115, 22, 0.1) !important;
-  --main-accent-contrast-opacified: rgba(255, 255, 255, 0.3) !important;
+.has-scroll-smooth body {
+  overflow: hidden;
 }
 
-/* Force ALL top-level functional containers to transparent/dark */
-.dark #tpwl-search>div,
-.dark #tpwl-search form,
-.dark #tpwl-search [class*="SearchEdit-module"],
-.dark #tpwl-search [class*="DefaultSearch-module"] {
-  background-color: transparent !important;
+.has-scroll-smooth [data-scroll-container] {
+  min-height: 100vh;
 }
 
-/* Inputs & Main Button Wrappers */
-.dark #tpwl-search input,
-.dark #tpwl-search input:not([type="submit"]),
-.dark #tpwl-search [class*="Input-module__input"] input,
-.dark #tpwl-search [class*="Input-module__input"] span,
-.dark #tpwl-search [class*="Input-module__input"] div {
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
+[data-scroll-direction="horizontal"] [data-scroll-container] {
+  height: 100vh;
+  display: inline-block;
+  white-space: nowrap;
 }
 
-.dark #tpwl-search [class*="Input-module__input"] {
-  background-color: #18181b !important;
-  border-color: #27272a !important;
-  color: #ffffff !important;
+[data-scroll-direction="horizontal"] [data-scroll-section] {
+  display: inline-block;
+  vertical-align: top;
+  white-space: normal;
+  height: 100%;
 }
 
-/* Universal Pseudo-Element Killer (Separators/Dividers/Fake Backgrounds) */
-[id="tpwl-search"] *::before,
-[id="tpwl-search"] *::after {
-  background-color: #18181b !important;
-  background-image: none !important;
-  border-color: #27272a !important;
-  box-shadow: none !important;
+.c-scrollbar {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 11px;
+  height: 100%;
+  transform: transform;
+  transition: opacity 0.3s;
+  opacity: 0;
+  z-index: 9999;
 }
 
-div[class*="__divider"],
-div[class*="Separator"],
-div[class*="Delimiter"] {
-  background-color: transparent !important;
-  background: transparent !important;
-  border-color: transparent !important;
-  width: 0 !important;
+.c-scrollbar:hover {
+  opacity: 1;
 }
 
-[id="tpwl-search"] div,
-[id="tpwl-search"] input,
-[id="tpwl-search"] span {
-  border-color: #27272a !important;
-  box-shadow: none !important;
+.has-scroll-scrolling .c-scrollbar,
+.has-scroll-dragging .c-scrollbar {
+  opacity: 1;
 }
 
-/* ─── PASSENGER & CLASS PICKER (Pseudo-Element Aware) ─── */
-/* Travelpayouts often uses ::before to paint the background. Clear it out and enforce dark. */
-div[class*="Passengers-module"],
-div[class*="PassengersBase-module"],
-div[class*="passengers" i] {
-  background-color: #18181b !important;
-  background: #18181b !important;
-  border-color: #27272a !important;
-  color: #ffffff !important;
+.c-scrollbar_thumb {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background-color: var(--primary);
+  opacity: 0.75;
+  width: 7px;
+  border-radius: 10px;
+  margin: 2px;
+  cursor: -webkit-grab;
+  cursor: grab;
 }
 
-div[class*="Passengers-module"]::before,
-div[class*="PassengersBase-module"]::before,
-div[class*="passengers" i]::before {
-  background-color: #18181b !important;
-  background: #18181b !important;
-}
-
-div[class*="Passengers-module"] *:not(svg):not(path) {
-  background-color: #18181b !important;
-  background: #18181b !important;
-  color: #ffffff !important;
-  border-color: #27272a !important;
-}
-
-div[class*="Passengers-module"] input {
-  background-color: transparent !important;
-  background: transparent !important;
-  box-shadow: none !important;
-}
-
-div[class*="Passengers-module__passengersLabel"],
-div[class*="Passengers-module__passengersDescription"] {
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
-}
-
-.dark #tpwl-search [class*="Input-module__input"]:focus,
-.dark #tpwl-search [class*="Input-module__input"]:focus-within {
-  border-color: #f97316 !important;
-  background-color: #000 !important;
-}
-
-/* Forcing all passenger and general control values to white */
-.dark #tpwl-search [class*="Passengers"] span,
-.dark #tpwl-search [class*="Control"] span,
-.dark #tpwl-search [class*="value"],
-.dark #tpwl-search [class*="text"] {
-  color: #ffffff !important;
-  -webkit-text-fill-color: #ffffff !important;
-}
-
-/* Muted Text & Labels (specifically target labels so we don't accidentally dim main input values) */
-.dark #tpwl-search [class*="Input-module"] label,
-.dark #tpwl-search label,
-.dark #tpwl-search [class*="label"],
-.dark #tpwl-search [class*="subtitle"] {
-  color: #a1a1aa !important;
-  -webkit-text-fill-color: #a1a1aa !important;
-}
-
-.dark #tpwl-search input::placeholder,
-.dark #tpwl-search [class*="placeholder"] {
-  color: #71717a !important;
-  -webkit-text-fill-color: #71717a !important;
-}
-
-.dark #tpwl-search [class*="Input-module"] svg {
-  color: #71717a !important;
-  fill: #71717a !important;
-}
-
-/* Clear/close and inline buttons */
-.dark #tpwl-search [class*="Input-module__clear"],
-.dark #tpwl-search [class*="Input-module"] button {
-  color: #71717a !important;
-}
-
-.dark #tpwl-search [class*="Input-module"] button:hover {
-  color: #f97316 !important;
-}
-
-/* The swap arrows */
-.dark #tpwl-search [class*="swapButton"] {
-  background-color: #27272a !important;
-  border-color: #3f3f46 !important;
-  color: #a1a1aa !important;
-}
-
-.dark #tpwl-search [class*="swapButton"]:hover {
-  background-color: #3f3f46 !important;
-  color: #f97316 !important;
-}
-
-/* Passenger popover / dropdown panel */
-.dark #tpwl-search [class*="PassengersPicker"],
-.dark #tpwl-search [class*="PassengersDropdown"],
-.dark #tpwl-search [class*="PassengersBase-module"] [class*="popover"],
-.dark #tpwl-search [class*="PassengersBase-module"] [class*="dropdown"] {
-  background-color: #111 !important;
-  border-color: #27272a !important;
-  color: #000000 !important;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
-}
-
-.dark #tpwl-search [class*="PassengerControl"] button,
-.dark #tpwl-search [class*="CountControl"] button {
-  background-color: #27272a !important;
-  border-color: #3f3f46 !important;
-  color: #e4e4e7 !important;
-}
-
-.dark #tpwl-search [class*="PassengerControl"] button:hover,
-.dark #tpwl-search [class*="CountControl"] button:hover {
-  background-color: #3f3f46 !important;
-  color: #f97316 !important;
-}
-
-/* ─── SEARCH BUTTON (THE DARK BOX FIX) ─── */
-.dark #tpwl-search button[type="submit"],
-.dark #tpwl-search [class*="submitBtn"],
-.dark #tpwl-search [class*="Button-module__primary"],
-.dark #tpwl-search [class*="Button-module__root"]:last-child {
-  background: linear-gradient(to right, #f97316, #e11d48) !important;
-  border: none !important;
-  color: #fff !important;
-  font-weight: 700 !important;
-  opacity: 1 !important;
-}
-
-.dark #tpwl-search button[type="submit"]:hover,
-.dark #tpwl-search [class*="submitBtn"]:hover {
-  opacity: 0.9 !important;
-  transform: translateY(-1px);
-}
-
-/* Popovers & Dropdowns */
-.dark #tpwl-search [class*="Dropdown-module__list"],
-.dark #tpwl-search [class*="Autocomplete"],
-.dark #tpwl-search [class*="suggestions"],
-.dark #tpwl-search ul[role="listbox"],
-.dark #tpwl-search [class*="Calendar"],
-.dark #tpwl-search [class*="DatePicker"],
-.dark #tpwl-search [class*="calendar"],
-.dark #tpwl-search [class*="Popover"] {
-  background-color: #111 !important;
-  border-color: #27272a !important;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
-}
-
-.dark #tpwl-search [class*="Dropdown-module__list"] li,
-.dark #tpwl-search [class*="Autocomplete"] li,
-.dark #tpwl-search ul[role="listbox"] li {
-  color: #e4e4e7 !important;
-}
-
-.dark #tpwl-search [class*="Dropdown-module__list"] li:hover,
-.dark #tpwl-search [class*="Autocomplete"] li:hover,
-.dark #tpwl-search ul[role="listbox"] li:hover {
-  background-color: #1c1917 !important;
-}
-
-.dark #tpwl-search [class*="Calendar"] button:hover,
-.dark #tpwl-search [class*="DatePicker"] button:hover {
-  background-color: #27272a !important;
-}
-
-/* ─── LINKS & TOGGLES (THE BLUE LINKS FIX) ─── */
-.dark #tpwl-search a,
-.dark #tpwl-search [class*="multiRouteBtn"],
-.dark #tpwl-search [class*="hotelsLabel"],
-.dark #tpwl-search span[class*="link"] {
-  color: #f97316 !important;
-}
-
-.dark #tpwl-search [class*="Toggle-module"],
-.dark #tpwl-search [class*="Checkbox"] {
-  color: #a1a1aa !important;
-}
-
-/* Powered by link */
-.dark #tpwl-search [class*="referralLink"],
-.dark #tpwl-tickets [class*="referralLink"] {
-  color: #71717a !important;
-  opacity: 0.8;
-}
-
-/* ─── SEARCH RESULTS / TICKETS ROOT ────────────────────────────────────────── */
-.dark #tpwl-tickets {
-  background-color: transparent !important;
-  color: #e4e4e7 !important;
-}
-
-/* ─── PROGRESS BAR (THE GRAY BOX FIX) ─── */
-.dark #tpwl-tickets [class*="SearchProgress-module"],
-.dark #tpwl-tickets [class*="progress"],
-.dark #tpwl-tickets [class*="Progress-module"],
-.dark #tpwl-tickets [class*="SearchingAtProviders"] {
-  background-color: #18181b !important;
-  border-color: #27272a !important;
-  color: #e4e4e7 !important;
-}
-
-.dark #tpwl-tickets [class*="ProgressBar"] [class*="fill"],
-.dark #tpwl-tickets [class*="progress"] [class*="bar"] {
-  background: linear-gradient(to right, #f97316, #e11d48) !important;
-}
-
-.dark #tpwl-tickets [class*="Progress-module"] svg path {
-  stroke: #f97316 !important;
-  fill: #f97316 !important;
-}
-
-/* Ticket Cards */
-.dark #tpwl-tickets [class*="Ticket-module"],
-.dark #tpwl-tickets [class*="ticket"],
-.dark #tpwl-tickets [class*="Card"] {
-  background-color: #111 !important;
-  border-color: rgba(255, 255, 255, 0.05) !important;
-  color: #e4e4e7 !important;
-}
-
-.dark #tpwl-tickets [class*="Ticket-module"]:hover,
-.dark #tpwl-tickets [class*="ticket"]:hover {
-  border-color: rgba(255, 255, 255, 0.1) !important;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3) !important;
-}
-
-/* Sidebar & Filters */
-.dark #tpwl-tickets [class*="Filter"],
-.dark #tpwl-tickets [class*="filter"],
-.dark #tpwl-tickets [class*="Sidebar"] {
-  background-color: #111 !important;
-  border-color: rgba(255, 255, 255, 0.05) !important;
-  color: #e4e4e7 !important;
-}
-
-/* Text elements */
-.dark #tpwl-tickets p,
-.dark #tpwl-tickets span,
-.dark #tpwl-tickets label,
-.dark #tpwl-tickets h1,
-.dark #tpwl-tickets h2,
-.dark #tpwl-tickets h3,
-.dark #tpwl-tickets h4 {
-  color: #e4e4e7 !important;
-}
-
-/* Muted secondary text */
-.dark #tpwl-tickets [class*="secondary"],
-.dark #tpwl-tickets [class*="muted"],
-.dark #tpwl-tickets [class*="light"] {
-  color: #a1a1aa !important;
-}
-
-.dark #tpwl-tickets [class*="price"],
-.dark #tpwl-tickets [class*="Price"] {
-  color: #fff !important;
-  font-weight: 800 !important;
-}
-
-/* Action Buttons inside Results */
-.dark #tpwl-tickets a[class*="buy"],
-.dark #tpwl-tickets a[class*="Buy"],
-.dark #tpwl-tickets button[class*="buy"],
-.dark #tpwl-tickets button[class*="Buy"],
-.dark #tpwl-tickets [class*="FlightCard-module__cardLeftButton"] {
-  background: linear-gradient(to right, #f97316, #e11d48) !important;
-  color: #fff !important;
-  border: none !important;
+.has-scroll-dragging .c-scrollbar_thumb {
+  cursor: -webkit-grabbing;
+  cursor: grabbing;
 }

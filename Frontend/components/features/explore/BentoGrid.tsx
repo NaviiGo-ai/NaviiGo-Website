@@ -17,7 +17,7 @@ export const BentoGrid = memo(({ destinations, onSelectDestination }: Props) => 
         <div
           key={item.id}
           onClick={() => onSelectDestination(item.id)}
-          className={`group relative rounded-[2rem] overflow-hidden border border-zinc-200 dark:border-zinc-800 shadow-sm hover:shadow-2xl transition-all cursor-pointer ${
+          className={`group relative rounded-[2rem] overflow-hidden border border-border bg-card shadow-sm hover:shadow-2xl transition-all cursor-pointer ${
             idx % 5 === 0 ? 'md:col-span-2 md:h-[400px]' : 'h-[360px]'
           }`}
         >
@@ -29,23 +29,23 @@ export const BentoGrid = memo(({ destinations, onSelectDestination }: Props) => 
             className="object-cover group-hover:scale-105 transition-transform duration-700"
             unoptimized
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
           
-          <div className="absolute top-4 left-4 bg-black/40 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold text-white flex items-center gap-1 border border-white/10">
-            <MapPin className="w-3.5 h-3.5 text-emerald-400" /> {item.state}
+          <div className="absolute top-4 left-4 bg-background/80 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold text-foreground flex items-center gap-1 border border-border">
+            <MapPin className="w-3.5 h-3.5 text-primary" /> {item.state}
           </div>
 
           <div className="absolute bottom-6 left-6 right-6 text-white">
             <div className="flex items-center justify-between mb-2">
-              <h3 className="text-2xl font-black">{item.name}</h3>
+              <h3 className="text-2xl font-bold font-serif">{item.name}</h3>
               {item.rating && (
-                <span className="flex items-center gap-1 text-xs font-bold bg-amber-500/20 text-amber-300 px-2.5 py-1 rounded-full border border-amber-500/30">
-                  <Star className="w-3.5 h-3.5 fill-amber-400" /> {item.rating}
+                <span className="flex items-center gap-1 text-xs font-bold bg-primary/20 text-primary-foreground px-2.5 py-1 rounded-full border border-primary/30">
+                  <Star className="w-3.5 h-3.5 fill-primary text-primary" /> {item.rating}
                 </span>
               )}
             </div>
-            <p className="text-sm text-zinc-300 line-clamp-2 mb-4 font-medium">{item.tagline}</p>
-            <div className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-400 group-hover:translate-x-1 transition-transform">
+            <p className="text-sm text-muted-foreground/90 line-clamp-2 mb-4 font-medium">{item.tagline}</p>
+            <div className="inline-flex items-center gap-1.5 text-xs font-bold text-primary-foreground bg-primary px-3 py-1.5 rounded-full group-hover:translate-x-1 transition-transform">
               Explore Deep Dive <ArrowRight className="w-3.5 h-3.5" />
             </div>
           </div>

@@ -1,96 +1,63 @@
 'use client';
 
-import Image from 'next/image';
 import Link from 'next/link';
-import { AnimatePresence, motion } from 'framer-motion';
-import { useEffect, useMemo, useState } from 'react';
+import { motion } from 'framer-motion';
+import { useEffect, useState } from 'react';
+import { Compass, Sparkles, Navigation, ChevronLeft, ChevronRight } from 'lucide-react';
 
 type Slide = {
+  id: string;
   name: string;
+  subtitle: string;
   blurb: string;
-  background: string;
-};
-
-type SpotCard = {
-  title: string;
-  image: string;
+  tag: string;
 };
 
 const slides: Slide[] = [
   {
+    id: 'varanasi',
     name: 'VARANASI',
-    blurb:
-      'Experience the spiritual heart of India. Varanasi, one of the oldest living cities, offers deep cultural roots, ancient ghats, and mesmerizing Ganga Aarti ceremonies.',
-    background: '/assets/varanasi-bg.jpg',
+    subtitle: 'Spiritual Capital',
+    blurb: 'Experience the spiritual heart of India. Ancient riverfront ghats, deep cultural roots, and mesmerizing evening Ganga Aarti ceremonies.',
+    tag: 'Holy Ghats & Heritage',
   },
   {
+    id: 'rajasthan',
     name: 'RAJASTHAN',
-    blurb:
-      'Step into the land of Kings. Rajasthan features golden deserts, majestic forts, opulent palaces, and a vibrant culture that echoes tales of historic grandeur.',
-    background: '/destinations/jaipur.png',
+    subtitle: 'Land of Kings',
+    blurb: 'Step into royal history. Golden Thar sand dunes, majestic hill forts, opulent palaces, and vibrant cultural grandeur.',
+    tag: 'Forts & Desert Safari',
   },
   {
+    id: 'himalayas',
     name: 'HIMALAYAS',
-    blurb:
-      'Ascend to the breathtaking peaks. The Indian Himalayas offer snow-clad mountains, spiritual retreats, and thrilling adventures in a landscape of pristine beauty.',
-    background: '/destinations/manali.png',
+    subtitle: 'Peak Serenity',
+    blurb: 'Ascend to breathtaking heights. Snow-clad mountain ranges, serene monasteries, and thrilling high-altitude alpine trails.',
+    tag: 'Mountain Trails & Valleys',
   },
   {
+    id: 'kerala',
     name: 'KERALA',
-    blurb:
-      'Kerala offers serene backwaters, lush tea-covered hills, heritage architecture, and tropical beaches, creating a slower and deeply scenic travel experience along India\'s southwestern coast.',
-    background: '/destinations/kerala.jpg',
-  },
-];
-
-const fallbackSlide: Slide = {
-  name: 'INDIA',
-  blurb: 'Discover the diverse, deeply spiritual, and culturally rich landscapes of India.',
-  background: '/destinations/agra.png',
-};
-
-const spotCards: SpotCard[] = [
-  {
-    title: 'Ganges Boat Ride, Varanasi',
-    image: '/assets/varanasi-spot-card.jpg',
-  },
-  {
-    title: 'Hawa Mahal, Jaipur',
-    image: '/destinations/jaipur.png',
-  },
-  {
-    title: 'Himalayan Peaks',
-    image: '/destinations/shimla.png',
-  },
-  {
-    title: 'Backwaters, Kerala',
-    image: '/destinations/kerala.jpg',
+    subtitle: "God's Own Country",
+    blurb: 'Serene backwaters, lush emerald tea plantations, heritage architecture, and tranquil tropical palm-fringed coastlines.',
+    tag: 'Backwaters & Spice Gardens',
   },
 ];
 
 export default function HeroSlider() {
   const [activeSlide, setActiveSlide] = useState(0);
   const [mounted, setMounted] = useState(false);
-  const currentSlide = slides[activeSlide] ?? slides[0] ?? fallbackSlide;
+
+  const currentSlide = slides[activeSlide] ?? slides[0];
 
   useEffect(() => {
     setMounted(true);
     const ticker = window.setInterval(() => {
       setActiveSlide((current) => (current + 1) % slides.length);
-    }, 5200);
+    }, 5500);
 
     return () => window.clearInterval(ticker);
   }, []);
-
-  const visibleCards = useMemo(() => {
-    // Show cards starting from the NEXT slide to emphasize what's coming
-    const first = spotCards[(activeSlide + 1) % spotCards.length];
-    const second = spotCards[(activeSlide + 2) % spotCards.length];
-    const third = spotCards[(activeSlide + 3) % spotCards.length];
-    const fourth = spotCards[(activeSlide + 4) % spotCards.length];
-
-    return [first, second, third, fourth].filter(Boolean) as SpotCard[];
-  }, [activeSlide]);
 
   const goPrev = () => {
     setActiveSlide((current) => (current - 1 + slides.length) % slides.length);
@@ -102,220 +69,119 @@ export default function HeroSlider() {
 
   if (!mounted) {
     return (
-      <section className="relative min-h-dvh overflow-hidden text-white bg-slate-950">
-        <div className="absolute inset-0">
-          <Image
-            src={slides[0].background}
-            alt={`${slides[0].name} landscape`}
-            fill
-            priority
-            className="object-cover"
-          />
-        </div>
-        <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/50 to-slate-950/20 backdrop-blur-[2px]" />
-        <div className="relative z-10 mx-auto flex min-h-dvh w-full max-w-[1500px] items-center px-4 sm:px-6 py-10 lg:px-10">
-          <div className="max-w-2xl">
-            <h1 className="text-4xl font-extrabold tracking-tight sm:text-7xl lg:text-8xl leading-none drop-shadow-2xl">
-              {slides[0].name}
-            </h1>
-            <p className="mt-6 max-w-lg text-sm leading-relaxed text-white/60 sm:text-base font-light">
-              {slides[0].blurb}
-            </p>
-            <Link
-              href="/explore?q=Varanasi"
-              className="mt-10 inline-flex items-center gap-4 rounded-xl bg-blue-600/90 px-10 py-4 text-sm font-bold text-white shadow-xl"
-            >
-              Explore <span className="text-xl">→</span>
-            </Link>
-          </div>
+      <section className="relative min-h-[85vh] overflow-hidden text-foreground bg-background flex items-center justify-center border-b border-border font-sans">
+        <div className="max-w-4xl mx-auto px-4 text-center">
+          <h1 className="text-5xl font-extrabold tracking-tight text-foreground font-serif">
+            NAViiGO
+          </h1>
+          <p className="mt-4 text-muted-foreground text-xl font-semibold">We Navigate, You Go</p>
         </div>
       </section>
     );
   }
 
   return (
-    <section className="relative min-h-dvh overflow-hidden text-white">
-      <AnimatePresence>
-        <motion.div
-          key={currentSlide.name}
-          className="absolute inset-0"
-          initial={{ opacity: 0, scale: 1.05 }}
-          animate={{ opacity: 1, scale: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 1.2, ease: 'easeInOut' }}
-        >
-          <Image
-            src={currentSlide.background}
-            alt={`${currentSlide.name} landscape`}
-            fill
-            priority
-            className="object-cover"
-          />
-        </motion.div>
-      </AnimatePresence>
+    <section className="relative min-h-[88vh] sm:min-h-dvh overflow-hidden text-foreground bg-background border-b border-border flex items-center justify-center font-sans">
+      {/* Travel Map Background Image - High Visibility */}
+      <div
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-85 dark:opacity-45 dark:invert dark:hue-rotate-180 mix-blend-multiply dark:mix-blend-luminosity pointer-events-none transition-all duration-500"
+        style={{ backgroundImage: "url('/home_bg.png')" }}
+      />
+      {/* Soft Vignette Gradient */}
+      <div className="absolute inset-0 bg-gradient-to-r from-background/85 via-background/50 to-transparent dark:from-background/80 dark:via-background/45 dark:to-transparent pointer-events-none" />
 
-      {/* Background with darker gradient overlay for better text visibility */}
-      <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/50 to-slate-950/20 backdrop-blur-[2px]" />
-
-      <div className="relative z-10 mx-auto flex min-h-dvh w-full max-w-[1500px] items-center px-4 sm:px-6 py-10 lg:px-10">
-
-        {/* Left Pagination Sidebar */}
-        <div className="mr-6 hidden h-[78vh] items-center gap-4 lg:flex">
-          <div className="flex h-full flex-col items-center justify-between py-4">
-            {slides.map((slide, index) => (
-              <span
-                key={slide.name}
-                className={`rounded-full transition ${index === activeSlide
-                  ? 'h-5 w-5 border border-white/70 bg-white/30'
-                  : 'h-2 w-2 bg-white/60'
-                  }`}
+      <div className="relative z-10 mx-auto flex min-h-[85vh] sm:min-h-dvh w-full max-w-7xl items-center px-4 sm:px-6 py-16 lg:px-8">
+        
+        {/* Left Vertical Counter Indicator */}
+        <div className="mr-10 hidden h-[65vh] flex-col items-center justify-between py-6 lg:flex shrink-0">
+          <div className="flex flex-col items-center gap-3.5">
+            {slides.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setActiveSlide(index)}
+                className={`rounded-full transition-all duration-300 ${
+                  index === activeSlide
+                    ? 'h-9 w-3 bg-primary shadow-xs'
+                    : 'h-3 w-3 bg-muted-foreground/30 hover:bg-muted-foreground/60'
+                }`}
+                aria-label={`Go to slide ${index + 1}`}
               />
             ))}
           </div>
-          <span className="h-full w-px bg-white/30" />
-          <span className="origin-bottom -rotate-90 text-xs tracking-[0.28em] text-white/75">
+          <div className="origin-bottom -rotate-90 text-sm font-bold tracking-[0.3em] text-muted-foreground font-mono">
             {(activeSlide + 1).toString().padStart(2, '0')}/{slides.length.toString().padStart(2, '0')}
-          </span>
+          </div>
         </div>
 
-        <div className="grid w-full grid-cols-1 items-center gap-16 xl:grid-cols-[1.1fr_1fr]">
+        {/* Clean Hero Column with Enhanced Typography */}
+        <div className="w-full max-w-3xl">
+          <div className="inline-flex items-center gap-2.5 px-4.5 py-2.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-sm sm:text-base font-bold mb-6 backdrop-blur-xs">
+            <Sparkles className="w-4 h-4" />
+            <span>{currentSlide.tag}</span>
+          </div>
 
-          <div className="max-w-2xl">
-            {/* Heading: Simultaneous Box Roll Effect */}
-            <div className="relative h-[44px] w-full sm:h-[84px] lg:h-[108px] overflow-hidden">
-              {/* Removed mode="wait" to allow the old text and new text to move at the same time */}
-              <AnimatePresence>
-                <motion.h1
-                  key={currentSlide.name}
-                  // Restored 'absolute' so the text lines overlap perfectly during the transition
-                  className="absolute left-0 top-0 text-[2.2rem] font-extrabold tracking-tight sm:text-7xl lg:text-8xl leading-none drop-shadow-2xl"
-                  initial={{ y: "100%", opacity: 0 }}
-                  animate={{ y: "0%", opacity: 1 }}
-                  exit={{ y: "-100%", opacity: 0 }}
-                  transition={{
-                    duration: 0.8, // Perfect speed for a mechanical 'roll'
-                    ease: [0.16, 1, 0.3, 1]
-                  }}
-                >
-                  {currentSlide.name}
-                </motion.h1>
-              </AnimatePresence>
-            </div>
-
-            <motion.p
-              key={`blurb-${activeSlide}`}
+          <div className="relative min-h-[140px] sm:min-h-[190px] w-full overflow-hidden">
+            <motion.div
+              key={currentSlide.name}
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="mt-6 max-w-lg text-sm leading-relaxed text-white/60 sm:text-base font-light"
+              transition={{ duration: 0.5, ease: 'easeOut' }}
             >
-              {currentSlide.blurb}
-            </motion.p>
-            <Link
-              href={`/explore?q=${currentSlide.name === 'VARANASI' ? 'Varanasi' : currentSlide.name === 'RAJASTHAN' ? 'Rajasthan' : currentSlide.name === 'HIMALAYAS' ? 'Himachal' : 'Kerala'}`}
-              className="mt-8 sm:mt-10 inline-flex items-center gap-3 sm:gap-4 rounded-xl bg-blue-600/90 px-7 sm:px-10 py-3 sm:py-4 text-sm font-bold text-white shadow-xl transition-all hover:scale-[1.05] hover:bg-blue-600"
-            >
-              Explore
-              <span className="text-xl">→</span>
-            </Link>
+              <span className="text-sm sm:text-base md:text-lg font-bold uppercase tracking-[0.35em] text-primary block mb-2.5 font-mono">
+                {currentSlide.subtitle}
+              </span>
+              <h1 className="text-5xl sm:text-7xl lg:text-8xl xl:text-9xl font-extrabold tracking-tight text-foreground font-serif leading-none">
+                {currentSlide.name}
+              </h1>
+            </motion.div>
           </div>
 
-          {/* Right Column: Masked Card Rail */}
-          <div
-            className="relative min-w-0 hidden xl:block"
-            style={{
-              WebkitMaskImage: 'linear-gradient(to right, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 75%, rgba(0,0,0,0) 100%)',
-              maskImage: 'linear-gradient(to right, rgba(0,0,0,1) 0%, rgba(0,0,0,1) 75%, rgba(0,0,0,0) 100%)',
-            }}
+          <motion.p
+            key={`blurb-${activeSlide}`}
+            initial={{ y: 15, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.4, delay: 0.1 }}
+            className="mt-6 sm:mt-8 max-w-2xl text-lg sm:text-xl md:text-2xl leading-relaxed text-muted-foreground font-sans font-medium"
           >
-            <motion.div
-              key={`cards-${activeSlide}`}
-              initial={{ x: 80, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
-              className="flex w-max items-start gap-12"
+            {currentSlide.blurb}
+          </motion.p>
+
+          <div className="mt-8 sm:mt-12 flex flex-wrap items-center gap-4.5">
+            <Link
+              href={`/explore?q=${encodeURIComponent(currentSlide.name)}`}
+              className="inline-flex items-center gap-3.5 rounded-2xl bg-primary px-9 py-4.5 text-base sm:text-lg font-bold text-primary-foreground shadow-md transition-all hover:scale-[1.03] hover:bg-primary/90"
             >
-              {visibleCards.map((card, idx) => (
-                <article
-                  key={`${activeSlide}-${card.title}-${idx}`}
-                  className="flex shrink-0 flex-col gap-6 transition-all duration-1000"
-                  style={{
-                    filter: `blur(${idx * 4}px)`,
-                    transform: `scale(${1 - idx * 0.1})`,
-                    opacity: 1 - idx * 0.3,
-                    zIndex: 20 - idx,
-                  }}
-                >
-                  <div className={`flex flex-col gap-3 transition-all duration-700 ${idx === 0 ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-4'}`}>
-                    <span className="text-sm font-semibold tracking-wide text-white/95">
-                      {card.title}
-                    </span>
-                    <div className="flex gap-2">
-                      {[...Array(5)].map((_, i) => (
-                        <span
-                          key={i}
-                          className={`h-1.5 w-1.5 rounded-full transition-colors ${
-                            i === 0 ? 'bg-white' : 'bg-white/30'
-                          }`}
-                        />
-                      ))}
-                    </div>
-                  </div>
+              <Navigation className="w-5 h-5" />
+              <span>Explore Destinations</span>
+              <span className="text-xl">&rarr;</span>
+            </Link>
 
-                  {/* Card Main Body */}
-                  <div className={`relative h-[380px] w-[280px] overflow-hidden rounded-[28px] bg-slate-800 transition-shadow duration-1000 ${
-                    idx === 0 ? 'shadow-[0_40px_100px_rgba(0,0,0,0.6)]' : 'shadow-none'
-                  }`}>
-                    <Image
-                      src={card.image}
-                      alt={card.title}
-                      fill
-                      className="object-cover"
-                      sizes="280px"
-                    />
-                    
-                    {/* Shadow Overlay */}
-                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/5 via-transparent to-black/60" />
-
-                    {/* Bookmark Icon */}
-                    <button
-                      type="button"
-                      className="absolute right-6 top-6 flex h-11 w-11 items-center justify-center rounded-full bg-white/20 shadow-lg backdrop-blur-md transition hover:bg-white/30"
-                    >
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
-                        <path d="M17 3H7c-1.1 0-1.99.9-1.99 2L5 21l7-3 7 3V5c0-1.1-.9-2-2-2z" />
-                      </svg>
-                    </button>
-                  </div>
-                </article>
-              ))}
-            </motion.div>
+            <Link
+              href="/itinerary?new=true"
+              className="inline-flex items-center gap-2.5 rounded-2xl bg-card/90 border border-border px-7 py-4.5 text-base sm:text-lg font-bold text-card-foreground hover:bg-accent transition-all shadow-xs backdrop-blur-xs"
+            >
+              <Compass className="w-5 h-5 text-primary" />
+              <span>Plan a Trip</span>
+            </Link>
           </div>
         </div>
 
-        {/* Navigation Buttons */}
-        <div className="absolute bottom-8 left-1/2 hidden -translate-x-1/2 items-center gap-3 lg:flex">
+        {/* Floating Slide Navigation Controls */}
+        <div className="absolute bottom-6 right-8 flex items-center gap-3">
           <button
             onClick={goPrev}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-white/30 text-lg transition hover:bg-white/45"
+            className="flex h-12 w-12 items-center justify-center rounded-full bg-card/90 backdrop-blur-xs border border-border text-foreground font-bold hover:bg-accent transition-colors shadow-xs"
             aria-label="Previous slide"
           >
-            ‹
+            <ChevronLeft className="w-6 h-6" />
           </button>
           <button
             onClick={goNext}
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-white/30 text-lg transition hover:bg-white/45"
+            className="flex h-12 w-12 items-center justify-center rounded-full bg-card/90 backdrop-blur-xs border border-border text-foreground font-bold hover:bg-accent transition-colors shadow-xs"
             aria-label="Next slide"
           >
-            ›
+            <ChevronRight className="w-6 h-6" />
           </button>
-        </div>
-
-        {/* Pagination Counter */}
-        <div className="absolute bottom-9 right-10 hidden items-center gap-8 text-xs tracking-[0.3em] text-white/70 lg:flex">
-          <span>{(activeSlide + 1).toString().padStart(2, '0')}</span>
-          <span className="h-px w-12 bg-white/40" />
-          <span>{slides.length.toString().padStart(2, '0')}</span>
         </div>
       </div>
     </section>

@@ -6,8 +6,9 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion';
 import { gsap } from 'gsap';
-import { Globe, Heart, Menu, Search, User, X, LifeBuoy, LogOut, Info, ChevronDown, MapPin, Clock, Navigation, History, PlusCircle, Compass, Plane, BookOpen } from 'lucide-react';
+import { Globe, Heart, Menu, Search, User, X, LifeBuoy, LogOut, Info, ChevronDown, MapPin, Clock, Navigation, History, PlusCircle, Compass, Plane, BookOpen, Bookmark } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
+import SlidingTabs from './SlidingTabs';
 import { useAuth } from '@/lib/AuthContext';
 import { ALL_DESTINATIONS } from '@/components/features/explore/exploreData';
 
@@ -42,8 +43,20 @@ export default function Navbar() {
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [itineraryDropdownOpen, setItineraryDropdownOpen] = useState(false);
   const [mobileItineraryOpen, setMobileItineraryOpen] = useState(false);
+  const [moreMenuOpen, setMoreMenuOpen] = useState(false);
+  const moreMenuRef = useRef<HTMLDivElement | null>(null);
   const dropdownTimeout = useRef<NodeJS.Timeout | null>(null);
   const { scrollY } = useScroll();
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (moreMenuRef.current && !moreMenuRef.current.contains(e.target as Node)) {
+        setMoreMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // ── Search: filter destinations + pages by query ──
   const searchResults = useMemo(() => {
@@ -97,15 +110,30 @@ export default function Navbar() {
     }
   }, [selectedIndex, totalResults, navigateToResult]);
 
+  const [isVisible, setIsVisible] = useState(true);
+  const lastScrollY = useRef(0);
+
   useEffect(() => {
     setMounted(true);
     const handleScroll = () => {
       if (typeof window === 'undefined') return;
-      const scrollPosition = window.scrollY;
-      const windowHeight = window.innerHeight;
-      const threshold = windowHeight * 0.7;
-      setIsScrolled(scrollPosition > threshold);
+      const currentScrollY = window.scrollY;
+      const delta = currentScrollY - lastScrollY.current;
+
+      setIsScrolled(currentScrollY > 40);
+
+      if (currentScrollY <= 40) {
+        setIsVisible(true);
+      } else {
+        if (delta > 10 && currentScrollY > 100) {
+          setIsVisible(false);
+        } else if (delta < -10) {
+          setIsVisible(true);
+        }
+      }
+      lastScrollY.current = currentScrollY;
     };
+
     window.addEventListener('scroll', handleScroll, { passive: true });
     window.addEventListener('resize', handleScroll);
     handleScroll();
@@ -113,15 +141,6 @@ export default function Navbar() {
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', handleScroll);
     };
-  }, []);
-
-  useEffect(() => {
-    if (!navRef.current) return;
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    const ctx = gsap.context(() => {
-      gsap.fromTo(navRef.current, { y: -10, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5, ease: 'power2.out' });
-    }, navRef);
-    return () => ctx.revert();
   }, []);
 
   const toggleMenu = () => setIsOpen((v) => !v);
@@ -153,125 +172,164 @@ export default function Navbar() {
         data-lenis-prevent
         role="navigation"
         aria-label="Main navigation"
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled
-            ? 'bg-white/90 dark:bg-slate-950/90 backdrop-blur-xl border-b border-black/5 dark:border-white/10 shadow-sm'
-            : 'bg-slate-950/30 backdrop-blur-md border-b border-white/5'
-          }`}
+        initial={{ y: 0, opacity: 1 }}
+        animate={{
+          y: isVisible || isOpen ? 0 : -110,
+          opacity: isVisible || isOpen ? 1 : 0,
+        }}
+        transition={{ duration: 0.35, ease: [0.25, 0.1, 0.25, 1] }}
+        className="fixed top-0 left-0 right-0 z-50 py-3 sm:py-4 transition-all duration-300 pointer-events-none"
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16 sm:h-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pointer-events-auto">
+          {/* Unified Floating Rounded Navbar Pill */}
+          <div className={`flex items-center justify-between gap-2 p-2 sm:p-2.5 rounded-full border transition-all duration-300 ${
+            isScrolled
+              ? 'bg-card/98 backdrop-blur-2xl border-border shadow-lg text-foreground'
+              : 'bg-card/95 backdrop-blur-xl border-border/90 shadow-md text-foreground'
+          }`}>
+            
             {/* Logo */}
-            <motion.div className="flex items-center space-x-2 group" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Link href="/" className="flex items-center space-x-3">
-                <div className="relative h-10 w-10 overflow-hidden rounded-full">
-                  <Image src="/content.png" alt="NaviiGo Logo" fill sizes="40px" className="object-cover" />
+            <motion.div className="flex items-center space-x-2 pl-2 group shrink-0" whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+              <Link
+                href="/"
+                onClick={(e) => {
+                  if (typeof window !== 'undefined' && window.location.pathname === '/') {
+                    e.preventDefault();
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }
+                }}
+                className="flex items-center space-x-2.5"
+              >
+                <div className="relative h-9 w-9 overflow-hidden rounded-full ring-2 ring-primary/20 shrink-0">
+                  <Image src="/content.png" alt="NaviiGo Logo" fill sizes="36px" className="object-cover" />
                 </div>
-                <span className="text-xl font-semibold tracking-tight text-slate-900 dark:text-slate-100">NaviiGo</span>
+                <span className="text-lg font-extrabold tracking-tight text-foreground font-sans pr-1">NaviiGo</span>
               </Link>
             </motion.div>
 
-            {/* Desktop Navigation */}
-            <div className="hidden lg:flex items-center gap-1 justify-center flex-1 mx-4">
-              {navItems.map((item) => (
-                <div
-                  key={item.name}
-                  className="relative"
-                  onMouseEnter={item.hasDropdown ? handleDropdownEnter : undefined}
-                  onMouseLeave={item.hasDropdown ? handleDropdownLeave : undefined}
-                >
-                  <motion.div
-                    className="flex items-center px-2.5 py-1.5 rounded-full text-slate-600 hover:text-primary hover:bg-slate-100 transition-all relative group dark:text-slate-300 dark:hover:text-secondary dark:hover:bg-white/5"
-                    whileHover={{ y: -1 }}
-                    whileTap={{ y: 0 }}
-                  >
-                    <Link href={item.href} className="flex items-center gap-1.5 text-[13px]">
-                      <item.icon className="w-3.5 h-3.5 opacity-70 group-hover:opacity-100" />
-                      <span className="font-semibold tracking-wide">{item.name}</span>
-                      {item.hasDropdown && <ChevronDown className={`w-3 h-3 opacity-60 transition-transform duration-200 ${itineraryDropdownOpen ? 'rotate-180' : ''}`} />}
-                    </Link>
-                    <motion.div
-                      className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-primary to-secondary rounded-full"
-                      initial={{ scaleX: 0 }}
-                      whileHover={{ scaleX: 1 }}
-                      transition={{ duration: 0.2 }}
-                    />
-                  </motion.div>
+            {/* Desktop Navigation with Sliding Tabs + Hamburger More Menu */}
+            <div className="hidden lg:flex items-center justify-center flex-1 mx-2 gap-2">
+              <SlidingTabs
+                bareContainer={true}
+                items={[
+                  { name: 'Explore', href: '/explore', icon: <Globe className="w-4 h-4" /> },
+                  { name: 'Passport', href: '/passport', icon: <Heart className="w-4 h-4" /> },
+                  { name: 'Itinerary', href: '/itinerary', icon: <Info className="w-4 h-4" /> },
+                  { name: 'Bookings', href: '/bookings', icon: <Plane className="w-4 h-4" /> },
+                ]}
+              />
 
-                  {/* Itinerary Dropdown */}
-                  {item.hasDropdown && (
-                    <AnimatePresence>
-                      {itineraryDropdownOpen && (
-                        <motion.div
-                          initial={{ opacity: 0, y: 8, scale: 0.96 }}
-                          animate={{ opacity: 1, y: 0, scale: 1 }}
-                          exit={{ opacity: 0, y: 8, scale: 0.96 }}
-                          transition={{ duration: 0.18, ease: 'easeOut' }}
-                          className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-72 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl rounded-2xl shadow-2xl shadow-black/10 dark:shadow-black/40 border border-black/5 dark:border-white/10 overflow-hidden z-50"
-                        >
-                          <div className="p-2">
-                            {ITINERARY_DROPDOWN.map((sub) => (
-                              <Link
-                                key={sub.name}
-                                href={sub.href}
-                                onClick={() => setItineraryDropdownOpen(false)}
-                                className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-white/5 transition-colors group/item"
-                              >
-                                <div className={`w-9 h-9 rounded-xl bg-slate-100 dark:bg-white/5 flex items-center justify-center ${sub.accent} group-hover/item:scale-110 transition-transform`}>
-                                  <sub.icon className="w-4 h-4" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <div className="text-[13px] font-semibold text-slate-800 dark:text-slate-200">{sub.name}</div>
-                                  <div className="text-[11px] text-slate-500 dark:text-slate-400">{sub.desc}</div>
-                                </div>
-                              </Link>
-                            ))}
-                          </div>
-                          <div className="px-4 py-2.5 bg-slate-50 dark:bg-white/[0.02] border-t border-slate-100 dark:border-white/5">
-                            <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">✨ AI-Powered Itinerary Management</p>
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+              {/* Hamburger More Dropdown Menu */}
+              <div className="relative" ref={moreMenuRef}>
+                <motion.button
+                  onClick={() => setMoreMenuOpen(prev => !prev)}
+                  className={`relative group flex items-center gap-2 px-4.5 py-3 text-base font-extrabold rounded-full transition-colors duration-200 ${
+                    moreMenuOpen
+                      ? 'bg-primary text-primary-foreground shadow-xs'
+                      : 'text-muted-foreground hover:text-foreground'
+                  }`}
+                  whileTap={{ scale: 0.95 }}
+                  aria-label="More navigation links"
+                >
+                  <Menu className={`w-4.5 h-4.5 ${moreMenuOpen ? 'text-primary-foreground' : 'text-primary'}`} />
+                  <span>More</span>
+                  <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${moreMenuOpen ? 'rotate-180 text-primary-foreground' : ''}`} />
+                  {!moreMenuOpen && (
+                    <span className="absolute bottom-1 left-4 right-4 h-[2.5px] bg-primary rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
                   )}
-                </div>
-              ))}
+                </motion.button>
+
+                <AnimatePresence>
+                  {moreMenuOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 12, scale: 0.96 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 12, scale: 0.96 }}
+                      transition={{ duration: 0.18, ease: 'easeOut' }}
+                      className="absolute right-0 top-full mt-3 w-max min-w-[185px] max-w-[210px] rounded-2xl border-2 border-primary/25 bg-card p-1.5 shadow-2xl z-[100] space-y-0.5"
+                    >
+                      <Link
+                        href="/saved"
+                        onClick={() => setMoreMenuOpen(false)}
+                        className="flex items-center gap-2.5 px-2.5 py-2 rounded-xl hover:bg-primary/10 text-card-foreground transition-all group"
+                      >
+                        <div className="w-7.5 h-7.5 rounded-lg bg-primary/15 text-primary flex items-center justify-center font-bold shadow-xs group-hover:bg-primary group-hover:text-primary-foreground transition-all shrink-0">
+                          <Bookmark className="w-3.5 h-3.5" />
+                        </div>
+                        <div>
+                          <div className="text-sm font-extrabold text-foreground group-hover:text-primary transition-colors leading-tight">Saved Trips</div>
+                          <div className="text-[11px] text-muted-foreground font-medium leading-tight">Bookmarks</div>
+                        </div>
+                      </Link>
+
+                      <Link
+                        href="/about"
+                        onClick={() => setMoreMenuOpen(false)}
+                        className="flex items-center gap-2.5 px-2.5 py-2 rounded-xl hover:bg-primary/10 text-card-foreground transition-all group"
+                      >
+                        <div className="w-7.5 h-7.5 rounded-lg bg-primary/15 text-primary flex items-center justify-center font-bold shadow-xs group-hover:bg-primary group-hover:text-primary-foreground transition-all shrink-0">
+                          <Info className="w-3.5 h-3.5" />
+                        </div>
+                        <div>
+                          <div className="text-sm font-extrabold text-foreground group-hover:text-primary transition-colors leading-tight">About</div>
+                          <div className="text-[11px] text-muted-foreground font-medium leading-tight">Our story</div>
+                        </div>
+                      </Link>
+
+                      <Link
+                        href="/support"
+                        onClick={() => setMoreMenuOpen(false)}
+                        className="flex items-center gap-2.5 px-2.5 py-2 rounded-xl hover:bg-primary/10 text-card-foreground transition-all group"
+                      >
+                        <div className="w-7.5 h-7.5 rounded-lg bg-primary/15 text-primary flex items-center justify-center font-bold shadow-xs group-hover:bg-primary group-hover:text-primary-foreground transition-all shrink-0">
+                          <LifeBuoy className="w-3.5 h-3.5" />
+                        </div>
+                        <div>
+                          <div className="text-sm font-extrabold text-foreground group-hover:text-primary transition-colors leading-tight">Support</div>
+                          <div className="text-[11px] text-muted-foreground font-medium leading-tight">Help center</div>
+                        </div>
+                      </Link>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             </div>
 
             {/* Right Side Actions */}
-            <div className="hidden md:flex items-center space-x-3">
+            <div className="hidden md:flex items-center space-x-2 pr-1 shrink-0">
               <motion.button
                 onClick={() => { setIsSearchOpen(true); setSearchQuery(''); setSelectedIndex(-1); }}
-                className="p-2 rounded-full hover:bg-black/5 text-slate-700 transition-colors dark:text-slate-200 dark:hover:bg-white/10"
-                whileHover={{ scale: 1.1, rotate: 90 }}
-                whileTap={{ scale: 0.9 }}
+                className="p-2.5 rounded-full hover:bg-accent hover:text-accent-foreground text-foreground transition-colors"
+                whileHover={{ scale: 1.08 }}
+                whileTap={{ scale: 0.95 }}
                 aria-label="Open search"
                 aria-haspopup="dialog"
               >
-                <Search className="w-5 h-5" />
+                <Search className="w-4.5 h-4.5" />
               </motion.button>
 
-              {/* <ThemeToggle /> */}
+              <ThemeToggle />
 
               {user ? (
-                <div className="flex items-center gap-3 pl-2">
+                <div className="flex items-center gap-2 pl-1">
                   <div className="hidden lg:flex flex-col items-end">
-                    <span className="text-sm font-medium text-slate-700 dark:text-slate-200 leading-none mb-0.5">{user.displayName?.split(' ')[0]}</span>
-                    <span className="text-[10px] text-slate-500 font-medium tracking-wide">MEMBER</span>
+                    <span className="text-sm font-medium text-foreground leading-none mb-0.5">{user.displayName?.split(' ')[0]}</span>
+                    <span className="text-[10px] text-muted-foreground font-medium tracking-wide">MEMBER</span>
                   </div>
                   {user.photoURL ? (
                     <motion.div whileHover={{ scale: 1.05 }} className="relative">
-                      <Image src={user.photoURL!} alt="User" width={36} height={36} className="w-9 h-9 rounded-full border-2 border-white dark:border-slate-800 shadow-sm" />
-                      <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-white dark:border-slate-800"></div>
+                      <Image src={user.photoURL!} alt="User" width={34} height={34} className="w-8.5 h-8.5 rounded-full border-2 border-border shadow-xs" />
+                      <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-primary rounded-full border-2 border-background"></div>
                     </motion.div>
                   ) : (
-                    <div className="w-9 h-9 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center">
-                      <User className="w-4 h-4 text-slate-500 dark:text-slate-400" />
+                    <div className="w-8.5 h-8.5 rounded-full bg-muted flex items-center justify-center">
+                      <User className="w-4 h-4 text-muted-foreground" />
                     </div>
                   )}
                   <motion.button
                     onClick={() => signOut()}
-                    className="p-2 ml-1 rounded-full text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-                    whileHover={{ scale: 1.1, rotate: 10 }}
+                    className="p-2 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                    whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9 }}
                     title="Sign Out"
                   >
@@ -281,27 +339,30 @@ export default function Navbar() {
               ) : (
                 <motion.button
                   onClick={() => signInWithGoogle()}
-                  className="flex items-center space-x-2 px-5 py-2.5 rounded-full bg-[#0066cc] text-white shadow-lg shadow-blue-900/20 hover:shadow-blue-900/30 transition-all font-medium"
-                  whileHover={{ scale: 1.02, y: -1 }}
-                  whileTap={{ scale: 0.98 }}
+                  className="flex items-center space-x-2.5 px-6 py-3 rounded-full bg-primary text-primary-foreground shadow-md hover:bg-primary/90 transition-all font-extrabold text-base tracking-wide"
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
                 >
-                  <User className="w-4 h-4" />
-                  <span className="text-sm">Sign In</span>
+                  <User className="w-5 h-5" />
+                  <span>Sign In</span>
                 </motion.button>
               )}
             </div>
 
-            {/* Mobile Menu Button */}
-            <motion.button
-              onClick={toggleMenu}
-              className="md:hidden p-2 rounded-lg hover:bg-black/5 text-slate-700 dark:text-slate-200 dark:hover:bg-white/10 relative z-[60]"
-              whileTap={{ scale: 0.9 }}
-              aria-label={isOpen ? 'Close menu' : 'Open menu'}
-              aria-expanded={isOpen}
-              aria-controls="mobile-menu"
-            >
-              {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </motion.button>
+            {/* Mobile Actions (ThemeToggle + Hamburger Menu Button) */}
+            <div className="flex md:hidden items-center gap-2 relative z-[60]">
+              <ThemeToggle />
+              <motion.button
+                onClick={toggleMenu}
+                className="p-2.5 rounded-full hover:bg-accent hover:text-accent-foreground text-foreground transition-colors"
+                whileTap={{ scale: 0.9 }}
+                aria-label={isOpen ? 'Close menu' : 'Open menu'}
+                aria-expanded={isOpen}
+                aria-controls="mobile-menu"
+              >
+                {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              </motion.button>
+            </div>
           </div>
         </div>
       </motion.nav>
@@ -333,11 +394,14 @@ export default function Navbar() {
                 <div className="relative h-9 w-9 overflow-hidden rounded-full">
                   <Image src="/content.png" alt="NaviiGo" fill sizes="36px" className="object-cover" />
                 </div>
-                <span className="font-bold text-slate-800 dark:text-white text-lg tracking-tight">NaviiGo</span>
+                <span className="font-bold text-foreground text-lg tracking-tight font-sans">NaviiGo</span>
               </div>
-              <motion.button onClick={toggleMenu} className="p-2 rounded-lg hover:bg-black/5 dark:hover:bg-white/10" whileTap={{ scale: 0.9 }}>
-                <X className="w-6 h-6 text-slate-700 dark:text-slate-200" />
-              </motion.button>
+              <div className="flex items-center gap-2">
+                <ThemeToggle />
+                <motion.button onClick={toggleMenu} className="p-2 rounded-lg hover:bg-accent text-foreground" whileTap={{ scale: 0.9 }}>
+                  <X className="w-6 h-6" />
+                </motion.button>
+              </div>
             </div>
 
             <div className="space-y-2">
@@ -386,9 +450,9 @@ export default function Navbar() {
               ))}
             </div>
 
-            <div className="flex items-center justify-between pt-2">
-              <div className="text-xs text-slate-500 dark:text-slate-400">Theme</div>
-              {/* <ThemeToggle /> */}
+            <div className="flex items-center justify-between py-2.5 px-1 border-t border-border/60">
+              <span className="text-sm font-extrabold text-foreground">Color Theme</span>
+              <ThemeToggle />
             </div>
 
             <div className="space-y-3 pt-6 border-t border-gray-200 dark:border-slate-800" suppressHydrationWarning>
@@ -433,7 +497,7 @@ export default function Navbar() {
       <AnimatePresence>
         {isSearchOpen && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[60] flex items-start justify-center pt-20 sm:pt-24 px-4">
-            <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setIsSearchOpen(false)} />
+            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setIsSearchOpen(false)} />
             <motion.div
               role="dialog"
               aria-modal="true"
@@ -442,16 +506,16 @@ export default function Navbar() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: -20 }}
               transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className="relative w-full max-w-2xl bg-white dark:bg-slate-900 rounded-2xl shadow-2xl overflow-hidden ring-1 ring-black/5 dark:ring-white/10"
+              className="relative w-full max-w-2xl bg-popover text-popover-foreground rounded-2xl shadow-2xl overflow-hidden border border-border"
             >
               {/* Search Input */}
-              <div className="flex items-center px-4 py-4 border-b border-slate-100 dark:border-slate-800">
-                <Search className="w-5 h-5 text-slate-400 dark:text-slate-500" />
+              <div className="flex items-center px-4 py-4 border-b border-border">
+                <Search className="w-5 h-5 text-muted-foreground" />
                 <input
                   ref={searchInputRef}
                   type="text"
                   placeholder="Search destinations, pages..."
-                  className="flex-1 bg-transparent border-none outline-none px-4 text-slate-800 dark:text-slate-200 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:ring-0"
+                  className="flex-1 bg-transparent border-none outline-none px-4 text-foreground placeholder:text-muted-foreground focus:ring-0"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyDown={handleSearchKeyDown}
@@ -462,11 +526,11 @@ export default function Navbar() {
                   aria-activedescendant={selectedIndex >= 0 ? `search-result-${selectedIndex}` : undefined}
                 />
                 {searchQuery && (
-                  <button onClick={() => setSearchQuery('')} className="p-1 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 transition-colors" aria-label="Clear search">
+                  <button onClick={() => setSearchQuery('')} className="p-1 rounded-full hover:bg-accent text-muted-foreground transition-colors" aria-label="Clear search">
                     <X className="w-4 h-4" />
                   </button>
                 )}
-                <button onClick={() => setIsSearchOpen(false)} className="ml-2 px-3 py-1 rounded-lg text-sm font-medium text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 transition-colors">Esc</button>
+                <button onClick={() => setIsSearchOpen(false)} className="ml-2 px-3 py-1 rounded-lg text-sm font-medium text-muted-foreground hover:bg-accent transition-colors">Esc</button>
               </div>
 
               {/* Search Results */}
@@ -476,7 +540,7 @@ export default function Navbar() {
                     {/* Destination Results */}
                     {searchResults.destinations.length > 0 && (
                       <div className="px-4 pt-3 pb-1">
-                        <h3 className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Destinations</h3>
+                        <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Destinations</h3>
                       </div>
                     )}
                     {searchResults.destinations.map((dest, i) => (
@@ -489,25 +553,25 @@ export default function Navbar() {
                         onMouseEnter={() => setSelectedIndex(i)}
                         className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors ${
                           selectedIndex === i
-                            ? 'bg-blue-50 dark:bg-blue-500/10'
-                            : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                            ? 'bg-primary/10 text-primary'
+                            : 'hover:bg-accent/60 text-foreground'
                         }`}
                       >
-                        <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center shrink-0">
-                          <MapPin className="w-4 h-4 text-emerald-500" />
+                        <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                          <MapPin className="w-4 h-4" />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="text-sm font-semibold text-slate-800 dark:text-slate-200 truncate">{dest.name}</div>
-                          <div className="text-xs text-slate-500 dark:text-slate-400 truncate">{dest.state} · {dest.category} · {dest.tagline}</div>
+                          <div className="text-sm font-semibold text-foreground truncate">{dest.name}</div>
+                          <div className="text-xs text-muted-foreground truncate">{dest.state} · {dest.category} · {dest.tagline}</div>
                         </div>
-                        <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider shrink-0">{dest.rating}★</span>
+                        <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider shrink-0">{dest.rating}★</span>
                       </button>
                     ))}
 
                     {/* Page Results */}
                     {searchResults.pages.length > 0 && (
                       <div className="px-4 pt-4 pb-1">
-                        <h3 className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Pages</h3>
+                        <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Pages</h3>
                       </div>
                     )}
                     {searchResults.pages.map((page, i) => {
@@ -522,16 +586,16 @@ export default function Navbar() {
                           onMouseEnter={() => setSelectedIndex(idx)}
                           className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors ${
                             selectedIndex === idx
-                              ? 'bg-blue-50 dark:bg-blue-500/10'
-                              : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                              ? 'bg-primary/10 text-primary'
+                              : 'hover:bg-accent/60 text-foreground'
                           }`}
                         >
-                          <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center shrink-0">
-                            <page.icon className="w-4 h-4 text-blue-500" />
+                          <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                            <page.icon className="w-4 h-4" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <div className="text-sm font-semibold text-slate-800 dark:text-slate-200">{page.name}</div>
-                            <div className="text-xs text-slate-500 dark:text-slate-400">{page.desc}</div>
+                            <div className="text-sm font-semibold text-foreground">{page.name}</div>
+                            <div className="text-xs text-muted-foreground">{page.desc}</div>
                           </div>
                         </button>
                       );
@@ -540,13 +604,13 @@ export default function Navbar() {
                 ) : searchQuery.trim() && totalResults === 0 ? (
                   <div className="px-4 py-10 text-center">
                     <div className="text-3xl mb-3">🔍</div>
-                    <p className="text-sm font-medium text-slate-500 dark:text-slate-400">No results for &ldquo;{searchQuery}&rdquo;</p>
-                    <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">Try searching for a city, state, or category</p>
+                    <p className="text-sm font-medium text-foreground">No results for &ldquo;{searchQuery}&rdquo;</p>
+                    <p className="text-xs text-muted-foreground mt-1">Try searching for a city, state, or category</p>
                   </div>
                 ) : (
                   /* Quick Jump (shown when no query) */
-                  <div className="px-4 py-5 bg-slate-50/50 dark:bg-slate-800/30">
-                    <h3 className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3">Quick Jump</h3>
+                  <div className="px-4 py-5 bg-muted/40">
+                    <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-3">Quick Jump</h3>
                     <div className="flex flex-wrap gap-2">
                       {[
                         { label: 'Goa', href: '/explore/Goa' },
@@ -559,14 +623,14 @@ export default function Navbar() {
                         <button
                           key={item.label}
                           onClick={() => { router.push(item.href); setIsSearchOpen(false); }}
-                          className="px-3 py-1.5 rounded-full bg-white dark:bg-slate-900 text-sm text-slate-600 dark:text-slate-300 shadow-sm ring-1 ring-black/5 dark:ring-white/5 hover:ring-blue-500/30 hover:text-blue-600 dark:hover:text-blue-400 transition-all"
+                          className="px-3 py-1.5 rounded-full bg-card text-card-foreground text-sm border border-border hover:border-primary hover:text-primary transition-all shadow-2xs"
                         >
                           {item.label}
                         </button>
                       ))}
                     </div>
-                    <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800">
-                      <p className="text-[11px] text-slate-400 dark:text-slate-500"><kbd className="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-[10px] font-mono">↑↓</kbd> navigate &nbsp; <kbd className="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-[10px] font-mono">↵</kbd> select &nbsp; <kbd className="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-[10px] font-mono">esc</kbd> close</p>
+                    <div className="mt-4 pt-3 border-t border-border">
+                      <p className="text-[11px] text-muted-foreground"><kbd className="px-1.5 py-0.5 rounded bg-muted text-[10px] font-mono">↑↓</kbd> navigate &nbsp; <kbd className="px-1.5 py-0.5 rounded bg-muted text-[10px] font-mono">↵</kbd> select &nbsp; <kbd className="px-1.5 py-0.5 rounded bg-muted text-[10px] font-mono">esc</kbd> close</p>
                     </div>
                   </div>
                 )}
