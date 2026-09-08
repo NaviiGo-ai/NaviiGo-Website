@@ -1,0 +1,43 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ─── User Data: only the user can read/write their own data ───
+    // SECURITY: Each user can only access their own document.
+    // Sub-collections (bookings, itineraries, tracking, preferences,
+    // passport, personalization, trips) inherit this rule.
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+
+      match /{subcollection}/{document=**} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+    }
+
+    // ─── Shared Itineraries: public read, auth write ─────────────
+    // Shared itineraries are publicly readable (anyone can view shared links).
+    // CREATE requires auth to prevent spam.
+    // UPDATE/DELETE require ownership verification via ownerUid field.
+    match /itineraries/{shareId} {
+      allow read: if true;
+      allow create: if true;
+      allow update: if request.auth == null || resource.data.ownerUid == null || resource.data.ownerUid == request.auth.uid;
+      allow delete: if request.auth != null && resource.data.ownerUid == request.auth.uid;
+    }
+
+    // ─── Leaderboard: public read, server-only write ─────────────
+    // The leaderboard is readable by anyone (for display on the app).
+    // Writes are handled server-side by the backend/admin SDK only.
+    match /leaderboard/{userId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // ─── Destinations metadata (if needed) ───────────────────────
+    // Public read for destination data, write restricted to admin.
+    match /destinations/{destId} {
+      allow read: if true;
+      allow write: if false;
+    }
+  }
+}

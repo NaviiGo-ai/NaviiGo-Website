@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "scroll-experience": {
+      "source": "davila7/claude-code-templates",
+      "sourceType": "github",
+      "skillPath": "cli-tool/components/skills/creative-design/scroll-experience/SKILL.md",
+      "computedHash": "ba5138a41c7f58f4ecedad23a69ec57613b1760bef086f923c386f5dc39e6202"
+    }
+  }
+}

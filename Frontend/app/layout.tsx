@@ -1,0 +1,105 @@
+import type { Metadata, Viewport } from 'next';
+import { Amaranth, Playfair_Display } from 'next/font/google';
+import './globals.css';
+import Navbar from '@/components/shared/Navbar';
+import Footer from '@/components/shared/Footer';
+import Providers from './providers';
+import { LazySocialButton, LazyMorphSurface, LazyWebGLBackground } from '@/components/shared/LazyComponents';
+import Script from 'next/script';
+
+const amaranth = Amaranth({
+  weight: ['400', '700'],
+  subsets: ['latin'],
+  variable: '--font-sans',
+  display: 'swap',
+});
+
+const playfair = Playfair_Display({
+  subsets: ['latin'],
+  variable: '--font-serif',
+  display: 'swap',
+});
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: 'cover',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#fbfbf9' },
+    { media: '(prefers-color-scheme: dark)', color: '#1a1a1a' },
+  ],
+};
+
+export const metadata: Metadata = {
+  metadataBase: new URL('https://naviigo.com'),
+  title: {
+    default: 'NaviiGo | The Ultimate Indian Travel Tech & AI Aggregator',
+    template: '%s | NaviiGo',
+  },
+  description: 'AI-Powered itineraries, digital pilgrim passports, and universal booking hub for cheap travel options across India.',
+  keywords: 'India travel, spiritual journey, digital passport, automatic stamps, AI itinerary generator, darshan timings planner, NaviiGO travel aggregator',
+  openGraph: {
+    title: 'NaviiGo | Indian Travel Planner & AI Aggregator',
+    description: 'Transform your journey with our Digital Pilgrim Passport and AI-powered itineraries.',
+    url: 'https://naviigo.com',
+    siteName: 'NaviiGo',
+    images: [
+      {
+        url: 'https://images.unsplash.com/photo-1564507592333-c60657eea523?auto=format&fit=crop&w=1280&q=80',
+        width: 1200,
+        height: 630,
+      }
+    ],
+    locale: 'en_IN',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'NaviiGO Travel Planner',
+    description: 'Start your ultimate Indian journey with an AI agent specifically built for Darshan timings and seamless cabs.',
+    images: ['https://images.unsplash.com/photo-1564507592333-c60657eea523?auto=format&fit=crop&w=1280&q=80'],
+  },
+  appleWebApp: {
+    title: 'NaviiGo',
+    statusBarStyle: 'black-translucent',
+    capable: true,
+  },
+};
+
+export default function RootLayout({
+  children,
+}: Readonly<{ children: React.ReactNode }>) {
+  return (
+    <html
+      lang="en"
+      className={`${amaranth.variable} ${playfair.variable}`}
+      suppressHydrationWarning
+    >
+      <body className="font-sans antialiased overflow-x-hidden">
+        <Providers>
+          <LazySocialButton />
+          <LazyWebGLBackground />
+          <Navbar />
+          <main className="overflow-x-hidden">{children}</main>
+          <Footer />
+          <LazyMorphSurface />
+        </Providers>
+
+        {/* Locomotive Scroll v3.5.4 CDN Fallback Script */}
+        <Script
+          src="https://cdn.jsdelivr.net/npm/locomotive-scroll@3.5.4/dist/locomotive-scroll.js"
+          strategy="beforeInteractive"
+        />
+
+        {/* TravelPayouts White Label Script */}
+        <Script
+          src="https://tpwgts.com/wl_web/main.js?wl_id=16321"
+          strategy="lazyOnload"
+          type="module"
+        />
+      </body>
+    </html>
+  );
+}

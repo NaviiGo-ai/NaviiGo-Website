@@ -8,6 +8,7 @@ import re
 import asyncio
 from typing import Optional, Dict, Any
 from services.gemini_client import get_client, GEMINI_MODEL, is_configured
+from services.prompt_builder import build_itinerary_prompt
 
 # Cache schema version — bump this when the prompt changes significantly
 # so the cache layer knows to re-fetch stale data.
