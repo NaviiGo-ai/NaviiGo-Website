@@ -2,7 +2,6 @@
 # Generates vector embeddings using Gemini's text-embedding-004 model.
 
 import asyncio
-import random
 import math
 from typing import Optional, List
 from services.gemini_client import get_client, is_configured
@@ -11,8 +10,8 @@ from services.gemini_client import get_client, is_configured
 async def generate_embedding(text: str) -> Optional[List[float]]:
     """Generate a 768-dimensional vector embedding for the given text."""
     if not is_configured():
-        print("[Embeddings] No GEMINI_API_KEY found, returning mock vector")
-        return [random.random() - 0.5 for _ in range(768)]
+        print("[Embeddings] No GEMINI_API_KEY found, returning None")
+        return None
 
     try:
         client = get_client()

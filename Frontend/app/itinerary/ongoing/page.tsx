@@ -54,24 +54,26 @@ function mapItineraryToOngoing(itin: SavedItineraryDoc): TripData | null {
 }
 
 export default function OngoingTripsPage() {
-    const { user, signInWithGoogle } = useAuth();
-    const [trips, setTrips] = useState<TripData[]>([]);
-    const [loading, setLoading] = useState(true);
+    const { user, loading: authLoading, signInWithGoogle } = useAuth();
+    const [trips, setTrips] = useState<TripData[] | null>(null);
 
     useEffect(() => {
-        if (!user?.uid) {
-            setLoading(false);
-            return;
-        }
-
+        if (!user?.uid) return;
+        let active = true;
         getUserItineraries(user.uid).then(itineraries => {
+            if (!active) return;
             const ongoing = itineraries
                 .map(mapItineraryToOngoing)
                 .filter((t): t is TripData => t !== null);
             setTrips(ongoing);
-            setLoading(false);
-        }).catch(() => setLoading(false));
+        }).catch(() => {
+            if (active) setTrips([]);
+        });
+        return () => { active = false; };
     }, [user?.uid]);
+
+    const loading = authLoading || (!!user && trips === null);
+    const tripList = trips ?? [];
 
     return (
         <div className="min-h-screen bg-[#f7f8fc] dark:bg-[#0a0a0f] pt-20 sm:pt-24 pb-20">
@@ -84,7 +86,7 @@ export default function OngoingTripsPage() {
                         <div>
                             <h1 className="text-3xl font-bold text-zinc-900 dark:text-white">Ongoing Trips</h1>
                             <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                                {trips.length > 0 ? `${trips.length} active journey${trips.length > 1 ? 's' : ''}` : 'Your currently active journeys'}
+                                {tripList.length > 0 ? `${tripList.length} active journey${tripList.length > 1 ? 's' : ''}` : 'Your currently active journeys'}
                             </p>
                         </div>
                     </div>
@@ -105,7 +107,7 @@ export default function OngoingTripsPage() {
                     </div>
                 )}
 
-                {user && !loading && trips.length === 0 && (
+                {user && !loading && tripList.length === 0 && (
                     <div className="text-center py-20">
                         <Plane className="w-12 h-12 text-zinc-300 dark:text-zinc-600 mx-auto mb-4" />
                         <h3 className="text-lg font-bold text-zinc-700 dark:text-zinc-300 mb-2">No ongoing trips</h3>
@@ -114,9 +116,9 @@ export default function OngoingTripsPage() {
                     </div>
                 )}
 
-                {user && !loading && trips.length > 0 && (
+                {user && !loading && tripList.length > 0 && (
                     <div className="space-y-6">
-                        {trips.map((trip, i) => (
+                        {tripList.map((trip, i) => (
                             <motion.div
                                 key={trip.id}
                                 initial={{ opacity: 0, y: 20 }}

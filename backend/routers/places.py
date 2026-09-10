@@ -52,10 +52,8 @@ async def nearby_places(lat: float = 9.9312, lng: float = 76.2673, type: str = "
             data = resp.json()
 
         if data:
-            import random
             places = [{
                 "name": (p.get("display_name") or "Unknown Place").split(",")[0],
-                "rating": round(random.random() * 1.5 + 3.5, 1),
                 "vicinity": ", ".join(p.get("display_name", "").split(",")[1:3]).strip() or "Nearby",
                 "type": type.replace("_", " "),
                 "priceLevel": 1,

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { badRequest, validateLat, validateLng, validateNumber, KNOWN_PLACE_TYPES } from '@/lib/validation';
 
 const GOOGLE_PLACES_KEY = process.env.GOOGLE_PLACES_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY || '';
+const PYTHON_API_URL = process.env.NEXT_PUBLIC_PYTHON_API_URL || 'http://localhost:8000';
 
 // Per-type max radius caps
 const RADIUS_CAPS: Record<string, number> = {
@@ -79,7 +80,7 @@ export async function GET(req: NextRequest) {
             isOpen: place.opening_hours?.open_now ?? null,
             types: place.types || [],
             photo: place.photos?.[0]
-                ? `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${place.photos[0].photo_reference}&key=${GOOGLE_PLACES_KEY}`
+                ? `${PYTHON_API_URL}/api/places/photo/${encodeURIComponent(place.photos[0].photo_reference)}?maxwidth=400`
                 : null,
         }));
 

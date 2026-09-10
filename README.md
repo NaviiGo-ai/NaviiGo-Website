@@ -128,7 +128,13 @@ PINECONE_API_KEY=your_pinecone_key
 REDIS_URL=redis://localhost:6379
 
 # ── Sentry (optional) ───────────────────
+# Error tracking. Completely optional — without a DSN the SDKs never init
+# (no network calls, no console noise) and the app falls back to plain
+# console.error. When set, errors from client, server and edge all report.
+# Source-map uploads need SENTRY_AUTH_TOKEN (CI env) too.
+NEXT_PUBLIC_SENTRY_DSN=your_sentry_dsn
 SENTRY_DSN=your_sentry_dsn
+SENTRY_AUTH_TOKEN=your_sentry_auth_token
 
 # ── CORS for backend (production) ────────
 CORS_ORIGINS=http://localhost:3000,https://your-domain.com

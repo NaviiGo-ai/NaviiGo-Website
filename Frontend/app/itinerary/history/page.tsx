@@ -43,23 +43,26 @@ function mapItineraryToPast(itin: SavedItineraryDoc): PastTrip | null {
 }
 
 export default function TripHistoryPage() {
-    const { user, signInWithGoogle } = useAuth();
-    const [trips, setTrips] = useState<PastTrip[]>([]);
-    const [loading, setLoading] = useState(true);
+    const { user, loading: authLoading, signInWithGoogle } = useAuth();
+    const [trips, setTrips] = useState<PastTrip[] | null>(null);
 
     useEffect(() => {
-        if (!user?.uid) {
-            setLoading(false);
-            return;
-        }
+        if (!user?.uid) return;
+        let active = true;
         getUserItineraries(user.uid).then(itineraries => {
+            if (!active) return;
             const past = itineraries
                 .map(mapItineraryToPast)
                 .filter((t): t is PastTrip => t !== null);
             setTrips(past);
-            setLoading(false);
-        }).catch(() => setLoading(false));
+        }).catch(() => {
+            if (active) setTrips([]);
+        });
+        return () => { active = false; };
     }, [user?.uid]);
+
+    const loading = authLoading || (!!user && trips === null);
+    const tripList = trips ?? [];
 
     return (
         <div className="min-h-screen bg-[#f7f8fc] dark:bg-[#0a0a0f] pt-20 sm:pt-24 pb-20">
@@ -72,20 +75,20 @@ export default function TripHistoryPage() {
                         <div>
                             <h1 className="text-3xl font-bold text-zinc-900 dark:text-white">Trip History</h1>
                             <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                                {trips.length > 0 ? `${trips.length} past adventure${trips.length > 1 ? 's' : ''}` : 'Relive your past adventures'}
+                                {tripList.length > 0 ? `${tripList.length} past adventure${tripList.length > 1 ? 's' : ''}` : 'Relive your past adventures'}
                             </p>
                         </div>
                     </div>
                 </motion.div>
 
                 {/* Stats Bar — only show when there are past trips */}
-                {trips.length > 0 && (
+                {tripList.length > 0 && (
                     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
                         className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
                         {[
-                            { label: 'Total Trips', value: trips.length, icon: '🗺️', color: 'text-blue-600 dark:text-blue-400' },
-                            { label: 'Destinations', value: new Set(trips.map(t => t.destination)).size, icon: '📍', color: 'text-emerald-600 dark:text-emerald-400' },
-                            { label: 'Total Days', value: trips.reduce((sum, t) => sum + parseInt(t.duration), 0), icon: '📅', color: 'text-purple-600 dark:text-purple-400' },
+                            { label: 'Total Trips', value: tripList.length, icon: '🗺️', color: 'text-blue-600 dark:text-blue-400' },
+                            { label: 'Destinations', value: new Set(tripList.map(t => t.destination)).size, icon: '📍', color: 'text-emerald-600 dark:text-emerald-400' },
+                            { label: 'Total Days', value: tripList.reduce((sum, t) => sum + parseInt(t.duration), 0), icon: '📅', color: 'text-purple-600 dark:text-purple-400' },
                         ].map((stat) => (
                             <div key={stat.label} className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-100 dark:border-zinc-800 p-4 text-center shadow-sm">
                                 <div className="text-2xl mb-1">{stat.icon}</div>
@@ -111,7 +114,7 @@ export default function TripHistoryPage() {
                     </div>
                 )}
 
-                {user && !loading && trips.length === 0 && (
+                {user && !loading && tripList.length === 0 && (
                     <div className="text-center py-20">
                         <Plane className="w-12 h-12 text-zinc-300 dark:text-zinc-600 mx-auto mb-4" />
                         <h3 className="text-lg font-bold text-zinc-700 dark:text-zinc-300 mb-2">No past trips yet</h3>
@@ -120,9 +123,9 @@ export default function TripHistoryPage() {
                     </div>
                 )}
 
-                {user && !loading && trips.length > 0 && (
+                {user && !loading && tripList.length > 0 && (
                     <div className="space-y-6">
-                        {trips.map((trip, i) => (
+                        {tripList.map((trip, i) => (
                             <motion.div
                                 key={trip.id}
                                 initial={{ opacity: 0, y: 20 }}

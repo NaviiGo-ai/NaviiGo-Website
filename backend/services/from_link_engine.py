@@ -3,35 +3,37 @@ import json
 import re
 import asyncio
 import hashlib
-import httpx
 from typing import Optional, Dict, Any
 from services.gemini_client import get_client, GEMINI_MODEL, is_configured
 from services.gemini_cache import cached_gemini_call
+from app.core.security import safe_fetch, UnsafeUrlError
 
 
 async def fetch_url_metadata(url: str) -> Optional[Dict[str, str]]:
-    """Fetch Open Graph metadata from a public URL."""
+    """Fetch Open Graph metadata from a public URL via SSRF-safe fetcher."""
     try:
-        async with httpx.AsyncClient(timeout=6.0) as client:
-            resp = await client.get(url, headers={
-                "User-Agent": "Mozilla/5.0 (compatible; NaviiGoBot/1.0; +https://naviigo.app)",
-                "Accept": "text/html,application/xhtml+xml",
-            })
-            if resp.status_code != 200:
-                return None
-            html = resp.text
+        resp = await safe_fetch(url, headers={
+            "User-Agent": "Mozilla/5.0 (compatible; NaviiGoBot/1.0; +https://naviigo.in)",
+            "Accept": "text/html,application/xhtml+xml",
+        })
+        if resp.status_code != 200:
+            return None
+        html = resp.text
 
-            og_title = re.search(r'<meta[^>]*property="og:title"[^>]*content="([^"]+)"', html)
-            og_desc = re.search(r'<meta[^>]*property="og:description"[^>]*content="([^"]+)"', html)
-            og_image = re.search(r'<meta[^>]*property="og:image"[^>]*content="([^"]+)"', html)
-            title_tag = re.search(r'<title>([^<]+)</title>', html)
+        og_title = re.search(r'<meta[^>]*property="og:title"[^>]*content="([^"]+)"', html)
+        og_desc = re.search(r'<meta[^>]*property="og:description"[^>]*content="([^"]+)"', html)
+        og_image = re.search(r'<meta[^>]*property="og:image"[^>]*content="([^"]+)"', html)
+        title_tag = re.search(r'<title>([^<]+)</title>', html)
 
-            title = (og_title.group(1) if og_title else "") or (title_tag.group(1) if title_tag else "")
-            return {
-                "title": title,
-                "description": og_desc.group(1) if og_desc else "",
-                "image": og_image.group(1) if og_image else "",
-            }
+        title = (og_title.group(1) if og_title else "") or (title_tag.group(1) if title_tag else "")
+        return {
+            "title": title,
+            "description": og_desc.group(1) if og_desc else "",
+            "image": og_image.group(1) if og_image else "",
+        }
+    except UnsafeUrlError:
+        # Unsafe URL (private/metadata/loopback etc.) → treat as failed fetch
+        return None
     except Exception:
         return None
 
@@ -90,15 +92,7 @@ async def extract_from_link(url: Optional[str] = None, caption_text: Optional[st
         raise ValueError("Could not extract any text from the link.")
 
     if not is_configured():
-        return {
-            "destName": "Ladakh",
-            "places": ["Pangong Tso", "Nubra Valley", "Leh Palace"],
-            "vibe": "adventure",
-            "days": 5,
-            "purpose": "adventure",
-            "tags": ["Mountains", "Lakes", "Road Trip"],
-            "confidence": "demo",
-        }
+        raise ValueError("AI content analysis is not available right now (missing GEMINI_API_KEY). Try again later.")
 
     # Cache by content hash (same URL/caption = same result)
     content_hash = hashlib.md5(analysis_text.encode()).hexdigest()[:16]

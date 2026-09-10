@@ -10,9 +10,8 @@ const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 export async function generateEmbedding(text: string): Promise<number[] | null> {
     try {
         if (!GEMINI_API_KEY) {
-            console.warn('[Embeddings] No GEMINI_API_KEY found, returning mock vector for development');
-            // Return a mock 768-dimensional vector if no API key is provided
-            return Array.from({ length: 768 }, () => Math.random() - 0.5);
+            console.warn('[Embeddings] No GEMINI_API_KEY found, returning null');
+            return null;
         }
 
         const model = genAI.getGenerativeModel({ model: 'text-embedding-004' });

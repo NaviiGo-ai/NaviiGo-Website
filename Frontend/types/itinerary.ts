@@ -6,6 +6,8 @@ export interface ActivityItem {
   id?: string;
   name: string;
   desc?: string;
+  /** Activity kind: 'restaurant' | 'hotel' | 'attraction' | 'activity' … set by curated/AI itinerary data */
+  type?: string;
   time?: string;
   lat?: number;
   lng?: number;

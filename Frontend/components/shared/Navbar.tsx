@@ -82,7 +82,11 @@ export default function Navbar() {
   const totalResults = searchResults.destinations.length + searchResults.pages.length;
 
   // Reset selected index when query changes
-  useEffect(() => { setSelectedIndex(-1); }, [searchQuery]);
+  const [prevSearchQuery, setPrevSearchQuery] = useState(searchQuery);
+  if (searchQuery !== prevSearchQuery) {
+    setPrevSearchQuery(searchQuery);
+    setSelectedIndex(-1);
+  }
 
   const navigateToResult = useCallback((index: number) => {
     const { destinations, pages } = searchResults;
@@ -114,6 +118,7 @@ export default function Navbar() {
   const lastScrollY = useRef(0);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
     const handleScroll = () => {
       if (typeof window === 'undefined') return;
@@ -169,7 +174,6 @@ export default function Navbar() {
     <>
       <motion.nav
         ref={navRef}
-        data-lenis-prevent
         role="navigation"
         aria-label="Main navigation"
         initial={{ y: 0, opacity: 1 }}
@@ -422,7 +426,7 @@ export default function Navbar() {
                       <span className="font-medium">{item.name}</span>
                     </Link>
                     {item.hasDropdown && (
-                      <button onClick={() => setMobileItineraryOpen(v => !v)} className="p-1">
+                      <button onClick={() => setMobileItineraryOpen(v => !v)} className="p-1" aria-label={mobileItineraryOpen ? 'Collapse Itinerary menu' : 'Expand Itinerary menu'} aria-expanded={mobileItineraryOpen}>
                         <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${mobileItineraryOpen ? 'rotate-180' : ''}`} />
                       </button>
                     )}
@@ -515,6 +519,7 @@ export default function Navbar() {
                   ref={searchInputRef}
                   type="text"
                   placeholder="Search destinations, pages..."
+                  aria-label="Search NaviiGo"
                   className="flex-1 bg-transparent border-none outline-none px-4 text-foreground placeholder:text-muted-foreground focus:ring-0"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}

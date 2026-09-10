@@ -274,10 +274,8 @@ All 14 atomic commits executed, verified, and live on branch `kartikey-reviewed`
 ### 16. Universal Booking Search
 - **What:** Search flights, trains, cabs, hotels across multiple platforms
 - **Key Files:**
-  - `lib/api/travel-search.ts` — Search logic for all 4 types
-  - `lib/api/amadeus.ts` — Amadeus API client (flights)
-  - `lib/api/googlePlaces.ts` — Google Places API client
-  - `app/api/search/*/route.ts` — API proxy routes
+  - `lib/api/travel-search.ts` — Search logic for all 4 types (SerpAPI google_flights / google_hotels, with graceful offline fallback)
+  - `app/api/search/route.ts` — API proxy route
   - `app/bookings/page.tsx` — Booking UI (50KB)
   - `components/features/bookings/BookingPortal.tsx` — Booking portal component
 - **Flights:**
@@ -381,9 +379,10 @@ All 14 atomic commits executed, verified, and live on branch `kartikey-reviewed`
 
 ### 27. Error Tracking (Sentry)
 - **Key Files:**
-  - `sentry.client.config.ts` — Client-side error tracking
+  - `instrumentation-client.ts` — Client-side error tracking (Sentry.init under Turbopack)
   - `sentry.server.config.ts` — Server-side error tracking
   - `sentry.edge.config.ts` — Edge runtime error tracking
+  - `instrumentation.ts` — Loads server/edge SDKs; `onRequestError` captures route errors
 - **Org:** naviigo, **Project:** naviigo-website
 
 ### 28. PWA Support
@@ -443,6 +442,26 @@ All 14 atomic commits executed, verified, and live on branch `kartikey-reviewed`
 ### 34. Validation
 - **Key File:** `lib/validation.ts` (4KB)
 - **Purpose:** Input validation utilities for forms and API inputs
+
+### 35. Live Weather (Open-Meteo)
+- **Key Files:** `components/features/itinerary/WeatherStrip.tsx`, `app/api/weather/route.ts`
+- **Purpose:** Free (no-key) live weather for itinerary views. Current + 7-day forecast; self-hides when offline/errors; 15-min client cache; anchors to map center or first activity with coords.
+- **Status:** ✅ Shipped (task #19)
+
+### 36. Voice Input on AI Chat (Phase 5a)
+- **Key File:** `components/shared/MorphSurface.tsx`
+- **Purpose:** Mic button in the AI chat dock using the Web Speech API (`SpeechRecognition`/`webkitSpeechRecognition`), `lang: 'en-IN'`. Feature-detected (mic hidden on unsupported browsers); transcripts fill the editable input; red pulse while listening; `aria-pressed` + labels.
+- **Status:** ✅ Shipped (task #22)
+
+### 37. Accessibility Pass (Phase 5b)
+- **Files:** `Navbar.tsx`, `CalendarPicker.tsx`, `TravelersSelector.tsx`, `MorphSurface.tsx`, `Footer.tsx`, `PlaceAutocomplete.tsx`, `ItineraryMap.tsx`
+- **Purpose:** Targeted screen-reader/keyboard pass: aria-labels on icon-only buttons (AI close/send/mic, calendar prev/next, travelers ±, search/newsletter inputs, chat input), keyboard-activatable AI dock (`role=button` + `tabIndex` + `onKeyDown`), `aria-expanded` on mobile menu chevrons, decorative `alt=""` for Leaflet popup images.
+- **Status:** ✅ Shipped (task #23)
+
+### 38. Per-Trip Expense Tracker (Phase 5c)
+- **Key File:** `components/features/itinerary/ExpenseTracker.tsx`
+- **Purpose:** Live spend log in the result page — ₹ INR formatting, 6 categories, editable budget vs actual, over-budget red bar, per-category breakdown, delete per entry. Persists to localStorage keyed by trip uuid via `useSyncExternalStore` (hydration-safe, multi-tab sync, offline/guest-safe).
+- **Status:** ✅ MVP shipped (task #24); group split + CSV export specced in `Plans.md` §5.7
 
 ---
 

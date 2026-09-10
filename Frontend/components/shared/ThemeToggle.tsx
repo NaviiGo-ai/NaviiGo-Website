@@ -9,7 +9,10 @@ export default function ThemeToggle() {
   const { theme, resolvedTheme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
-  useEffect(() => setMounted(true), []);
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMounted(true);
+  }, []);
 
   const activeTheme = theme === 'system' ? resolvedTheme : theme;
   const isDark = activeTheme === 'dark';

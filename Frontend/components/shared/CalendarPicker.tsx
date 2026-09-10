@@ -108,11 +108,11 @@ export default function CalendarPicker({ startDate, endDate, onSelect }: Calenda
             <div className="bg-white dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-700 p-5">
                 {/* Nav */}
                 <div className="flex items-center justify-between mb-4">
-                    <button onClick={prevMonth} className="w-8 h-8 rounded-full border border-zinc-200 dark:border-zinc-600 flex items-center justify-center text-sm hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors">←</button>
+                    <button onClick={prevMonth} aria-label="Previous month" className="w-8 h-8 rounded-full border border-zinc-200 dark:border-zinc-600 flex items-center justify-center text-sm hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors">←</button>
                     <div className="text-xs text-zinc-500 font-medium">
                         {picking === 'start' ? '📅 Select start date' : '📅 Select end date'}
                     </div>
-                    <button onClick={nextMonth} className="w-8 h-8 rounded-full border border-zinc-200 dark:border-zinc-600 flex items-center justify-center text-sm hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors">→</button>
+                    <button onClick={nextMonth} aria-label="Next month" className="w-8 h-8 rounded-full border border-zinc-200 dark:border-zinc-600 flex items-center justify-center text-sm hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors">→</button>
                 </div>
                 {/* 2 months */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">

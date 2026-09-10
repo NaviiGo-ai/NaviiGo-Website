@@ -1,0 +1,190 @@
+{
+  "destName": "Jaipur",
+  "description": "A curated 2-day cultural itinerary for Jaipur.",
+  "avgCost": "",
+  "crowdLevel": "Medium",
+  "crowdNote": "",
+  "logistics": {
+    "flights": "Check airline websites",
+    "trains": "Check IRCTC"
+  },
+  "highlights": [
+    {
+      "name": "Hawa Mahal",
+      "img": "",
+      "desc": "Iconic honeycomb palace",
+      "bestMonths": "",
+      "duration": "1h",
+      "tags": [
+        "Heritage"
+      ],
+      "lat": 26.9239,
+      "lng": 75.8267
+    },
+    {
+      "name": "Amber Fort",
+      "img": "",
+      "desc": "Hilltop fort",
+      "bestMonths": "",
+      "duration": "2h",
+      "tags": [
+        "Heritage"
+      ],
+      "lat": 26.9855,
+      "lng": 75.8513
+    }
+  ],
+  "restaurants": [
+    {
+      "name": "Laxmi Misthan Bhandar",
+      "desc": "Famous sweets",
+      "tags": [
+        "Rajasthani"
+      ],
+      "lat": 26.9213,
+      "lng": 75.8259,
+      "price": "2028",
+      "time": "Lunch",
+      "crowd": "High",
+      "crowdTip": "Try pyaaz kachori"
+    }
+  ],
+  "hotels": [
+    {
+      "name": "Umaid Bhawan",
+      "desc": "Heritage hotel",
+      "tags": [
+        "Heritage"
+      ],
+      "lat": 26.908,
+      "lng": 75.8135,
+      "price": "2028$"
+    }
+  ],
+  "dayPlans": [
+    {
+      "day": 1,
+      "title": "🗺️ Arrival & Heritage Walk",
+      "weather": {
+        "temp": "20°C–35°C",
+        "condition": "Clear Sky",
+        "emoji": "sun",
+        "rain": 0,
+        "tip": "Perfect sightseeing weather — don't forget sunscreen"
+      },
+      "activities": [
+        {
+          "name": "Check-in at Umaid Bhawan",
+          "desc": "Arrive and settle into your accommodation. Freshen up before exploring.",
+          "crowd": "Low",
+          "crowdTip": "🏨 Pro tip: Ask for a room upgrade at check-in — works 30% of the time!",
+          "travelFromPrev": "Arriving in city",
+          "lat": 26.908,
+          "lng": 75.8135,
+          "type": "hotel",
+          "durationMins": 45,
+          "time": "2:00 PM",
+          "slot": "Afternoon"
+        },
+        {
+          "name": "Lunch at Laxmi Misthan Bhandar",
+          "desc": "Famous sweets Must-try: .  per person.",
+          "crowd": "Medium",
+          "crowdTip": "🍽️ Peak lunch is 1–2 PM. Arrive by 12:30 for quick service.",
+          "travelFromPrev": "24 min walk",
+          "lat": 26.9213,
+          "lng": 75.8259,
+          "type": "restaurant",
+          "durationMins": 90,
+          "category": "casual",
+          "time": "2:55 PM",
+          "slot": "Afternoon"
+        },
+        {
+          "name": "Hawa Mahal",
+          "desc": "Iconic honeycomb palace",
+          "crowd": "Medium",
+          "crowdTip": "Photography rules vary — always ask first",
+          "travelFromPrev": "5 min walk",
+          "lat": 26.9239,
+          "lng": 75.8267,
+          "type": "attraction",
+          "durationMins": 90.0,
+          "time": "5:30 PM",
+          "slot": "Evening"
+        },
+        {
+          "name": "Dinner at Laxmi Misthan Bhandar",
+          "desc": "Famous sweets Try the .",
+          "crowd": "Low",
+          "crowdTip": "🌙 Evening dining in India peaks 8–9 PM. Arriving at 7:30 PM means you get the best table.",
+          "travelFromPrev": "5 min walk",
+          "lat": 26.9213,
+          "lng": 75.8259,
+          "type": "restaurant",
+          "durationMins": 75,
+          "category": "casual",
+          "time": "7:35 PM",
+          "slot": "Evening"
+        }
+      ]
+    },
+    {
+      "day": 2,
+      "title": "Arts & Crafts & Farewell",
+      "weather": {
+        "temp": "22°C–33°C",
+        "condition": "Partly Cloudy",
+        "emoji": "cloud",
+        "rain": 20,
+        "tip": "Comfortable conditions for outdoor activities"
+      },
+      "activities": [
+        {
+          "name": "Checkout from Umaid Bhawan",
+          "desc": "Pack up, settle bills, and store luggage at reception if needed.",
+          "crowd": "Low",
+          "crowdTip": "🧳 Ask the hotel to store your bags — most places do it free until evening.",
+          "travelFromPrev": "",
+          "lat": 26.908,
+          "lng": 75.8135,
+          "type": "hotel",
+          "durationMins": 30,
+          "time": "8:30 AM",
+          "slot": "Morning"
+        },
+        {
+          "name": "Amber Fort",
+          "desc": "Hilltop fort",
+          "crowd": "Medium",
+          "crowdTip": "Photography rules vary — always ask first",
+          "travelFromPrev": "23 min cab",
+          "lat": 26.9855,
+          "lng": 75.8513,
+          "type": "attraction",
+          "durationMins": 90.0,
+          "time": "10:00 AM",
+          "slot": "Morning"
+        },
+        {
+          "name": "Lunch at Laxmi Misthan Bhandar",
+          "desc": "Famous sweets Must-try: .  per person.",
+          "crowd": "Medium",
+          "crowdTip": "🍽️ Peak lunch is 1–2 PM. Arrive by 12:30 for quick service.",
+          "travelFromPrev": "19 min cab",
+          "lat": 26.9213,
+          "lng": 75.8259,
+          "type": "restaurant",
+          "durationMins": 90,
+          "category": "casual",
+          "time": "2:00 PM",
+          "slot": "Afternoon"
+        }
+      ]
+    }
+  ],
+  "mapCenter": {
+    "lat": 26.9124,
+    "lng": 75.7873
+  }
+}

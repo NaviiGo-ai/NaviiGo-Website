@@ -6,7 +6,6 @@
 // - Category-aware fallback with name-based hashing for variety
 // - Fallback gradient for broken images
 
-import { CATEGORY_IMAGE_POOLS, getCategoryImage, hashString } from './imageMap';
 
 // ─── Unsplash ─────────────────────────────────────────────────────────────────
 
@@ -23,9 +22,10 @@ export function unsplashUrl(photoId: string, options: {
 // ─── Google Places Photo ──────────────────────────────────────────────────────
 
 export function placesPhotoUrl(photoReference: string, maxWidth: number = 800): string {
-    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-    if (!apiKey || !photoReference) return '';
-    return `https://maps.googleapis.com/maps/api/place/photo?maxwidth=${maxWidth}&photo_reference=${photoReference}&key=${apiKey}`;
+    if (!photoReference) return '';
+    // Serve bytes via the backend proxy so the API key never reaches the client.
+    const base = process.env.NEXT_PUBLIC_PYTHON_API_URL || 'http://localhost:8000';
+    return `${base}/api/places/photo/${encodeURIComponent(photoReference)}?maxwidth=${maxWidth}`;
 }
 
 // ─── Fallback Gradient ────────────────────────────────────────────────────────
@@ -103,7 +103,7 @@ export function resolveImage(
         const url = placesPhotoUrl(placesPhotoRef);
         if (url) return { url, type: 'places' };
     }
-    return { url: getCategoryImage(category || 'place', category || 'default'), type: 'fallback' };
+    return { url: '', type: 'fallback' };
 }
 
 // ─── Image Error Handler ──────────────────────────────────────────────────────
@@ -114,8 +114,7 @@ export function handleImageError(
     fallbackCategory?: string
 ): void {
     const img = event.currentTarget;
-    img.src = getCategoryImage(img.alt || 'place', fallbackCategory || 'default');
-    img.onerror = null; // prevent infinite loop
+    img.style.display = 'none'; // hide broken image completely
 }
 
 // ─── Universal Image Source Resolver ──────────────────────────────────────────
@@ -125,41 +124,14 @@ export function handleImageError(
 
 export function resolveImgSrc(src: string, width: number = 800, name?: string, _category?: string): string {
     if (!src || src === 'placeholder') {
-        // Category-aware fallback instead of always showing Delhi
-        return getCategoryImage(name || 'activity', inferCategory(undefined, _category));
+        return '';
     }
-    // Already a full URL — use it directly
-    if (src.startsWith('http://') || src.startsWith('https://')) return src;
-    // Local path (e.g. /destinations/jaipur.png)
-    if (src.startsWith('/')) return src;
-    // If it looks like just a filename, try destinations folder
-    if (!src.includes('/') && (src.endsWith('.png') || src.endsWith('.jpg') || src.endsWith('.jpeg') || src.endsWith('.webp'))) {
-        return `/destinations/${src}`;
+    // Only accept full URLs (http/https)
+    if (src.startsWith('http://') || src.startsWith('https://')) {
+        return src;
     }
-    // Category hint from Gemini (e.g. "temple_generic", "beach_scene", "heritage_scene")
-    if (src.includes('_')) {
-        const parts = src.split('_');
-        // Try each part as a category key (handles "heritage_scene", "spiritual_site", etc.)
-        for (const part of parts) {
-            const catHint = part.toLowerCase();
-            if (CATEGORY_IMAGE_POOLS[catHint]) {
-                return getCategoryImage(name || src, catHint);
-            }
-            // Also check TAG_TO_CATEGORY for indirect matches
-            if (TAG_TO_CATEGORY[catHint]) {
-                return getCategoryImage(name || src, TAG_TO_CATEGORY[catHint]);
-            }
-        }
-        // Fallback: use first part as category hint
-        return getCategoryImage(name || src, inferCategory(undefined, parts[0]));
-    }
-    // Legacy Unsplash ID format (e.g. '1567521464027-f127ff144326')
-    // Completely bypass Unsplash and use local dynamic images instead
-    if (/^\d+-[a-f0-9]+$/.test(src)) {
-        return getCategoryImage(name || src, inferCategory(undefined, _category));
-    }
-    // Final fallback — use category-aware hash
-    return getCategoryImage(name || src, inferCategory(undefined, _category));
+    // Everything else is considered unavailable; return empty string
+    return '';
 }
 
 

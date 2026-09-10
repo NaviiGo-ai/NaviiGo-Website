@@ -9,6 +9,35 @@ interface TravelersSelectorProps {
   onSelect?: (val: string) => void;
 }
 
+const Counter = ({ label, sub, count, setter, min = 0 }: any) => (
+  <div className="flex items-center justify-between py-3 border-b border-zinc-100 dark:border-zinc-800 last:border-0">
+    <div>
+      <p className="text-sm font-bold text-zinc-900 dark:text-white">{label}</p>
+      <p className="text-[10px] text-zinc-500 font-medium">{sub}</p>
+    </div>
+    <div className="flex items-center gap-4">
+      <button
+        type="button"
+        onClick={() => setter(Math.max(min, count - 1))}
+        aria-label={`Decrease ${label}`}
+        className="w-8 h-8 rounded-full border border-zinc-200 dark:border-zinc-700 flex items-center justify-center hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors disabled:opacity-30"
+        disabled={count <= min}
+      >
+        <Minus className="w-3.5 h-3.5" />
+      </button>
+      <span className="w-4 text-center text-sm font-bold text-zinc-900 dark:text-white">{count}</span>
+      <button
+        type="button"
+        onClick={() => setter(count + 1)}
+        aria-label={`Increase ${label}`}
+        className="w-8 h-8 rounded-full border border-zinc-200 dark:border-zinc-700 flex items-center justify-center hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+      >
+        <Plus className="w-3.5 h-3.5" />
+      </button>
+    </div>
+  </div>
+);
+
 export default function TravelersSelector({ value, onSelect }: TravelersSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [adults, setAdults] = useState(1);
@@ -38,33 +67,6 @@ export default function TravelersSelector({ value, onSelect }: TravelersSelector
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
-
-  const Counter = ({ label, sub, count, setter, min = 0 }: any) => (
-    <div className="flex items-center justify-between py-3 border-b border-zinc-100 dark:border-zinc-800 last:border-0">
-      <div>
-        <p className="text-sm font-bold text-zinc-900 dark:text-white">{label}</p>
-        <p className="text-[10px] text-zinc-500 font-medium">{sub}</p>
-      </div>
-      <div className="flex items-center gap-4">
-        <button
-          type="button"
-          onClick={() => setter(Math.max(min, count - 1))}
-          className="w-8 h-8 rounded-full border border-zinc-200 dark:border-zinc-700 flex items-center justify-center hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors disabled:opacity-30"
-          disabled={count <= min}
-        >
-          <Minus className="w-3.5 h-3.5" />
-        </button>
-        <span className="w-4 text-center text-sm font-bold text-zinc-900 dark:text-white">{count}</span>
-        <button
-          type="button"
-          onClick={() => setter(count + 1)}
-          className="w-8 h-8 rounded-full border border-zinc-200 dark:border-zinc-700 flex items-center justify-center hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
-        >
-          <Plus className="w-3.5 h-3.5" />
-        </button>
-      </div>
-    </div>
-  );
 
   return (
     <div ref={containerRef} className="relative w-full">

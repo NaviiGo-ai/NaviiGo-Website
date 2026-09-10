@@ -27,21 +27,14 @@ const INDIAN_STATES = [
     'West Bengal', 'A&N Islands', 'Delhi', 'J&K', 'Ladakh', 'Lakshadweep',
 ];
 
-const DEMO_STAMPS: PassportStamp[] = [
-    { name: 'Kashi Vishwanath', location: 'Varanasi', state: 'Uttar Pradesh', icon: '🕉️', type: 'Spiritual', xpEarned: 175, visitedDate: '2025-08-14', activities: ['Ganga Aarti', 'Temple Darshan', 'Boat Ride'], verificationMethod: 'itinerary_complete' },
-    { name: 'Amber Fort', location: 'Jaipur', state: 'Rajasthan', icon: '🏰', type: 'Heritage', xpEarned: 200, visitedDate: '2025-09-22', activities: ['Fort Tour', 'Light Show', 'Bazaar Walk'], verificationMethod: 'itinerary_complete' },
-    { name: 'Meenakshi Temple', location: 'Madurai', state: 'Tamil Nadu', icon: '🛕', type: 'Spiritual', xpEarned: 150, visitedDate: '2025-10-05', activities: ['Architecture Tour', 'Evening Ceremony'], verificationMethod: 'manual' },
-    { name: 'Alleppey Backwaters', location: 'Kerala', state: 'Kerala', icon: '🛶', type: 'Nature', xpEarned: 200, visitedDate: '2025-11-12', activities: ['Houseboat Cruise', 'Village Walk', 'Sunset Watch'], verificationMethod: 'itinerary_complete' },
-];
-
-const DEMO_STATS: PassportStats = {
-    totalStamps: 4, totalXP: 725, level: 3, streak: 2,
-    lastTripDate: '2025-11-12',
-    achievements: ['first_trip'],
-    statesVisited: ['Uttar Pradesh', 'Rajasthan', 'Tamil Nadu', 'Kerala'],
-    citiesVisited: ['Varanasi', 'Jaipur', 'Madurai', 'Kerala'],
-    categoryCounts: { Spiritual: 2, Heritage: 1, Nature: 1 },
-    totalActivitiesCompleted: 10,
+const FALLBACK_STATS: PassportStats = {
+    totalStamps: 0, totalXP: 0, level: 1, streak: 0,
+    lastTripDate: null,
+    achievements: [],
+    statesVisited: [],
+    citiesVisited: [],
+    categoryCounts: {},
+    totalActivitiesCompleted: 0,
 };
 
 export default function PassportPage() {
@@ -49,31 +42,40 @@ export default function PassportPage() {
     const containerRef = useRef<HTMLDivElement>(null);
     const [selectedStamp, setSelectedStamp] = useState<PassportStamp | null>(null);
     const [activeTab, setActiveTab] = useState<'stamps' | 'achievements' | 'stats' | 'leaderboard' | 'bucketlist'>('stamps');
-    
+
     const { user, loading: authLoading, signInWithGoogle } = useAuth();
 
-    const [stats, setStats] = useState<PassportStats>(DEMO_STATS);
-    const [stamps, setStamps] = useState<PassportStamp[]>(DEMO_STAMPS);
+    const [stats, setStats] = useState<PassportStats>(FALLBACK_STATS);
+    const [stamps, setStamps] = useState<PassportStamp[]>([]);
     const [bucketList, setBucketList] = useState<any[]>([]);
     const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [loadedUid, setLoadedUid] = useState<string | null>(null);
+
+    const [prevUserUid, setPrevUserUid] = useState(user?.uid);
+    if (user?.uid !== prevUserUid) {
+        setPrevUserUid(user?.uid);
+        if (!user?.uid) {
+            setStats(FALLBACK_STATS);
+            setStamps([]);
+            setBucketList([]);
+            setLeaderboard([]);
+            setLoadedUid(null);
+        }
+    }
+
+    const loading = !!user && loadedUid !== user.uid;
 
     useEffect(() => {
-        if (authLoading) return;
-        if (!user) {
-            setStats(DEMO_STATS);
-            setStamps(DEMO_STAMPS);
-            setLoading(false);
-            return;
-        }
+        if (authLoading || !user) return;
+        let active = true;
 
-        setLoading(true);
         Promise.all([
             getPassportStats(user.uid),
             getPassportStamps(user.uid),
             getUserBucketList(user.uid),
             getLeaderboard(20),
         ]).then(([fsStats, fsStamps, fsBucketList, fsLeaderboard]) => {
+            if (!active) return;
             setBucketList(fsBucketList);
             setLeaderboard(fsLeaderboard);
             if (fsStats) {
@@ -86,7 +88,12 @@ export default function PassportPage() {
             } else {
                 setStamps([]);
             }
-        }).finally(() => setLoading(false));
+            setLoadedUid(user.uid);
+        }).catch(() => {
+            if (active) setLoadedUid(user.uid);
+        });
+
+        return () => { active = false; };
     }, [user, authLoading]);
 
     const progress = xpProgress(stats.totalXP);
@@ -134,7 +141,7 @@ export default function PassportPage() {
         <div className="text-center py-20 px-4">
             <motion.div animate={{ y: [0, -10, 0] }} transition={{ repeat: Infinity, duration: 3 }} className="text-6xl mb-6">✈️</motion.div>
             <h2 className="text-2xl font-bold text-zinc-900 dark:text-white mb-3">Passport is Empty!</h2>
-            <p className="text-zinc-500 max-w-md mx-auto mb-8">You haven't completed any trips yet. Generate an itinerary, pack your bags, and earn your first stamp!</p>
+            <p className="text-zinc-500 max-w-md mx-auto mb-8">You haven&apos;t completed any trips yet. Generate an itinerary, pack your bags, and earn your first stamp!</p>
             <button onClick={() => router.push('/explore')} className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold py-3 px-8 rounded-full shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50 transition-all hover:scale-105">
                 Explore Destinations
             </button>
@@ -392,7 +399,7 @@ export default function PassportPage() {
                                 return (
                                     <div key={rank} className="flex flex-col items-center group cursor-pointer">
                                         <div className="relative mb-4 z-10 group-hover:-translate-y-2 transition-transform">
-                                            <Image src={entry.photoURL || '/placeholder.jpg'} alt="" width={80} height={80} className={`rounded-full border-4 border-white dark:border-zinc-900 object-cover shadow-xl ${idx === 0 ? 'w-20 h-20 md:w-24 md:h-24 ring-4 ring-amber-400' : 'w-16 h-16 md:w-20 md:h-20'}`} />
+                                            <Image src={entry.photoURL || 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='} alt="" width={80} height={80} className={`rounded-full border-4 border-white dark:border-zinc-900 object-cover shadow-xl ${idx === 0 ? 'w-20 h-20 md:w-24 md:h-24 ring-4 ring-amber-400' : 'w-16 h-16 md:w-20 md:h-20'}`} />
                                             <div className={`absolute -bottom-3 left-1/2 -translate-x-1/2 w-8 h-8 rounded-full bg-gradient-to-br ${color} flex items-center justify-center text-white font-black shadow-lg border-2 border-white dark:border-zinc-900`}>{rank}</div>
                                         </div>
                                         <div className="text-center mb-4">

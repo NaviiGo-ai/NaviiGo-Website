@@ -21,11 +21,9 @@ import {
 import type {
     UserProfile,
     UserPreferences,
-    Booking,
     SavedItineraryDoc,
     TrackingSession,
     LocationPoint,
-    PassengerInfo,
 } from './firestoreSchema';
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -96,54 +94,6 @@ export async function updateUserPreferences(uid: string, prefs: Partial<UserPref
             });
         }
     });
-}
-
-export async function addRecentSearch(uid: string, search: {
-    query: string;
-    type: 'flights' | 'hotels' | 'trains' | 'cabs';
-    from?: string;
-    to?: string;
-}) {
-    const prefs = await getUserPreferences(uid);
-    const existing = prefs?.recentSearches ?? [];
-    const updated = [
-        { ...search, timestamp: Timestamp.now() },
-        ...existing.slice(0, 9), // keep last 10
-    ];
-    await updateUserPreferences(uid, { recentSearches: updated } as any);
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// BOOKINGS — users/{uid}/bookings/{bookingId}
-// ═══════════════════════════════════════════════════════════════════════════════
-
-export async function createBooking(uid: string, booking: Omit<Booking, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> {
-    const colRef = collection(db, 'users', uid, 'bookings');
-    const docRef = await addDoc(colRef, {
-        ...booking,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-    });
-    // Update user stats
-    await updateDoc(doc(db, 'users', uid), { totalBookings: increment(1) });
-    return docRef.id;
-}
-
-export async function updateBookingStatus(uid: string, bookingId: string, status: Booking['status'], pnr?: string) {
-    const ref = doc(db, 'users', uid, 'bookings', bookingId);
-    const update: Record<string, unknown> = { status, updatedAt: serverTimestamp() };
-    if (pnr) update.pnr = pnr;
-    await updateDoc(ref, update);
-}
-
-export async function getUserBookings(uid: string): Promise<Booking[]> {
-    const q = query(
-        collection(db, 'users', uid, 'bookings'),
-        orderBy('createdAt', 'desc'),
-        limit(50)
-    );
-    const snap = await getDocs(q);
-    return snap.docs.map(d => ({ id: d.id, ...d.data() } as Booking));
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════

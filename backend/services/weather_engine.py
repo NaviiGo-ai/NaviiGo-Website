@@ -70,10 +70,6 @@ async def get_weather(lat: float = 20.5937, lng: float = 78.9629) -> Dict[str, A
     except Exception as e:
         print(f"[Weather] Open-Meteo API failed: {e}")
         return {
-            "current": {
-                "temp": 28, "feelsLike": 31, "humidity": 72, "rainChance": 20,
-                "windSpeed": 12, "condition": "Partly Cloudy", "emoji": "⛅",
-            },
+            "current": None,
             "daily": [],
-            "_mock": True,
         }

@@ -45,7 +45,7 @@ export interface Booking {
   id: string;
   type: 'flight' | 'hotel' | 'train' | 'cab';
   status: 'intent_created' | 'confirmed' | 'cancelled' | 'completed';
-  bookingMethod: 'amadeus' | 'redirect';
+  bookingMethod: 'redirect'; // NaviiGo always redirects to the OTA/operator to complete the booking
 
   // Search context
   from: string;
@@ -56,7 +56,7 @@ export interface Booking {
   // Booking details
   providerName: string; // airline, hotel name, etc.
   providerCode: string; // flight number, hotel id, etc.
-  pnr: string | null; // actual PNR from Amadeus, null for redirects
+  pnr: string | null; // confirmation/booking ref if the redirect provider returns one, null otherwise
   totalPrice: number;
   currency: string;
   

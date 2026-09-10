@@ -5,11 +5,26 @@ python-dotenv==1.1.0
 google-genai==1.16.1
 httpx==0.28.1
 pydantic==2.11.3
+pydantic-settings==2.6.1
 pinecone==5.4.2
 requests==2.32.3
 firebase-admin==6.7.0
 redis==5.3.0
 slowapi==0.1.9
+
+# ── PostgreSQL transactional core ────────────────────────────────────────────
+# SQLite (aiosqlite) keeps tests/dev hermetic; asyncpg is the prod driver;
+# psycopg2-binary drives Alembic migrations against Postgres.
+sqlalchemy==2.0.36
+alembic==1.14.0
+asyncpg==0.31.0
+aiosqlite==0.22.1
+greenlet==3.5.5
+psycopg2-binary==2.9.10
+
+# ── Payments + analytics ─────────────────────────────────────────────────────
+razorpay==1.4.2
+posthog==3.8.0
 
 # Dev / Testing
 pytest==8.3.5

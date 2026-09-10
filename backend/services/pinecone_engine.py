@@ -2,7 +2,6 @@
 # Semantic similarity search for destination matching using Pinecone.
 
 import os
-import random
 from typing import List, Dict, Any
 from pinecone import Pinecone
 
@@ -28,8 +27,8 @@ async def search_destinations_by_vibe(user_taste_vector: List[float], top_k: int
     """Search Pinecone for destinations matching the user's taste vector."""
     index = _get_index()
     if index is None:
-        print("[Pinecone] No PINECONE_API_KEY found. Returning mock matches.")
-        return _mock_vector_search(top_k)
+        print("[Pinecone] No PINECONE_API_KEY found. Returning empty matches.")
+        return []
 
     try:
         result = index.query(
@@ -43,7 +42,7 @@ async def search_destinations_by_vibe(user_taste_vector: List[float], top_k: int
         ]
     except Exception as e:
         print(f"[Pinecone] Vector search failed: {e}")
-        return _mock_vector_search(top_k)
+        return []
 
 
 async def upsert_destination_vector(dest_id: str, vector: List[float], metadata: dict = None):
@@ -56,11 +55,3 @@ async def upsert_destination_vector(dest_id: str, vector: List[float], metadata:
         print(f"[Pinecone] Upserted vector for: {dest_id}")
     except Exception as e:
         print(f"[Pinecone] Failed to upsert {dest_id}: {e}")
-
-
-def _mock_vector_search(top_k: int) -> List[Dict[str, Any]]:
-    fallback_ids = ["goa", "manali", "varanasi", "udaipur", "munnar", "jaipur"]
-    return [
-        {"id": fid, "score": 0.8 + random.random() * 0.15, "metadata": {"source": "mock_fallback"}}
-        for fid in fallback_ids[:top_k]
-    ]

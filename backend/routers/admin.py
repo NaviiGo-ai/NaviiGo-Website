@@ -6,13 +6,14 @@ from services.gemini_cache import get_cache_stats as get_gemini_stats, clear_nam
 from services.destination_cache import get_cache_stats as get_dest_stats, load_csv_destinations, clear_cache as clear_dest_cache
 from services.user_data import get_full_user_context, get_ai_profile, get_user_itineraries
 from services.firebase_client import is_firebase_configured
+from app.core.dependencies import CurrentUserId
 
 router = APIRouter()
 
 
 @router.get("/cache/stats")
-async def cache_stats():
-    """Get cache statistics for monitoring."""
+async def cache_stats(user_id: CurrentUserId):
+    """Get cache statistics for monitoring. Requires an authenticated token."""
     return {
         "gemini_cache": get_gemini_stats(),
         "destination_cache": get_dest_stats(),
@@ -22,8 +23,8 @@ async def cache_stats():
 
 
 @router.post("/cache/clear")
-async def clear_cache(namespace: Optional[str] = None):
-    """Clear cache — all or by namespace."""
+async def clear_cache(user_id: CurrentUserId, namespace: Optional[str] = None):
+    """Clear cache — all or by namespace. Requires an authenticated token."""
     if namespace:
         return clear_namespace(namespace)
     clear_all()
@@ -32,15 +33,15 @@ async def clear_cache(namespace: Optional[str] = None):
 
 
 @router.post("/cache/reload-csv")
-async def reload_csv():
-    """Reload destination data from CSV files in backend/data/."""
-    count = load_csv_destinations()
+async def reload_csv(user_id: CurrentUserId):
+    """Reload destination data from CSV files in backend/data/. Requires an authenticated token."""
+    count = await load_csv_destinations()
     return {"success": True, "destinations_loaded": count}
 
 
 @router.get("/user/{uid}/context")
-async def user_context(uid: str):
-    """Get the full AI context for a user (for debugging)."""
+async def user_context(user_id: CurrentUserId, uid: str):
+    """Get the full AI context for a user (for debugging). Requires an authenticated token."""
     if not is_firebase_configured():
         return {"error": "Firebase not configured", "tip": "Place firebase-service-account.json in backend/"}
     ctx = await get_full_user_context(uid)
@@ -52,8 +53,8 @@ async def user_context(uid: str):
 
 
 @router.get("/user/{uid}/itineraries")
-async def user_itineraries(uid: str):
-    """Get a user's saved itineraries."""
+async def user_itineraries(user_id: CurrentUserId, uid: str):
+    """Get a user's saved itineraries. Requires an authenticated token."""
     if not is_firebase_configured():
         return {"error": "Firebase not configured"}
     itineraries = await get_user_itineraries(uid)

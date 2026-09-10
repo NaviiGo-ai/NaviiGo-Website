@@ -2,7 +2,7 @@
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { resolveImgSrc } from '@/lib/imageService';
-import { DEST_IMAGES } from '@/lib/imageMap';
+
 import { getBrowsingSignals } from '@/lib/browsingSignals';
 
 interface SmartRecommendationsProps {
@@ -14,16 +14,7 @@ interface SmartRecommendationsProps {
     onSelectAndNext?: (destId: string, destName: string) => void;
 }
 
-const DEST_IMG_MAP: Record<string, string> = {
-    ladakh: DEST_IMAGES.ladakh, manali: DEST_IMAGES.manali, kerala: DEST_IMAGES.kerala,
-    goa: DEST_IMAGES.goa, jaipur: DEST_IMAGES.jaipur, varanasi: DEST_IMAGES.varanasi,
-    rishikesh: DEST_IMAGES.rishikesh, andaman: DEST_IMAGES.andaman,
-    darjeeling: DEST_IMAGES.darjeeling, udaipur: DEST_IMAGES.udaipur,
-    coorg: DEST_IMAGES.coorg, hampi: DEST_IMAGES.hampi, shimla: DEST_IMAGES.shimla,
-    amritsar: DEST_IMAGES.amritsar, gangtok: DEST_IMAGES.gangtok,
-    mysuru: DEST_IMAGES.mysuru, kolkata: DEST_IMAGES.kolkata, mumbai: DEST_IMAGES.mumbai,
-    hyderabad: DEST_IMAGES.hyderabad, shillong: DEST_IMAGES.shillong,
-};
+const DEST_IMG_MAP: Record<string, string> = {};
 
 export default function SmartRecommendations({
     purpose, group, budget, userId, onSelect, onSelectAndNext
@@ -86,7 +77,7 @@ export default function SmartRecommendations({
         else handleSelect(id, name);
     };
 
-    const imgFor = (id: string) => resolveImgSrc(DEST_IMG_MAP[id] || DEST_IMAGES.mumbai, 600);
+    const imgFor = (id: string) => resolveImgSrc(DEST_IMG_MAP[id] || '', 600);
 
     return (
         <div className="mb-6">

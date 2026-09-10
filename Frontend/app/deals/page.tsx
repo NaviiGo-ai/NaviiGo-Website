@@ -1,6 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+
+const emptySubscribe = () => () => {};
 import { motion, AnimatePresence } from "framer-motion";
 
 type WidgetState = "loading" | "loaded" | "failed";
@@ -123,19 +125,13 @@ function WidgetFallback() {
 }
 
 export default function MetasearchDealsPage() {
-  const [isMounted, setIsMounted] = useState(false);
   const [widgetState, setWidgetState] = useState<WidgetState>("loading");
+  const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
   const searchRef = useRef<HTMLDivElement>(null);
   const ticketsRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-
   // After mount, wait 3s minimum then poll for up to 8s before declaring failed
   useEffect(() => {
-    if (!isMounted) return;
-
     // Scroll skeleton into view so it's immediately visible
     window.scrollTo({ top: 320, behavior: 'smooth' });
 
@@ -163,7 +159,7 @@ export default function MetasearchDealsPage() {
     }, CHECK_INTERVAL);
 
     return () => { clearInterval(timer); clearTimeout(minTimer); };
-  }, [isMounted]);
+  }, []);
 
   return (
     <>
@@ -196,7 +192,7 @@ export default function MetasearchDealsPage() {
 
             {/* Loading indicator pill */}
             <AnimatePresence>
-              {isMounted && widgetState === "loading" && (
+              {widgetState === "loading" && (
                 <motion.div
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -214,7 +210,7 @@ export default function MetasearchDealsPage() {
           </motion.div>
 
           {/* ── Widget area ─────────────────────────────────────────────── */}
-          {isMounted && (
+          {mounted && (
             <div className="space-y-12">
 
               {/* Search widget zone */}

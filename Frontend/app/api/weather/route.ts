@@ -3,7 +3,7 @@ import { badRequest, validateLat, validateLng } from '@/lib/validation';
 
 /**
  * Weather API route using Open-Meteo (100% free, no key required).
- * Falls back to mock data if the API is unreachable.
+ * Returns an honest 503 when the upstream API is unreachable — never mock data.
  */
 export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
@@ -69,22 +69,10 @@ export async function GET(req: NextRequest) {
             })),
         });
     } catch (err) {
-        // Latitude-aware fallback
-        const isCold = lat > 30 || lat < -30;
-
-        return NextResponse.json({
-            current: {
-                temp: isCold ? 5 : 28,
-                feelsLike: isCold ? 3 : 31,
-                humidity: 72,
-                rainChance: 20,
-                windSpeed: 12,
-                condition: 'Partly Cloudy',
-                emoji: '⛅',
-            },
-            daily: [],
-            _mock: true,
-            error: true,
-        });
+        // Upstream unavailable -> honest error, no fabricated weather
+        return NextResponse.json(
+            { error: 'Weather service is temporarily unavailable. Please try again shortly.' },
+            { status: 503 }
+        );
     }
 }

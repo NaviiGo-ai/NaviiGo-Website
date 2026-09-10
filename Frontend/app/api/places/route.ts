@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { badRequest, validateLat, validateLng, validateNumber } from '@/lib/validation';
 
-const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY;
-
 // Whitelisted place types for the nearby search
 const ALLOWED_TYPES = new Set(['tourist_attraction', 'museum', 'park', 'amusement_park', 'art_gallery', 'landmark']);
 
@@ -24,9 +22,6 @@ export async function GET(req: NextRequest) {
 
     const rawType = searchParams.get('type') ?? 'tourist_attraction';
     const type = ALLOWED_TYPES.has(rawType) ? rawType : 'tourist_attraction';
-
-    // Radius capped at 100km (100,000m)
-    const radius = validateNumber(searchParams.get('radius') ?? '5000', 1, 100_000) ?? 5000;
     // ─────────────────────────────────────────────────────────────────
 
     // ── Fallback: Nominatim reverse geocode + search ──────────

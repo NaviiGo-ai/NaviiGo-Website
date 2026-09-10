@@ -5,15 +5,15 @@ import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { saveSharedItinerary, listenToItinerary, saveItineraryToFirestore } from '@/lib/firestore';
 import { useAuth } from '@/lib/AuthContext';
-import { resolveImgSrc } from '@/lib/imageService';
 import PlaceImage from '@/components/shared/PlaceImage';
 import {
-    DEST_DATA, FALLBACK_DEST, CROWD_COLOR, CROWD_DOT,
+    DEST_DATA, CROWD_COLOR, CROWD_DOT,
     type DayPlan, type CrowdLevel,
 } from '@/app/itinerary/data';
 import { genShareId, CrowdDot } from './helpers';
 import ShareDropdown from './ShareDropdown';
 import TransportCompare from './TransportCompare';
+import WeatherStrip from './WeatherStrip';
 
 const ItineraryMap = dynamic(() => import('@/components/shared/ItineraryMap'), { ssr: false });
 import { useAI } from '@/context/AIContext';
@@ -33,17 +33,49 @@ interface DayViewPageProps {
     onBack: () => void;
 }
 
+// Destination center for the live weather strip: prefer explicit mapCenter,
+// else fall back to the first activity that carries coordinates.
+function pickMapCenter(d: any): { lat: number; lng: number } | null {
+    const mc = d?.mapCenter;
+    if (mc && Number.isFinite(mc.lat) && Number.isFinite(mc.lng)) return mc;
+    for (const dp of d?.dayPlans ?? []) {
+        for (const a of dp?.activities ?? []) {
+            if (typeof a?.lat === 'number' && typeof a?.lng === 'number') return { lat: a.lat, lng: a.lng };
+        }
+    }
+    return null;
+}
+
 export default function DayViewPage({ form, generatedData, onBack }: DayViewPageProps) {
     const router = useRouter();
     const { user } = useAuth();
     const { registerItinerary, unregisterItinerary } = useAI();
     const [isSaved, setIsSaved] = useState(false);
     const destId = form.destination as string, destName = form.destName as string;
-    const staticData = DEST_DATA[destId] ?? FALLBACK_DEST;
-    const data: any = generatedData ? { ...staticData, ...generatedData } : staticData;
+    const staticData = DEST_DATA[destId];
+    const data: any = useMemo(() => {
+      if (!staticData) {
+        // Destination data not available - return empty state instead of fallback
+        return {
+          description: 'Destination data not available',
+          avgCost: '',
+          weather: {},
+          crowdLevel: 'Low',
+          crowdNote: 'Data unavailable for this destination',
+          highlights: [],
+          restaurants: [],
+          hotels: [],
+          dayPlans: [],
+          mapCenter: { lat: 0, lng: 0 },
+          estimatedTravelCost: undefined
+        };
+      }
+      return generatedData ? { ...staticData, ...generatedData } : staticData;
+    }, [generatedData, staticData]);
+    const center = pickMapCenter(data);
     const [activeDay, setActiveDay] = useState(() => {
         const initial = typeof form._initialDay === 'number' ? form._initialDay : 0;
-        const totalDays = (generatedData ?? DEST_DATA[form.destination as string] ?? FALLBACK_DEST)?.dayPlans?.length ?? 0;
+        const totalDays = (generatedData ?? DEST_DATA[form.destination as string])?.dayPlans?.length ?? 0;
         return Math.max(0, Math.min(initial, totalDays - 1));
     });
     const [activeActivity, setActiveActivity] = useState(-1);
@@ -51,7 +83,9 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
     const [dayRouteInfo, setDayRouteInfo] = useState<{ distance: string, time: string } | null>(null);
     const [customPlans, setCustomPlans] = useState<DayPlan[]>(() => (form.customPlans as DayPlan[]) || JSON.parse(JSON.stringify(data.dayPlans)));
     const plan: DayPlan | undefined = customPlans[activeDay] ?? customPlans[0];
-    const activities = plan?.activities ?? [];
+    const activities = useMemo(() => {
+        return plan?.activities ?? [];
+    }, [plan]);
 
     // Sync activeDay with browser history navigation (back/forward)
     useEffect(() => {
@@ -121,8 +155,7 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
             unregisterItinerary();
             registeredRef.current = false;
         };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [registerItinerary, unregisterItinerary]);
+    }, [registerItinerary, unregisterItinerary, data, customPlans]);
 
     const [isSharing, setIsSharing] = useState(false);
     const [collaborators, setCollaborators] = useState(1);
@@ -326,6 +359,12 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
             </div>
 
             <div className="max-w-[1400px] mx-auto px-4 lg:px-8 py-6">
+                {/* Live weather strip for the destination */}
+                {center && (
+                    <div className="mb-6">
+                        <WeatherStrip lat={center.lat} lng={center.lng} label={destName} />
+                    </div>
+                )}
                 {/* 2-Col Layout at page level */}
                 <div className="flex flex-col lg:flex-row gap-8">
                     {/* Left Column: Animating Day Dashboard + Timeline */}
@@ -428,7 +467,7 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                                 {/* Route Info */}
                                 {dayRouteInfo && routeIsSane ? (
                                     <div className="bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-500/10 dark:to-blue-500/10 rounded-2xl border border-indigo-100 dark:border-indigo-500/20 p-4 shadow-sm flex flex-col justify-center hover:shadow-md transition-shadow">
-                                        <div className="flex items-center gap-2 mb-1"><span className="text-xl">🗺️</span><span className="font-bold text-xs text-indigo-900 dark:text-indigo-300 uppercase tracking-wide">Today's Commute</span></div>
+                                        <div className="flex items-center gap-2 mb-1"><span className="text-xl">🗺️</span><span className="font-bold text-xs text-indigo-900 dark:text-indigo-300 uppercase tracking-wide">Today&apos;s Commute</span></div>
                                         <div className="font-bold text-indigo-700 dark:text-indigo-400 text-lg leading-tight">{dayRouteInfo.time}</div>
                                         <div className="text-[11px] text-indigo-600/70 dark:text-indigo-400/70 font-medium">{dayRouteInfo.distance} total travel</div>
                                     </div>
@@ -455,7 +494,7 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                                         {data.hotels.slice(0, 3).map((hotel: any, i: number) => (
                                             <div key={i} className="group relative bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-100 dark:border-zinc-800 overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all flex flex-col">
-                                                <PlaceImage name={hotel.name} city={destName} fallbackSrc={resolveImgSrc(hotel.img, 400, hotel.name, hotel.type || 'hotel')} className="h-28 w-full shrink-0" asBackground />
+                                                <PlaceImage name={hotel.name} city={destName} className="h-28 w-full shrink-0" asBackground />
                                                 <div className="p-3 flex-1 flex flex-col">
                                                     <div className="font-bold text-sm text-zinc-900 dark:text-white line-clamp-1 mb-0.5">{hotel.name}</div>
                                                     <div className="text-[11px] text-zinc-500 line-clamp-2 mb-3 flex-1">{hotel.desc}</div>
@@ -809,7 +848,7 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                                                     }}>
                                                     <div className="flex items-center gap-3 mb-2 text-xs font-bold text-zinc-400 uppercase tracking-widest"><span className="text-base leading-none">🏨</span> Place to stay</div>
                                                     <div className="flex gap-4">
-                                                        <PlaceImage name={data.hotels[0].name} city={destName} fallbackSrc={resolveImgSrc(data.hotels[0].img, 150, data.hotels[0].name, data.hotels[0].type)} className="w-16 h-16 rounded-xl shrink-0" asBackground />
+                                                        <PlaceImage name={data.hotels[0].name} city={destName} className="w-16 h-16 rounded-xl shrink-0" asBackground />
                                                         <div className="flex flex-col justify-center">
                                                             <div className="font-bold text-base text-zinc-900 dark:text-white line-clamp-1 group-hover:text-emerald-500 transition-colors">{data.hotels[0].name}</div>
                                                             <div className="text-xs text-zinc-500 mt-0.5">{data.hotels[0].type} • {data.hotels[0].priceRange}</div>
@@ -825,7 +864,7 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                                                     }}>
                                                     <div className="flex items-center gap-3 mb-2 text-xs font-bold text-zinc-400 uppercase tracking-widest"><span className="text-base leading-none">🍽️</span> Where to eat</div>
                                                     <div className="flex gap-4">
-                                                        <PlaceImage name={data.restaurants[0].name} city={destName} fallbackSrc={resolveImgSrc(data.restaurants[0].img, 150, data.restaurants[0].name, data.restaurants[0].cuisine)} className="w-16 h-16 rounded-xl shrink-0" asBackground />
+                                                        <PlaceImage name={data.restaurants[0].name} city={destName} className="w-16 h-16 rounded-xl shrink-0" asBackground />
                                                         <div className="flex flex-col justify-center">
                                                             <div className="font-bold text-base text-zinc-900 dark:text-white line-clamp-1 group-hover:text-amber-500 transition-colors">{data.restaurants[0].name}</div>
                                                             <div className="text-xs text-zinc-500 mt-0.5">{data.restaurants[0].cuisine}</div>
@@ -870,7 +909,7 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                                             {data.highlights?.filter((a: any) => !plan.activities.find((pa: any) => pa.name === a.name)).slice(0, 4).map((sug: any) => (
                                                 <div key={sug.name} className="bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl p-2.5 flex gap-3 group cursor-pointer hover:border-emerald-400 hover:shadow-md transition-all"
                                                     onClick={() => addCustomActivity({ name: sug.name, display_name: sug.desc, lat: sug.lat || data.mapCenter.lat, lon: sug.lng || data.mapCenter.lng })}>
-                                                    <PlaceImage name={sug.name} city={destName} fallbackSrc={resolveImgSrc(sug.img, 150, sug.name, sug.tags?.[0])} className="w-10 h-10 rounded-lg shrink-0" asBackground />
+                                                    <PlaceImage name={sug.name} city={destName} className="w-10 h-10 rounded-lg shrink-0" asBackground />
                                                     <div className="min-w-0 flex flex-col justify-center">
                                                         <div className="text-[11px] font-bold text-zinc-900 dark:text-white truncate group-hover:text-emerald-600 transition-colors">{sug.name}</div>
                                                         <div className="text-[9px] text-zinc-500 truncate mt-0.5">{sug.desc}</div>

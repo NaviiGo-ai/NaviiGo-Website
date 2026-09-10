@@ -1,18 +1,19 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useParams, useRouter } from 'next/navigation';
-import { 
-    MapPin, Users, Compass, Link2, Heart, ArrowRight, Loader2, Sparkles, AlertTriangle, 
-    MessageSquare, Camera, Utensils 
+import Image from 'next/image';
+import {
+    MapPin, Users, Compass, Link2, Heart, ArrowRight, Loader2, Sparkles, AlertTriangle,
+    MessageSquare, Camera, Utensils
 } from 'lucide-react';
 import { trackDeepDiveVibe, startCityView, flushCityView } from '@/lib/browsingSignals';
 import ReviewSection from '@/components/features/reviews/ReviewSection';
 import { getUpcomingFestivals, type Festival } from '@/lib/festivalCalendar';
 import { resolveImgSrc } from '@/lib/imageService';
 import { LocalEvent } from '@/lib/api/googleEvents';
-import { safeLocalStorage } from '@/lib/utils/storage';
+
 
 interface DeepDiveData {
     redditConsensus: string;
@@ -33,45 +34,10 @@ export default function DestinationDeepDive() {
     const [data, setData] = useState<DeepDiveData | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
-    const [festivals, setFestivals] = useState<Festival[]>([]);
+    const festivals = useMemo(() => getUpcomingFestivals(destination), [destination]);
     const [liveEvents, setLiveEvents] = useState<LocalEvent[]>([]);
 
-    // Pre-fill from local storage if available from previous builds
-    useEffect(() => {
-        const saved = safeLocalStorage.getItem('naviigo_form_data');
-        if (saved) {
-            try {
-                const parsed = JSON.parse(saved);
-                if (parsed.companions) {
-                    if (parsed.companions.toLowerCase().includes('couple')) setCompanion('Couple');
-                    else if (parsed.companions.toLowerCase().includes('family')) setCompanion('Family');
-                    else if (parsed.companions.toLowerCase().includes('friends')) setCompanion('Group of Friends');
-                    else setCompanion('Solo');
-                }
-            } catch (e) {
-                console.warn('[Explore] Error parsing saved form data:', e);
-            }
-        }
-        
-        // Track city view start
-        startCityView(destination);
-        
-        const controller = new AbortController();
-
-        // Fetch immediately on mount
-        fetchDeepDive(controller.signal);
-        fetchEvents(controller.signal);
-        // Load upcoming festivals for this destination
-        setFestivals(getUpcomingFestivals(destination));
-
-        // Flush city view and abort pending fetches on unmount or destination change
-        return () => {
-            controller.abort();
-            flushCityView();
-        };
-    }, [destination]);
-
-    const fetchDeepDive = async (signal?: AbortSignal) => {
+    const fetchDeepDive = useCallback(async (signal?: AbortSignal) => {
         setLoading(true);
         setError('');
         // Track the vibe selection for personalization
@@ -96,9 +62,9 @@ export default function DestinationDeepDive() {
                 setLoading(false);
             }
         }
-    };
+    }, [destination, companion, vibe]);
 
-    const fetchEvents = async (signal?: AbortSignal) => {
+    const fetchEvents = useCallback(async (signal?: AbortSignal) => {
         try {
             const baseUrl = '';
             const res = await fetch(`${baseUrl}/api/explore/events`, {
@@ -116,7 +82,24 @@ export default function DestinationDeepDive() {
                 console.error('Failed to fetch live events:', e);
             }
         }
-    };
+    }, [destination]);
+
+    useEffect(() => {
+        // Track city view start
+        startCityView(destination);
+        
+        const controller = new AbortController();
+
+        // Fetch immediately on mount
+        fetchDeepDive(controller.signal);
+        fetchEvents(controller.signal);
+
+        // Flush city view and abort pending fetches on unmount or destination change
+        return () => {
+            controller.abort();
+            flushCityView();
+        };
+    }, [destination, companion, vibe, fetchDeepDive, fetchEvents]);
 
     return (
         <div className="min-h-screen bg-[#f5f5f7] dark:bg-[#000000] pb-24 overflow-x-hidden">
@@ -162,8 +145,8 @@ export default function DestinationDeepDive() {
                             <option>Relaxation & Luxury</option>
                             <option>Budget Backpacking</option>
                         </select>
-                        <button 
-                            onClick={fetchDeepDive} disabled={loading}
+                        <button
+                            onClick={() => fetchDeepDive()} disabled={loading}
                             className="bg-white text-black px-6 py-2.5 rounded-xl font-bold text-sm shadow-md hover:bg-zinc-200 transition-colors disabled:opacity-50"
                         >
                             {loading ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : 'Update Vibe'}
@@ -201,7 +184,7 @@ export default function DestinationDeepDive() {
                                 </div>
                             </div>
                             <p className="text-lg md:text-xl font-medium text-orange-800 dark:text-orange-200/90 leading-relaxed">
-                                "{data.redditConsensus}"
+                                &quot;{data.redditConsensus}&quot;
                             </p>
                         </div>
 
@@ -297,8 +280,7 @@ export default function DestinationDeepDive() {
                             {liveEvents.map((event, i) => (
                                 <a key={i} href={event.link} target="_blank" rel="noopener noreferrer" className="group block bg-white dark:bg-[#111] border border-zinc-200 dark:border-white/10 rounded-2xl overflow-hidden hover:shadow-xl transition-all hover:-translate-y-1">
                                     <div className="h-32 w-full relative overflow-hidden bg-zinc-100 dark:bg-zinc-800">
-                                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                                        <img src={event.thumbnail} alt={event.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                        <Image src={event.thumbnail} alt={event.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                                         <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider">
                                             {event.date.when}
                                         </div>

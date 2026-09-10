@@ -56,24 +56,27 @@ function mapItineraryToUpcoming(itin: SavedItineraryDoc): UpcomingTrip | null {
 }
 
 export default function UpcomingTripsPage() {
-    const { user, signInWithGoogle } = useAuth();
-    const [trips, setTrips] = useState<UpcomingTrip[]>([]);
-    const [loading, setLoading] = useState(true);
+    const { user, loading: authLoading, signInWithGoogle } = useAuth();
+    const [trips, setTrips] = useState<UpcomingTrip[] | null>(null);
 
     useEffect(() => {
-        if (!user?.uid) {
-            setLoading(false);
-            return;
-        }
+        if (!user?.uid) return;
+        let active = true;
         getUserItineraries(user.uid).then(itineraries => {
+            if (!active) return;
             const upcoming = itineraries
                 .map(mapItineraryToUpcoming)
                 .filter((t): t is UpcomingTrip => t !== null)
                 .sort((a, b) => a.daysUntil - b.daysUntil);
             setTrips(upcoming);
-            setLoading(false);
-        }).catch(() => setLoading(false));
+        }).catch(() => {
+            if (active) setTrips([]);
+        });
+        return () => { active = false; };
     }, [user?.uid]);
+
+    const loading = authLoading || (!!user && trips === null);
+    const tripList = trips ?? [];
 
     return (
         <div className="min-h-screen bg-[#f7f8fc] dark:bg-[#0a0a0f] pt-20 sm:pt-24 pb-20">
@@ -86,7 +89,7 @@ export default function UpcomingTripsPage() {
                         <div>
                             <h1 className="text-3xl font-bold text-zinc-900 dark:text-white">Upcoming Trips</h1>
                             <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                                {trips.length > 0 ? `${trips.length} adventure${trips.length > 1 ? 's' : ''} planned` : 'Your planned future adventures'}
+                                {tripList.length > 0 ? `${tripList.length} adventure${tripList.length > 1 ? 's' : ''} planned` : 'Your planned future adventures'}
                             </p>
                         </div>
                     </div>
@@ -107,7 +110,7 @@ export default function UpcomingTripsPage() {
                     </div>
                 )}
 
-                {user && !loading && trips.length === 0 && (
+                {user && !loading && tripList.length === 0 && (
                     <div className="text-center py-20">
                         <Plane className="w-12 h-12 text-zinc-300 dark:text-zinc-600 mx-auto mb-4" />
                         <h3 className="text-lg font-bold text-zinc-700 dark:text-zinc-300 mb-2">No upcoming trips</h3>
@@ -116,9 +119,9 @@ export default function UpcomingTripsPage() {
                     </div>
                 )}
 
-                {user && !loading && trips.length > 0 && (
+                {user && !loading && tripList.length > 0 && (
                     <div className="space-y-6">
-                        {trips.map((trip, i) => (
+                        {tripList.map((trip, i) => (
                             <motion.div
                                 key={trip.id}
                                 initial={{ opacity: 0, y: 20 }}

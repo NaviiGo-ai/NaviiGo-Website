@@ -1,4 +1,3 @@
-import { DEST_IMAGES } from '@/lib/imageMap';
 // ─── TYPES ─────────────────────────────────────────────────────────────────────
 export type WalkLevel = 'Easy' | 'Medium' | 'High';
 export type ValueLevel = 'Low' | 'Medium' | 'High';
@@ -80,67 +79,67 @@ export const PURPOSES = [
 
 export const DESTINATIONS = [
     // ── North India ──────────────────────────────────────────────
-    { id: 'delhi', name: 'Delhi', sub: 'Capital of Contrasts', state: 'Delhi', img: DEST_IMAGES['delhi'] || DEST_IMAGES.mumbai },
-    { id: 'jaipur', name: 'Jaipur', sub: 'The Pink City', state: 'Rajasthan', img: DEST_IMAGES['jaipur'] || DEST_IMAGES.mumbai },
-    { id: 'agra', name: 'Agra', sub: 'Land of the Taj', state: 'Uttar Pradesh', img: DEST_IMAGES['agra'] || DEST_IMAGES.mumbai },
-    { id: 'varanasi', name: 'Varanasi', sub: 'City of Light', state: 'Uttar Pradesh', img: DEST_IMAGES['varanasi'] || DEST_IMAGES.mumbai },
-    { id: 'amritsar', name: 'Amritsar', sub: 'Golden City', state: 'Punjab', img: DEST_IMAGES['amritsar'] || DEST_IMAGES.mumbai },
-    { id: 'lucknow', name: 'Lucknow', sub: 'City of Nawabs', state: 'Uttar Pradesh', img: DEST_IMAGES['lucknow'] || DEST_IMAGES.mumbai },
+    { id: 'delhi', name: 'Delhi', sub: 'Capital of Contrasts', state: 'Delhi', img: '' },
+    { id: 'jaipur', name: 'Jaipur', sub: 'The Pink City', state: 'Rajasthan', img: '' },
+    { id: 'agra', name: 'Agra', sub: 'Land of the Taj', state: 'Uttar Pradesh', img: '' },
+    { id: 'varanasi', name: 'Varanasi', sub: 'City of Light', state: 'Uttar Pradesh', img: '' },
+    { id: 'amritsar', name: 'Amritsar', sub: 'Golden City', state: 'Punjab', img: '' },
+    { id: 'lucknow', name: 'Lucknow', sub: 'City of Nawabs', state: 'Uttar Pradesh', img: '' },
 
     // ── Rajasthan ────────────────────────────────────────────────
-    { id: 'udaipur', name: 'Udaipur', sub: 'City of Lakes', state: 'Rajasthan', img: DEST_IMAGES['udaipur'] || DEST_IMAGES.mumbai },
-    { id: 'jodhpur', name: 'Jodhpur', sub: 'The Blue City', state: 'Rajasthan', img: DEST_IMAGES['jodhpur'] || DEST_IMAGES.mumbai },
-    { id: 'jaisalmer', name: 'Jaisalmer', sub: 'Golden City', state: 'Rajasthan', img: DEST_IMAGES['jaisalmer'] || DEST_IMAGES.mumbai },
-    { id: 'pushkar', name: 'Pushkar', sub: 'Rose Garden of Rajasthan', state: 'Rajasthan', img: DEST_IMAGES['pushkar'] || DEST_IMAGES.mumbai },
+    { id: 'udaipur', name: 'Udaipur', sub: 'City of Lakes', state: 'Rajasthan', img: '' },
+    { id: 'jodhpur', name: 'Jodhpur', sub: 'The Blue City', state: 'Rajasthan', img: '' },
+    { id: 'jaisalmer', name: 'Jaisalmer', sub: 'Golden City', state: 'Rajasthan', img: '' },
+    { id: 'pushkar', name: 'Pushkar', sub: 'Rose Garden of Rajasthan', state: 'Rajasthan', img: '' },
 
     // ── Himalayan ────────────────────────────────────────────────
-    { id: 'manali', name: 'Manali', sub: 'Gateway to Himalayas', state: 'Himachal Pradesh', img: DEST_IMAGES['manali'] || DEST_IMAGES.mumbai },
-    { id: 'shimla', name: 'Shimla', sub: 'Queen of Hills', state: 'Himachal Pradesh', img: DEST_IMAGES['shimla'] || DEST_IMAGES.mumbai },
-    { id: 'rishikesh', name: 'Rishikesh', sub: 'Yoga Capital of World', state: 'Uttarakhand', img: DEST_IMAGES['rishikesh'] || DEST_IMAGES.mumbai },
-    { id: 'dharamshala', name: 'Dharamshala', sub: 'Little Lhasa', state: 'Himachal Pradesh', img: DEST_IMAGES['dharamshala'] || DEST_IMAGES.mumbai },
-    { id: 'nainital', name: 'Nainital', sub: 'Lake District', state: 'Uttarakhand', img: DEST_IMAGES['nainital'] || DEST_IMAGES.mumbai },
-    { id: 'mussoorie', name: 'Mussoorie', sub: 'Queen of Hills', state: 'Uttarakhand', img: DEST_IMAGES['mussoorie'] || DEST_IMAGES.mumbai },
-    { id: 'haridwar', name: 'Haridwar', sub: 'Gateway to Gods', state: 'Uttarakhand', img: DEST_IMAGES['haridwar'] || DEST_IMAGES.mumbai },
+    { id: 'manali', name: 'Manali', sub: 'Gateway to Himalayas', state: 'Himachal Pradesh', img: '' },
+    { id: 'shimla', name: 'Shimla', sub: 'Queen of Hills', state: 'Himachal Pradesh', img: '' },
+    { id: 'rishikesh', name: 'Rishikesh', sub: 'Yoga Capital of World', state: 'Uttarakhand', img: '' },
+    { id: 'dharamshala', name: 'Dharamshala', sub: 'Little Lhasa', state: 'Himachal Pradesh', img: '' },
+    { id: 'nainital', name: 'Nainital', sub: 'Lake District', state: 'Uttarakhand', img: '' },
+    { id: 'mussoorie', name: 'Mussoorie', sub: 'Queen of Hills', state: 'Uttarakhand', img: '' },
+    { id: 'haridwar', name: 'Haridwar', sub: 'Gateway to Gods', state: 'Uttarakhand', img: '' },
 
     // ── Kashmir & Ladakh ─────────────────────────────────────────
-    { id: 'srinagar', name: 'Srinagar', sub: 'Paradise on Earth', state: 'J&K', img: DEST_IMAGES['srinagar'] || DEST_IMAGES.mumbai },
-    { id: 'ladakh', name: 'Ladakh', sub: 'Land of High Passes', state: 'Ladakh', img: DEST_IMAGES['ladakh'] || DEST_IMAGES.mumbai },
-    { id: 'gulmarg', name: 'Gulmarg', sub: 'Meadow of Flowers', state: 'J&K', img: DEST_IMAGES['gulmarg'] || DEST_IMAGES.mumbai },
+    { id: 'srinagar', name: 'Srinagar', sub: 'Paradise on Earth', state: 'J&K', img: '' },
+    { id: 'ladakh', name: 'Ladakh', sub: 'Land of High Passes', state: 'Ladakh', img: '' },
+    { id: 'gulmarg', name: 'Gulmarg', sub: 'Meadow of Flowers', state: 'J&K', img: '' },
 
     // ── South India ──────────────────────────────────────────────
-    { id: 'kerala', name: 'Kerala', sub: "God's Own Country", state: 'Kerala', img: DEST_IMAGES['kerala'] || DEST_IMAGES.mumbai },
-    { id: 'goa', name: 'Goa', sub: 'Sun, Sand & Soul', state: 'Goa', img: DEST_IMAGES['goa'] || DEST_IMAGES.mumbai },
-    { id: 'mysuru', name: 'Mysuru', sub: 'Palace City', state: 'Karnataka', img: DEST_IMAGES['mysuru'] || DEST_IMAGES.mumbai },
-    { id: 'hampi', name: 'Hampi', sub: 'Boulder Kingdom', state: 'Karnataka', img: DEST_IMAGES['hampi'] || DEST_IMAGES.mumbai },
-    { id: 'pondicherry', name: 'Pondicherry', sub: 'French Riviera of East', state: 'Tamil Nadu', img: DEST_IMAGES['pondicherry'] || DEST_IMAGES.mumbai },
-    { id: 'ooty', name: 'Ooty', sub: 'Queen of Nilgiris', state: 'Tamil Nadu', img: DEST_IMAGES['ooty'] || DEST_IMAGES.mumbai },
-    { id: 'coorg', name: 'Coorg', sub: 'Scotland of India', state: 'Karnataka', img: DEST_IMAGES['coorg'] || DEST_IMAGES.mumbai },
-    { id: 'hyderabad', name: 'Hyderabad', sub: 'City of Pearls', state: 'Telangana', img: DEST_IMAGES['hyderabad'] || DEST_IMAGES.mumbai },
-    { id: 'madurai', name: 'Madurai', sub: 'Temple City', state: 'Tamil Nadu', img: DEST_IMAGES['madurai'] || DEST_IMAGES.mumbai },
+    { id: 'kerala', name: 'Kerala', sub: "God's Own Country", state: 'Kerala', img: '' },
+    { id: 'goa', name: 'Goa', sub: 'Sun, Sand & Soul', state: 'Goa', img: '' },
+    { id: 'mysuru', name: 'Mysuru', sub: 'Palace City', state: 'Karnataka', img: '' },
+    { id: 'hampi', name: 'Hampi', sub: 'Boulder Kingdom', state: 'Karnataka', img: '' },
+    { id: 'pondicherry', name: 'Pondicherry', sub: 'French Riviera of East', state: 'Tamil Nadu', img: '' },
+    { id: 'ooty', name: 'Ooty', sub: 'Queen of Nilgiris', state: 'Tamil Nadu', img: '' },
+    { id: 'coorg', name: 'Coorg', sub: 'Scotland of India', state: 'Karnataka', img: '' },
+    { id: 'hyderabad', name: 'Hyderabad', sub: 'City of Pearls', state: 'Telangana', img: '' },
+    { id: 'madurai', name: 'Madurai', sub: 'Temple City', state: 'Tamil Nadu', img: '' },
 
     // ── West India ────────────────────────────────────────────────
-    { id: 'mumbai', name: 'Mumbai', sub: 'City of Dreams', state: 'Maharashtra', img: DEST_IMAGES['mumbai'] || DEST_IMAGES.mumbai },
-    { id: 'kutch', name: 'Kutch', sub: 'White Desert', state: 'Gujarat', img: DEST_IMAGES['kutch'] || DEST_IMAGES.mumbai },
-    { id: 'dwarka', name: 'Dwarka', sub: 'Kingdom of Krishna', state: 'Gujarat', img: DEST_IMAGES['dwarka'] || DEST_IMAGES.mumbai },
+    { id: 'mumbai', name: 'Mumbai', sub: 'City of Dreams', state: 'Maharashtra', img: '' },
+    { id: 'kutch', name: 'Kutch', sub: 'White Desert', state: 'Gujarat', img: '' },
+    { id: 'dwarka', name: 'Dwarka', sub: 'Kingdom of Krishna', state: 'Gujarat', img: '' },
 
     // ── East India ────────────────────────────────────────────────
-    { id: 'kolkata', name: 'Kolkata', sub: 'City of Joy', state: 'West Bengal', img: DEST_IMAGES['kolkata'] || DEST_IMAGES.mumbai },
-    { id: 'darjeeling', name: 'Darjeeling', sub: 'Queen of Hills', state: 'West Bengal', img: DEST_IMAGES['darjeeling'] || DEST_IMAGES.mumbai },
-    { id: 'gangtok', name: 'Gangtok', sub: 'Land of Monasteries', state: 'Sikkim', img: DEST_IMAGES['gangtok'] || DEST_IMAGES.mumbai },
-    { id: 'puri', name: 'Puri', sub: 'Abode of Lord Jagannath', state: 'Odisha', img: DEST_IMAGES['puri'] || DEST_IMAGES.mumbai },
+    { id: 'kolkata', name: 'Kolkata', sub: 'City of Joy', state: 'West Bengal', img: '' },
+    { id: 'darjeeling', name: 'Darjeeling', sub: 'Queen of Hills', state: 'West Bengal', img: '' },
+    { id: 'gangtok', name: 'Gangtok', sub: 'Land of Monasteries', state: 'Sikkim', img: '' },
+    { id: 'puri', name: 'Puri', sub: 'Abode of Lord Jagannath', state: 'Odisha', img: '' },
 
     // ── Northeast ────────────────────────────────────────────────
-    { id: 'shillong', name: 'Shillong', sub: 'Scotland of East', state: 'Meghalaya', img: DEST_IMAGES['shillong'] || DEST_IMAGES.mumbai },
-    { id: 'tawang', name: 'Tawang', sub: 'Monastery in Clouds', state: 'Arunachal Pradesh', img: DEST_IMAGES['tawang'] || DEST_IMAGES.mumbai },
+    { id: 'shillong', name: 'Shillong', sub: 'Scotland of East', state: 'Meghalaya', img: '' },
+    { id: 'tawang', name: 'Tawang', sub: 'Monastery in Clouds', state: 'Arunachal Pradesh', img: '' },
 
     // ── Islands ──────────────────────────────────────────────────
-    { id: 'andaman', name: 'Andaman', sub: 'Tropical Paradise', state: 'A&N Islands', img: DEST_IMAGES['andaman'] || DEST_IMAGES.mumbai },
-    { id: 'lakshadweep', name: 'Lakshadweep', sub: 'Coral Islands', state: 'Lakshadweep', img: DEST_IMAGES['lakshadweep'] || DEST_IMAGES.mumbai },
+    { id: 'andaman', name: 'Andaman', sub: 'Tropical Paradise', state: 'A&N Islands', img: '' },
+    { id: 'lakshadweep', name: 'Lakshadweep', sub: 'Coral Islands', state: 'Lakshadweep', img: '' },
 
     // ── Pilgrimages ──────────────────────────────────────────────
-    { id: 'tirupati', name: 'Tirupati', sub: 'Lord Venkateswara', state: 'Andhra Pradesh', img: DEST_IMAGES['tirupati'] || DEST_IMAGES.mumbai },
-    { id: 'ujjain', name: 'Ujjain', sub: 'City of Mahakal', state: 'Madhya Pradesh', img: DEST_IMAGES['ujjain'] || DEST_IMAGES.mumbai },
-    { id: 'bodhgaya', name: 'Bodh Gaya', sub: 'Seat of Enlightenment', state: 'Bihar', img: DEST_IMAGES['bodhgaya'] || DEST_IMAGES.mumbai },
+    { id: 'tirupati', name: 'Tirupati', sub: 'Lord Venkateswara', state: 'Andhra Pradesh', img: '' },
+    { id: 'ujjain', name: 'Ujjain', sub: 'City of Mahakal', state: 'Madhya Pradesh', img: '' },
+    { id: 'bodhgaya', name: 'Bodh Gaya', sub: 'Seat of Enlightenment', state: 'Bihar', img: '' },
 ];
 
 export const GROUP_SIZES = [

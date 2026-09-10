@@ -19,6 +19,7 @@ export default function SavedPage() {
 
   useEffect(() => {
     if (!user?.uid) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setLoading(false);
       return;
     }
@@ -55,7 +56,6 @@ export default function SavedPage() {
     show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } }
   };
 
-  return (
   return (
     <div className="min-h-screen bg-background text-foreground pt-20 sm:pt-32 px-4 sm:px-6 md:px-12 pb-24 font-sans">
       <div className="max-w-7xl mx-auto">

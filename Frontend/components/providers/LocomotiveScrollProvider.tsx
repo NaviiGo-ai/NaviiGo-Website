@@ -34,7 +34,11 @@ export default function LocomotiveScrollProvider({ children }: LocomotiveScrollP
       if (typeof window === 'undefined' || !containerRef.current) return;
 
       try {
-        const LocomotiveScroll = (await import('locomotive-scroll')).default;
+        // LocomotiveScroll is loaded via CDN script in layout.tsx
+        const LocomotiveScroll = (window as any).LocomotiveScroll;
+        if (!LocomotiveScroll) {
+          throw new Error('LocomotiveScroll not found on window object');
+        }
 
         locomotiveScroll = new LocomotiveScroll({
           el: containerRef.current,

@@ -7,9 +7,9 @@ export default function OfflinePage() {
       <div className="w-20 h-20 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center mb-6">
         <MapPinOff className="w-10 h-10 text-slate-500" />
       </div>
-      <h1 className="text-3xl font-bold text-white mb-3">You're Offline</h1>
+      <h1 className="text-3xl font-bold text-white mb-3">You&apos;re Offline</h1>
       <p className="text-slate-400 max-w-md mb-8">
-        It looks like you've lost internet connection. Don't worry, your saved itineraries and digital passport are cached securely on your device!
+        It looks like you&apos;ve lost internet connection. Don&apos;t worry, your saved itineraries and digital passport are cached securely on your device!
       </p>
       <div className="flex gap-4">
         <Link 

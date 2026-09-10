@@ -7,12 +7,20 @@ from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from limiter import limiter
 from dotenv import load_dotenv
+from pathlib import Path
 
-# Load environment variables from parent .env.local or .env
-load_dotenv(dotenv_path="../.env.local")
-load_dotenv(dotenv_path="../.env")
+# Load environment variables relative to this file — never CWD-dependent.
+# Priority: repo-level .env.local (frontend-shared secrets), then backend/.env,
+# then repo-level .env.
+_backend_dir = Path(__file__).parent
+_base_dir = _backend_dir.parent
+load_dotenv(dotenv_path=_base_dir / ".env.local")
+load_dotenv(dotenv_path=_backend_dir / ".env")
+load_dotenv(dotenv_path=_base_dir / ".env")
 
 from routers import itinerary, chat, recommendations, explore, weather, transport, taste, places, admin
+from app.api import bookings, payments
+from app.core.errors import register_app_error_handler
 
 
 # ── Startup logic using modern lifespan ──
@@ -41,7 +49,7 @@ app = FastAPI(
 _cors_origins = os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=list(set(["http://localhost:3000", "https://naviigo.app", "https://www.naviigo.app"] + [origin.strip() for origin in _cors_origins if origin.strip()])),
+    allow_origins=list(set(["http://localhost:3000", "https://naviigo.in", "https://www.naviigo.in"] + [origin.strip() for origin in _cors_origins if origin.strip()])),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -50,6 +58,9 @@ app.add_middleware(
 # Rate Limiting
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+# App errors (auth, forbidden, not-found, ...) -> stable JSON bodies, not bare 500s
+register_app_error_handler(app)
 
 # ── Register all routers ──
 app.include_router(itinerary.router,       prefix="/api/itinerary",       tags=["Itinerary"])
@@ -61,6 +72,8 @@ app.include_router(transport.router,       prefix="/api/transport",       tags=[
 app.include_router(taste.router,           prefix="/api/taste",           tags=["Taste"])
 app.include_router(places.router,          prefix="/api/places",          tags=["Places"])
 app.include_router(admin.router,           prefix="/api/admin",           tags=["Admin"])
+app.include_router(bookings.router,        prefix="/api/bookings",        tags=["Bookings"])
+app.include_router(payments.router,        prefix="/api/payments",        tags=["Payments"])
 
 
 @app.get("/")

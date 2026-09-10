@@ -17,7 +17,6 @@ const AUTH_GATED_ROUTES = [
     '/itinerary/upcoming',
     '/itinerary/history',
     '/itinerary/detail',
-    '/itinerary/tracking',
 ];
 
 self.addEventListener('install', (event) => {
