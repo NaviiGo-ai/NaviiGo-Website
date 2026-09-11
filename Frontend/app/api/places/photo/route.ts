@@ -54,6 +54,8 @@ export async function GET(req: NextRequest) {
     const rawWidth = parseInt(searchParams.get('w') || '800', 10);
     const maxWidth = Math.min(1600, Math.max(100, Number.isFinite(rawWidth) ? rawWidth : 800));
 
+    const isDebug = searchParams.get('debug') === '1' || searchParams.get('debug') === 'true';
+
     // Check if directly resolving a photo resource name
     const directPhotoName = isValidPhotoName(photoNameParam)
         ? photoNameParam
@@ -62,6 +64,13 @@ export async function GET(req: NextRequest) {
     if (directPhotoName) {
         const cdnUrl = await resolvePhotoCdnUrl(directPhotoName, maxWidth);
         if (!cdnUrl) {
+            if (isDebug) {
+                return NextResponse.json({
+                    error: 'Failed to resolve photo CDN redirect',
+                    photoName: directPhotoName,
+                    hasApiKey: !!GOOGLE_PLACES_API_KEY,
+                }, { status: 502 });
+            }
             return NextResponse.json({ url: '' });
         }
 
@@ -81,11 +90,18 @@ export async function GET(req: NextRequest) {
 
     const cacheKey = `${name}|${city}|${maxWidth}`.toLowerCase();
     const cached = photoCache.get(cacheKey);
-    if (cached && Date.now() - cached.ts < CACHE_TTL) {
+    if (!isDebug && cached && Date.now() - cached.ts < CACHE_TTL) {
         return NextResponse.json({ url: cached.url });
     }
 
     if (!GOOGLE_PLACES_API_KEY) {
+        console.error('[Places Photo] GOOGLE_PLACES_API_KEY is not defined in environment variables');
+        if (isDebug) {
+            return NextResponse.json({
+                error: 'GOOGLE_PLACES_API_KEY environment variable is not defined on the server (check Vercel Project Settings > Environment Variables)',
+                hasApiKey: false,
+            }, { status: 500 });
+        }
         return NextResponse.json({ url: '' });
     }
 
@@ -106,12 +122,27 @@ export async function GET(req: NextRequest) {
         const data = await res.json().catch(() => null);
 
         if (!res.ok) {
-            console.error(`[Places Photo] ${placesApiError(data, res.status)}`);
+            const errMsg = placesApiError(data, res.status);
+            console.error(`[Places Photo] ${errMsg}`);
+            if (isDebug) {
+                return NextResponse.json({
+                    error: errMsg,
+                    status: res.status,
+                    googleResponse: data,
+                }, { status: res.status });
+            }
             return NextResponse.json({ url: '' });
         }
 
         const photoName = data?.places?.[0]?.photos?.[0]?.name;
         if (!isValidPhotoName(photoName)) {
+            if (isDebug) {
+                return NextResponse.json({
+                    error: 'No photo found for this place in Google Places',
+                    query,
+                    googlePlaces: data?.places || [],
+                });
+            }
             return NextResponse.json({ url: '' });
         }
 
@@ -123,9 +154,21 @@ export async function GET(req: NextRequest) {
             photoCache.set(cacheKey, { url: finalUrl, ts: Date.now() });
         }
 
+        if (isDebug) {
+            return NextResponse.json({
+                success: true,
+                query,
+                photoName,
+                cdnUrl: finalUrl,
+            });
+        }
+
         return NextResponse.json({ url: finalUrl });
     } catch (err: any) {
         console.error('[Places Photo] Error:', err?.message || err);
+        if (isDebug) {
+            return NextResponse.json({ error: err?.message || String(err) }, { status: 500 });
+        }
         return NextResponse.json({ url: '' });
     }
 }
