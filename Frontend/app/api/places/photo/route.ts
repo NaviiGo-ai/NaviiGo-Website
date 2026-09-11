@@ -7,7 +7,8 @@ import {
     placesPhotoProxyPath,
 } from '@/lib/api/placesNew';
 
-const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY;
+const rawKey = process.env.GOOGLE_PLACES_API_KEY || '';
+const GOOGLE_PLACES_API_KEY = rawKey.trim().replace(/^["']|["']$/g, '');
 const GOOGLE_REFERER = 'https://naviigo.in/';
 
 // In-memory cache to avoid repeated API calls for the same place
@@ -128,6 +129,10 @@ export async function GET(req: NextRequest) {
                 return NextResponse.json({
                     error: errMsg,
                     status: res.status,
+                    keyLength: GOOGLE_PLACES_API_KEY.length,
+                    keyPrefix: GOOGLE_PLACES_API_KEY.slice(0, 8),
+                    keySuffix: GOOGLE_PLACES_API_KEY.slice(-4),
+                    rawHadQuotes: rawKey.startsWith('"') || rawKey.startsWith("'"),
                     googleResponse: data,
                 }, { status: res.status });
             }
