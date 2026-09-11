@@ -4,7 +4,7 @@
 import os
 from google import genai
 
-GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.6-flash")
 
 _client = None
 _client_key = None
