@@ -12,6 +12,7 @@ import SmartRecommendations from './SmartRecommendations';
 import VibeMatch from './VibeMatch';
 import { useAuth } from '@/lib/AuthContext';
 import AuthRequiredModal from '@/components/shared/AuthRequiredModal';
+import { getPersonalizationTaste, savePersonalizationTaste, saveItineraryByUUID } from '@/lib/firestore';
 
 /** Resolve a city name to its DEST_DATA key (e.g. 'Jaipur' → 'jaipur') */
 function resolveDestKey(name: string): { id: string; name: string } | null {
@@ -239,10 +240,10 @@ export default function SetupWizard({ onDone }: SetupWizardProps) {
     const TOTAL_STEPS = 5;
 
     /**
-     * Generate a UUID, store the form in sessionStorage keyed by that UUID,
+     * Generate a UUID, save the form to Firestore keyed by that UUID,
      * then navigate to /itinerary/[uuid]. The [uuid] page handles generation.
      */
-    const handleSubmit = useCallback(() => {
+    const handleSubmit = useCallback(async () => {
         if (!user) {
             setShowAuthRequired(true);
             return;
@@ -250,7 +251,8 @@ export default function SetupWizard({ onDone }: SetupWizardProps) {
         setIsSubmitting(true);
         const uuid = crypto.randomUUID();
         const formWithMeta = { ...form, userId: user.uid };
-        sessionStorage.setItem(`navii_form_${uuid}`, JSON.stringify(formWithMeta));
+        // Save itinerary to Firestore for persistence
+        await saveItineraryByUUID(uuid, { form: formWithMeta, generatedData: null, destName: form.destName });
         // Also call the legacy onDone so parent can still hook in if needed
         onDone({ ...formWithMeta, uuid });
         router.push(`/itinerary/plan/${uuid}`);
@@ -327,27 +329,31 @@ export default function SetupWizard({ onDone }: SetupWizardProps) {
                                     setForm(p => ({ ...p, destination: destId, destName, purpose: purpose || p.purpose || 'leisure' }));
 
                                     // Update taste vector in background
-                                    const baseUrl = '';
-                                    fetch(`${baseUrl}/api/taste/update`, {
-                                        method: 'POST',
-                                        headers: { 'Content-Type': 'application/json' },
-                                        body: JSON.stringify({
-                                            currentVector: JSON.parse(localStorage.getItem('naviigo_taste_vector') || '[]'),
-                                            selectedDestId: destId,
-                                            purpose: purpose || 'leisure'
-                                        })
-                                    }).then(r => r.json()).then(async d => {
-                                        if (d.success) {
-                                            localStorage.setItem('naviigo_taste_vector', JSON.stringify(d.newVector));
-                                            // Persist to Firestore for cross-device sync
-                                            if (user?.uid) {
-                                                try {
-                                                    const { savePersonalizationTaste } = await import('@/lib/firestore');
-                                                    await savePersonalizationTaste(user.uid, d.newVector);
-                                                } catch { }
+                                    const updateTaste = async () => {
+                                        try {
+                                            const { getPersonalizationTaste, savePersonalizationTaste } = await import('@/lib/firestore');
+                                            const currentTaste = user?.uid ? await getPersonalizationTaste(user.uid) : null;
+                                            const currentVector = currentTaste?.vector || [];
+
+                                            const baseUrl = '';
+                                            const r = await fetch(`${baseUrl}/api/taste/update`, {
+                                                method: 'POST',
+                                                headers: { 'Content-Type': 'application/json' },
+                                                body: JSON.stringify({
+                                                    currentVector,
+                                                    selectedDestId: destId,
+                                                    purpose: purpose || 'leisure'
+                                                })
+                                            });
+                                            const d = await r.json();
+                                            if (d.success && user?.uid) {
+                                                await savePersonalizationTaste(user.uid, d.newVector);
                                             }
+                                        } catch (err) {
+                                            console.error(err);
                                         }
-                                    }).catch(console.error);
+                                    };
+                                    updateTaste();
 
                                     setVibeMatchMode(false);
                                     setStep(3);

@@ -10,11 +10,13 @@ import { resolveImgSrc } from '@/lib/imageService';
 import PlaceImage from '@/components/shared/PlaceImage';
 import {
     PURPOSES, DESTINATIONS, GROUP_SIZES,
-    DEST_DATA, FALLBACK_DEST, CROWD_COLOR, WALK_COLOR,
+    DEST_DATA, CROWD_COLOR, WALK_COLOR,
     type CrowdLevel,
 } from '@/app/itinerary/data';
 import { Badge, genShareId } from './helpers';
 import ShareDropdown from './ShareDropdown';
+import WeatherStrip from './WeatherStrip';
+import ExpenseTracker from './ExpenseTracker';
 import { useAI } from '@/context/AIContext';
 import { destinationExploreHref, itineraryPlaceHref } from '@/lib/placeLinks';
 
@@ -28,6 +30,18 @@ interface ResultPageProps {
     isLoaded?: boolean;
     onDayView: () => void;
     onReset: () => void;
+}
+
+// Live-weather anchor: prefer the map center, else the first activity with coords.
+function pickWeatherCenter(d: any): { lat: number; lng: number } | null {
+    const mc = d?.mapCenter;
+    if (mc && Number.isFinite(mc.lat) && Number.isFinite(mc.lng)) return mc;
+    for (const dp of d?.dayPlans ?? []) {
+        for (const a of dp?.activities ?? []) {
+            if (typeof a?.lat === 'number' && typeof a?.lng === 'number') return { lat: a.lat, lng: a.lng };
+        }
+    }
+    return null;
 }
 
 export default function ResultPage({ form, generatedData, shareId, onDayView, onReset }: ResultPageProps) {
@@ -49,19 +63,40 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
     const destId = form.destination as string, destName = form.destName as string;
     const purpose = form.purpose as string, group = form.group as string;
     const displayMonth = form.startDate ? new Date(form.startDate as string).toLocaleString('en-US', { month: 'short' }) : 'Jan';
-    const staticData = DEST_DATA[destId] ?? FALLBACK_DEST;
+    const staticData = DEST_DATA[destId];
     const data: any = useMemo(() => {
-        const base = generatedData ? { ...staticData, ...generatedData } : staticData;
-        return localData ? { ...base, ...localData } : base;
+      if (!staticData) {
+        // Destination data not available - return empty state instead of fallback
+        return {
+          description: 'Destination data not available',
+          avgCost: '',
+          weather: {},
+          crowdLevel: 'Low',
+          crowdNote: 'Data unavailable for this destination',
+          highlights: [],
+          restaurants: [],
+          hotels: [],
+          dayPlans: [],
+          mapCenter: { lat: 0, lng: 0 },
+          estimatedTravelCost: undefined,
+          logistics: { flights: '', trains: '' },
+          departureInfo: undefined
+        };
+      }
+      const base = generatedData ? { ...staticData, ...generatedData } : staticData;
+      return localData ? { ...base, ...localData } : base;
     }, [staticData, generatedData, localData]);
     const destInfo = DESTINATIONS.find(d => d.id === destId);
     const purposeLabel = PURPOSES.find(p => p.id === purpose)?.label ?? purpose;
     const groupLabel = GROUP_SIZES.find(g => g.id === group)?.label ?? group;
     const weatherForMonth = data.weather?.[displayMonth] ?? data.weather?.['Jan'] ?? '20–30°C';
 
+    // Live-weather anchor: prefer the map center, else the first activity with coords.
+    const weatherCenter = pickWeatherCenter(data);
+
     // Register itinerary for AI edits — persist changes to Firestore
     useEffect(() => {
-        registerItinerary(data, (newData) => {
+        registerItinerary(data, (newData: any) => {
             setLocalData(newData);
             // Save updated itinerary to Firestore so changes persist
             if (user?.uid) {
@@ -349,6 +384,11 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                     </div>
                 </div>
 
+                {/* Live weather — Open-Meteo via /api/weather, self-hides when offline */}
+                {weatherCenter && (
+                    <WeatherStrip lat={weatherCenter.lat} lng={weatherCenter.lng} label={destName} compact />
+                )}
+
                 <div className="flex flex-col lg:flex-row gap-6">
                     <div className="flex-1 space-y-10">
                         {/* Budget Tracker */}
@@ -375,6 +415,9 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                                 </div>
                             </div>
                         </div>
+
+                        {/* Per-trip expense tracker — logs actual spend vs budget */}
+                        <ExpenseTracker shareId={shareId} budget={form.budget as number} />
 
                         {/* Smart Packing List */}
 
@@ -438,7 +481,7 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                                         onClick={(e) => { e.stopPropagation(); router.push(itineraryPlaceHref('attraction', destId, a)); }}
                                         className="bg-white dark:bg-zinc-900 rounded-2xl overflow-hidden border border-zinc-100 dark:border-zinc-800 shadow-sm hover:shadow-md transition-all cursor-pointer hover:-translate-y-1">
                                         <div className="relative h-36">
-                                            <PlaceImage name={a.name} city={destName} fallbackSrc={resolveImgSrc(a.img, 500, a.name, a.tags?.[0])} className="absolute inset-0 w-full h-full" asBackground />
+                                            <PlaceImage name={a.name} city={destName} className="absolute inset-0 w-full h-full" asBackground />
                                             <div className="absolute top-2 left-2 w-7 h-7 rounded-full bg-emerald-500 text-white text-xs font-bold flex items-center justify-center shadow-md">{i + 1}</div>
                                             <div className="absolute bottom-2 left-2 flex gap-1">{a.tags?.slice(0, 2).map((t: string, tIdx: number) => <span key={`hl-tag-${i}-${tIdx}`} className="text-[10px] bg-black/50 text-white backdrop-blur px-2 py-0.5 rounded-full font-medium">{t}</span>)}</div>
                                         </div>
@@ -471,7 +514,7 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                                             onClick={(e) => { e.stopPropagation(); router.push(itineraryPlaceHref('restaurant', destId, r)); }}
                                             className="bg-white dark:bg-zinc-900 rounded-2xl overflow-hidden border border-zinc-100 dark:border-zinc-800 shadow-sm hover:shadow-md transition-all cursor-pointer hover:-translate-y-1">
                                             <div className="relative h-32">
-                                                <PlaceImage name={r.name} city={destName} fallbackSrc={resolveImgSrc(r.img, 500, r.name, r.cuisine)} className="absolute inset-0 w-full h-full" asBackground />
+                                                <PlaceImage name={r.name} city={destName} className="absolute inset-0 w-full h-full" asBackground />
                                                 <div className="absolute bottom-2 left-2 flex gap-1"><span className="text-[10px] bg-black/60 text-white backdrop-blur px-2 py-0.5 rounded-full font-medium">{r.cuisine}</span></div>
                                             </div>
                                             <div className="p-3">
@@ -498,7 +541,7 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                                             onClick={(e) => { e.stopPropagation(); router.push(itineraryPlaceHref('hotel', destId, h)); }}
                                             className="bg-white dark:bg-zinc-900 rounded-2xl overflow-hidden border border-zinc-100 dark:border-zinc-800 shadow-sm hover:shadow-md transition-all cursor-pointer hover:-translate-y-1">
                                             <div className="relative h-32">
-                                                <PlaceImage name={h.name} city={destName} fallbackSrc={resolveImgSrc(h.img, 500, h.name, h.type)} className="absolute inset-0 w-full h-full" asBackground />
+                                                <PlaceImage name={h.name} city={destName} className="absolute inset-0 w-full h-full" asBackground />
                                                 <div className="absolute bottom-2 left-2 flex gap-1"><span className="text-[10px] bg-black/60 text-white backdrop-blur px-2 py-0.5 rounded-full font-medium">{h.type}</span></div>
                                                 <div className="absolute top-2 right-2 text-[10px] font-bold text-white bg-black/50 backdrop-blur px-1.5 py-0.5 rounded">{h.priceRange}</div>
                                             </div>

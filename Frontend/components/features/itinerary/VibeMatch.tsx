@@ -2,7 +2,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
 import { resolveImgSrc } from '@/lib/imageService';
-import { DEST_IMAGES } from '@/lib/imageMap';
+
 
 const VIBES = [
     { emoji: '🏔️', label: 'Mountains', tag: 'mountain' },
@@ -35,30 +35,30 @@ const VIBE_DEST_MAP: Record<string, string[]> = {
 };
 
 const DEST_META: Record<string, { name: string; emoji: string; img: string }> = {
-    manali:      { name: 'Manali',      emoji: '⛷️',  img: DEST_IMAGES.manali },
-    ladakh:      { name: 'Ladakh',      emoji: '🏔️',  img: DEST_IMAGES.ladakh },
-    shimla:      { name: 'Shimla',      emoji: '🌨️',  img: DEST_IMAGES.shimla },
-    darjeeling:  { name: 'Darjeeling',  emoji: '🍵',  img: DEST_IMAGES.darjeeling },
-    gangtok:     { name: 'Gangtok',     emoji: '🙏',  img: DEST_IMAGES.gangtok },
-    goa:         { name: 'Goa',         emoji: '🌊',  img: DEST_IMAGES.goa },
-    andaman:     { name: 'Andaman',     emoji: '🐠',  img: DEST_IMAGES.andaman },
-    kerala:      { name: 'Kerala',      emoji: '🌴',  img: DEST_IMAGES.kerala },
-    pondicherry: { name: 'Pondicherry', emoji: '🇫🇷',  img: DEST_IMAGES.pondicherry },
-    rishikesh:   { name: 'Rishikesh',   emoji: '🧘',  img: DEST_IMAGES.rishikesh },
-    coorg:       { name: 'Coorg',       emoji: '☕',  img: DEST_IMAGES.coorg },
-    varanasi:    { name: 'Varanasi',    emoji: '🕉️',  img: DEST_IMAGES.varanasi },
-    amritsar:    { name: 'Amritsar',    emoji: '🥗',  img: DEST_IMAGES.amritsar },
-    tirupati:    { name: 'Tirupati',    emoji: '🛕',  img: DEST_IMAGES.tirupati },
-    ujjain:      { name: 'Ujjain',      emoji: '🪔',  img: DEST_IMAGES.ujjain },
-    jaipur:      { name: 'Jaipur',      emoji: '🏯',  img: DEST_IMAGES.jaipur },
-    hyderabad:   { name: 'Hyderabad',   emoji: '💎',  img: DEST_IMAGES.hyderabad },
-    kolkata:     { name: 'Kolkata',     emoji: '🎭',  img: DEST_IMAGES.kolkata },
-    udaipur:     { name: 'Udaipur',     emoji: '🏰',  img: DEST_IMAGES.udaipur },
-    mysuru:      { name: 'Mysuru',      emoji: '👑',  img: DEST_IMAGES.mysuru },
-    hampi:       { name: 'Hampi',       emoji: '🗿',  img: DEST_IMAGES.hampi },
-    mumbai:      { name: 'Mumbai',      emoji: '🌆',  img: DEST_IMAGES.mumbai },
-    shillong:    { name: 'Shillong',    emoji: '🎵',  img: DEST_IMAGES.shillong },
-    kaziranga:   { name: 'Kaziranga',   emoji: '🦏',  img: DEST_IMAGES.kaziranga },
+    manali:      { name: 'Manali',      emoji: '⛷️',  img: '' },
+    ladakh:      { name: 'Ladakh',      emoji: '🏔️',  img: '' },
+    shimla:      { name: 'Shimla',      emoji: '🌨️',  img: '' },
+    darjeeling:  { name: 'Darjeeling',  emoji: '🍵',  img: '' },
+    gangtok:     { name: 'Gangtok',     emoji: '🙏',  img: '' },
+    goa:         { name: 'Goa',         emoji: '🌊',  img: '' },
+    andaman:     { name: 'Andaman',     emoji: '🐠',  img: '' },
+    kerala:      { name: 'Kerala',      emoji: '🌴',  img: '' },
+    pondicherry: { name: 'Pondicherry', emoji: '🇫🇷',  img: '' },
+    rishikesh:   { name: 'Rishikesh',   emoji: '🧘',  img: '' },
+    coorg:       { name: 'Coorg',       emoji: '☕',  img: '' },
+    varanasi:    { name: 'Varanasi',    emoji: '🕉️',  img: '' },
+    amritsar:    { name: 'Amritsar',    emoji: '🥗',  img: '' },
+    tirupati:    { name: 'Tirupati',    emoji: '🛕',  img: '' },
+    ujjain:      { name: 'Ujjain',      emoji: '🪔',  img: '' },
+    jaipur:      { name: 'Jaipur',      emoji: '🏯',  img: '' },
+    hyderabad:   { name: 'Hyderabad',   emoji: '💎',  img: '' },
+    kolkata:     { name: 'Kolkata',     emoji: '🎭',  img: '' },
+    udaipur:     { name: 'Udaipur',     emoji: '🏰',  img: '' },
+    mysuru:      { name: 'Mysuru',      emoji: '👑',  img: '' },
+    hampi:       { name: 'Hampi',       emoji: '🗿',  img: '' },
+    mumbai:      { name: 'Mumbai',      emoji: '🌆',  img: '' },
+    shillong:    { name: 'Shillong',    emoji: '🎵',  img: '' },
+    kaziranga:   { name: 'Kaziranga',   emoji: '🦏',  img: '' },
 };
 
 // Seasonal intelligence
@@ -108,7 +108,7 @@ function getMatchedDestinations(selectedTags: string[]): DestResult[] {
 
     return Object.entries(scores)
         .map(([id, { score, matchedVibes }]) => {
-            const meta = DEST_META[id] || { name: id, emoji: '📍', img: DEST_IMAGES.mumbai };
+            const meta = DEST_META[id] || { name: id, emoji: '📍', img: '' };
             let finalScore = score;
             let warning: { reason: string } | undefined;
             let ideal: { reason: string } | undefined;
@@ -242,7 +242,7 @@ export default function VibeMatch({ onSelect }: VibeMatchProps) {
                                 className={`rounded-2xl overflow-hidden border-2 shadow-lg ${topMatch.warning ? 'border-red-400/50' : 'border-emerald-500/60 shadow-emerald-500/10'}`}>
                                 <div className="relative h-40 cursor-pointer group" onClick={() => onSelect(topMatch.id, topMatch.name, vibeToPurpose(topMatch.matchedVibes))}>
                                     <div className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
-                                        style={{ backgroundImage: `url(${resolveImgSrc(topMatch.img || DEST_IMAGES.mumbai, 700)})` }} />
+                                        style={{ backgroundImage: `url(${resolveImgSrc(topMatch.img || '', 700)})` }} />
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
 
                                     {/* Best match badge */}
@@ -293,7 +293,7 @@ export default function VibeMatch({ onSelect }: VibeMatchProps) {
                                     className={`rounded-2xl overflow-hidden border-2 transition-all ${dest.warning ? 'border-red-400/30' : 'border-transparent hover:border-zinc-500'}`}>
                                     <div className="relative h-24 cursor-pointer group" onClick={() => onSelect(dest.id, dest.name, vibeToPurpose(dest.matchedVibes))}>
                                         <div className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
-                                            style={{ backgroundImage: `url(${resolveImgSrc(dest.img || DEST_IMAGES.mumbai, 400)})` }} />
+                                            style={{ backgroundImage: `url(${resolveImgSrc(dest.img || '', 400)})` }} />
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
 
                                         {/* Weather badge */}

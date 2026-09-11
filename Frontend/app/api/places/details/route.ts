@@ -1,18 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { badRequest, validateLat, validateLng, validateNumber, KNOWN_PLACE_TYPES } from '@/lib/validation';
+import {
+    PLACES_API_BASE,
+    PLACE_FIELD_MASK,
+    MAX_CIRCLE_RADIUS,
+    MAX_RESULT_COUNT,
+    normalizePlace,
+    placesApiError,
+    placesPhotoProxyPath,
+} from '@/lib/api/placesNew';
 
-const GOOGLE_PLACES_KEY = process.env.GOOGLE_PLACES_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY || '';
+const GOOGLE_PLACES_KEY = process.env.GOOGLE_PLACES_API_KEY || '';
+const PYTHON_API_URL = process.env.NEXT_PUBLIC_PYTHON_API_URL || 'http://localhost:8000';
 
-// Per-type max radius caps
+// Per-type radius caps (the New API caps a circle at 50 km regardless).
 const RADIUS_CAPS: Record<string, number> = {
     restaurant: 30_000,    // 30km
     lodging: 50_000,       // 50km
-    tourist_attraction: 100_000, // 100km
+    tourist_attraction: 50_000, // 50km — New API maximum
 };
 
 /**
- * Google Places API — Nearby Search for restaurants/hotels near a destination.
+ * Google Places API (New) — nearby/named lookup for restaurants and hotels.
  * GET /api/places/details?lat=26.9&lng=75.7&type=restaurant&query=best+restaurants+jaipur
+ *
+ * Two New-API endpoints back this route:
+ *   • with a `query`   → places:searchText   (free text + a location bias)
+ *   • without a `query` → places:searchNearby (type + a hard restriction)
+ *
+ * searchNearby has no keyword parameter, which is why the free-text case falls
+ * back to searchText — it is the only New-API endpoint that can resolve a
+ * named place.
  *
  * Returns formatted data matching our Restaurant/Hotel interfaces.
  * Cached with 24-hour revalidation to minimize API costs.
@@ -30,13 +48,13 @@ export async function GET(req: NextRequest) {
     const rawType = searchParams.get('type') || 'restaurant';
     const type = KNOWN_PLACE_TYPES.has(rawType as any) ? rawType : 'restaurant';
 
-    // Apply per-type radius cap (default 50km max if type unknown)
-    const maxRadius = RADIUS_CAPS[type] ?? 50_000;
+    // Apply per-type radius cap, then the New API's own 50km circle ceiling.
+    const maxRadius = Math.min(RADIUS_CAPS[type] ?? MAX_CIRCLE_RADIUS, MAX_CIRCLE_RADIUS);
     const radius = validateNumber(searchParams.get('radius') || '5000', 1, maxRadius) ?? 5000;
 
     // Sanitise the optional free-text query (max 100 chars)
     const rawQuery = searchParams.get('query') || '';
-    const query = rawQuery.slice(0, 100);
+    const query = rawQuery.slice(0, 100).trim();
     // ─────────────────────────────────────────────────────────────────
 
     if (!GOOGLE_PLACES_KEY) {
@@ -47,46 +65,73 @@ export async function GET(req: NextRequest) {
         });
     }
 
-    try {
-        const url = new URL('https://maps.googleapis.com/maps/api/place/nearbysearch/json');
-        url.searchParams.set('location', `${lat},${lng}`);
-        url.searchParams.set('radius', String(radius));
-        url.searchParams.set('type', type);
-        if (query) url.searchParams.set('keyword', query);
-        url.searchParams.set('key', GOOGLE_PLACES_KEY);
+    const center = { latitude: lat, longitude: lng };
 
-        const res = await fetch(url.toString(), {
+    try {
+        const [path, body] = query
+            ? [
+                'places:searchText',
+                {
+                    textQuery: query,
+                    maxResultCount: MAX_RESULT_COUNT,
+                    locationBias: { circle: { center, radius } },
+                },
+            ]
+            : [
+                'places:searchNearby',
+                {
+                    includedTypes: [type],
+                    maxResultCount: MAX_RESULT_COUNT,
+                    locationRestriction: { circle: { center, radius } },
+                },
+            ];
+
+        const res = await fetch(`${PLACES_API_BASE}/${path}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Goog-Api-Key': GOOGLE_PLACES_KEY,
+                'X-Goog-FieldMask': PLACE_FIELD_MASK,
+            },
+            body: JSON.stringify(body),
             next: { revalidate: 86400 }, // Cache 24 hours
         });
 
-        if (!res.ok) throw new Error('Google Places API error');
-        const data = await res.json();
+        const data = await res.json().catch(() => null);
 
-        if (data.status !== 'OK' && data.status !== 'ZERO_RESULTS') {
-            console.warn('[Places] API status:', data.status, data.error_message);
-            return NextResponse.json({ success: true, results: [], _status: data.status });
+        if (!res.ok) {
+            const detail = placesApiError(data, res.status);
+            console.warn('[Places] API error:', detail);
+            return NextResponse.json({ success: true, results: [], _status: detail });
         }
 
-        const results = (data.results || []).slice(0, 10).map((place: any) => ({
-            id: place.place_id,
-            name: place.name,
-            rating: place.rating || 0,
-            userRatingsTotal: place.user_ratings_total || 0,
-            priceLevel: place.price_level, // 0-4
-            vicinity: place.vicinity,
-            lat: place.geometry?.location?.lat,
-            lng: place.geometry?.location?.lng,
-            isOpen: place.opening_hours?.open_now ?? null,
-            types: place.types || [],
-            photo: place.photos?.[0]
-                ? `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${place.photos[0].photo_reference}&key=${GOOGLE_PLACES_KEY}`
-                : null,
-        }));
+        const places: any[] = Array.isArray(data?.places) ? data.places : [];
+
+        const results = places.slice(0, 10).map((raw) => {
+            const place = normalizePlace(raw);
+            return {
+                id: place.id,
+                name: place.name,
+                rating: place.rating,
+                userRatingsTotal: place.userRatingsTotal,
+                priceLevel: place.priceLevel, // 0-4
+                vicinity: place.vicinity,
+                lat: place.lat,
+                lng: place.lng,
+                isOpen: place.isOpen,
+                types: place.types,
+                // Absolute URL — the client renders it via `resolveImgSrc`, which
+                // only accepts http(s):// sources.
+                photo: place.photoName
+                    ? `${PYTHON_API_URL}${placesPhotoProxyPath(place.photoName, 400)}`
+                    : null,
+            };
+        });
 
         return NextResponse.json({
             success: true,
             results,
-            total: data.results?.length || 0,
+            total: places.length,
         });
 
     } catch (error: any) {

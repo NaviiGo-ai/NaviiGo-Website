@@ -5,7 +5,7 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import React from "react";
 import { useClickOutside } from "./use-click-outside";
 import { useAI } from "@/context/AIContext";
-import { Sparkles, X, Send, Bot } from "lucide-react";
+import { Sparkles, X, Send, Bot, Mic } from "lucide-react";
 
 const SiriOrb = ({ size }: { size?: string }) => (
   <div 
@@ -88,6 +88,10 @@ function Dock() {
     <motion.footer
       className="flex h-[44px] select-none items-center justify-center whitespace-nowrap w-full cursor-pointer"
       onClick={openAI}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openAI(); } }}
+      role="button"
+      tabIndex={0}
+      aria-label={itineraryContext ? 'Open plan assistant' : 'Open AI chat'}
       initial={shouldReduceMotion ? {} : { opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={shouldReduceMotion ? {} : { opacity: 0 }}
@@ -113,6 +117,48 @@ function ChatPanel() {
   const shouldReduceMotion = useReducedMotion();
   const [input, setInput] = React.useState('');
   const chatEndRef = React.useRef<HTMLDivElement>(null);
+
+  // ─── Voice input (Web Speech API — free, no key, works in Chrome/Edge) ─────
+  // Feature-detected at mount; the mic button hides on unsupported browsers.
+  const [isListening, setIsListening] = React.useState(false);
+  const [micSupported] = React.useState<boolean>(
+    () => typeof window !== 'undefined' && !!( (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition )
+  );
+  const recognitionRef = React.useRef<any>(null);
+
+  const toggleListening = React.useCallback(() => {
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+      return;
+    }
+    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SR) return;
+    const recognition = new SR();
+    recognition.lang = 'en-IN'; // Indian English — the app's primary market
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+    recognition.onresult = (e: any) => {
+      const text = e.results?.[0]?.[0]?.transcript ?? '';
+      if (text) {
+        // Append to whatever is already typed (transcripts land mid-sentence
+        // if the user speaks multiple times) and keep it editable before send.
+        setInput((prev) => (prev.trim() ? `${prev.trim()} ${text.trim()}` : text.trim()));
+      }
+    };
+    recognition.onerror = () => setIsListening(false);
+    recognition.onend = () => setIsListening(false);
+    recognitionRef.current = recognition;
+    try {
+      recognition.start();
+      setIsListening(true);
+    } catch {
+      setIsListening(false);
+    }
+  }, [isListening]);
+
+  // Stop any in-flight recognition when the panel unmounts.
+  React.useEffect(() => () => { recognitionRef.current?.stop(); }, []);
 
   React.useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -218,6 +264,7 @@ function ChatPanel() {
         </div>
         <button
           onClick={closeAI}
+          aria-label="Close AI chat"
           className="w-8 h-8 rounded-full hover:bg-accent flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
         >
           <X className="w-4 h-4" />
@@ -324,10 +371,28 @@ function ChatPanel() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Help me with my trip..."
+            aria-label="Message to AI assistant"
             className="flex-1 bg-transparent text-sm outline-none text-foreground placeholder:text-muted-foreground font-medium"
           />
+          {micSupported && (
+            <button
+              type="button"
+              onClick={toggleListening}
+              aria-label={isListening ? 'Stop voice input' : 'Start voice input'}
+              aria-pressed={isListening}
+              title={isListening ? 'Listening… tap to stop' : 'Voice input'}
+              className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all flex-shrink-0 ${
+                isListening
+                  ? 'bg-destructive text-white animate-pulse'
+                  : 'bg-secondary text-secondary-foreground hover:bg-accent hover:text-accent-foreground'
+              }`}
+            >
+              <Mic className="w-4 h-4" />
+            </button>
+          )}
           <button
             type="submit"
+            aria-label="Send message"
             className="w-9 h-9 rounded-xl bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/90 transition-all flex-shrink-0 disabled:opacity-40 disabled:scale-95"
             disabled={!input.trim()}
           >

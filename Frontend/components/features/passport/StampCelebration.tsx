@@ -1,6 +1,6 @@
 'use client';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Zap, Trophy, ArrowRight, Star } from 'lucide-react';
 import type { AwardResult } from '@/lib/passportService';
 
@@ -10,22 +10,23 @@ interface StampCelebrationProps {
     onViewPassport: () => void;
 }
 
+const CONFETTI_COLORS = ['#f59e0b', '#ef4444', '#10b981', '#6366f1', '#ec4899', '#f97316'];
+
+const CONFETTI_PIECES = Array.from({ length: 50 }, (_, i) => ({
+    id: i,
+    x: ((i * 37 + 13) % 100),
+    delay: ((i * 19) % 20) / 10,
+    duration: 2 + ((i * 23) % 30) / 10,
+    color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+    size: 4 + ((i * 29) % 80) / 10,
+    rotation: (i * 73) % 360,
+}));
+
 // CSS-only confetti
 function Confetti() {
-    const colors = ['#f59e0b', '#ef4444', '#10b981', '#6366f1', '#ec4899', '#f97316'];
-    const pieces = Array.from({ length: 50 }, (_, i) => ({
-        id: i,
-        x: Math.random() * 100,
-        delay: Math.random() * 2,
-        duration: 2 + Math.random() * 3,
-        color: colors[i % colors.length],
-        size: 4 + Math.random() * 8,
-        rotation: Math.random() * 360,
-    }));
-
     return (
         <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-            {pieces.map(p => (
+            {CONFETTI_PIECES.map(p => (
                 <motion.div
                     key={p.id}
                     initial={{ y: -20, x: `${p.x}vw`, opacity: 1, rotate: 0 }}
@@ -45,14 +46,15 @@ function Confetti() {
 }
 
 export default function StampCelebration({ result, onClose, onViewPassport }: StampCelebrationProps) {
-    const [show, setShow] = useState(false);
+    const [show, setShow] = useState(true);
 
     useEffect(() => {
-        if (result) {
-            setShow(true);
-            const timer = setTimeout(() => { setShow(false); onClose(); }, 12000);
-            return () => clearTimeout(timer);
-        }
+        if (!result) return;
+        const timer = setTimeout(() => {
+            setShow(false);
+            onClose();
+        }, 12000);
+        return () => clearTimeout(timer);
     }, [result, onClose]);
 
     if (!result) return null;

@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState, useEffect } from "react";
-import { DEST_DATA, FALLBACK_DEST, DESTINATIONS } from "@/app/itinerary/data";
+import { DEST_DATA, DESTINATIONS } from "@/app/itinerary/data";
 import { resolveImgSrc } from '@/lib/imageService';
 
 function DetailContent() {
@@ -16,7 +16,7 @@ function DetailContent() {
     const lat = Number(searchParams.get('lat'));
     const lng = Number(searchParams.get('lng'));
 
-    const data = DEST_DATA[destId] ?? FALLBACK_DEST;
+    const data = DEST_DATA[destId];
     const destInfo = DESTINATIONS.find(d => d.id === destId);
     
     const isFromLocal = searchParams.get('fromLocal') === 'true';
@@ -25,27 +25,21 @@ function DetailContent() {
     const [lookupComplete, setLookupComplete] = useState(false);
 
     useEffect(() => {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setMounted(true);
         let dataToSet = null;
 
-        // Check localStorage first if it's a dynamically generated item
-        if (isFromLocal) {
-            try {
-                const localStr = localStorage.getItem('navii_detail_item');
-                if (localStr) dataToSet = JSON.parse(localStr);
-            } catch (e) {
-                console.error('Failed to parse local item data', e);
-            }
-        }
+        // Removed localStorage usage; rely on Firestore or other sources
+        // No localStorage read here
 
         // Fallback to hardcoded DEST_DATA
         if (!dataToSet) {
             if (type === 'attraction') {
-                dataToSet = data.highlights?.find(h => h.name === name);
+                dataToSet = data?.highlights?.find(h => h.name === name);
             } else if (type === 'restaurant') {
-                dataToSet = data.restaurants?.find(r => r.name === name);
+                dataToSet = data?.restaurants?.find(r => r.name === name);
             } else if (type === 'hotel') {
-                dataToSet = data.hotels?.find(h => h.name === name);
+                dataToSet = data?.hotels?.find(h => h.name === name);
             }
         }
         
@@ -58,6 +52,7 @@ function DetailContent() {
     useEffect(() => {
         const placeType = type === 'hotel' ? 'lodging' : type === 'restaurant' ? 'restaurant' : 'tourist_attraction';
         if (!name || !Number.isFinite(lat) || !Number.isFinite(lng)) {
+            // eslint-disable-next-line react-hooks/set-state-in-effect
             setLookupComplete(true);
             return;
         }

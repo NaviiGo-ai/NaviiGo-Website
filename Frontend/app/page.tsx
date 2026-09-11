@@ -61,16 +61,22 @@ export default function Home() {
           SECTION 01 — HERO
          ————————————————————————————————————————————————───────────────── */}
       <section className="relative min-h-screen min-h-dvh flex items-center justify-center border-b border-border overflow-hidden">
-        {/* Mobile / Android Dedicated Background Image (Maximum Visibility in Light & Dark Theme) */}
+        {/* Mobile Background Wash — self-contained gradient, no image asset required */}
         <div
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-100 dark:opacity-85 dark:invert dark:hue-rotate-180 mix-blend-multiply dark:mix-blend-luminosity pointer-events-none transition-all duration-500 sm:hidden"
-          style={{ backgroundImage: "url('/home_Assets/android.png')" }}
+          className="absolute inset-0 pointer-events-none transition-all duration-500 sm:hidden"
+          style={{
+            background:
+              'radial-gradient(900px 520px at 78% 12%, rgba(14,165,233,0.22), transparent 62%), radial-gradient(720px 460px at 12% 86%, rgba(99,102,241,0.20), transparent 62%)',
+          }}
         />
 
-        {/* Desktop / Tablet Background Image */}
+        {/* Desktop / Tablet Background Wash */}
         <div
-          className="hidden sm:block absolute inset-0 bg-cover bg-center bg-no-repeat opacity-95 dark:opacity-60 dark:invert dark:hue-rotate-180 mix-blend-multiply dark:mix-blend-luminosity pointer-events-none transition-all duration-500"
-          style={{ backgroundImage: "url('/home_bg.png')" }}
+          className="hidden sm:block absolute inset-0 pointer-events-none transition-all duration-500 dark:opacity-70"
+          style={{
+            background:
+              'radial-gradient(1200px 620px at 72% 18%, rgba(14,165,233,0.20), transparent 62%), radial-gradient(980px 540px at 18% 82%, rgba(99,102,241,0.18), transparent 62%), radial-gradient(760px 420px at 92% 88%, rgba(45,212,191,0.14), transparent 62%)',
+          }}
         />
         {/* Ultra-Light Vignette Mask for Maximum Android Background Visibility */}
         <div className="absolute inset-0 bg-gradient-to-r from-background/35 via-background/15 to-transparent sm:from-background/75 sm:via-background/45 dark:from-background/45 dark:via-background/20 pointer-events-none" />
@@ -194,7 +200,7 @@ export default function Home() {
                   </div>
                   <div>
                     <div className="text-xs sm:text-sm font-extrabold tracking-wide text-primary-foreground">Ask NaviiGo AI</div>
-                    <div className="text-primary-foreground/90 text-[11px] sm:text-xs font-medium truncate">"Best time for Morning Boat Ride?"</div>
+                    <div className="text-primary-foreground/90 text-[11px] sm:text-xs font-medium truncate">&quot;Best time for Morning Boat Ride?&quot;</div>
                   </div>
                 </div>
 
@@ -214,7 +220,7 @@ export default function Home() {
             THE FRAGMENTATION PROBLEM
           </motion.span>
           <motion.h2 initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={1} className="text-3xl sm:text-5xl font-bold tracking-tight text-foreground font-serif max-w-3xl mx-auto">
-            Travel shouldn't feel like a research project.
+            Travel shouldn&apos;t feel like a research project.
           </motion.h2>
           <motion.p initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={2} className="mt-4 text-base sm:text-lg text-muted-foreground max-w-xl mx-auto">
             One trip currently means dozens of browser tabs, scattered train apps, unverified dhabas, and conflicting advice.
@@ -310,7 +316,7 @@ export default function Home() {
               <span className="text-xs font-bold uppercase tracking-[0.3em] text-primary mb-3 block">AI TRAVEL ORCHESTRATION</span>
               <h2 className="text-3xl sm:text-5xl font-bold tracking-tight text-foreground font-serif leading-tight">
                 Tell us where you want to go.{' '}
-                <span className="text-primary">We'll figure out the journey.</span>
+                <span className="text-primary">We&apos;ll figure out the journey.</span>
               </h2>
               <p className="mt-4 text-base sm:text-lg text-muted-foreground leading-relaxed">
                 Select your travel style and let our cultural AI engine build an optimized itinerary complete with temple Aarti timings, local food spots, and weather windows.
@@ -433,7 +439,7 @@ export default function Home() {
             <div>
               <span className="text-xs font-bold uppercase tracking-[0.3em] text-primary mb-3 block">DESTINATION INTELLIGENCE</span>
               <h2 className="text-3xl sm:text-5xl font-bold tracking-tight text-foreground font-serif">
-                Don't just know where to go.{' '}
+                Don&apos;t just know where to go.{' '}
                 <span className="text-primary block sm:inline">Know what it feels like to be there.</span>
               </h2>
             </div>
@@ -490,7 +496,7 @@ export default function Home() {
           <div className="text-center mb-16">
             <span className="text-xs font-bold uppercase tracking-[0.3em] text-primary mb-3 block">UNIVERSAL BOOKING ENGINE</span>
             <h2 className="text-3xl sm:text-5xl font-bold tracking-tight text-foreground font-serif">
-              From "Let's go" to "Booked."
+              From &quot;Let&apos;s go&quot; to &quot;Booked.&quot;
             </h2>
             <p className="mt-3 text-base sm:text-lg text-muted-foreground max-w-lg mx-auto">
               Compare flights, IRCTC train options, intercity cabs and hotels across 500+ OTA platforms in one search window.
@@ -679,7 +685,7 @@ export default function Home() {
             Your next story is waiting.
           </h2>
           <p className="text-lg sm:text-xl text-muted-foreground max-w-xl mx-auto mb-10">
-            Tell NaviiGo where you're going. We'll help you figure out the rest.
+            Tell NaviiGo where you&apos;re going. We&apos;ll help you figure out the rest.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Link href="/itinerary?new=true" className="w-full sm:w-auto px-10 py-4.5 rounded-2xl bg-primary text-primary-foreground font-bold text-lg hover:bg-primary/90 transition-all hover:scale-105 shadow-md">

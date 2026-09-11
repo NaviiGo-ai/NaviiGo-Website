@@ -57,14 +57,23 @@ function ExplorePageContent() {
     return () => obs.disconnect();
   }, [visibleSections]);
 
-  useEffect(() => {
-    if (user?.uid) {
-      getUserBucketList(user.uid).then(list => {
-        setLiked(new Set(list.map(item => item.id)));
-      });
-    } else {
+  const [prevUserUid, setPrevUserUid] = useState(user?.uid);
+  if (user?.uid !== prevUserUid) {
+    setPrevUserUid(user?.uid);
+    if (!user?.uid) {
       setLiked(new Set());
     }
+  }
+
+  useEffect(() => {
+    if (!user?.uid) return;
+    let active = true;
+    getUserBucketList(user.uid).then(list => {
+      if (active) {
+        setLiked(new Set(list.map(item => item.id)));
+      }
+    });
+    return () => { active = false; };
   }, [user?.uid]);
 
   const filtered = useMemo(() => {
@@ -99,7 +108,7 @@ function ExplorePageContent() {
       <section ref={heroRef} className="relative h-[60vh] sm:h-[75vh] md:h-[85vh] min-h-[480px] sm:min-h-[560px] md:min-h-[620px] flex items-center justify-center overflow-hidden pt-20 sm:pt-28">
         {/* Parallax background */}
         <motion.div style={{ scale: heroScale, y: heroY }} className="absolute inset-0">
-          <div className="absolute inset-0 bg-[url('/destinations/agra.png')] bg-cover bg-center" />
+          <div className="absolute inset-0" />
           <div className="absolute inset-0 bg-black/40" />
           <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-black/30" />
         </motion.div>

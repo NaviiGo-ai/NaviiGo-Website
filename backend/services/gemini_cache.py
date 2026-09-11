@@ -86,11 +86,9 @@ def _safe_filename(namespace: str, key: str) -> Path:
     """Create a filesystem-safe path for the cache entry."""
     ns_dir = CACHE_ROOT / namespace
     ns_dir.mkdir(parents=True, exist_ok=True)
-    # Hash long keys to avoid filesystem issues
-    if len(key) > 80:
-        key = hashlib.md5(key.encode()).hexdigest()
-    safe = "".join(c if c.isalnum() or c in "-_" else "_" for c in key)
-    return ns_dir / f"{safe}.json"
+    # Always hash keys to prevent leaking search terms in filenames
+    hashed_key = hashlib.md5(key.encode()).hexdigest()
+    return ns_dir / f"{hashed_key}.json"
 
 
 # ── Memory Layer ─────────────────────────────────────────────────────────────

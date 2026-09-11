@@ -20,8 +20,8 @@ const footerLinks = {
   Company: [
     { label: 'About Us', href: '/about' },
     { label: 'Support', href: '/support' },
-    { label: 'Privacy Policy', href: '/support' },
-    { label: 'Terms of Service', href: '/support' },
+    { label: 'Privacy Policy', href: '/privacy' },
+    { label: 'Terms of Service', href: '/terms' },
   ],
 };
 
@@ -106,6 +106,7 @@ export default function Footer() {
               <input
                 type="email"
                 placeholder="you@email.com"
+                aria-label="Email for travel tips newsletter"
                 className="flex-1 md:w-64 px-4 py-2.5 rounded-xl bg-input border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition"
               />
               <button className="px-6 py-2.5 rounded-xl bg-primary text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors shrink-0 shadow-xs">

@@ -118,6 +118,11 @@ NEXT_PUBLIC_FIREBASE_APP_ID=1:123456789:web:abc123
 NEXT_PUBLIC_PYTHON_API_URL=http://localhost:8000
 
 # ── Google APIs (optional) ────────────────
+# Powers place photos, nearby/typed search and the itinerary place lookup.
+# Enable "Places API (New)" on the key — the code targets places.googleapis.com/v1
+# only and does not call the legacy maps.googleapis.com/maps/api/place/* endpoints.
+# The calls are server-side, so restrict the key by IP (or leave unrestricted);
+# an HTTP-referrer restriction will make every request fail with "API key not valid".
 GOOGLE_PLACES_API_KEY=your_places_key
 GOOGLE_DISTANCE_MATRIX_KEY=your_distance_matrix_key
 
@@ -128,7 +133,13 @@ PINECONE_API_KEY=your_pinecone_key
 REDIS_URL=redis://localhost:6379
 
 # ── Sentry (optional) ───────────────────
+# Error tracking. Completely optional — without a DSN the SDKs never init
+# (no network calls, no console noise) and the app falls back to plain
+# console.error. When set, errors from client, server and edge all report.
+# Source-map uploads need SENTRY_AUTH_TOKEN (CI env) too.
+NEXT_PUBLIC_SENTRY_DSN=your_sentry_dsn
 SENTRY_DSN=your_sentry_dsn
+SENTRY_AUTH_TOKEN=your_sentry_auth_token
 
 # ── CORS for backend (production) ────────
 CORS_ORIGINS=http://localhost:3000,https://your-domain.com

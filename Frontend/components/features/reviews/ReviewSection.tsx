@@ -12,12 +12,8 @@ interface ReviewSectionProps {
     destName: string;
 }
 
-// ─── Demo Reviews (fallback when Firestore is empty) ─────────────────────────
-const DEMO_REVIEWS: DestinationReview[] = [
-    { id: 'demo1', userId: 'u1', userName: 'Ananya S.', userPhoto: '', destId: '', destName: '', rating: 5, title: 'Absolutely magical experience!', body: 'Visited during monsoon and the city was gorgeous. The local food was incredible — try the street food near the old market. Would highly recommend hiring a local guide for the heritage walk.', travelDate: '2025-08', group: 'couple', budget: 'mid-range', pros: ['Amazing architecture', 'Incredible food', 'Friendly locals'], cons: ['Crowded during peak hours'], helpfulCount: 24, createdAt: null as any },
-    { id: 'demo2', userId: 'u2', userName: 'Rahul M.', userPhoto: '', destId: '', destName: '', rating: 4, title: 'Great for history lovers', body: 'Spent 3 days exploring all the historical sites. The sunrise views are stunning. The only downside was the heat during afternoon — plan your outdoor activities in the morning.', travelDate: '2025-10', group: 'solo', budget: 'budget', pros: ['Rich history', 'Sunrise views', 'Good budget options'], cons: ['Afternoon heat', 'Some tourist traps'], helpfulCount: 18, createdAt: null as any },
-    { id: 'demo3', userId: 'u3', userName: 'Priya K.', userPhoto: '', destId: '', destName: '', rating: 5, title: 'Perfect family vacation!', body: 'Took the whole family including grandparents. Everything was accessible and well-organized. Kids loved the interactive museum. Hotels in the old quarter are charming but roads are narrow.', travelDate: '2025-12', group: 'family', budget: 'luxury', pros: ['Family friendly', 'Accessible', 'Cultural immersion'], cons: ['Narrow old city roads'], helpfulCount: 31, createdAt: null as any },
-];
+// Reviews are loaded from Firestore only — never seeded with fabricated data.
+const EMPTY_REVIEWS: DestinationReview[] = [];
 
 function StarRating({ rating, size = 'sm', interactive = false, onChange }: {
     rating: number; size?: 'sm' | 'md' | 'lg'; interactive?: boolean; onChange?: (r: number) => void;
@@ -48,8 +44,8 @@ function StarRating({ rating, size = 'sm', interactive = false, onChange }: {
 
 export default function ReviewSection({ destId, destName }: ReviewSectionProps) {
     const { user } = useAuth();
-    const [reviews, setReviews] = useState<DestinationReview[]>(DEMO_REVIEWS);
-    const [avgRating, setAvgRating] = useState({ avg: 4.7, count: 3 });
+    const [reviews, setReviews] = useState<DestinationReview[]>(EMPTY_REVIEWS);
+    const [avgRating, setAvgRating] = useState({ avg: 0, count: 0 });
     const [showForm, setShowForm] = useState(false);
     const [expandedReview, setExpandedReview] = useState<string | null>(null);
     const [sortBy, setSortBy] = useState<'recent' | 'helpful' | 'rating'>('helpful');
@@ -139,7 +135,7 @@ export default function ReviewSection({ destId, destName }: ReviewSectionProps) 
                     <h2 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
                         <MessageSquare className="w-6 h-6 text-orange-500" /> Traveler Reviews
                     </h2>
-                    <p className="text-sm text-slate-500 mt-1">{avgRating.count} reviews · {avgRating.avg} average</p>
+                    <p className="text-sm text-slate-500 mt-1">{avgRating.count > 0 ? `${avgRating.count} reviews · ${avgRating.avg} average` : 'No reviews yet'}</p>
                 </div>
                 {user && (
                     <button
@@ -155,7 +151,7 @@ export default function ReviewSection({ destId, destName }: ReviewSectionProps) 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 {/* Average rating */}
                 <div className="flex flex-col items-center justify-center p-6 bg-white/60 dark:bg-white/5 backdrop-blur-sm rounded-2xl border border-zinc-200 dark:border-white/10">
-                    <div className="text-5xl font-bold text-slate-900 dark:text-white mb-2">{avgRating.avg}</div>
+                    <div className="text-5xl font-bold text-slate-900 dark:text-white mb-2">{avgRating.count > 0 ? avgRating.avg : '—'}</div>
                     <StarRating rating={Math.round(avgRating.avg)} size="md" />
                     <p className="text-sm text-slate-500 mt-1">{avgRating.count} reviews</p>
                 </div>
@@ -238,6 +234,15 @@ export default function ReviewSection({ destId, destName }: ReviewSectionProps) 
 
             {/* Review Cards */}
             <div className="space-y-4">
+                {sortedReviews.length === 0 && (
+                    <div className="p-8 text-center rounded-2xl border border-dashed border-zinc-300 dark:border-zinc-700 bg-white/40 dark:bg-white/5">
+                        <MessageSquare className="w-8 h-8 text-slate-300 dark:text-zinc-600 mx-auto mb-3" />
+                        <p className="font-semibold text-slate-700 dark:text-slate-200 mb-1">No reviews yet</p>
+                        <p className="text-sm text-slate-500 dark:text-slate-400">
+                            {user ? 'Be the first to share your experience!' : 'Be the first to share your experience when you visit.'}
+                        </p>
+                    </div>
+                )}
                 {sortedReviews.map((review, i) => (
                     <motion.div
                         key={review.id || i}
@@ -249,6 +254,7 @@ export default function ReviewSection({ destId, destName }: ReviewSectionProps) 
                         <div className="flex items-start gap-3 mb-3">
                             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-amber-500 flex items-center justify-center text-white text-sm font-bold shrink-0">
                                 {review.userPhoto ? (
+                                    /* eslint-disable-next-line @next/next/no-img-element */
                                     <img src={review.userPhoto} alt="" className="w-full h-full rounded-full object-cover" />
                                 ) : (
                                     review.userName.charAt(0)

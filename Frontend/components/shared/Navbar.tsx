@@ -82,7 +82,11 @@ export default function Navbar() {
   const totalResults = searchResults.destinations.length + searchResults.pages.length;
 
   // Reset selected index when query changes
-  useEffect(() => { setSelectedIndex(-1); }, [searchQuery]);
+  const [prevSearchQuery, setPrevSearchQuery] = useState(searchQuery);
+  if (searchQuery !== prevSearchQuery) {
+    setPrevSearchQuery(searchQuery);
+    setSelectedIndex(-1);
+  }
 
   const navigateToResult = useCallback((index: number) => {
     const { destinations, pages } = searchResults;
@@ -114,6 +118,7 @@ export default function Navbar() {
   const lastScrollY = useRef(0);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
     const handleScroll = () => {
       if (typeof window === 'undefined') return;
@@ -169,7 +174,6 @@ export default function Navbar() {
     <>
       <motion.nav
         ref={navRef}
-        data-lenis-prevent
         role="navigation"
         aria-label="Main navigation"
         initial={{ y: 0, opacity: 1 }}
@@ -200,8 +204,8 @@ export default function Navbar() {
                 }}
                 className="flex items-center space-x-2.5"
               >
-                <div className="relative h-9 w-9 overflow-hidden rounded-full ring-2 ring-primary/20 shrink-0">
-                  <Image src="/content.png" alt="NaviiGo Logo" fill sizes="36px" className="object-cover" />
+                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary ring-2 ring-primary/20 shrink-0" aria-hidden="true">
+                  <Compass className="h-5 w-5 text-primary-foreground" strokeWidth={2.5} />
                 </div>
                 <span className="text-lg font-extrabold tracking-tight text-foreground font-sans pr-1">NaviiGo</span>
               </Link>
@@ -391,8 +395,8 @@ export default function Navbar() {
           <div className="p-6 pt-5 space-y-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <div className="relative h-9 w-9 overflow-hidden rounded-full">
-                  <Image src="/content.png" alt="NaviiGo" fill sizes="36px" className="object-cover" />
+                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary" aria-hidden="true">
+                  <Compass className="h-5 w-5 text-primary-foreground" strokeWidth={2.5} />
                 </div>
                 <span className="font-bold text-foreground text-lg tracking-tight font-sans">NaviiGo</span>
               </div>
@@ -422,7 +426,7 @@ export default function Navbar() {
                       <span className="font-medium">{item.name}</span>
                     </Link>
                     {item.hasDropdown && (
-                      <button onClick={() => setMobileItineraryOpen(v => !v)} className="p-1">
+                      <button onClick={() => setMobileItineraryOpen(v => !v)} className="p-1" aria-label={mobileItineraryOpen ? 'Collapse Itinerary menu' : 'Expand Itinerary menu'} aria-expanded={mobileItineraryOpen}>
                         <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${mobileItineraryOpen ? 'rotate-180' : ''}`} />
                       </button>
                     )}
@@ -515,6 +519,7 @@ export default function Navbar() {
                   ref={searchInputRef}
                   type="text"
                   placeholder="Search destinations, pages..."
+                  aria-label="Search NaviiGo"
                   className="flex-1 bg-transparent border-none outline-none px-4 text-foreground placeholder:text-muted-foreground focus:ring-0"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}

@@ -1,4 +1,5 @@
 'use client';
+
 import { useEffect, useState, useCallback, Suspense } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
@@ -22,40 +23,20 @@ function DayViewContent() {
     const uuid = decodeURIComponent(rawUuid).trim().replace(/\s+/g, '-').toLowerCase();
     const dayNumber = parseInt(params?.dayNumber as string, 10);
 
-    const [phase, setPhase] = useState<'loading' | 'ready' | 'not-found'>('loading');
+    const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(uuid);
+    const isInvalid = !uuid || !isValidUUID || isNaN(dayNumber) || dayNumber < 1;
+
+    const [phase, setPhase] = useState<'loading' | 'ready' | 'generating' | 'not-found'>('loading');
     const [form, setForm] = useState<Record<string, unknown>>({});
     const [generatedData, setGeneratedData] = useState<any>(null);
 
-    const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(uuid);
-
     useEffect(() => {
-        if (!uuid || !isValidUUID || isNaN(dayNumber) || dayNumber < 1) {
-            setPhase('not-found');
-            return;
-        }
+        if (isInvalid) return;
+        let active = true;
 
-        // 1. Check local sessionStorage cache FIRST for instant load
-        let foundLocal = false;
-        if (typeof window !== 'undefined') {
-            const stored = sessionStorage.getItem(`navii_itin_${uuid}`);
-            if (stored) {
-                try {
-                    const parsed = JSON.parse(stored);
-                    if (parsed.generatedData) {
-                        const totalDays = parsed.generatedData?.dayPlans?.length ?? 0;
-                        if (dayNumber <= totalDays) {
-                            setForm(parsed.form ?? {});
-                            setGeneratedData(parsed.generatedData);
-                            setPhase('ready');
-                            foundLocal = true;
-                        }
-                    }
-                } catch (e) {}
-            }
-        }
-
-        // 2. Fetch from Firestore (or update if Firestore has doc)
+        // Fetch from Firestore (or update if Firestore has newer doc)
         getItineraryByUUID(uuid).then((data) => {
+            if (!active) return;
             if (data?.generatedData) {
                 const totalDays = data.generatedData?.dayPlans?.length ?? 0;
                 if (dayNumber > totalDays) {
@@ -65,13 +46,18 @@ function DayViewContent() {
                 setForm(data.form ?? {});
                 setGeneratedData(data.generatedData);
                 setPhase('ready');
-            } else if (!foundLocal) {
+            } else if (data?.form) {
+                setForm(data.form ?? {});
+                setPhase('generating');
+            } else {
                 setPhase('not-found');
             }
         }).catch(() => {
-            if (!foundLocal) setPhase('not-found');
+            if (active) setPhase('not-found');
         });
-    }, [uuid, dayNumber, isValidUUID, router]);
+
+        return () => { active = false; };
+    }, [uuid, dayNumber, isInvalid, router]);
 
 
     const handleBack = useCallback(() => {
@@ -102,7 +88,7 @@ function DayViewContent() {
                         Day Not Found
                     </h1>
                     <p className="text-zinc-500 dark:text-zinc-400 text-sm mb-8">
-                        This itinerary or day doesn't exist. It may have expired or the URL is invalid.
+                        This itinerary or day doesn&apos;t exist. It may have expired or the URL is invalid.
                     </p>
                     <button
                         onClick={() => router.push('/itinerary')}

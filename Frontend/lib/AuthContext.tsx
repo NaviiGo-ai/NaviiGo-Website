@@ -58,12 +58,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setCurrentUid(user.uid);
           await loadFromFirestore(user.uid);
 
-          // Also load taste vector from Firestore into localStorage
+          // Also load taste vector from Firestore (no localStorage storage)
           const { getPersonalizationTaste } = await import('./firestore');
           const taste = await getPersonalizationTaste(user.uid);
-          if (taste?.vector?.length) {
-            localStorage.setItem('naviigo_taste_vector', JSON.stringify(taste.vector));
-          }
+          // Taste vector is now used directly from Firestore; no localStorage caching
         } catch (err) {
           console.error('Failed to sync personalization:', err);
         }

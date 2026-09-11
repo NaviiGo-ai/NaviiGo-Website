@@ -154,77 +154,53 @@ async def generate(payload: ItineraryRequest, request: Request):
             days=payload.days or 3,
         )
 
-        if gemini_data:
-            # ── Step 2: Run deterministic personalization engine ──
-            print(f"[Itinerary] Got destination data, running personalization...")
-            result = generate_itinerary(user_context, gemini_data)
-            if result:
-                # ── Step 3: Save to Firebase if userId provided ──
-                if authenticated_user_id:
-                    await save_itinerary(authenticated_user_id, {
-                        "destination": resolved_dest,
-                        "destName": dest_name,
-                        "form": {
-                            "purpose": payload.purpose,
-                            "group": group,
-                            "days": payload.days,
-                            "budget": payload.budget,
-                            "startDate": payload.startDate,
-                            "travelerType": traveler_type,
-                            "routeStops": [stop.model_dump() for stop in route_stops],
-                        },
-                        "generatedData": result,
-                    })
+        if not gemini_data:
+            # No destination data available -> return honest error
+            raise HTTPException(status_code=503, detail=f"Destination data not available for {dest_name}")
 
-                return {
-                    "success": True,
-                    "itinerary": result,
-                    "source": "ai-personalized",
-                    "userId": authenticated_user_id,
-                }
-
-        # ── Fallback: minimal data + deterministic engine ──
-        print(f"[Itinerary] Data fetch failed for \"{dest_name}\", using minimal fallback")
+        # Enrich with real weather data
         try:
-            fallback_data = _build_minimal_dest_info(dest_name)
-            fallback_result = generate_itinerary(user_context, fallback_data)
-            if fallback_result:
-                # Still save to Firebase
-                if authenticated_user_id:
-                    await save_itinerary(authenticated_user_id, {
-                        "destination": resolved_dest,
-                        "destName": dest_name,
-                        "form": {"purpose": payload.purpose, "group": group, "days": payload.days},
-                        "generatedData": fallback_result,
-                    })
-                return {
-                    "success": True,
-                    "itinerary": fallback_result,
-                    "source": "fallback-personalized",
-                    "userId": authenticated_user_id,
-                }
-        except Exception as fallback_err:
-            print(f"[Itinerary] Fallback engine also failed: {fallback_err}")
+            from services.weather_engine import get_weather
+            map_center = gemini_data.get("mapCenter", {})
+            lat = map_center.get("lat", 20.5937)
+            lng = map_center.get("lng", 78.9629)
+            weather_data = await get_weather(lat=lat, lng=lng)
+            gemini_data["weather"] = weather_data
+        except Exception as e:
+            print(f"[Itinerary] Weather fetch failed: {e}")
+            # If weather fails, we still proceed without weather data (will be None in the model)
+            gemini_data["weather"] = {"current": None, "daily": []}
 
-        # Last resort
-        return {
-            "success": True,
-            "itinerary": {
-                "destName": dest_name,
-                "description": f"{dest_name} is a wonderful destination. Plan your trip with NaviiGo!",
-                "avgCost": "₹2,000 – ₹8,000",
-                "crowdLevel": "Medium",
-                "crowdNote": "Check seasonal crowd levels",
-                "logistics": {"flights": "Check airline websites", "trains": "Check IRCTC"},
-                "mapCenter": {"lat": 20.5937, "lng": 78.9629},
-                "highlights": [],
-                "restaurants": [],
-                "hotels": [],
-                "dayPlans": [],
-            },
-            "source": "empty-fallback",
-            "userId": authenticated_user_id,
-        }
+        # ── Step 2: Run deterministic personalization engine ──
+        print(f"[Itinerary] Got destination data, running personalization...")
+        result = generate_itinerary(user_context, gemini_data)
+        if result:
+            # ── Step 3: Save to Firebase if userId provided ──
+            if authenticated_user_id:
+                await save_itinerary(authenticated_user_id, {
+                    "destination": resolved_dest,
+                    "destName": dest_name,
+                    "form": {
+                        "purpose": payload.purpose,
+                        "group": group,
+                        "days": payload.days,
+                        "budget": payload.budget,
+                        "startDate": payload.startDate,
+                        "travelerType": traveler_type,
+                        "routeStops": [stop.model_dump() for stop in route_stops],
+                    },
+                    "generatedData": result,
+                })
+
+            return {
+                "success": True,
+                "itinerary": result,
+                "source": "ai-personalized",
+                "userId": authenticated_user_id,
+            }
+
+        # If the deterministic engine fails, return an error
+        raise HTTPException(status_code=500, detail="Failed to generate itinerary")
 
     except HTTPException:
         raise
@@ -245,36 +221,6 @@ async def from_link(payload: FromLinkRequest, request: Request):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-def _build_minimal_dest_info(dest_name: str) -> dict:
-    """Build minimal destination data when all sources are unavailable."""
-    return {
-        "description": f"{dest_name} is a vibrant destination in India with rich culture, stunning landscapes, and unforgettable experiences.",
-        "avgCost": "₹2,000 – ₹8,000 per day",
-        "crowdLevel": "Medium",
-        "crowdNote": "Varies by season — check local advisories",
-        "logistics": {"flights": "Check airline websites for latest fares", "trains": "Check IRCTC for trains"},
-        "weather": {},
-        "mapCenter": {"lat": 20.5937, "lng": 78.9629},
-        "highlights": [
-            {"name": f"{dest_name} Heritage Walk", "desc": "Explore the historic old quarter and local markets.", "tags": ["Heritage", "Culture"], "lat": 20.60, "lng": 78.97, "duration": "2-3 hrs", "img": "", "bestMonths": "Oct-Mar"},
-            {"name": "Local Morning Market", "desc": "Wake up early and visit where locals shop.", "tags": ["Market", "Food"], "lat": 20.59, "lng": 78.96, "duration": "1-2 hrs", "img": "", "bestMonths": "All year"},
-            {"name": "Sunset Viewpoint", "desc": "The best sunset spot in the city.", "tags": ["Nature", "Sunset"], "lat": 20.58, "lng": 78.95, "duration": "1 hr", "img": "", "bestMonths": "Oct-Mar"},
-            {"name": f"{dest_name} Temple", "desc": "The most iconic spiritual site.", "tags": ["Temple", "Spiritual"], "lat": 20.61, "lng": 78.98, "duration": "1-2 hrs", "img": "", "bestMonths": "All year"},
-            {"name": "Museum & Art Gallery", "desc": "A curated collection of local art and history.", "tags": ["Museum", "Culture"], "lat": 20.595, "lng": 78.965, "duration": "1-2 hrs", "img": "", "bestMonths": "All year"},
-            {"name": "City Park & Gardens", "desc": "A peaceful green escape.", "tags": ["Nature", "Relaxation"], "lat": 20.585, "lng": 78.955, "duration": "1 hr", "img": "", "bestMonths": "Oct-Mar"},
-        ],
-        "restaurants": [
-            {"name": "Local Thali House", "desc": "Authentic regional thali.", "cuisine": "Regional", "priceRange": "₹200-400", "rating": 4.5, "mustTry": "Traditional thali", "lat": 20.595, "lng": 78.965, "tags": ["Local"], "id": "r1", "img": ""},
-            {"name": "Street Food Corner", "desc": "Popular chaat and snacks.", "cuisine": "Street Food", "priceRange": "₹50-150", "rating": 4.3, "mustTry": "Local chaat", "lat": 20.59, "lng": 78.96, "tags": ["Street Food"], "id": "r2", "img": ""},
-            {"name": "Rooftop Café", "desc": "Great views with coffee.", "cuisine": "Café", "priceRange": "₹300-600", "rating": 4.4, "mustTry": "Filter coffee", "lat": 20.60, "lng": 78.97, "tags": ["Café"], "id": "r3", "img": ""},
-            {"name": "Heritage Restaurant", "desc": "Fine dining in a heritage building.", "cuisine": "Indian", "priceRange": "₹500-1200", "rating": 4.6, "mustTry": "Biryani", "lat": 20.605, "lng": 78.975, "tags": ["Fine Dining"], "id": "r4", "img": ""},
-        ],
-        "hotels": [
-            {"name": "Budget Hostel", "desc": "Clean and wallet-friendly.", "type": "Hostel", "priceRange": "₹500-800/night", "rating": 4.2, "amenities": ["WiFi", "AC"], "lat": 20.59, "lng": 78.96, "id": "h1", "img": ""},
-            {"name": "Comfort Inn", "desc": "Reliable mid-range option.", "type": "Hotel", "priceRange": "₹1500-3000/night", "rating": 4.4, "amenities": ["WiFi", "AC", "Restaurant"], "lat": 20.595, "lng": 78.965, "id": "h2", "img": ""},
-            {"name": "Heritage Resort", "desc": "Premium heritage property.", "type": "Resort", "priceRange": "₹5000-12000/night", "rating": 4.7, "amenities": ["WiFi", "AC", "Pool", "Spa"], "lat": 20.60, "lng": 78.97, "id": "h3", "img": ""},
-        ],
-    }
 
 
 async def _generate_multi_city_itinerary(base_context: Dict[str, Any], route_stops: List[RouteStop]) -> Optional[dict]:
@@ -301,7 +247,12 @@ async def _generate_multi_city_itinerary(base_context: Dict[str, Any], route_sto
             purpose=base_context["purpose"],
             budget=base_context["budget"],
             days=stay_days,
-        ) or _build_minimal_dest_info(city_name)
+        )
+        if not city_data:
+            raise HTTPException(
+                status_code=503,
+                detail=f"Destination data not available for {city_name}. Please try again later.",
+            )
 
         is_first_city = city_index == 0
         is_last_city = city_index == len(city_specs) - 1

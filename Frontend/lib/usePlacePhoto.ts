@@ -14,23 +14,21 @@ const photoCache = new Map<string, string>();
 export function usePlacePhoto(
     name: string | undefined,
     city: string | undefined,
-    fallback: string,
     width: number = 800
 ): string {
     const [url, setUrl] = useState(() => {
-        if (!name) return fallback;
+        if (!name) return '';
         const key = `${name}|${city || ''}`.toLowerCase();
-        return photoCache.get(key) || fallback;
+        return photoCache.get(key) || '';
     });
 
     useEffect(() => {
         if (!name) return;
 
         const key = `${name}|${city || ''}`.toLowerCase();
-        
-        // Already cached
+
+        // If already cached, we don't need to do anything - state is already set from useState initializer
         if (photoCache.has(key)) {
-            setUrl(photoCache.get(key)!);
             return;
         }
 
@@ -40,17 +38,17 @@ export function usePlacePhoto(
             try {
                 const params = new URLSearchParams({ name, w: String(width) });
                 if (city) params.set('city', city);
-                
+
                 const res = await fetch(`/api/places/photo?${params}`);
                 if (!res.ok) return;
-                
+
                 const data = await res.json();
                 if (data.url && !cancelled) {
                     photoCache.set(key, data.url);
                     setUrl(data.url);
                 }
             } catch {
-                // Silently fail — keep the fallback image
+                // Leave url as empty string to indicate photo not available
             }
         })();
 

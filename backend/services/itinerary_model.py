@@ -71,24 +71,17 @@ TRAVELER_PACE = {
 # ─── Survey-Based Crowd Tips ────────────────────────────────────────────────
 
 SURVEY_CROWD_TIPS = {
-    "Temple":   ["Go before 8 AM — lines triple by 10 AM per our survey", "84% of visitors regret going post-noon", "Dress code strictly enforced — carry a dupatta"],
-    "Heritage": ["Hire a local guide (₹200–₹500) — 91% say it transformed their visit", "Golden hour is 30 mins before closing", "Photography rules vary — always ask first"],
-    "Beach":    ["Avoid 11 AM–3 PM — UV index is extreme", "Best light for photos: 6–8 AM or 5–7 PM", "Water sports bookings fill by 9 AM in season"],
-    "Market":   ["Bargaining is expected — start at 40% of asking price", "Evenings are busier but more electric", "Cash preferred — carry small notes"],
-    "Nature":   ["Register at forest office before entry", "Carry water — 2L minimum in Indian summer", "Best wildlife sightings: 6–9 AM"],
-    "Trekking": ["Start early — summit by noon to avoid afternoon storms", "Hire a local guide for any trail above 3500m", "Acclimatize 1 day before attempting high-altitude treks"],
-    "Museum":   ["Monday closures are common — always check", "Photography often not allowed inside", "Average visit: 90 mins per our data"],
-    "Shopping": ["Sundays many shops are closed in religious towns", "Government emporiums have fixed prices — safe for gifts", "Avoid tourist shops near monuments — 3x markup"],
-    "default":  ["Go early for the best experience", "Carry water and a light snack", "Check Google Maps for live crowd data"],
+    "Temple":   ["Go before 8 AM — lines grow significantly by late morning", "Dress code strictly enforced — carry a dupatta or scarf", "Visit on weekdays for thinner crowds"],
+    "Heritage": ["Hire a local guide (₹200–₹500) — visitors say it transforms their visit", "Golden hour light is perfect 30 mins before closing", "Photography rules vary — always ask first"],
+    "Beach":    ["Avoid 11 AM–3 PM — UV index peaks during these hours", "Best light for photos: early morning or late afternoon", "Water sports bookings fill quickly in high season"],
+    "Market":   ["Bargaining is expected — start at roughly half asking price", "Evenings are busier but more vibrant", "Carry small notes — many vendors prefer cash"],
+    "Nature":   ["Register at forest office before entry when required", "Carry at least 2L water per person in summer months", "Best wildlife sightings often occur at dawn"],
+    "Trekking": ["Start early — aim to summit by noon to avoid afternoon weather changes", "Consider hiring a local guide for trails above 3500m", "Acclimatize for a day before attempting high-altitude treks"],
+    "Museum":   ["Many museums are closed on Mondays or Tuesdays — check ahead", "Photography policies vary — inquire at the desk", "Average visit duration: 60-90 minutes"],
+    "Shopping": ["Many smaller shops close on Sundays in religious towns", "Government emporiums have fixed prices — good for fixed-budget shopping", "Tourist areas near major monuments often have inflated prices"],
+    "default":  ["Go early in the day for the best experience", "Carry water and a light snack", "Check local sources for current crowd conditions"],
 }
 
-WEATHER_CONDITIONS = [
-    {"condition": "Clear Skies",   "emoji": "☀️",  "rain": 0,  "tip": "Great day for sightseeing — carry sunscreen"},
-    {"condition": "Partly Cloudy", "emoji": "⛅",  "rain": 15, "tip": "Light & breezy — carry sunglasses"},
-    {"condition": "Hazy Morning",  "emoji": "🌤️", "rain": 5,  "tip": "Cool morning — good for early starts"},
-    {"condition": "Misty Morning",  "emoji": "🌫️", "rain": 30, "tip": "Carry a light jacket and umbrella"},
-    {"condition": "Sunny",         "emoji": "☀️",  "rain": 0,  "tip": "Stay hydrated and use sunscreen"},
-]
 
 DAY_TITLES_MAP = {
     "spiritual": ["Sacred Beginnings", "Temple Trail", "Divine Detours", "Pilgrimage Path", "Spiritual Heights"],
@@ -229,17 +222,27 @@ def _get_survey_tip(tags: List[str]) -> str:
     return defaults[random.randint(0, len(defaults) - 1)]
 
 
-def _geo_filter_and_snap(items: List[dict], center: dict) -> List[dict]:
-    result = []
+def _geo_filter_and_snap(items: List[dict], center: dict) -> tuple[List[dict], List[dict]]:
+    """Partition items by geographic radius around ``center``.
+
+    Returns ``(in_range, flagged)``. Out-of-radius items are neither silently
+    moved to the map center (the historical bug) nor silently dropped: they are
+    returned in ``flagged`` with a ``geoFlag`` marker (plus ``geoDistKm``) so
+    callers can surface the exclusion honestly instead of presenting the item
+    at wrong coordinates.
+    """
+    in_range: List[dict] = []
+    flagged: List[dict] = []
     for item in items:
         if not item.get("lat") or not item.get("lng"):
-            result.append(item)
+            flagged.append({**item, "geoFlag": "missing-coordinates"})
             continue
         dist_km = _haversine_m(center["lat"], center["lng"], item["lat"], item["lng"]) / 1000
-        if dist_km > GEO_RADIUS_KM:
-            item = {**item, "lat": center["lat"], "lng": center["lng"]}
-        result.append(item)
-    return result
+        if dist_km <= GEO_RADIUS_KM:
+            in_range.append(item)
+        else:
+            flagged.append({**item, "geoFlag": f"outside-{GEO_RADIUS_KM}km", "geoDistKm": round(dist_km, 1)})
+    return in_range, flagged
 
 
 # ─── Spatial Clustering ─────────────────────────────────────────────────────
@@ -475,7 +478,7 @@ def generate_itinerary(ctx: dict, dest_data: dict) -> Optional[dict]:
         for tag in a.get("tags", []):
             tag_counts[tag] = tag_counts.get(tag, 0) + 1
     scored_attractions.sort(key=lambda a: a["score"], reverse=True)
-    scored_attractions = _geo_filter_and_snap(scored_attractions, map_center)
+    scored_attractions, flagged_attractions = _geo_filter_and_snap(scored_attractions, map_center)
 
     # ── V2: Day-of-week filtering ────────────────────────────────────────────
     # Remove attractions that are closed on the travel dates.
@@ -579,7 +582,7 @@ def generate_itinerary(ctx: dict, dest_data: dict) -> Optional[dict]:
     # Score restaurants — separate street food for trail injection
     restaurants = list(dest_data.get("restaurants", []))
     restaurants.sort(key=lambda r: r.get("rating", 0) * 10, reverse=True)
-    scored_restaurants = _geo_filter_and_snap(restaurants, map_center)
+    scored_restaurants, flagged_restaurants = _geo_filter_and_snap(restaurants, map_center)
     street_food_restaurants = [r for r in scored_restaurants if r.get("category") == "street-food"]
 
     # Score hotels by budget fit
@@ -771,8 +774,48 @@ def generate_itinerary(ctx: dict, dest_data: dict) -> Optional[dict]:
         # ── Open Day / Rest Day — skip scheduling ────────────────────────────
         if day_index in free_days:
             purpose_titles = DAY_TITLES_MAP.get(ctx.get("purpose", "cultural"), DAY_TITLES_MAP["cultural"])
-            weather_idx = day_index % len(WEATHER_CONDITIONS)
-            weather = {"temp": temp_for_month, **WEATHER_CONDITIONS[weather_idx]}
+            # Build weather from real forecast data
+            weather_data = dest_data.get("weather") or {}
+            daily_forecast = weather_data.get("daily", []) if isinstance(weather_data, dict) else []
+            current = weather_data.get("current", {}) if isinstance(weather_data, dict) else {}
+
+            # Get forecast for this day, fallback to current, then to unavailable
+            if daily_forecast and day_index < len(daily_forecast):
+                day_weather = daily_forecast[day_index]
+                temp_str = f"{day_weather.get('minTemp', '?')}°C–{day_weather.get('maxTemp', '?')}°C"
+                condition = day_weather.get('condition', 'Data not available')
+                emoji = day_weather.get('emoji', '🌤️')
+                rain_chance = day_weather.get('rainChance', 0)
+            elif current:
+                temp_str = f"{current.get('temp', '?')}°C"
+                condition = current.get('condition', 'Data not available')
+                emoji = current.get('emoji', '🌤️')
+                rain_chance = current.get('rainChance', 0)
+            else:
+                temp_str = "Forecast unavailable"
+                condition = "Weather data not available"
+                emoji = "❓"
+                rain_chance = 0
+
+            # Generate tip based on conditions
+            tip = "Great day for exploration!"
+            if rain_chance > 60:
+                tip = "Pack rain gear and plan for indoor activities"
+            elif rain_chance > 30:
+                tip = "Consider carrying an umbrella"
+            elif "clear" in condition.lower() or "sunny" in condition.lower():
+                tip = "Perfect sightseeing weather — don't forget sunscreen"
+            elif "cloud" in condition.lower():
+                tip = "Comfortable conditions for outdoor activities"
+
+            weather = {
+                "temp": temp_str,
+                "condition": condition,
+                "emoji": emoji,
+                "rain": rain_chance,
+                "tip": tip
+            }
+
             day_plans.append({
                 "day": day_index + 1,
                 "title": "Free Day - Explore at Your Own Pace",
@@ -1171,8 +1214,47 @@ def generate_itinerary(ctx: dict, dest_data: dict) -> Optional[dict]:
                 day_title = f"{day_title} & Farewell"
 
         # Weather
-        weather_idx = day_index % len(WEATHER_CONDITIONS)
-        weather = {"temp": temp_for_month, **WEATHER_CONDITIONS[weather_idx]}
+        # Build weather from real forecast data
+        weather_data = dest_data.get("weather") or {}
+        daily_forecast = weather_data.get("daily", []) if isinstance(weather_data, dict) else []
+        current = weather_data.get("current", {}) if isinstance(weather_data, dict) else {}
+
+        # Get forecast for this day, fallback to current, then to unavailable
+        if daily_forecast and day_index < len(daily_forecast):
+            day_weather = daily_forecast[day_index]
+            temp_str = f"{day_weather.get('minTemp', '?')}°C–{day_weather.get('maxTemp', '?')}°C"
+            condition = day_weather.get('condition', 'Data not available')
+            emoji = day_weather.get('emoji', '🌤️')
+            rain_chance = day_weather.get('rainChance', 0)
+        elif current:
+            temp_str = f"{current.get('temp', '?')}°C"
+            condition = current.get('condition', 'Data not available')
+            emoji = current.get('emoji', '🌤️')
+            rain_chance = current.get('rainChance', 0)
+        else:
+            temp_str = "Forecast unavailable"
+            condition = "Weather data not available"
+            emoji = "❓"
+            rain_chance = 0
+
+        # Generate tip based on conditions
+        tip = "Great day for exploration!"
+        if rain_chance > 60:
+            tip = "Pack rain gear and plan for indoor activities"
+        elif rain_chance > 30:
+            tip = "Consider carrying an umbrella"
+        elif "clear" in condition.lower() or "sunny" in condition.lower():
+            tip = "Perfect sightseeing weather — don't forget sunscreen"
+        elif "cloud" in condition.lower():
+            tip = "Comfortable conditions for outdoor activities"
+
+        weather = {
+            "temp": temp_str,
+            "condition": condition,
+            "emoji": emoji,
+            "rain": rain_chance,
+            "tip": tip
+        }
 
         day_plans.append({
             "day": day_index + 1,
@@ -1230,6 +1312,10 @@ def generate_itinerary(ctx: dict, dest_data: dict) -> Optional[dict]:
         ],
         "dayPlans": day_plans,
         "mapCenter": map_center,
+        "geoFlags": {
+            "attractions": flagged_attractions,
+            "restaurants": flagged_restaurants,
+        },
     }
 
     if departure_info:

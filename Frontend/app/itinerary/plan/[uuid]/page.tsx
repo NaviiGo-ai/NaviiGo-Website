@@ -5,19 +5,17 @@ import { motion, AnimatePresence } from 'framer-motion';
 import LoadingScreen from '@/components/features/itinerary/LoadingScreen';
 import ResultPage from '@/components/features/itinerary/ResultPage';
 import { listenToItineraryByUUID } from '@/lib/firestore';
-import { safeSessionStorage } from '@/lib/utils/storage';
+
 
 /**
  * /itinerary/plan/[uuid]
  *
  * Each generated itinerary has a unique UUID URL.
  * Flow:
- *   1. On mount: subscribe to Firestore `itineraries/{uuid}` via onSnapshot
+ *   1. On mount: subscribe to Firestore `itineraries/{uuid}` via getItineraryByUUID
  *   2. If doc has generatedData → show ResultPage immediately
- *   3. If doc is missing → read form from sessionStorage (written by SetupWizard)
- *      and show LoadingScreen, which calls the generate API and writes the result
- *      to Firestore. The onSnapshot fires → ResultPage shows.
- *   4. If neither sessionStorage nor Firestore have data → show 404-style message.
+ *   3. If doc has form but no generatedData → show LoadingScreen, which calls the generate API and writes the result to Firestore (calls onDone when complete). The onSnapshot fires → ResultPage shows.
+ *   4. If doc is missing completely → show 404-style message.
  */
 function ItineraryUUIDContent() {
     const params = useParams();
@@ -58,48 +56,28 @@ function ItineraryUUIDContent() {
                     setPhase('result');
                     return;
                 }
-            } catch (err) {
-                console.warn('[UUID Page] Firestore fetch skipped/failed, checking local cache:', err);
-            }
 
-            if (!isMounted) return;
-
-            // 2. Fallback: check sessionStorage for generated itinerary
-            const localItin = safeSessionStorage.getItem(`navii_itin_${uuid}`) || (rawUuid ? safeSessionStorage.getItem(`navii_itin_${rawUuid}`) : null);
-            if (localItin) {
-                try {
-                    const parsed = JSON.parse(localItin);
-                    if (parsed.generatedData) {
-                        setForm(parsed.form ?? {});
-                        setGeneratedData(parsed.generatedData);
-                        setPhase('result');
-                        return;
-                    }
-                } catch (e) {
-                    console.warn('[UUID Page] Error parsing local itinerary cache:', e);
-                }
-            }
-
-            // 3. Fallback: check sessionStorage for form to trigger generation
-            const storedForm = safeSessionStorage.getItem(`navii_form_${uuid}`) || (rawUuid ? safeSessionStorage.getItem(`navii_form_${rawUuid}`) : null);
-            if (storedForm) {
-                try {
-                    setForm(JSON.parse(storedForm));
+                // If we have a form but no generatedData, we are in generating state
+                if (data?.form) {
+                    setForm(data.form ?? {});
                     setPhase('generating');
                     return;
-                } catch (e) {
-                    console.warn('[UUID Page] Error parsing stored form:', e);
                 }
-            }
 
-            // 4. If nothing found at all
-            setPhase('not-found');
+                // If we have neither, then not found
+                setPhase('not-found');
+                return;
+            } catch (err) {
+                console.warn('[UUID Page] Firestore fetch skipped/failed:', err);
+                if (!isMounted) return;
+                setPhase('not-found');
+            }
         };
 
         loadData();
 
         return () => { isMounted = false; };
-    }, [uuid, isValidUUID]);
+    }, [uuid, isValidUUID, rawUuid]);
 
     /**
      * Called by LoadingScreen when generation completes.
@@ -110,14 +88,9 @@ function ItineraryUUIDContent() {
         if (data) {
             setGeneratedData(data);
             setPhase('result');
-            // Save to sessionStorage as a client fallback for offline/non-Firebase mode
-            safeSessionStorage.setItem(`navii_itin_${uuid}`, JSON.stringify({
-                form,
-                generatedData: data,
-                destName: form.destName || '',
-            }));
+            // Removed sessionStorage usage; rely on Firestore
         }
-    }, [uuid, form]);
+    }, []);
 
 
     const handleReset = useCallback(() => {

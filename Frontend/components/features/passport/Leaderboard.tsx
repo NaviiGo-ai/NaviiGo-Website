@@ -46,7 +46,7 @@ export const Leaderboard = memo(({ leaderboard }: Props) => {
               </span>
               <div>
                 <div className="font-bold text-zinc-900 dark:text-white">{entry.displayName}</div>
-                <div className="text-xs text-zinc-400">Level {entry.level} • {entry.stampsCount} Stamps</div>
+                <div className="text-xs text-zinc-400">Level {entry.level} • {entry.totalStamps} Stamps</div>
               </div>
             </div>
 

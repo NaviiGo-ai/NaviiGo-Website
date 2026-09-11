@@ -121,6 +121,7 @@ export default function PlaceAutocomplete({
           type="text"
           name={`${name}_display`}
           id={`autocomplete-${name}`}
+          aria-label={placeholder}
           value={query}
           onChange={(e) => {
             setQuery(e.target.value);

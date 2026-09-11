@@ -43,6 +43,11 @@ backend/*.pyc
 **/__pycache__/
 *.pyc
 
+# Local SQLite dev/test databases (PostgreSQL is the prod store)
+*.db
+*.sqlite
+*.sqlite3
+
 # Firebase service account keys (NEVER commit these!)
 *firebase*adminsdk*.json
 *service*account*.json

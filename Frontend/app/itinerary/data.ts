@@ -1,4 +1,3 @@
-import { DEST_IMAGES } from '@/lib/imageMap';
 // ─── TYPES ─────────────────────────────────────────────────────────────────────
 export type WalkLevel = 'Easy' | 'Medium' | 'High';
 export type ValueLevel = 'Low' | 'Medium' | 'High';
@@ -80,67 +79,67 @@ export const PURPOSES = [
 
 export const DESTINATIONS = [
     // ── North India ──────────────────────────────────────────────
-    { id: 'delhi', name: 'Delhi', sub: 'Capital of Contrasts', state: 'Delhi', img: DEST_IMAGES['delhi'] || DEST_IMAGES.mumbai },
-    { id: 'jaipur', name: 'Jaipur', sub: 'The Pink City', state: 'Rajasthan', img: DEST_IMAGES['jaipur'] || DEST_IMAGES.mumbai },
-    { id: 'agra', name: 'Agra', sub: 'Land of the Taj', state: 'Uttar Pradesh', img: DEST_IMAGES['agra'] || DEST_IMAGES.mumbai },
-    { id: 'varanasi', name: 'Varanasi', sub: 'City of Light', state: 'Uttar Pradesh', img: DEST_IMAGES['varanasi'] || DEST_IMAGES.mumbai },
-    { id: 'amritsar', name: 'Amritsar', sub: 'Golden City', state: 'Punjab', img: DEST_IMAGES['amritsar'] || DEST_IMAGES.mumbai },
-    { id: 'lucknow', name: 'Lucknow', sub: 'City of Nawabs', state: 'Uttar Pradesh', img: DEST_IMAGES['lucknow'] || DEST_IMAGES.mumbai },
+    { id: 'delhi', name: 'Delhi', sub: 'Capital of Contrasts', state: 'Delhi', img: '' },
+    { id: 'jaipur', name: 'Jaipur', sub: 'The Pink City', state: 'Rajasthan', img: '' },
+    { id: 'agra', name: 'Agra', sub: 'Land of the Taj', state: 'Uttar Pradesh', img: '' },
+    { id: 'varanasi', name: 'Varanasi', sub: 'City of Light', state: 'Uttar Pradesh', img: '' },
+    { id: 'amritsar', name: 'Amritsar', sub: 'Golden City', state: 'Punjab', img: '' },
+    { id: 'lucknow', name: 'Lucknow', sub: 'City of Nawabs', state: 'Uttar Pradesh', img: '' },
 
     // ── Rajasthan ────────────────────────────────────────────────
-    { id: 'udaipur', name: 'Udaipur', sub: 'City of Lakes', state: 'Rajasthan', img: DEST_IMAGES['udaipur'] || DEST_IMAGES.mumbai },
-    { id: 'jodhpur', name: 'Jodhpur', sub: 'The Blue City', state: 'Rajasthan', img: DEST_IMAGES['jodhpur'] || DEST_IMAGES.mumbai },
-    { id: 'jaisalmer', name: 'Jaisalmer', sub: 'Golden City', state: 'Rajasthan', img: DEST_IMAGES['jaisalmer'] || DEST_IMAGES.mumbai },
-    { id: 'pushkar', name: 'Pushkar', sub: 'Rose Garden of Rajasthan', state: 'Rajasthan', img: DEST_IMAGES['pushkar'] || DEST_IMAGES.mumbai },
+    { id: 'udaipur', name: 'Udaipur', sub: 'City of Lakes', state: 'Rajasthan', img: '' },
+    { id: 'jodhpur', name: 'Jodhpur', sub: 'The Blue City', state: 'Rajasthan', img: '' },
+    { id: 'jaisalmer', name: 'Jaisalmer', sub: 'Golden City', state: 'Rajasthan', img: '' },
+    { id: 'pushkar', name: 'Pushkar', sub: 'Rose Garden of Rajasthan', state: 'Rajasthan', img: '' },
 
     // ── Himalayan ────────────────────────────────────────────────
-    { id: 'manali', name: 'Manali', sub: 'Gateway to Himalayas', state: 'Himachal Pradesh', img: DEST_IMAGES['manali'] || DEST_IMAGES.mumbai },
-    { id: 'shimla', name: 'Shimla', sub: 'Queen of Hills', state: 'Himachal Pradesh', img: DEST_IMAGES['shimla'] || DEST_IMAGES.mumbai },
-    { id: 'rishikesh', name: 'Rishikesh', sub: 'Yoga Capital of World', state: 'Uttarakhand', img: DEST_IMAGES['rishikesh'] || DEST_IMAGES.mumbai },
-    { id: 'dharamshala', name: 'Dharamshala', sub: 'Little Lhasa', state: 'Himachal Pradesh', img: DEST_IMAGES['dharamshala'] || DEST_IMAGES.mumbai },
-    { id: 'nainital', name: 'Nainital', sub: 'Lake District', state: 'Uttarakhand', img: DEST_IMAGES['nainital'] || DEST_IMAGES.mumbai },
-    { id: 'mussoorie', name: 'Mussoorie', sub: 'Queen of Hills', state: 'Uttarakhand', img: DEST_IMAGES['mussoorie'] || DEST_IMAGES.mumbai },
-    { id: 'haridwar', name: 'Haridwar', sub: 'Gateway to Gods', state: 'Uttarakhand', img: DEST_IMAGES['haridwar'] || DEST_IMAGES.mumbai },
+    { id: 'manali', name: 'Manali', sub: 'Gateway to Himalayas', state: 'Himachal Pradesh', img: '' },
+    { id: 'shimla', name: 'Shimla', sub: 'Queen of Hills', state: 'Himachal Pradesh', img: '' },
+    { id: 'rishikesh', name: 'Rishikesh', sub: 'Yoga Capital of World', state: 'Uttarakhand', img: '' },
+    { id: 'dharamshala', name: 'Dharamshala', sub: 'Little Lhasa', state: 'Himachal Pradesh', img: '' },
+    { id: 'nainital', name: 'Nainital', sub: 'Lake District', state: 'Uttarakhand', img: '' },
+    { id: 'mussoorie', name: 'Mussoorie', sub: 'Queen of Hills', state: 'Uttarakhand', img: '' },
+    { id: 'haridwar', name: 'Haridwar', sub: 'Gateway to Gods', state: 'Uttarakhand', img: '' },
 
     // ── Kashmir & Ladakh ─────────────────────────────────────────
-    { id: 'srinagar', name: 'Srinagar', sub: 'Paradise on Earth', state: 'J&K', img: DEST_IMAGES['srinagar'] || DEST_IMAGES.mumbai },
-    { id: 'ladakh', name: 'Ladakh', sub: 'Land of High Passes', state: 'Ladakh', img: DEST_IMAGES['ladakh'] || DEST_IMAGES.mumbai },
-    { id: 'gulmarg', name: 'Gulmarg', sub: 'Meadow of Flowers', state: 'J&K', img: DEST_IMAGES['gulmarg'] || DEST_IMAGES.mumbai },
+    { id: 'srinagar', name: 'Srinagar', sub: 'Paradise on Earth', state: 'J&K', img: '' },
+    { id: 'ladakh', name: 'Ladakh', sub: 'Land of High Passes', state: 'Ladakh', img: '' },
+    { id: 'gulmarg', name: 'Gulmarg', sub: 'Meadow of Flowers', state: 'J&K', img: '' },
 
     // ── South India ──────────────────────────────────────────────
-    { id: 'kerala', name: 'Kerala', sub: "God's Own Country", state: 'Kerala', img: DEST_IMAGES['kerala'] || DEST_IMAGES.mumbai },
-    { id: 'goa', name: 'Goa', sub: 'Sun, Sand & Soul', state: 'Goa', img: DEST_IMAGES['goa'] || DEST_IMAGES.mumbai },
-    { id: 'mysuru', name: 'Mysuru', sub: 'Palace City', state: 'Karnataka', img: DEST_IMAGES['mysuru'] || DEST_IMAGES.mumbai },
-    { id: 'hampi', name: 'Hampi', sub: 'Boulder Kingdom', state: 'Karnataka', img: DEST_IMAGES['hampi'] || DEST_IMAGES.mumbai },
-    { id: 'pondicherry', name: 'Pondicherry', sub: 'French Riviera of East', state: 'Tamil Nadu', img: DEST_IMAGES['pondicherry'] || DEST_IMAGES.mumbai },
-    { id: 'ooty', name: 'Ooty', sub: 'Queen of Nilgiris', state: 'Tamil Nadu', img: DEST_IMAGES['ooty'] || DEST_IMAGES.mumbai },
-    { id: 'coorg', name: 'Coorg', sub: 'Scotland of India', state: 'Karnataka', img: DEST_IMAGES['coorg'] || DEST_IMAGES.mumbai },
-    { id: 'hyderabad', name: 'Hyderabad', sub: 'City of Pearls', state: 'Telangana', img: DEST_IMAGES['hyderabad'] || DEST_IMAGES.mumbai },
-    { id: 'madurai', name: 'Madurai', sub: 'Temple City', state: 'Tamil Nadu', img: DEST_IMAGES['madurai'] || DEST_IMAGES.mumbai },
+    { id: 'kerala', name: 'Kerala', sub: "God's Own Country", state: 'Kerala', img: '' },
+    { id: 'goa', name: 'Goa', sub: 'Sun, Sand & Soul', state: 'Goa', img: '' },
+    { id: 'mysuru', name: 'Mysuru', sub: 'Palace City', state: 'Karnataka', img: '' },
+    { id: 'hampi', name: 'Hampi', sub: 'Boulder Kingdom', state: 'Karnataka', img: '' },
+    { id: 'pondicherry', name: 'Pondicherry', sub: 'French Riviera of East', state: 'Tamil Nadu', img: '' },
+    { id: 'ooty', name: 'Ooty', sub: 'Queen of Nilgiris', state: 'Tamil Nadu', img: '' },
+    { id: 'coorg', name: 'Coorg', sub: 'Scotland of India', state: 'Karnataka', img: '' },
+    { id: 'hyderabad', name: 'Hyderabad', sub: 'City of Pearls', state: 'Telangana', img: '' },
+    { id: 'madurai', name: 'Madurai', sub: 'Temple City', state: 'Tamil Nadu', img: '' },
 
     // ── West India ────────────────────────────────────────────────
-    { id: 'mumbai', name: 'Mumbai', sub: 'City of Dreams', state: 'Maharashtra', img: DEST_IMAGES['mumbai'] || DEST_IMAGES.mumbai },
-    { id: 'kutch', name: 'Kutch', sub: 'White Desert', state: 'Gujarat', img: DEST_IMAGES['kutch'] || DEST_IMAGES.mumbai },
-    { id: 'dwarka', name: 'Dwarka', sub: 'Kingdom of Krishna', state: 'Gujarat', img: DEST_IMAGES['dwarka'] || DEST_IMAGES.mumbai },
+    { id: 'mumbai', name: 'Mumbai', sub: 'City of Dreams', state: 'Maharashtra', img: '' },
+    { id: 'kutch', name: 'Kutch', sub: 'White Desert', state: 'Gujarat', img: '' },
+    { id: 'dwarka', name: 'Dwarka', sub: 'Kingdom of Krishna', state: 'Gujarat', img: '' },
 
     // ── East India ────────────────────────────────────────────────
-    { id: 'kolkata', name: 'Kolkata', sub: 'City of Joy', state: 'West Bengal', img: DEST_IMAGES['kolkata'] || DEST_IMAGES.mumbai },
-    { id: 'darjeeling', name: 'Darjeeling', sub: 'Queen of Hills', state: 'West Bengal', img: DEST_IMAGES['darjeeling'] || DEST_IMAGES.mumbai },
-    { id: 'gangtok', name: 'Gangtok', sub: 'Land of Monasteries', state: 'Sikkim', img: DEST_IMAGES['gangtok'] || DEST_IMAGES.mumbai },
-    { id: 'puri', name: 'Puri', sub: 'Abode of Lord Jagannath', state: 'Odisha', img: DEST_IMAGES['puri'] || DEST_IMAGES.mumbai },
+    { id: 'kolkata', name: 'Kolkata', sub: 'City of Joy', state: 'West Bengal', img: '' },
+    { id: 'darjeeling', name: 'Darjeeling', sub: 'Queen of Hills', state: 'West Bengal', img: '' },
+    { id: 'gangtok', name: 'Gangtok', sub: 'Land of Monasteries', state: 'Sikkim', img: '' },
+    { id: 'puri', name: 'Puri', sub: 'Abode of Lord Jagannath', state: 'Odisha', img: '' },
 
     // ── Northeast ────────────────────────────────────────────────
-    { id: 'shillong', name: 'Shillong', sub: 'Scotland of East', state: 'Meghalaya', img: DEST_IMAGES['shillong'] || DEST_IMAGES.mumbai },
-    { id: 'tawang', name: 'Tawang', sub: 'Monastery in Clouds', state: 'Arunachal Pradesh', img: DEST_IMAGES['tawang'] || DEST_IMAGES.mumbai },
+    { id: 'shillong', name: 'Shillong', sub: 'Scotland of East', state: 'Meghalaya', img: '' },
+    { id: 'tawang', name: 'Tawang', sub: 'Monastery in Clouds', state: 'Arunachal Pradesh', img: '' },
 
     // ── Islands ──────────────────────────────────────────────────
-    { id: 'andaman', name: 'Andaman', sub: 'Tropical Paradise', state: 'A&N Islands', img: DEST_IMAGES['andaman'] || DEST_IMAGES.mumbai },
-    { id: 'lakshadweep', name: 'Lakshadweep', sub: 'Coral Islands', state: 'Lakshadweep', img: DEST_IMAGES['lakshadweep'] || DEST_IMAGES.mumbai },
+    { id: 'andaman', name: 'Andaman', sub: 'Tropical Paradise', state: 'A&N Islands', img: '' },
+    { id: 'lakshadweep', name: 'Lakshadweep', sub: 'Coral Islands', state: 'Lakshadweep', img: '' },
 
     // ── Pilgrimages ──────────────────────────────────────────────
-    { id: 'tirupati', name: 'Tirupati', sub: 'Lord Venkateswara', state: 'Andhra Pradesh', img: DEST_IMAGES['tirupati'] || DEST_IMAGES.mumbai },
-    { id: 'ujjain', name: 'Ujjain', sub: 'City of Mahakal', state: 'Madhya Pradesh', img: DEST_IMAGES['ujjain'] || DEST_IMAGES.mumbai },
-    { id: 'bodhgaya', name: 'Bodh Gaya', sub: 'Seat of Enlightenment', state: 'Bihar', img: DEST_IMAGES['bodhgaya'] || DEST_IMAGES.mumbai },
+    { id: 'tirupati', name: 'Tirupati', sub: 'Lord Venkateswara', state: 'Andhra Pradesh', img: '' },
+    { id: 'ujjain', name: 'Ujjain', sub: 'City of Mahakal', state: 'Madhya Pradesh', img: '' },
+    { id: 'bodhgaya', name: 'Bodh Gaya', sub: 'Seat of Enlightenment', state: 'Bihar', img: '' },
 ];
 
 export const GROUP_SIZES = [
@@ -221,24 +220,24 @@ export const DEST_DATA: Record<string, DestInfo> = {
         crowdLevel: 'Medium', crowdNote: 'Oct–Mar peak season; monsoon peaceful and lush',
         mapCenter: { lat: 9.9312, lng: 76.2673 },
         highlights: [
-            { name: 'Alleppey Backwaters', img: '1593693397690-362cb9666fc2', desc: 'Cruise through palm-lined canals on a traditional Kerala houseboat.', bestMonths: 'Oct – Mar', duration: '4–8 hrs', walking: 'Easy', value: 'High', tags: ['Houseboat', 'Nature'], lat: 9.4981, lng: 76.3388 },
-            { name: 'Munnar Tea Gardens', img: '1626621341517-bbf3d9990a23', desc: 'Walk through endless rolling hills of manicured tea estates.', bestMonths: 'Sep – May', duration: '3–5 hrs', walking: 'Medium', value: 'High', tags: ['Nature', 'Hills'], lat: 10.0889, lng: 77.0595 },
-            { name: 'Fort Kochi Heritage', img: '1524492412937-b28074a5d7da', desc: 'Explore Portuguese-era architecture and Chinese fishing nets.', bestMonths: 'Nov – Feb', duration: '2–4 hrs', walking: 'Medium', value: 'High', tags: ['History', 'Culture'], lat: 9.9658, lng: 76.2421 },
-            { name: 'Varkala Cliff Beach', img: '1512343779784-a1d53b98b8ef', desc: 'Stunning cliff-top beach with red laterite cliffs and mineral springs.', bestMonths: 'Oct – Mar', duration: '2–6 hrs', walking: 'Easy', value: 'High', tags: ['Beach', 'Sunset'], lat: 8.7379, lng: 76.7163 },
-            { name: 'Periyar Tiger Reserve', img: '1549366021-d6d0bdb29a8b', desc: 'Boat safari spotting elephants and bison in the Cardamom Hills.', bestMonths: 'Oct – May', duration: '3–6 hrs', walking: 'Medium', value: 'Medium', tags: ['Wildlife', 'Safari'], lat: 9.4667, lng: 77.2333 },
-            { name: 'Athirappilly Falls', img: '1593693397690-362cb9666fc2', desc: "Kerala's largest waterfall crashing through dense tropical forest.", bestMonths: 'Jun – Jan', duration: '2–4 hrs', walking: 'High', value: 'High', tags: ['Waterfall', 'Trekking'], lat: 10.2856, lng: 76.5697 },
+            { name: 'Alleppey Backwaters', img: '', desc: 'Cruise through palm-lined canals on a traditional Kerala houseboat.', bestMonths: 'Oct – Mar', duration: '4–8 hrs', walking: 'Easy', value: 'High', tags: ['Houseboat', 'Nature'], lat: 9.4981, lng: 76.3388 },
+            { name: 'Munnar Tea Gardens', img: '', desc: 'Walk through endless rolling hills of manicured tea estates.', bestMonths: 'Sep – May', duration: '3–5 hrs', walking: 'Medium', value: 'High', tags: ['Nature', 'Hills'], lat: 10.0889, lng: 77.0595 },
+            { name: 'Fort Kochi Heritage', img: '', desc: 'Explore Portuguese-era architecture and Chinese fishing nets.', bestMonths: 'Nov – Feb', duration: '2–4 hrs', walking: 'Medium', value: 'High', tags: ['History', 'Culture'], lat: 9.9658, lng: 76.2421 },
+            { name: 'Varkala Cliff Beach', img: '', desc: 'Stunning cliff-top beach with red laterite cliffs and mineral springs.', bestMonths: 'Oct – Mar', duration: '2–6 hrs', walking: 'Easy', value: 'High', tags: ['Beach', 'Sunset'], lat: 8.7379, lng: 76.7163 },
+            { name: 'Periyar Tiger Reserve', img: '', desc: 'Boat safari spotting elephants and bison in the Cardamom Hills.', bestMonths: 'Oct – May', duration: '3–6 hrs', walking: 'Medium', value: 'Medium', tags: ['Wildlife', 'Safari'], lat: 9.4667, lng: 77.2333 },
+            { name: 'Athirappilly Falls', img: '', desc: "Kerala's largest waterfall crashing through dense tropical forest.", bestMonths: 'Jun – Jan', duration: '2–4 hrs', walking: 'High', value: 'High', tags: ['Waterfall', 'Trekking'], lat: 10.2856, lng: 76.5697 },
         ],
         restaurants: [
-            { id: 'kr1', name: 'Dhe Puttu', img: '1567521464027-f127ff144326', desc: 'Celebrity chef Suresh Pillai\'s famous puttu and kadala curry variations. Modern twist on Kerala\'s beloved breakfast staple.', cuisine: 'Kerala Traditional', priceRange: '₹200–₹600', rating: 4.6, mustTry: 'Cheese Puttu & Kadala Curry', timing: '7:30 AM – 10:30 PM', lat: 10.0005, lng: 76.3077, tags: ['Breakfast', 'Local'] },
-            { id: 'kr2', name: 'Kayees Rahmathulla', img: '1631515243349-e0cb75fb8d4a', desc: 'Legendary biryani house since 1948. The Kayees Biryani is a Kochi institution — fragrant, spiced, unforgettable.', cuisine: 'Malabar', priceRange: '₹150–₹400', rating: 4.7, mustTry: 'Kayees Biryani', timing: '11:30 AM – 10:00 PM', lat: 9.9716, lng: 76.2893, tags: ['Biryani', 'Iconic'] },
-            { id: 'kr3', name: 'Paragon Restaurant', img: '1555396273-367ea4eb4db5', desc: 'Multi-generational Calicut restaurant famous for its Malabar-style seafood. Must-visit for fish lovers.', cuisine: 'Malabar Seafood', priceRange: '₹300–₹800', rating: 4.5, mustTry: 'Fish Biryani & Prawn Masala', timing: '12:00 PM – 11:00 PM', lat: 11.2488, lng: 75.7804, tags: ['Seafood', 'Famous'] },
-            { id: 'kr4', name: 'Thalassery Restaurant', img: '1517248135467-4c7edcad34c4', desc: 'Authentic North Kerala cuisine with rich Moplah flavors. Known for their Thalassery Dum Biryani.', cuisine: 'North Kerala', priceRange: '₹250–₹600', rating: 4.4, mustTry: 'Thalassery Biryani & Pathiri', timing: '11:00 AM – 10:30 PM', lat: 9.9312, lng: 76.2673, tags: ['Biryani', 'Traditional'] },
+            { id: 'kr1', name: 'Dhe Puttu', img: '', desc: 'Celebrity chef Suresh Pillai\'s famous puttu and kadala curry variations. Modern twist on Kerala\'s beloved breakfast staple.', cuisine: 'Kerala Traditional', priceRange: '₹200–₹600', rating: 4.6, mustTry: 'Cheese Puttu & Kadala Curry', timing: '7:30 AM – 10:30 PM', lat: 10.0005, lng: 76.3077, tags: ['Breakfast', 'Local'] },
+            { id: 'kr2', name: 'Kayees Rahmathulla', img: '', desc: 'Legendary biryani house since 1948. The Kayees Biryani is a Kochi institution — fragrant, spiced, unforgettable.', cuisine: 'Malabar', priceRange: '₹150–₹400', rating: 4.7, mustTry: 'Kayees Biryani', timing: '11:30 AM – 10:00 PM', lat: 9.9716, lng: 76.2893, tags: ['Biryani', 'Iconic'] },
+            { id: 'kr3', name: 'Paragon Restaurant', img: '', desc: 'Multi-generational Calicut restaurant famous for its Malabar-style seafood. Must-visit for fish lovers.', cuisine: 'Malabar Seafood', priceRange: '₹300–₹800', rating: 4.5, mustTry: 'Fish Biryani & Prawn Masala', timing: '12:00 PM – 11:00 PM', lat: 11.2488, lng: 75.7804, tags: ['Seafood', 'Famous'] },
+            { id: 'kr4', name: 'Thalassery Restaurant', img: '', desc: 'Authentic North Kerala cuisine with rich Moplah flavors. Known for their Thalassery Dum Biryani.', cuisine: 'North Kerala', priceRange: '₹250–₹600', rating: 4.4, mustTry: 'Thalassery Biryani & Pathiri', timing: '11:00 AM – 10:30 PM', lat: 9.9312, lng: 76.2673, tags: ['Biryani', 'Traditional'] },
         ],
         hotels: [
-            { id: 'kh1', name: 'Kumarakom Lake Resort', img: '1571896349842-33c89424de2d', desc: 'Award-winning luxury lakeside resort with private villas, infinity pool, and Ayurvedic spa on Vembanad Lake.', type: 'Resort', priceRange: '₹12,000–₹35,000/night', rating: 4.8, amenities: ['Pool', 'Spa', 'Lake View', 'Ayurveda'], checkIn: '2:00 PM', lat: 9.5916, lng: 76.4314 },
-            { id: 'kh2', name: 'Zostel Alleppey', img: '1564501049412-61c2a3083791', desc: 'Backpacker-friendly hostel right on the Alleppey waterfront. Dorms and private rooms with great common areas.', type: 'Hostel', priceRange: '₹500–₹2,500/night', rating: 4.3, amenities: ['WiFi', 'Common Kitchen', 'Bikes'], checkIn: '1:00 PM', lat: 9.4981, lng: 76.3388 },
-            { id: 'kh3', name: 'Windermere Estate', img: '1582719508461-905c673c825d', desc: 'Heritage plantation bungalow amid cardamom and coffee gardens in Munnar with panoramic valley views.', type: 'Homestay', priceRange: '₹4,000–₹8,000/night', rating: 4.6, amenities: ['Garden', 'Trekking', 'Home Cooked Meals'], checkIn: '12:00 PM', lat: 10.0800, lng: 77.0580 },
-            { id: 'kh4', name: 'Fragrant Nature Kochi', img: '1566073771259-6a6300d73351', desc: 'Premium waterfront hotel in Fort Kochi with harbor views, rooftop restaurant, and modern amenities.', type: 'Hotel', priceRange: '₹5,000–₹15,000/night', rating: 4.5, amenities: ['Pool', 'Restaurant', 'Harbor View', 'Spa'], checkIn: '2:00 PM', lat: 9.9658, lng: 76.2421 },
+            { id: 'kh1', name: 'Kumarakom Lake Resort', img: '', desc: 'Award-winning luxury lakeside resort with private villas, infinity pool, and Ayurvedic spa on Vembanad Lake.', type: 'Resort', priceRange: '₹12,000–₹35,000/night', rating: 4.8, amenities: ['Pool', 'Spa', 'Lake View', 'Ayurveda'], checkIn: '2:00 PM', lat: 9.5916, lng: 76.4314 },
+            { id: 'kh2', name: 'Zostel Alleppey', img: '', desc: 'Backpacker-friendly hostel right on the Alleppey waterfront. Dorms and private rooms with great common areas.', type: 'Hostel', priceRange: '₹500–₹2,500/night', rating: 4.3, amenities: ['WiFi', 'Common Kitchen', 'Bikes'], checkIn: '1:00 PM', lat: 9.4981, lng: 76.3388 },
+            { id: 'kh3', name: 'Windermere Estate', img: '', desc: 'Heritage plantation bungalow amid cardamom and coffee gardens in Munnar with panoramic valley views.', type: 'Homestay', priceRange: '₹4,000–₹8,000/night', rating: 4.6, amenities: ['Garden', 'Trekking', 'Home Cooked Meals'], checkIn: '12:00 PM', lat: 10.0800, lng: 77.0580 },
+            { id: 'kh4', name: 'Fragrant Nature Kochi', img: '', desc: 'Premium waterfront hotel in Fort Kochi with harbor views, rooftop restaurant, and modern amenities.', type: 'Hotel', priceRange: '₹5,000–₹15,000/night', rating: 4.5, amenities: ['Pool', 'Restaurant', 'Harbor View', 'Spa'], checkIn: '2:00 PM', lat: 9.9658, lng: 76.2421 },
         ],
         dayPlans: [
             {
@@ -287,22 +286,22 @@ export const DEST_DATA: Record<string, DestInfo> = {
         crowdLevel: 'High', crowdNote: 'Popular year-round; Oct–Feb best with Diwali and Teej festivals',
         mapCenter: { lat: 26.9124, lng: 75.7873 },
         highlights: [
-            { name: 'Amber Fort', img: '1599661502283-a44ea24dfc74', desc: 'Magnificent hilltop fortress with intricate mirror mosaics.', bestMonths: 'Oct – Mar', duration: '3–5 hrs', walking: 'High', value: 'High', tags: ['Fort', 'History'], lat: 26.9855, lng: 75.8513 },
-            { name: 'Hawa Mahal', img: '1524492412937-b28074a5d7da', desc: 'Iconic 5-storey Palace of Winds with 953 latticed windows.', bestMonths: 'Oct – Mar', duration: '1–2 hrs', walking: 'Easy', value: 'High', tags: ['Architecture', 'Iconic'], lat: 26.9239, lng: 75.8267 },
-            { name: 'City Palace', img: '1599661502283-a44ea24dfc74', desc: 'Sprawling royal complex housing museums and courtyards.', bestMonths: 'Oct – Mar', duration: '2–4 hrs', walking: 'Medium', value: 'High', tags: ['Palace', 'Museum'], lat: 26.9258, lng: 75.8237 },
-            { name: 'Nahargarh Fort', img: '1626621341517-bbf3d9990a23', desc: 'Tiger fort on the Aravalli hills with panoramic sunset views.', bestMonths: 'Oct – Mar', duration: '2–3 hrs', walking: 'High', value: 'High', tags: ['Fort', 'Sunset'], lat: 26.9388, lng: 75.8154 },
-            { name: 'Johari Bazaar', img: '1582283925565-d053709d3bdf', desc: 'Famous market for gems, silver jewellery and vivid textiles.', bestMonths: 'Oct – Mar', duration: '2–4 hrs', walking: 'Medium', value: 'High', tags: ['Shopping', 'Culture'], lat: 26.9196, lng: 75.8250 },
-            { name: 'Jantar Mantar', img: '1593693397690-362cb9666fc2', desc: 'UNESCO World Heritage astronomical observatory.', bestMonths: 'Oct – Mar', duration: '1–2 hrs', walking: 'Easy', value: 'High', tags: ['Heritage', 'UNESCO'], lat: 26.9248, lng: 75.8246 },
+            { name: 'Amber Fort', img: '', desc: 'Magnificent hilltop fortress with intricate mirror mosaics.', bestMonths: 'Oct – Mar', duration: '3–5 hrs', walking: 'High', value: 'High', tags: ['Fort', 'History'], lat: 26.9855, lng: 75.8513 },
+            { name: 'Hawa Mahal', img: '', desc: 'Iconic 5-storey Palace of Winds with 953 latticed windows.', bestMonths: 'Oct – Mar', duration: '1–2 hrs', walking: 'Easy', value: 'High', tags: ['Architecture', 'Iconic'], lat: 26.9239, lng: 75.8267 },
+            { name: 'City Palace', img: '', desc: 'Sprawling royal complex housing museums and courtyards.', bestMonths: 'Oct – Mar', duration: '2–4 hrs', walking: 'Medium', value: 'High', tags: ['Palace', 'Museum'], lat: 26.9258, lng: 75.8237 },
+            { name: 'Nahargarh Fort', img: '', desc: 'Tiger fort on the Aravalli hills with panoramic sunset views.', bestMonths: 'Oct – Mar', duration: '2–3 hrs', walking: 'High', value: 'High', tags: ['Fort', 'Sunset'], lat: 26.9388, lng: 75.8154 },
+            { name: 'Johari Bazaar', img: '', desc: 'Famous market for gems, silver jewellery and vivid textiles.', bestMonths: 'Oct – Mar', duration: '2–4 hrs', walking: 'Medium', value: 'High', tags: ['Shopping', 'Culture'], lat: 26.9196, lng: 75.8250 },
+            { name: 'Jantar Mantar', img: '', desc: 'UNESCO World Heritage astronomical observatory.', bestMonths: 'Oct – Mar', duration: '1–2 hrs', walking: 'Easy', value: 'High', tags: ['Heritage', 'UNESCO'], lat: 26.9248, lng: 75.8246 },
         ],
         restaurants: [
-            { id: 'jr1', name: 'Laxmi Misthan Bhandar (LMB)', img: '1567521464027-f127ff144326', desc: 'Legendary since 1727 — the most iconic vegetarian restaurant in Jaipur. Famous for dal baati churma and ghevar.', cuisine: 'Rajasthani Veg', priceRange: '₹200–₹600', rating: 4.5, mustTry: 'Dal Baati Churma & Ghevar', timing: '8:00 AM – 11:00 PM', lat: 26.9220, lng: 75.8260, tags: ['Iconic', 'Vegetarian'] },
-            { id: 'jr2', name: 'Rawat Mishtan Bhandar', img: '1631515243349-e0cb75fb8d4a', desc: 'The go-to spot for the best pyaaz kachori in all of Rajasthan. Crispy, spiced, heavenly.', cuisine: 'Street Food', priceRange: '₹50–₹250', rating: 4.6, mustTry: 'Pyaaz Kachori & Mirchi Bada', timing: '6:30 AM – 10:30 PM', lat: 26.9070, lng: 75.8030, tags: ['Street Food', 'Snacks'] },
-            { id: 'jr3', name: 'Chokhi Dhani', img: '1555396273-367ea4eb4db5', desc: 'Immersive Rajasthani village resort — folk dances, camel rides, puppet shows, and unlimited thali dinner.', cuisine: 'Rajasthani Thali', priceRange: '₹800–₹1,500', rating: 4.4, mustTry: 'Unlimited Rajasthani Thali', timing: '5:00 PM – 11:00 PM', lat: 26.7800, lng: 75.8465, tags: ['Experience', 'Cultural'] },
+            { id: 'jr1', name: 'Laxmi Misthan Bhandar (LMB)', img: '', desc: 'Legendary since 1727 — the most iconic vegetarian restaurant in Jaipur. Famous for dal baati churma and ghevar.', cuisine: 'Rajasthani Veg', priceRange: '₹200–₹600', rating: 4.5, mustTry: 'Dal Baati Churma & Ghevar', timing: '8:00 AM – 11:00 PM', lat: 26.9220, lng: 75.8260, tags: ['Iconic', 'Vegetarian'] },
+            { id: 'jr2', name: 'Rawat Mishtan Bhandar', img: '', desc: 'The go-to spot for the best pyaaz kachori in all of Rajasthan. Crispy, spiced, heavenly.', cuisine: 'Street Food', priceRange: '₹50–₹250', rating: 4.6, mustTry: 'Pyaaz Kachori & Mirchi Bada', timing: '6:30 AM – 10:30 PM', lat: 26.9070, lng: 75.8030, tags: ['Street Food', 'Snacks'] },
+            { id: 'jr3', name: 'Chokhi Dhani', img: '', desc: 'Immersive Rajasthani village resort — folk dances, camel rides, puppet shows, and unlimited thali dinner.', cuisine: 'Rajasthani Thali', priceRange: '₹800–₹1,500', rating: 4.4, mustTry: 'Unlimited Rajasthani Thali', timing: '5:00 PM – 11:00 PM', lat: 26.7800, lng: 75.8465, tags: ['Experience', 'Cultural'] },
         ],
         hotels: [
-            { id: 'jh1', name: 'Rambagh Palace', img: '1571896349842-33c89424de2d', desc: 'Former residence of the Maharaja, now a Taj luxury hotel with opulent suites and royal gardens.', type: 'Hotel', priceRange: '₹25,000–₹80,000/night', rating: 4.9, amenities: ['Pool', 'Spa', 'Heritage', 'Fine Dining'], checkIn: '2:00 PM', lat: 26.8975, lng: 75.8029 },
-            { id: 'jh2', name: 'Pearl Palace Heritage', img: '1564501049412-61c2a3083791', desc: 'Award-winning budget boutique hotel with rooftop restaurant and beautifully themed rooms.', type: 'Hotel', priceRange: '₹1,500–₹4,000/night', rating: 4.5, amenities: ['Rooftop', 'WiFi', 'Restaurant'], checkIn: '12:00 PM', lat: 26.9124, lng: 75.7873 },
-            { id: 'jh3', name: 'Arya Niwas', img: '1582719508461-905c673c825d', desc: 'Well-known heritage guesthouse with sprawling gardens, home-cooked meals, and warm Rajasthani hospitality.', type: 'Homestay', priceRange: '₹2,000–₹5,000/night', rating: 4.4, amenities: ['Garden', 'Home Meals', 'Central Location'], checkIn: '12:00 PM', lat: 26.9160, lng: 75.8050 },
+            { id: 'jh1', name: 'Rambagh Palace', img: '', desc: 'Former residence of the Maharaja, now a Taj luxury hotel with opulent suites and royal gardens.', type: 'Hotel', priceRange: '₹25,000–₹80,000/night', rating: 4.9, amenities: ['Pool', 'Spa', 'Heritage', 'Fine Dining'], checkIn: '2:00 PM', lat: 26.8975, lng: 75.8029 },
+            { id: 'jh2', name: 'Pearl Palace Heritage', img: '', desc: 'Award-winning budget boutique hotel with rooftop restaurant and beautifully themed rooms.', type: 'Hotel', priceRange: '₹1,500–₹4,000/night', rating: 4.5, amenities: ['Rooftop', 'WiFi', 'Restaurant'], checkIn: '12:00 PM', lat: 26.9124, lng: 75.7873 },
+            { id: 'jh3', name: 'Arya Niwas', img: '', desc: 'Well-known heritage guesthouse with sprawling gardens, home-cooked meals, and warm Rajasthani hospitality.', type: 'Homestay', priceRange: '₹2,000–₹5,000/night', rating: 4.4, amenities: ['Garden', 'Home Meals', 'Central Location'], checkIn: '12:00 PM', lat: 26.9160, lng: 75.8050 },
         ],
         dayPlans: [
             {
@@ -339,18 +338,18 @@ export const DEST_DATA: Record<string, DestInfo> = {
         crowdLevel: 'High', crowdNote: 'Busy year-round; Dev Deepawali draws massive crowds',
         mapCenter: { lat: 25.3176, lng: 83.0065 },
         highlights: [
-            { name: 'Dashashwamedh Ghat', img: '1582283925565-d053709d3bdf', desc: 'Spectacular fire Ganga Aarti ceremony every evening.', bestMonths: 'Oct – Mar', duration: '1–3 hrs', walking: 'Easy', value: 'High', tags: ['Spiritual', 'Aarti'], lat: 25.3046, lng: 83.0105 },
-            { name: 'Kashi Vishwanath', img: '1582283925565-d053709d3bdf', desc: 'One of the most sacred Jyotirlinga shrines of Lord Shiva.', bestMonths: 'All year', duration: '1–2 hrs', walking: 'Easy', value: 'High', tags: ['Temple', 'Spiritual'], lat: 25.3109, lng: 83.0107 },
-            { name: 'Sunrise Boat Ride', img: '1593693397690-362cb9666fc2', desc: 'Row past 84 ghats at dawn as priests perform rituals.', bestMonths: 'Oct – Mar', duration: '1–2 hrs', walking: 'Easy', value: 'High', tags: ['Sunrise', 'Boat'], lat: 25.3000, lng: 83.0080 },
-            { name: 'Sarnath', img: '1524492412937-b28074a5d7da', desc: 'Sacred Buddhist site where the Buddha gave his first sermon.', bestMonths: 'Oct – Mar', duration: '3–4 hrs', walking: 'Easy', value: 'High', tags: ['Buddhist', 'Heritage'], lat: 25.3814, lng: 83.0246 },
+            { name: 'Dashashwamedh Ghat', img: '', desc: 'Spectacular fire Ganga Aarti ceremony every evening.', bestMonths: 'Oct – Mar', duration: '1–3 hrs', walking: 'Easy', value: 'High', tags: ['Spiritual', 'Aarti'], lat: 25.3046, lng: 83.0105 },
+            { name: 'Kashi Vishwanath', img: '', desc: 'One of the most sacred Jyotirlinga shrines of Lord Shiva.', bestMonths: 'All year', duration: '1–2 hrs', walking: 'Easy', value: 'High', tags: ['Temple', 'Spiritual'], lat: 25.3109, lng: 83.0107 },
+            { name: 'Sunrise Boat Ride', img: '', desc: 'Row past 84 ghats at dawn as priests perform rituals.', bestMonths: 'Oct – Mar', duration: '1–2 hrs', walking: 'Easy', value: 'High', tags: ['Sunrise', 'Boat'], lat: 25.3000, lng: 83.0080 },
+            { name: 'Sarnath', img: '', desc: 'Sacred Buddhist site where the Buddha gave his first sermon.', bestMonths: 'Oct – Mar', duration: '3–4 hrs', walking: 'Easy', value: 'High', tags: ['Buddhist', 'Heritage'], lat: 25.3814, lng: 83.0246 },
         ],
         restaurants: [
-            { id: 'vr1', name: 'Kashi Chat Bhandar', img: '1567521464027-f127ff144326', desc: 'The most beloved chaat shop in Varanasi. Tamatar chaat and dahi puri are legendary.', cuisine: 'Street Food', priceRange: '₹30–₹150', rating: 4.7, mustTry: 'Tamatar Chaat & Banarasi Paan', timing: '10:00 AM – 10:00 PM', lat: 25.3080, lng: 83.0100, tags: ['Street Food', 'Iconic'] },
-            { id: 'vr2', name: 'Blue Lassi Shop', img: '1631515243349-e0cb75fb8d4a', desc: 'Tiny hole-in-the-wall shop near Manikarnika Ghat. The thick, creamy lassi served in clay cups is a Varanasi ritual.', cuisine: 'Beverages', priceRange: '₹40–₹120', rating: 4.8, mustTry: 'Saffron Lassi & Fruit Lassi', timing: '7:00 AM – 9:00 PM', lat: 25.3100, lng: 83.0110, tags: ['Lassi', 'Must Visit'] },
+            { id: 'vr1', name: 'Kashi Chat Bhandar', img: '', desc: 'The most beloved chaat shop in Varanasi. Tamatar chaat and dahi puri are legendary.', cuisine: 'Street Food', priceRange: '₹30–₹150', rating: 4.7, mustTry: 'Tamatar Chaat & Banarasi Paan', timing: '10:00 AM – 10:00 PM', lat: 25.3080, lng: 83.0100, tags: ['Street Food', 'Iconic'] },
+            { id: 'vr2', name: 'Blue Lassi Shop', img: '', desc: 'Tiny hole-in-the-wall shop near Manikarnika Ghat. The thick, creamy lassi served in clay cups is a Varanasi ritual.', cuisine: 'Beverages', priceRange: '₹40–₹120', rating: 4.8, mustTry: 'Saffron Lassi & Fruit Lassi', timing: '7:00 AM – 9:00 PM', lat: 25.3100, lng: 83.0110, tags: ['Lassi', 'Must Visit'] },
         ],
         hotels: [
-            { id: 'vh1', name: 'BrijRama Palace', img: '1571896349842-33c89424de2d', desc: '18th-century palace on the banks of the Ganges with heritage suites and river-facing balconies.', type: 'Hotel', priceRange: '₹12,000–₹30,000/night', rating: 4.8, amenities: ['Heritage', 'River View', 'Restaurant', 'Spa'], checkIn: '2:00 PM', lat: 25.3046, lng: 83.0105 },
-            { id: 'vh2', name: 'Stops Hostel Varanasi', img: '1564501049412-61c2a3083791', desc: 'Vibrant backpacker hostel near Assi Ghat with rooftop views and social atmosphere.', type: 'Hostel', priceRange: '₹500–₹2,000/night', rating: 4.4, amenities: ['Rooftop', 'WiFi', 'Tours'], checkIn: '1:00 PM', lat: 25.2950, lng: 83.0060 },
+            { id: 'vh1', name: 'BrijRama Palace', img: '', desc: '18th-century palace on the banks of the Ganges with heritage suites and river-facing balconies.', type: 'Hotel', priceRange: '₹12,000–₹30,000/night', rating: 4.8, amenities: ['Heritage', 'River View', 'Restaurant', 'Spa'], checkIn: '2:00 PM', lat: 25.3046, lng: 83.0105 },
+            { id: 'vh2', name: 'Stops Hostel Varanasi', img: '', desc: 'Vibrant backpacker hostel near Assi Ghat with rooftop views and social atmosphere.', type: 'Hostel', priceRange: '₹500–₹2,000/night', rating: 4.4, amenities: ['Rooftop', 'WiFi', 'Tours'], checkIn: '1:00 PM', lat: 25.2950, lng: 83.0060 },
         ],
         dayPlans: [
             {
@@ -375,18 +374,18 @@ export const DEST_DATA: Record<string, DestInfo> = {
         crowdLevel: 'High', crowdNote: 'Peak season Nov–Feb; monsoon quieter with lush greenery',
         mapCenter: { lat: 15.2993, lng: 74.1240 },
         highlights: [
-            { name: 'Palolem Beach', img: '1512343779784-a1d53b98b8ef', desc: 'Gorgeous crescent beach with gentle waves and sunset huts.', bestMonths: 'Nov – Mar', duration: '2–8 hrs', walking: 'Easy', value: 'High', tags: ['Beach', 'Sunset'], lat: 15.0100, lng: 74.0230 },
-            { name: 'Basilica of Bom Jesus', img: '1524492412937-b28074a5d7da', desc: 'UNESCO baroque church holding remains of St. Francis Xavier.', bestMonths: 'Nov – Mar', duration: '1–2 hrs', walking: 'Easy', value: 'High', tags: ['Heritage', 'Church'], lat: 15.5009, lng: 73.9116 },
-            { name: 'Dudhsagar Falls', img: '1593693397690-362cb9666fc2', desc: "One of India's tallest waterfalls at 310m through dense forest.", bestMonths: 'Jun – Jan', duration: '4–6 hrs', walking: 'High', value: 'High', tags: ['Waterfall', 'Trekking'], lat: 15.3144, lng: 74.3143 },
-            { name: 'Anjuna Flea Market', img: '1512343779784-a1d53b98b8ef', desc: 'The original hippie market with handicrafts and souvenirs.', bestMonths: 'Nov – Apr', duration: '2–4 hrs', walking: 'Medium', value: 'High', tags: ['Market', 'Shopping'], lat: 15.5740, lng: 73.7411 },
+            { name: 'Palolem Beach', img: '', desc: 'Gorgeous crescent beach with gentle waves and sunset huts.', bestMonths: 'Nov – Mar', duration: '2–8 hrs', walking: 'Easy', value: 'High', tags: ['Beach', 'Sunset'], lat: 15.0100, lng: 74.0230 },
+            { name: 'Basilica of Bom Jesus', img: '', desc: 'UNESCO baroque church holding remains of St. Francis Xavier.', bestMonths: 'Nov – Mar', duration: '1–2 hrs', walking: 'Easy', value: 'High', tags: ['Heritage', 'Church'], lat: 15.5009, lng: 73.9116 },
+            { name: 'Dudhsagar Falls', img: '', desc: "One of India's tallest waterfalls at 310m through dense forest.", bestMonths: 'Jun – Jan', duration: '4–6 hrs', walking: 'High', value: 'High', tags: ['Waterfall', 'Trekking'], lat: 15.3144, lng: 74.3143 },
+            { name: 'Anjuna Flea Market', img: '', desc: 'The original hippie market with handicrafts and souvenirs.', bestMonths: 'Nov – Apr', duration: '2–4 hrs', walking: 'Medium', value: 'High', tags: ['Market', 'Shopping'], lat: 15.5740, lng: 73.7411 },
         ],
         restaurants: [
-            { id: 'gr1', name: 'Thalassa', img: '1555396273-367ea4eb4db5', desc: 'Cliff-top Greek restaurant with stunning sunset views, fairy lights, and live music over the Arabian Sea.', cuisine: 'Greek-Goan', priceRange: '₹800–₹2,000', rating: 4.6, mustTry: 'Grilled Seafood Platter & Greek Salad', timing: '5:00 PM – 11:30 PM', lat: 15.5950, lng: 73.7430, tags: ['Sunset', 'Fine Dining'] },
-            { id: 'gr2', name: 'Vinayak Family Restaurant', img: '1567521464027-f127ff144326', desc: 'No-frills local eatery known for the best fish thali in Goa. Authentic Goan home-style cooking.', cuisine: 'Goan', priceRange: '₹150–₹400', rating: 4.5, mustTry: 'Fish Thali & Prawn Rawa Fry', timing: '11:30 AM – 3:30 PM', lat: 15.4588, lng: 73.8158, tags: ['Local', 'Seafood'] },
+            { id: 'gr1', name: 'Thalassa', img: '', desc: 'Cliff-top Greek restaurant with stunning sunset views, fairy lights, and live music over the Arabian Sea.', cuisine: 'Greek-Goan', priceRange: '₹800–₹2,000', rating: 4.6, mustTry: 'Grilled Seafood Platter & Greek Salad', timing: '5:00 PM – 11:30 PM', lat: 15.5950, lng: 73.7430, tags: ['Sunset', 'Fine Dining'] },
+            { id: 'gr2', name: 'Vinayak Family Restaurant', img: '', desc: 'No-frills local eatery known for the best fish thali in Goa. Authentic Goan home-style cooking.', cuisine: 'Goan', priceRange: '₹150–₹400', rating: 4.5, mustTry: 'Fish Thali & Prawn Rawa Fry', timing: '11:30 AM – 3:30 PM', lat: 15.4588, lng: 73.8158, tags: ['Local', 'Seafood'] },
         ],
         hotels: [
-            { id: 'gh1', name: 'Elsewhere', img: '1582719508461-905c673c825d', desc: 'Charming beach huts on a secluded South Goa beach. Solar powered, barefoot luxury with an artistic vibe.', type: 'Homestay', priceRange: '₹3,000–₹8,000/night', rating: 4.7, amenities: ['Beachfront', 'Eco-Friendly', 'Art'], checkIn: '2:00 PM', lat: 15.0100, lng: 74.0230 },
-            { id: 'gh2', name: 'W Goa', img: '1566073771259-6a6300d73351', desc: 'Luxury beachside resort with infinity pool, spa, and multiple dining options overlooking the Arabian Sea.', type: 'Resort', priceRange: '₹15,000–₹40,000/night', rating: 4.6, amenities: ['Pool', 'Spa', 'Beach', 'Nightlife'], checkIn: '3:00 PM', lat: 15.5560, lng: 73.7450 },
+            { id: 'gh1', name: 'Elsewhere', img: '', desc: 'Charming beach huts on a secluded South Goa beach. Solar powered, barefoot luxury with an artistic vibe.', type: 'Homestay', priceRange: '₹3,000–₹8,000/night', rating: 4.7, amenities: ['Beachfront', 'Eco-Friendly', 'Art'], checkIn: '2:00 PM', lat: 15.0100, lng: 74.0230 },
+            { id: 'gh2', name: 'W Goa', img: '', desc: 'Luxury beachside resort with infinity pool, spa, and multiple dining options overlooking the Arabian Sea.', type: 'Resort', priceRange: '₹15,000–₹40,000/night', rating: 4.6, amenities: ['Pool', 'Spa', 'Beach', 'Nightlife'], checkIn: '3:00 PM', lat: 15.5560, lng: 73.7450 },
         ],
         dayPlans: [
             {
@@ -411,18 +410,18 @@ export const DEST_DATA: Record<string, DestInfo> = {
         crowdLevel: 'High', crowdNote: 'Peak: May–Jun & Dec–Jan; Rohtang Pass closed Nov–May',
         mapCenter: { lat: 32.2396, lng: 77.1887 },
         highlights: [
-            { name: 'Rohtang Pass', img: '1626621341517-bbf3d9990a23', desc: 'High mountain pass at 3,978m with glaciers and snowfields.', bestMonths: 'May – Sep', duration: '6–8 hrs', walking: 'Medium', value: 'High', tags: ['Mountains', 'Snow'], lat: 32.3700, lng: 77.2480 },
-            { name: 'Hadimba Devi Temple', img: '1582283925565-d053709d3bdf', desc: 'Ancient cave temple amid towering cedar trees.', bestMonths: 'All year', duration: '1–2 hrs', walking: 'Easy', value: 'High', tags: ['Temple', 'Forest'], lat: 32.2427, lng: 77.1785 },
-            { name: 'Solang Valley', img: '1626621341517-bbf3d9990a23', desc: 'Adventure hub for paragliding, skiing and cable car rides.', bestMonths: 'Dec–Feb, May–Jun', duration: '3–5 hrs', walking: 'Medium', value: 'High', tags: ['Adventure', 'Snow'], lat: 32.3152, lng: 77.1575 },
-            { name: 'Old Manali Walk', img: '1524492412937-b28074a5d7da', desc: 'Apple orchards, bohemian cafes and Manu Maharishi Temple.', bestMonths: 'May – Oct', duration: '2–4 hrs', walking: 'Medium', value: 'High', tags: ['Culture', 'Walk'], lat: 32.2520, lng: 77.1870 },
+            { name: 'Rohtang Pass', img: '', desc: 'High mountain pass at 3,978m with glaciers and snowfields.', bestMonths: 'May – Sep', duration: '6–8 hrs', walking: 'Medium', value: 'High', tags: ['Mountains', 'Snow'], lat: 32.3700, lng: 77.2480 },
+            { name: 'Hadimba Devi Temple', img: '', desc: 'Ancient cave temple amid towering cedar trees.', bestMonths: 'All year', duration: '1–2 hrs', walking: 'Easy', value: 'High', tags: ['Temple', 'Forest'], lat: 32.2427, lng: 77.1785 },
+            { name: 'Solang Valley', img: '', desc: 'Adventure hub for paragliding, skiing and cable car rides.', bestMonths: 'Dec–Feb, May–Jun', duration: '3–5 hrs', walking: 'Medium', value: 'High', tags: ['Adventure', 'Snow'], lat: 32.3152, lng: 77.1575 },
+            { name: 'Old Manali Walk', img: '', desc: 'Apple orchards, bohemian cafes and Manu Maharishi Temple.', bestMonths: 'May – Oct', duration: '2–4 hrs', walking: 'Medium', value: 'High', tags: ['Culture', 'Walk'], lat: 32.2520, lng: 77.1870 },
         ],
         restaurants: [
-            { id: 'mr1', name: 'Lazy Dog Lounge', img: '1555396273-367ea4eb4db5', desc: 'Old Manali café with mountain views, wood-fired pizza, and great coffee. Popular with backpackers.', cuisine: 'Continental', priceRange: '₹200–₹600', rating: 4.5, mustTry: 'Wood-fired Pizza & Pancakes', timing: '8:00 AM – 11:00 PM', lat: 32.2520, lng: 77.1870, tags: ['Café', 'Views'] },
-            { id: 'mr2', name: 'Johnson\'s Café', img: '1517248135467-4c7edcad34c4', desc: 'Iconic Manali restaurant in a stone cottage from the 1930s. Famous for trout and continental dishes.', cuisine: 'Continental-Indian', priceRange: '₹400–₹1,000', rating: 4.6, mustTry: 'Fresh River Trout & Apple Crumble', timing: '10:00 AM – 10:00 PM', lat: 32.2400, lng: 77.1900, tags: ['Heritage', 'Fine Dining'] },
+            { id: 'mr1', name: 'Lazy Dog Lounge', img: '', desc: 'Old Manali café with mountain views, wood-fired pizza, and great coffee. Popular with backpackers.', cuisine: 'Continental', priceRange: '₹200–₹600', rating: 4.5, mustTry: 'Wood-fired Pizza & Pancakes', timing: '8:00 AM – 11:00 PM', lat: 32.2520, lng: 77.1870, tags: ['Café', 'Views'] },
+            { id: 'mr2', name: 'Johnson\'s Café', img: '', desc: 'Iconic Manali restaurant in a stone cottage from the 1930s. Famous for trout and continental dishes.', cuisine: 'Continental-Indian', priceRange: '₹400–₹1,000', rating: 4.6, mustTry: 'Fresh River Trout & Apple Crumble', timing: '10:00 AM – 10:00 PM', lat: 32.2400, lng: 77.1900, tags: ['Heritage', 'Fine Dining'] },
         ],
         hotels: [
-            { id: 'mh1', name: 'Himalayan Village Resort', img: '1571896349842-33c89424de2d', desc: 'Traditional Himachali cottage resort with valley views, bonfire, and farm-to-table meals.', type: 'Resort', priceRange: '₹6,000–₹15,000/night', rating: 4.7, amenities: ['Valley View', 'Bonfire', 'Trekking', 'Organic Food'], checkIn: '1:00 PM', lat: 32.2500, lng: 77.1800 },
-            { id: 'mh2', name: 'Zostel Manali', img: '1564501049412-61c2a3083791', desc: 'Hip backpacker hostel in Old Manali with mountain views, common room, and easy access to cafes.', type: 'Hostel', priceRange: '₹500–₹2,500/night', rating: 4.3, amenities: ['WiFi', 'Common Room', 'Mountain View'], checkIn: '1:00 PM', lat: 32.2520, lng: 77.1870 },
+            { id: 'mh1', name: 'Himalayan Village Resort', img: '', desc: 'Traditional Himachali cottage resort with valley views, bonfire, and farm-to-table meals.', type: 'Resort', priceRange: '₹6,000–₹15,000/night', rating: 4.7, amenities: ['Valley View', 'Bonfire', 'Trekking', 'Organic Food'], checkIn: '1:00 PM', lat: 32.2500, lng: 77.1800 },
+            { id: 'mh2', name: 'Zostel Manali', img: '', desc: 'Hip backpacker hostel in Old Manali with mountain views, common room, and easy access to cafes.', type: 'Hostel', priceRange: '₹500–₹2,500/night', rating: 4.3, amenities: ['WiFi', 'Common Room', 'Mountain View'], checkIn: '1:00 PM', lat: 32.2520, lng: 77.1870 },
         ],
         dayPlans: [
             {
@@ -447,18 +446,18 @@ export const DEST_DATA: Record<string, DestInfo> = {
         crowdLevel: 'Medium', crowdNote: 'Oct–Mar is peak season; monsoon brings lush greenery',
         mapCenter: { lat: 24.5854, lng: 73.7125 },
         highlights: [
-            { name: 'City Palace', img: '1599661502283-a44ea24dfc74', desc: 'Sprawling lakeside palace complex with museums, courtyards, and panoramic terraces.', bestMonths: 'Oct – Mar', duration: '3–5 hrs', walking: 'Medium', value: 'High', tags: ['Palace', 'History', 'Lake'], lat: 24.5764, lng: 73.6915 },
-            { name: 'Lake Pichola Boat Ride', img: '1593693397690-362cb9666fc2', desc: 'Cruise past island palaces and ghats as the sun sets over the Aravallis.', bestMonths: 'Oct – Mar', duration: '1–2 hrs', walking: 'Easy', value: 'High', tags: ['Lake', 'Sunset', 'Romantic'], lat: 24.5716, lng: 73.6806 },
-            { name: 'Monsoon Palace', img: '1626621341517-bbf3d9990a23', desc: 'Hilltop palace with sweeping 360° views of the city and surrounding countryside.', bestMonths: 'Oct – Mar', duration: '2–3 hrs', walking: 'Easy', value: 'High', tags: ['Fort', 'Sunset'], lat: 24.5780, lng: 73.6359 },
-            { name: 'Jagdish Temple', img: '1582283925565-d053709d3bdf', desc: 'Ornate Indo-Aryan temple dedicated to Lord Vishnu, dating to 1651.', bestMonths: 'All year', duration: '1–2 hrs', walking: 'Easy', value: 'High', tags: ['Temple', 'Heritage'], lat: 24.5780, lng: 73.6835 },
+            { name: 'City Palace', img: '', desc: 'Sprawling lakeside palace complex with museums, courtyards, and panoramic terraces.', bestMonths: 'Oct – Mar', duration: '3–5 hrs', walking: 'Medium', value: 'High', tags: ['Palace', 'History', 'Lake'], lat: 24.5764, lng: 73.6915 },
+            { name: 'Lake Pichola Boat Ride', img: '', desc: 'Cruise past island palaces and ghats as the sun sets over the Aravallis.', bestMonths: 'Oct – Mar', duration: '1–2 hrs', walking: 'Easy', value: 'High', tags: ['Lake', 'Sunset', 'Romantic'], lat: 24.5716, lng: 73.6806 },
+            { name: 'Monsoon Palace', img: '', desc: 'Hilltop palace with sweeping 360° views of the city and surrounding countryside.', bestMonths: 'Oct – Mar', duration: '2–3 hrs', walking: 'Easy', value: 'High', tags: ['Fort', 'Sunset'], lat: 24.5780, lng: 73.6359 },
+            { name: 'Jagdish Temple', img: '', desc: 'Ornate Indo-Aryan temple dedicated to Lord Vishnu, dating to 1651.', bestMonths: 'All year', duration: '1–2 hrs', walking: 'Easy', value: 'High', tags: ['Temple', 'Heritage'], lat: 24.5780, lng: 73.6835 },
         ],
         restaurants: [
-            { id: 'ur1', name: 'Ambrai Restaurant', img: '1555396273-367ea4eb4db5', desc: 'Lakeside fine dining with City Palace illuminated across the water. Rajasthani and Continental cuisine.', cuisine: 'Rajasthani-Continental', priceRange: '₹600–₹1,500', rating: 4.7, mustTry: 'Laal Maas & Dal Baati', timing: '12:00 PM – 11:00 PM', lat: 24.5744, lng: 73.6824, tags: ['Fine Dining', 'Lake View'] },
-            { id: 'ur2', name: 'Natraj Dining Hall', img: '1567521464027-f127ff144326', desc: 'Famous pure-veg Rajasthani thali since 1967. Unlimited and authentic.', cuisine: 'Rajasthani Thali', priceRange: '₹200–₹500', rating: 4.5, mustTry: 'Unlimited Rajasthani Thali', timing: '10:30 AM – 10:00 PM', lat: 24.5805, lng: 73.6850, tags: ['Thali', 'Vegetarian'] },
+            { id: 'ur1', name: 'Ambrai Restaurant', img: '', desc: 'Lakeside fine dining with City Palace illuminated across the water. Rajasthani and Continental cuisine.', cuisine: 'Rajasthani-Continental', priceRange: '₹600–₹1,500', rating: 4.7, mustTry: 'Laal Maas & Dal Baati', timing: '12:00 PM – 11:00 PM', lat: 24.5744, lng: 73.6824, tags: ['Fine Dining', 'Lake View'] },
+            { id: 'ur2', name: 'Natraj Dining Hall', img: '', desc: 'Famous pure-veg Rajasthani thali since 1967. Unlimited and authentic.', cuisine: 'Rajasthani Thali', priceRange: '₹200–₹500', rating: 4.5, mustTry: 'Unlimited Rajasthani Thali', timing: '10:30 AM – 10:00 PM', lat: 24.5805, lng: 73.6850, tags: ['Thali', 'Vegetarian'] },
         ],
         hotels: [
-            { id: 'uh1', name: 'Taj Lake Palace', img: '1571896349842-33c89424de2d', desc: 'Iconic floating marble palace on Lake Pichola — one of the most romantic hotels in the world.', type: 'Hotel', priceRange: '₹30,000–₹1,00,000/night', rating: 4.9, amenities: ['Lake', 'Spa', 'Heritage', 'Pool'], checkIn: '2:00 PM', lat: 24.5750, lng: 73.6820 },
-            { id: 'uh2', name: 'Zostel Udaipur', img: '1564501049412-61c2a3083791', desc: 'Rooftop hostel with Lake Pichola views, cozy dorms, and social traveler vibe.', type: 'Hostel', priceRange: '₹600–₹2,500/night', rating: 4.4, amenities: ['Rooftop', 'WiFi', 'Lake View'], checkIn: '1:00 PM', lat: 24.5780, lng: 73.6840 },
+            { id: 'uh1', name: 'Taj Lake Palace', img: '', desc: 'Iconic floating marble palace on Lake Pichola — one of the most romantic hotels in the world.', type: 'Hotel', priceRange: '₹30,000–₹1,00,000/night', rating: 4.9, amenities: ['Lake', 'Spa', 'Heritage', 'Pool'], checkIn: '2:00 PM', lat: 24.5750, lng: 73.6820 },
+            { id: 'uh2', name: 'Zostel Udaipur', img: '', desc: 'Rooftop hostel with Lake Pichola views, cozy dorms, and social traveler vibe.', type: 'Hostel', priceRange: '₹600–₹2,500/night', rating: 4.4, amenities: ['Rooftop', 'WiFi', 'Lake View'], checkIn: '1:00 PM', lat: 24.5780, lng: 73.6840 },
         ],
         dayPlans: [
             {
@@ -483,18 +482,18 @@ export const DEST_DATA: Record<string, DestInfo> = {
         crowdLevel: 'High', crowdNote: 'Busy year-round; Oct–Mar is the best weather; avoid weekends',
         mapCenter: { lat: 27.1751, lng: 78.0421 },
         highlights: [
-            { name: 'Taj Mahal', img: '1564507592333-c60657eea523', desc: 'The immortal ivory-white marble mausoleum — a UNESCO World Heritage masterpiece.', bestMonths: 'Oct – Mar', duration: '2–4 hrs', walking: 'Easy', value: 'High', tags: ['Heritage', 'UNESCO', 'Iconic'], lat: 27.1751, lng: 78.0421 },
-            { name: 'Agra Fort', img: '1599661502283-a44ea24dfc74', desc: 'Massive red sandstone Mughal fortress with palaces, mosques and audience halls.', bestMonths: 'Oct – Mar', duration: '2–3 hrs', walking: 'Medium', value: 'High', tags: ['Fort', 'History', 'UNESCO'], lat: 27.1795, lng: 78.0214 },
-            { name: 'Mehtab Bagh', img: '1593693397690-362cb9666fc2', desc: 'Moonlight Garden across the Yamuna with the most iconic sunset view of the Taj.', bestMonths: 'Oct – Mar', duration: '1–2 hrs', walking: 'Easy', value: 'High', tags: ['Sunset', 'Garden'], lat: 27.1843, lng: 78.0389 },
-            { name: "Itimad-ud-Daulah's Tomb", img: '1524492412937-b28074a5d7da', desc: 'The "Baby Taj" — exquisite marble tomb predating the Taj Mahal with similar inlay work.', bestMonths: 'Oct – Mar', duration: '1–2 hrs', walking: 'Easy', value: 'High', tags: ['Heritage', 'Architecture'], lat: 27.1925, lng: 78.0307 },
+            { name: 'Taj Mahal', img: '', desc: 'The immortal ivory-white marble mausoleum — a UNESCO World Heritage masterpiece.', bestMonths: 'Oct – Mar', duration: '2–4 hrs', walking: 'Easy', value: 'High', tags: ['Heritage', 'UNESCO', 'Iconic'], lat: 27.1751, lng: 78.0421 },
+            { name: 'Agra Fort', img: '', desc: 'Massive red sandstone Mughal fortress with palaces, mosques and audience halls.', bestMonths: 'Oct – Mar', duration: '2–3 hrs', walking: 'Medium', value: 'High', tags: ['Fort', 'History', 'UNESCO'], lat: 27.1795, lng: 78.0214 },
+            { name: 'Mehtab Bagh', img: '', desc: 'Moonlight Garden across the Yamuna with the most iconic sunset view of the Taj.', bestMonths: 'Oct – Mar', duration: '1–2 hrs', walking: 'Easy', value: 'High', tags: ['Sunset', 'Garden'], lat: 27.1843, lng: 78.0389 },
+            { name: "Itimad-ud-Daulah's Tomb", img: '', desc: 'The "Baby Taj" — exquisite marble tomb predating the Taj Mahal with similar inlay work.', bestMonths: 'Oct – Mar', duration: '1–2 hrs', walking: 'Easy', value: 'High', tags: ['Heritage', 'Architecture'], lat: 27.1925, lng: 78.0307 },
         ],
         restaurants: [
-            { id: 'ar1', name: 'Peshawri (ITC Mughal)', img: '1517248135467-4c7edcad34c4', desc: 'Award-winning North Indian restaurant inside ITC Mughal hotel. Legendary kebabs and dal.', cuisine: 'Mughlai', priceRange: '₹1,000–₹3,000', rating: 4.7, mustTry: 'Dal Bukhara & Sikandari Raan', timing: '12:30 PM – 11:00 PM', lat: 27.1560, lng: 78.0250, tags: ['Fine Dining', 'Mughlai'] },
-            { id: 'ar2', name: 'Mama Chicken', img: '1631515243349-e0cb75fb8d4a', desc: 'Local legend for its butter chicken and brain curry. No frills, all flavor.', cuisine: 'Street Food', priceRange: '₹100–₹300', rating: 4.5, mustTry: 'Butter Chicken & Brain Masala', timing: '11:00 AM – 10:00 PM', lat: 27.1780, lng: 78.0170, tags: ['Street Food', 'Iconic'] },
+            { id: 'ar1', name: 'Peshawri (ITC Mughal)', img: '', desc: 'Award-winning North Indian restaurant inside ITC Mughal hotel. Legendary kebabs and dal.', cuisine: 'Mughlai', priceRange: '₹1,000–₹3,000', rating: 4.7, mustTry: 'Dal Bukhara & Sikandari Raan', timing: '12:30 PM – 11:00 PM', lat: 27.1560, lng: 78.0250, tags: ['Fine Dining', 'Mughlai'] },
+            { id: 'ar2', name: 'Mama Chicken', img: '', desc: 'Local legend for its butter chicken and brain curry. No frills, all flavor.', cuisine: 'Street Food', priceRange: '₹100–₹300', rating: 4.5, mustTry: 'Butter Chicken & Brain Masala', timing: '11:00 AM – 10:00 PM', lat: 27.1780, lng: 78.0170, tags: ['Street Food', 'Iconic'] },
         ],
         hotels: [
-            { id: 'ah1', name: 'The Oberoi Amarvilas', img: '1571896349842-33c89424de2d', desc: 'Luxury hotel with uninterrupted Taj Mahal views from every room, just 600m away.', type: 'Hotel', priceRange: '₹30,000–₹80,000/night', rating: 4.9, amenities: ['Taj View', 'Pool', 'Spa', 'Fine Dining'], checkIn: '2:00 PM', lat: 27.1720, lng: 78.0410 },
-            { id: 'ah2', name: 'Zostel Agra', img: '1564501049412-61c2a3083791', desc: 'Budget-friendly hostel near Taj Mahal with rooftop views and social travel vibe.', type: 'Hostel', priceRange: '₹500–₹2,000/night', rating: 4.3, amenities: ['Rooftop', 'WiFi', 'Taj View'], checkIn: '1:00 PM', lat: 27.1740, lng: 78.0440 },
+            { id: 'ah1', name: 'The Oberoi Amarvilas', img: '', desc: 'Luxury hotel with uninterrupted Taj Mahal views from every room, just 600m away.', type: 'Hotel', priceRange: '₹30,000–₹80,000/night', rating: 4.9, amenities: ['Taj View', 'Pool', 'Spa', 'Fine Dining'], checkIn: '2:00 PM', lat: 27.1720, lng: 78.0410 },
+            { id: 'ah2', name: 'Zostel Agra', img: '', desc: 'Budget-friendly hostel near Taj Mahal with rooftop views and social travel vibe.', type: 'Hostel', priceRange: '₹500–₹2,000/night', rating: 4.3, amenities: ['Rooftop', 'WiFi', 'Taj View'], checkIn: '1:00 PM', lat: 27.1740, lng: 78.0440 },
         ],
         dayPlans: [
             {
@@ -519,18 +518,18 @@ export const DEST_DATA: Record<string, DestInfo> = {
         crowdLevel: 'Medium', crowdNote: 'Sep–Nov ideal; Feb–Apr also great; monsoon brings rafting closures',
         mapCenter: { lat: 30.0869, lng: 78.2676 },
         highlights: [
-            { name: 'Laxman Jhula & Ram Jhula', img: '1585409677983-0f6c41ca9c3b', desc: 'Iconic iron suspension bridges spanning the Ganges with temple views and monkey encounters.', bestMonths: 'Sep – May', duration: '1–2 hrs', walking: 'Easy', value: 'High', tags: ['Heritage', 'Spiritual', 'Walk'], lat: 30.1254, lng: 78.3237 },
-            { name: 'Beatles Ashram', img: '1524492412937-b28074a5d7da', desc: 'Abandoned ashram where The Beatles stayed in 1968 — covered in vibrant graffiti art.', bestMonths: 'Sep – May', duration: '2–3 hrs', walking: 'Easy', value: 'High', tags: ['Culture', 'History', 'Art'], lat: 30.1098, lng: 78.3148 },
-            { name: 'White Water Rafting', img: '1626621341517-bbf3d9990a23', desc: 'Thrilling Ganges rapids from Shivpuri to Rishikesh — Grade III–IV rapids.', bestMonths: 'Sep – Jun', duration: '3–4 hrs', walking: 'Easy', value: 'High', tags: ['Adventure', 'Rafting'], lat: 30.1500, lng: 78.3000 },
-            { name: 'Triveni Ghat Aarti', img: '1582283925565-d053709d3bdf', desc: 'Mesmerizing evening Ganga Aarti ceremony with hundreds of oil lamps on the river.', bestMonths: 'All year', duration: '1–2 hrs', walking: 'Easy', value: 'High', tags: ['Spiritual', 'Aarti'], lat: 30.1020, lng: 78.2970 },
+            { name: 'Laxman Jhula & Ram Jhula', img: '', desc: 'Iconic iron suspension bridges spanning the Ganges with temple views and monkey encounters.', bestMonths: 'Sep – May', duration: '1–2 hrs', walking: 'Easy', value: 'High', tags: ['Heritage', 'Spiritual', 'Walk'], lat: 30.1254, lng: 78.3237 },
+            { name: 'Beatles Ashram', img: '', desc: 'Abandoned ashram where The Beatles stayed in 1968 — covered in vibrant graffiti art.', bestMonths: 'Sep – May', duration: '2–3 hrs', walking: 'Easy', value: 'High', tags: ['Culture', 'History', 'Art'], lat: 30.1098, lng: 78.3148 },
+            { name: 'White Water Rafting', img: '', desc: 'Thrilling Ganges rapids from Shivpuri to Rishikesh — Grade III–IV rapids.', bestMonths: 'Sep – Jun', duration: '3–4 hrs', walking: 'Easy', value: 'High', tags: ['Adventure', 'Rafting'], lat: 30.1500, lng: 78.3000 },
+            { name: 'Triveni Ghat Aarti', img: '', desc: 'Mesmerizing evening Ganga Aarti ceremony with hundreds of oil lamps on the river.', bestMonths: 'All year', duration: '1–2 hrs', walking: 'Easy', value: 'High', tags: ['Spiritual', 'Aarti'], lat: 30.1020, lng: 78.2970 },
         ],
         restaurants: [
-            { id: 'rr1', name: 'Chotiwala Restaurant', img: '1567521464027-f127ff144326', desc: 'Rishikesh landmark since 1958 — pure veg thali on the ghats with the iconic Chotiwala mascot.', cuisine: 'North Indian Veg', priceRange: '₹100–₹350', rating: 4.3, mustTry: 'Special Thali & Aloo Puri', timing: '8:00 AM – 10:30 PM', lat: 30.1220, lng: 78.3210, tags: ['Iconic', 'Vegetarian'] },
-            { id: 'rr2', name: 'Little Buddha Cafe', img: '1555396273-367ea4eb4db5', desc: 'Bohemian riverside café popular with yoga practitioners — great smoothies, Israeli and Indian food.', cuisine: 'Continental-Indian', priceRange: '₹200–₹500', rating: 4.5, mustTry: 'Shakshuka & Banana Pancakes', timing: '8:00 AM – 9:30 PM', lat: 30.1240, lng: 78.3220, tags: ['Café', 'River View'] },
+            { id: 'rr1', name: 'Chotiwala Restaurant', img: '', desc: 'Rishikesh landmark since 1958 — pure veg thali on the ghats with the iconic Chotiwala mascot.', cuisine: 'North Indian Veg', priceRange: '₹100–₹350', rating: 4.3, mustTry: 'Special Thali & Aloo Puri', timing: '8:00 AM – 10:30 PM', lat: 30.1220, lng: 78.3210, tags: ['Iconic', 'Vegetarian'] },
+            { id: 'rr2', name: 'Little Buddha Cafe', img: '', desc: 'Bohemian riverside café popular with yoga practitioners — great smoothies, Israeli and Indian food.', cuisine: 'Continental-Indian', priceRange: '₹200–₹500', rating: 4.5, mustTry: 'Shakshuka & Banana Pancakes', timing: '8:00 AM – 9:30 PM', lat: 30.1240, lng: 78.3220, tags: ['Café', 'River View'] },
         ],
         hotels: [
-            { id: 'rh1', name: 'Aloha on the Ganges', img: '1582719508461-905c673c825d', desc: 'Boutique riverside resort with stunning Ganges views, yoga deck, and Ayurvedic spa.', type: 'Resort', priceRange: '₹5,000–₹12,000/night', rating: 4.6, amenities: ['River View', 'Yoga', 'Spa', 'Pool'], checkIn: '2:00 PM', lat: 30.1080, lng: 78.3100 },
-            { id: 'rh2', name: 'Zostel Rishikesh', img: '1564501049412-61c2a3083791', desc: 'Riverside hostel near Laxman Jhula with mountain views, hammocks, and bonfire nights.', type: 'Hostel', priceRange: '₹500–₹2,500/night', rating: 4.4, amenities: ['River View', 'WiFi', 'Bonfire'], checkIn: '1:00 PM', lat: 30.1250, lng: 78.3240 },
+            { id: 'rh1', name: 'Aloha on the Ganges', img: '', desc: 'Boutique riverside resort with stunning Ganges views, yoga deck, and Ayurvedic spa.', type: 'Resort', priceRange: '₹5,000–₹12,000/night', rating: 4.6, amenities: ['River View', 'Yoga', 'Spa', 'Pool'], checkIn: '2:00 PM', lat: 30.1080, lng: 78.3100 },
+            { id: 'rh2', name: 'Zostel Rishikesh', img: '', desc: 'Riverside hostel near Laxman Jhula with mountain views, hammocks, and bonfire nights.', type: 'Hostel', priceRange: '₹500–₹2,500/night', rating: 4.4, amenities: ['River View', 'WiFi', 'Bonfire'], checkIn: '1:00 PM', lat: 30.1250, lng: 78.3240 },
         ],
         dayPlans: [
             {
@@ -555,24 +554,24 @@ export const DEST_DATA: Record<string, DestInfo> = {
         crowdLevel: 'High', crowdNote: 'Apr–Oct peak season; houseboats book out months ahead in summer',
         mapCenter: { lat: 34.0837, lng: 74.7973 },
         highlights: [
-            { name: 'Dal Lake Shikara Ride', img: '/destinations/srinagar.jpg', desc: 'Glide on a hand-carved shikara across the mirror-still waters of Dal Lake, passing floating gardens, lotus blooms and centuries-old houseboats.', bestMonths: 'Apr – Oct', duration: '2–4 hrs', walking: 'Easy', value: 'High', tags: ['Lake', 'Iconic', 'Romance'], lat: 34.0860, lng: 74.8370 },
-            { name: 'Mughal Gardens – Nishat Bagh', img: '/destinations/srinagar.jpg', desc: 'The "Garden of Joy" built by Nur Jahan\'s brother in 1633 with 12 terraces representing zodiac signs, set against the Zabarwan Range. Entry: ₹25. Open 9 AM – 7 PM.', bestMonths: 'Mar – Nov', duration: '1–2 hrs', walking: 'Easy', value: 'High', tags: ['Heritage', 'Mughal', 'Garden'], lat: 34.1173, lng: 74.8808 },
-            { name: 'Shalimar Bagh', img: '/destinations/srinagar.jpg', desc: 'Emperor Jahangir\'s "Abode of Love" — a stunning Mughal garden with cascading fountains, black marble pavilion and chinar-shaded walkways. Entry: ₹25. Open 9 AM – 7 PM.', bestMonths: 'Mar – Nov', duration: '1–2 hrs', walking: 'Easy', value: 'High', tags: ['Heritage', 'Mughal', 'UNESCO'], lat: 34.1382, lng: 74.8851 },
-            { name: 'Shankaracharya Temple', img: '/destinations/srinagar.jpg', desc: 'Ancient hilltop Shiva temple dating to 200 BC perched at 1,000 ft above Srinagar. Panoramic 360° views of the valley. Open sunrise–sunset. Modest dress required.', bestMonths: 'All year', duration: '1–2 hrs', walking: 'High', value: 'High', tags: ['Temple', 'Spiritual', 'Viewpoint'], lat: 34.0710, lng: 74.8557 },
-            { name: 'Hazratbal Shrine', img: '/destinations/srinagar.jpg', desc: 'Kashmir\'s most revered shrine on the western shore of Dal Lake, housing a relic believed to be the Prophet\'s hair. Stunning white marble architecture.', bestMonths: 'All year', duration: '1 hr', walking: 'Easy', value: 'High', tags: ['Spiritual', 'Shrine', 'Architecture'], lat: 34.1283, lng: 74.8384 },
-            { name: 'Old City & Jama Masjid', img: '/destinations/srinagar.jpg', desc: 'Wander the atmospheric lanes of Srinagar\'s old town and visit the 600-year-old Jama Masjid with its 370 wooden pillars and serene inner courtyard.', bestMonths: 'All year', duration: '2–3 hrs', walking: 'Medium', value: 'High', tags: ['Heritage', 'Culture', 'Walk'], lat: 34.0765, lng: 74.8116 },
+            { name: 'Dal Lake Shikara Ride', img: '', desc: 'Glide on a hand-carved shikara across the mirror-still waters of Dal Lake, passing floating gardens, lotus blooms and centuries-old houseboats.', bestMonths: 'Apr – Oct', duration: '2–4 hrs', walking: 'Easy', value: 'High', tags: ['Lake', 'Iconic', 'Romance'], lat: 34.0860, lng: 74.8370 },
+            { name: 'Mughal Gardens – Nishat Bagh', img: '', desc: 'The "Garden of Joy" built by Nur Jahan\'s brother in 1633 with 12 terraces representing zodiac signs, set against the Zabarwan Range. Entry: ₹25. Open 9 AM – 7 PM.', bestMonths: 'Mar – Nov', duration: '1–2 hrs', walking: 'Easy', value: 'High', tags: ['Heritage', 'Mughal', 'Garden'], lat: 34.1173, lng: 74.8808 },
+            { name: 'Shalimar Bagh', img: '', desc: 'Emperor Jahangir\'s "Abode of Love" — a stunning Mughal garden with cascading fountains, black marble pavilion and chinar-shaded walkways. Entry: ₹25. Open 9 AM – 7 PM.', bestMonths: 'Mar – Nov', duration: '1–2 hrs', walking: 'Easy', value: 'High', tags: ['Heritage', 'Mughal', 'UNESCO'], lat: 34.1382, lng: 74.8851 },
+            { name: 'Shankaracharya Temple', img: '', desc: 'Ancient hilltop Shiva temple dating to 200 BC perched at 1,000 ft above Srinagar. Panoramic 360° views of the valley. Open sunrise–sunset. Modest dress required.', bestMonths: 'All year', duration: '1–2 hrs', walking: 'High', value: 'High', tags: ['Temple', 'Spiritual', 'Viewpoint'], lat: 34.0710, lng: 74.8557 },
+            { name: 'Hazratbal Shrine', img: '', desc: 'Kashmir\'s most revered shrine on the western shore of Dal Lake, housing a relic believed to be the Prophet\'s hair. Stunning white marble architecture.', bestMonths: 'All year', duration: '1 hr', walking: 'Easy', value: 'High', tags: ['Spiritual', 'Shrine', 'Architecture'], lat: 34.1283, lng: 74.8384 },
+            { name: 'Old City & Jama Masjid', img: '', desc: 'Wander the atmospheric lanes of Srinagar\'s old town and visit the 600-year-old Jama Masjid with its 370 wooden pillars and serene inner courtyard.', bestMonths: 'All year', duration: '2–3 hrs', walking: 'Medium', value: 'High', tags: ['Heritage', 'Culture', 'Walk'], lat: 34.0765, lng: 74.8116 },
         ],
         restaurants: [
-            { id: 'sr1', name: 'Ahdoos Restaurant', img: '/destinations/srinagar.jpg', desc: 'Iconic 1918-est. restaurant on Residency Road, famous for its Wazwan feasts and Rogan Josh. A Srinagar institution.', cuisine: 'Kashmiri Wazwan', priceRange: '₹400–₹1,200', rating: 4.6, mustTry: 'Rogan Josh & Gushtaba', timing: '11:00 AM – 11:00 PM', lat: 34.0837, lng: 74.7973, tags: ['Iconic', 'Wazwan', 'Famous'] },
-            { id: 'sr2', name: 'Mughal Darbar', img: '/destinations/srinagar.jpg', desc: 'Popular family restaurant known for massive portions of authentic Kashmiri cuisine. Try their 36-course Wazwan platter.', cuisine: 'Kashmiri', priceRange: '₹300–₹900', rating: 4.5, mustTry: 'Tabak Maaz & Dum Aloo', timing: '10:30 AM – 10:30 PM', lat: 34.0770, lng: 74.8040, tags: ['Local', 'Family', 'Wazwan'] },
-            { id: 'sr3', name: 'Chai Jaai', img: '/destinations/srinagar.jpg', desc: 'Cozy café by Dal Lake specializing in Kashmiri Noon Chai (pink salt tea), breads and light bites. Perfect for cold mornings.', cuisine: 'Café & Kashmiri Tea', priceRange: '₹100–₹400', rating: 4.4, mustTry: 'Noon Chai with Sheermal bread', timing: '7:00 AM – 8:00 PM', lat: 34.0900, lng: 74.8280, tags: ['Café', 'Tea', 'Breakfast'] },
-            { id: 'sr4', name: 'Shamyana Restaurant', img: '/destinations/srinagar.jpg', desc: 'Upscale restaurant on Boulevard Road serving Kashmiri, North Indian and Continental fare with Dal Lake views.', cuisine: 'Multi-cuisine', priceRange: '₹500–₹1,500', rating: 4.3, mustTry: 'Kashmiri Pulao & Seekh Kebab', timing: '12:00 PM – 11:00 PM', lat: 34.0880, lng: 74.8200, tags: ['Fine Dining', 'Lake View'] },
+            { id: 'sr1', name: 'Ahdoos Restaurant', img: '', desc: 'Iconic 1918-est. restaurant on Residency Road, famous for its Wazwan feasts and Rogan Josh. A Srinagar institution.', cuisine: 'Kashmiri Wazwan', priceRange: '₹400–₹1,200', rating: 4.6, mustTry: 'Rogan Josh & Gushtaba', timing: '11:00 AM – 11:00 PM', lat: 34.0837, lng: 74.7973, tags: ['Iconic', 'Wazwan', 'Famous'] },
+            { id: 'sr2', name: 'Mughal Darbar', img: '', desc: 'Popular family restaurant known for massive portions of authentic Kashmiri cuisine. Try their 36-course Wazwan platter.', cuisine: 'Kashmiri', priceRange: '₹300–₹900', rating: 4.5, mustTry: 'Tabak Maaz & Dum Aloo', timing: '10:30 AM – 10:30 PM', lat: 34.0770, lng: 74.8040, tags: ['Local', 'Family', 'Wazwan'] },
+            { id: 'sr3', name: 'Chai Jaai', img: '', desc: 'Cozy café by Dal Lake specializing in Kashmiri Noon Chai (pink salt tea), breads and light bites. Perfect for cold mornings.', cuisine: 'Café & Kashmiri Tea', priceRange: '₹100–₹400', rating: 4.4, mustTry: 'Noon Chai with Sheermal bread', timing: '7:00 AM – 8:00 PM', lat: 34.0900, lng: 74.8280, tags: ['Café', 'Tea', 'Breakfast'] },
+            { id: 'sr4', name: 'Shamyana Restaurant', img: '', desc: 'Upscale restaurant on Boulevard Road serving Kashmiri, North Indian and Continental fare with Dal Lake views.', cuisine: 'Multi-cuisine', priceRange: '₹500–₹1,500', rating: 4.3, mustTry: 'Kashmiri Pulao & Seekh Kebab', timing: '12:00 PM – 11:00 PM', lat: 34.0880, lng: 74.8200, tags: ['Fine Dining', 'Lake View'] },
         ],
         hotels: [
-            { id: 'sh1', name: 'The Lalit Grand Palace', img: '/destinations/srinagar.jpg', desc: 'Restored 1910 royal palace overlooking Dal Lake with sprawling gardens, heritage rooms and world-class spa.', type: 'Resort', priceRange: '₹12,000–₹35,000/night', rating: 4.7, amenities: ['Spa', 'Pool', 'Lake View', 'Heritage'], checkIn: '2:00 PM', lat: 34.0920, lng: 74.8430 },
-            { id: 'sh2', name: 'Young Bombay Houseboats', img: '/destinations/srinagar.jpg', desc: 'Traditional carved-wood houseboat on Dal Lake. Stay on the water with full board, shikaras and lake views.', type: 'Homestay', priceRange: '₹3,500–₹8,000/night', rating: 4.5, amenities: ['Lake Stay', 'Full Board', 'Shikara'], checkIn: '1:00 PM', lat: 34.0850, lng: 74.8380 },
-            { id: 'sh3', name: 'Hotel Swiss', img: '/destinations/srinagar.jpg', desc: 'Clean mid-range hotel on Boulevard Road with Dal Lake views, modern rooms and friendly staff.', type: 'Hotel', priceRange: '₹2,500–₹5,000/night', rating: 4.2, amenities: ['WiFi', 'Restaurant', 'Room Service'], checkIn: '12:00 PM', lat: 34.0870, lng: 74.8250 },
-            { id: 'sh4', name: 'Zostel Srinagar', img: '/destinations/srinagar.jpg', desc: 'Backpacker-friendly hostel near Dal Gate with dorms, common areas, and organized group activities.', type: 'Hostel', priceRange: '₹600–₹2,000/night', rating: 4.1, amenities: ['WiFi', 'Common Kitchen', 'Activities'], checkIn: '1:00 PM', lat: 34.0830, lng: 74.8100 },
+            { id: 'sh1', name: 'The Lalit Grand Palace', img: '', desc: 'Restored 1910 royal palace overlooking Dal Lake with sprawling gardens, heritage rooms and world-class spa.', type: 'Resort', priceRange: '₹12,000–₹35,000/night', rating: 4.7, amenities: ['Spa', 'Pool', 'Lake View', 'Heritage'], checkIn: '2:00 PM', lat: 34.0920, lng: 74.8430 },
+            { id: 'sh2', name: 'Young Bombay Houseboats', img: '', desc: 'Traditional carved-wood houseboat on Dal Lake. Stay on the water with full board, shikaras and lake views.', type: 'Homestay', priceRange: '₹3,500–₹8,000/night', rating: 4.5, amenities: ['Lake Stay', 'Full Board', 'Shikara'], checkIn: '1:00 PM', lat: 34.0850, lng: 74.8380 },
+            { id: 'sh3', name: 'Hotel Swiss', img: '', desc: 'Clean mid-range hotel on Boulevard Road with Dal Lake views, modern rooms and friendly staff.', type: 'Hotel', priceRange: '₹2,500–₹5,000/night', rating: 4.2, amenities: ['WiFi', 'Restaurant', 'Room Service'], checkIn: '12:00 PM', lat: 34.0870, lng: 74.8250 },
+            { id: 'sh4', name: 'Zostel Srinagar', img: '', desc: 'Backpacker-friendly hostel near Dal Gate with dorms, common areas, and organized group activities.', type: 'Hostel', priceRange: '₹600–₹2,000/night', rating: 4.1, amenities: ['WiFi', 'Common Kitchen', 'Activities'], checkIn: '1:00 PM', lat: 34.0830, lng: 74.8100 },
         ],
         dayPlans: [
             {

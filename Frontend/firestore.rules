@@ -1,40 +1,105 @@
 rules_version = '2';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// NaviiGo — Firestore rules for the named database `naviigo-db`
+// (see firebase.json → firestore.database)
+// ─────────────────────────────────────────────────────────────────────────────
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ─── User Data: only the user can read/write their own data ───
-    // SECURITY: Each user can only access their own document.
-    // Sub-collections (bookings, itineraries, tracking, preferences,
-    // passport, personalization, trips) inherit this rule.
+    // ─── Helpers ─────────────────────────────────────────────────────────────
+    function signedIn() {
+      return request.auth != null;
+    }
+    function isOwner(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+    // Keys this write adds / changes / removes (equal values are not "changed").
+    function changedKeys() {
+      return request.resource.data.diff(resource.data).affectedKeys();
+    }
+
+    // ─── User data — owner only ──────────────────────────────────────────────
+    // users/{uid}
+    //   users/{uid}/preferences/main
+    //   users/{uid}/itineraries/{id}
+    //   users/{uid}/tracking/{tripId}  +  .../locations/{id}
+    //   users/{uid}/trips/{tripId}                      (expenseState, checkpoints)
+    //   users/{uid}/passport/stats  +  .../stamps/entries/{id}
+    //   users/{uid}/bucketList/{id}
+    //   users/{uid}/personalization/{signals|taste}
     match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read, write: if isOwner(userId);
 
       match /{subcollection}/{document=**} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
+        allow read, write: if isOwner(userId);
       }
     }
 
-    // ─── Shared Itineraries: public read, auth write ─────────────
-    // Shared itineraries are publicly readable (anyone can view shared links).
-    // CREATE requires auth to prevent spam.
-    // UPDATE/DELETE require ownership verification via ownerUid field.
+    // ─── Shareable itineraries — itineraries/{uuid} ──────────────────────────
+    // Two document shapes live in this collection:
+    //   (a) UUID itineraries : { form, generatedData, destName, userId, isPublic }
+    //       written by SetupWizard / LoadingScreen / the generate API route
+    //   (b) legacy shares    : { form, customPlans, destName, ownerUid, collaborators }
+    //       written by saveSharedItinerary / updateSharedPlans
+    //
+    // Read is public so a share link opens for signed-out visitors.
+    // Write is restricted: you may only rewrite a doc you own, or touch the
+    // collaboration fields on someone else's share.
     match /itineraries/{shareId} {
       allow read: if true;
+
+      // Guests must be able to create a share link, so create stays open.
+      // A random UUID cannot be squatted meaningfully: attackers can only add
+      // junk docs, never alter an existing itinerary.
       allow create: if true;
-      allow update: if request.auth == null || resource.data.ownerUid == null || resource.data.ownerUid == request.auth.uid;
-      allow delete: if request.auth != null && resource.data.ownerUid == request.auth.uid;
+
+      allow update: if signedIn() && (
+        // (a) Owner of a UUID itinerary
+        resource.data.userId == request.auth.uid
+        // (b) Collaborator editing only the collaboration fields
+        || changedKeys().hasOnly(['collaborators', 'invitedUsers', 'customPlans', 'updatedAt'])
+        // (c) Legacy share doc that carries no owner field
+        || !('userId' in resource.data)
+      );
+
+      allow delete: if signedIn() && resource.data.userId == request.auth.uid;
     }
 
-    // ─── Leaderboard: public read, server-only write ─────────────
-    // The leaderboard is readable by anyone (for display on the app).
-    // Writes are handled server-side by the backend/admin SDK only.
+    // ─── Leaderboard — leaderboard/{uid} ─────────────────────────────────────
+    // Public read (it is a public ranking). Each user may only write their own
+    // row. NOTE: XP is computed client-side, so a user can inflate their own
+    // score — move this write to the backend/Admin SDK if that matters.
     match /leaderboard/{userId} {
       allow read: if true;
-      allow write: if false;
+      allow write: if isOwner(userId);
     }
 
-    // ─── Destinations metadata (if needed) ───────────────────────
-    // Public read for destination data, write restricted to admin.
+    // ─── Destination reviews — reviews/{destId}/entries/{reviewId} ──────────
+    match /reviews/{destId} {
+      match /entries/{reviewId} {
+        allow read: if true;
+
+        // Must be signed in and reviewing as yourself.
+        allow create: if signedIn()
+                      && request.resource.data.userId == request.auth.uid
+                      && request.resource.data.helpfulCount == 0;
+
+        // Anyone signed in may vote "helpful" — but only the counter, and it
+        // can only go up. (A literal +1 equality check would break here:
+        // FieldValue.increment() is applied *after* rules run, so
+        // request.resource.data still holds the pre-increment value.)
+        allow update: if signedIn()
+                      && changedKeys().hasOnly(['helpfulCount'])
+                      && request.resource.data.helpfulCount
+                         >= resource.data.helpfulCount;
+
+        allow delete: if signedIn()
+                      && resource.data.userId == request.auth.uid;
+      }
+    }
+
+    // ─── Destination metadata — server / Admin SDK only ─────────────────────
     match /destinations/{destId} {
       allow read: if true;
       allow write: if false;

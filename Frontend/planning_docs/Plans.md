@@ -214,6 +214,7 @@
 ## 🟣 Phase 5: Future Plans
 
 > Plans below are for upcoming features. Add new plans from discussions here.
+> **Last updated:** 2026-09-09 — 5.3 (weather), 5.5 (voice input), 5.7 (expense MVP), 5.9 (a11y pass) advanced.
 
 ### Plan 5.1: Multi-City / Circuit Itineraries
 - **Priority:** P1 — High
@@ -225,6 +226,11 @@
 - **Dependencies:** Enhanced itinerary model, inter-city transport data
 - **Effort:** 3-4 weeks
 - **Status:** 📋 Planned
+- **Spec (architecture-heavy — design before build):**
+  - **Data model:** extend `GeneratedItinerary` with `legs: { from, to, mode, durationHrs, costEstimate }[]` and `cityIndex: number` on each day plan (which city a day belongs to). `mapCenter` becomes `cities: { name, lat, lng, days }[]`.
+  - **Generation:** `backend/services/itinerary_engine.py` — add `multi_city: boolean` + `cities: string[]` to the generation request; prompt Gemini for day→city allocation and leg suggestions; deterministic fallback splits days evenly across cities and uses `travel-search.ts` train/flight mock links between them.
+  - **UI:** setup wizard gains a "2+ cities" toggle (reuses `PlaceAutocomplete`); result page renders a city pill per day and a leg card between city groups.
+  - **Acceptance:** Golden Triangle (Delhi–Agra–Jaipur) generates with 3 city tabs, inter-city leg cards, and correct day allocation for a 5+ day trip.
 
 ### Plan 5.2: Group Trip Collaboration
 - **Priority:** P2 — Medium
@@ -236,6 +242,12 @@
 - **Dependencies:** Firestore real-time listeners, enhanced sharing model
 - **Effort:** 4-5 weeks
 - **Status:** 📋 Planned
+- **Spec (architecture-heavy — design before build):**
+  - **Real-time editing:** reuse the existing `listenToItinerary`/`updateSharedPlans` Firestore surface (already live in `ResultPage`) — the plumbing exists; work is presence ("X is editing…" cursors via a `presence/{shareId}` collection + `onSnapshot`) and merge strategy (last-write-wins per day, with an `editedBy`/`editedAt` stamp to show conflict).
+  - **Voting:** new `itineraries/{id}/votes/{activityId}` subcollection; each doc is one user's `{ vote: 1|-1 }`; UI tallies per activity; rule: one vote per uid per activity (security rule: `request.auth.uid == resource.data.uid`).
+  - **Shared expenses:** migrate the `ExpenseTracker` (5.7) entries from localStorage into `itineraries/{id}/expenses/{entryId}`; the split feature adds `paidBy`/`splitAmong: string[]` fields and a per-person balance view.
+  - **Group chat:** `itineraries/{id}/chat/{msgId}` with `createdAt` ordering; keep last 200 messages client-side; no moderation stack in v1 (rate-limit writes via existing `rateLimit.ts`).
+  - **Acceptance:** two browsers editing one itinerary see each other's changes <1s; votes render live; expenses show per-person balance.
 
 ### Plan 5.3: Real-Time Crowd & Weather Intelligence
 - **Priority:** P2 — Medium
@@ -245,7 +257,11 @@
   - Rain/heat alerts with automatic indoor alternatives
 - **Dependencies:** Google Places API, Open-Meteo API
 - **Effort:** 2-3 weeks
-- **Status:** 📋 Planned
+- **Status:** 🟡 Partially done — ✅ live weather (Open-Meteo `WeatherStrip` in itinerary + result views, self-hiding offline, 15-min client cache); ❌ crowd predictions & rescheduling pending
+- **Spec (remaining — crowd part):**
+  - **Crowd:** Google Places `popular_times` is only available via the (closed) Places Insights API; practical alternative is a deterministic heuristic scored server-side (`backend/services/events_engine.py` pattern): day-of-week + hour → busy factor (1-5) from local tourism stats in `backend/data/`, exposed as `GET /api/crowd?lat&lng&date` with a cached Redis/file layer.
+  - **Rescheduling:** when `WeatherStrip` reports rain/heat (from the 7-day forecast already fetched), the itinerary header shows an amber "Reschedule today's outdoor activities →" banner that proposes indoor swaps from the same city's indoor activities (via `useDeepDive`/events cache).
+  - **Acceptance:** crowd meter (1-5) renders per activity in day view; a rain day surfaces indoor alternatives in one tap.
 
 ### Plan 5.4: Photo Journal & Trip Diary
 - **Priority:** P3 — Low
@@ -256,6 +272,11 @@
 - **Dependencies:** Firebase Storage, image processing
 - **Effort:** 3 weeks
 - **Status:** 📋 Planned
+- **Spec (architecture-heavy — design before build):**
+  - **Upload:** `app/api/storage/upload/route.ts` — authenticated proxy (Firebase Admin SDK token check) that signs a Firebase Storage upload URL; never expose the storage bucket to the client. Images capped at 5MB (client-side check) → `storage/itineraries/{shareId}/{activityId}/{ts}.jpg`; on-device resize via `canvas` to max 1600px before upload (keeps quota and load sane).
+  - **Diary doc:** `itineraries/{id}/journal/{activityId}` — `{ photoUrl, caption, createdAt }`; auto-build a share card (`/itinerary/plan/[uuid]/diary`) with a public read rule on the doc and the images served through the existing `/api/places/photo`-style proxy pattern (signed CDN URL in the doc, not a raw bucket URL).
+  - **Sharing:** WhatsApp/Instagram via the existing `ShareDropdown` web-share + WhatsApp deep link pattern already in `transportLinks.ts`.
+  - **Acceptance:** guest trip gets a shareable diary URL with photos; uploads fail cleanly offline.
 
 ### Plan 5.5: AI Voice Assistant
 - **Priority:** P3 — Low
@@ -265,7 +286,11 @@
   - Hands-free navigation during trips
 - **Dependencies:** Web Speech API, enhanced Gemini chat
 - **Effort:** 3-4 weeks
-- **Status:** 📋 Planned
+- **Status:** 🟡 Partially done — ✅ voice **input** shipped (mic button in the AI chat dock, `SpeechRecognition`/`webkitSpeechRecognition`, `lang: 'en-IN'`, feature-detected so unsupported browsers hide the mic, transcription fills the editable input); ❌ voice responses & hands-free mode pending
+- **Spec (remaining):**
+  - **Voice responses:** browser `speechSynthesis` (free, no key) with `lang = 'en-IN'`, rate 1.0; a speaker toggle per AI message; fallback to text when voices unavailable. Do **not** add Gemini TTS (paid) unless speechSynthesis quality is insufficient.
+  - **Hands-free:** a "Hands-free" toggle that auto-sends the first transcript instead of filling the input, and keeps the mic hot for follow-ups.
+  - **Acceptance:** mic → transcript → AI answer → spoken aloud round-trips in Chrome/Edge on Android desktop; non-supporting browsers render no mic UI.
 
 ### Plan 5.6: Local Guide Marketplace
 - **Priority:** P3 — Low
@@ -276,6 +301,11 @@
 - **Dependencies:** Payment integration, guide verification system
 - **Effort:** 6-8 weeks
 - **Status:** 📋 Planned
+- **Spec (architecture-heavy — design before build):**
+  - **Data model:** `guides/{uid}` (`name, city, languages[], specialties[], hourlyRate, rating, verified`), `guide_bookings/{id}` (`guideId, travelerUid, date, hours, status, total`). Verification = manual admin flag + Google sign-in linking (no KYC stack in v1).
+  - **Payments (India-first):** Razorpay Payment Links (no recurring-API integration needed for v1) via `backend/services/payments_engine.py`; webhook route validates signature server-side; booking doc transitions `pending → confirmed → completed`, with a `platformFeePct` field (15%).
+  - **Discovery:** reuse the destination deep-dive page (`explore/[destId]`) tab to list verified guides per city.
+  - **Acceptance:** traveler books a verified guide, pays via UPI link, booking appears in `/itinerary/upcoming`.
 
 ### Plan 5.7: Expense Tracker
 - **Priority:** P2 — Medium
@@ -286,7 +316,11 @@
   - Export to CSV/PDF
 - **Dependencies:** Firestore, currency formatting
 - **Effort:** 2-3 weeks
-- **Status:** 📋 Planned
+- **Status:** 🟡 Partially done — ✅ MVP shipped (`ExpenseTracker` in `ResultPage`: ₹ INR formatting, 6 categories, editable budget vs actual with over-budget red bar, per-category breakdown, localStorage persistence keyed by trip uuid — offline + guest-safe); ❌ group splitting & CSV/PDF export pending
+- **Spec (remaining):**
+  - **CSV export:** one tap → `Blob` download of `date,category,note,amount` rows (no dependency needed); PDF via the print stylesheet route (a `@media print`-optimized summary view) rather than a new lib.
+  - **Group splitting:** see 5.2 — move entries to Firestore and add `paidBy`/`splitAmong`.
+  - **Acceptance:** a 5-entry trip exports clean CSV; budget bar turns red when spend crosses 100%.
 
 ### Plan 5.8: Emergency SOS Feature
 - **Priority:** P2 — Medium
@@ -297,6 +331,11 @@
 - **Dependencies:** Geolocation API, SMS/notification service
 - **Effort:** 2 weeks
 - **Status:** 📋 Planned
+- **Spec (architecture-heavy — design before build):**
+  - **SOS trigger:** floating SOS button on the ongoing-trip page; `navigator.geolocation.getCurrentPosition` → build a `https://maps.google.com/?q=lat,lng` short link → open the user's default WhatsApp/Telegram (share deep links, no SMS gateway/cost) with a pre-filled "📍 I need help at …" message.
+  - **Emergency numbers:** static, keyed CSV in `backend/data/emergency_contacts.csv` (`state, police, ambulance, women_helpline, embassies_json`) served via `GET /api/safety?city=...` with the existing file-cache layer — zero API cost, always available offline via the PWA cache.
+  - **Contacts:** `safety_contacts/{uid}` Firestore docs (names + phone numbers), editable in a Safety settings screen.
+  - **Acceptance:** one tap on a real device opens WhatsApp with the live GPS link; the safety page shows the right helplines for the trip's state.
 
 ### Plan 5.9: Accessibility Improvements
 - **Priority:** P2 — Medium
@@ -307,7 +346,11 @@
   - Audio descriptions for landmarks
 - **Dependencies:** Accessibility data for destinations
 - **Effort:** 3 weeks
-- **Status:** 📋 Planned
+- **Status:** 🟡 Partially done — ✅ screen-reader pass shipped 2026-09-09 (aria-labels on icon-only buttons incl. AI chat close/send/mic, calendar prev/next, travelers ±, search & newsletter inputs, chat input; keyboard-activatable AI dock `role=button`/`tabIndex`/`onKeyDown`; `aria-expanded` on mobile menu chevrons; `alt=""` for decorative Leaflet popup images); ❌ wheelchair/elderly data-dependent items pending
+- **Spec (remaining):**
+  - **Ratings:** wheelchair/elderly-friendly flag as a per-activity `accessibility: 'wheelchair' | 'elderly' | 'standard'` field — source from the destination CSV (`backend/data/`) with manual annotations for the top 30 cities rather than a paid API; surfaced as a filter chip in day view.
+  - **Audio descriptions:** reuse `speechSynthesis` (as in 5.5) for an "🔊 Read this landmark" button on deep-dive pages.
+  - **Acceptance:** full tab-through of the itinerary pages announces every control; filter shows only wheelchair-accessible activities.
 
 ### Plan 5.10: Language Translation Layer
 - **Priority:** P3 — Low
@@ -318,6 +361,11 @@
 - **Dependencies:** Google Translate API or Gemini translation
 - **Effort:** 3-4 weeks
 - **Status:** 📋 Planned
+- **Spec (architecture-heavy — design before build):**
+  - **Phrase packs:** static JSON per language (`backend/data/phrases/hi.json`, `ta.json`, …) — ~40 essential travel phrases; served via the existing `/api/search`-style proxy with file caching. This ships first and needs no API key.
+  - **UI translation:** `NEXT_PUBLIC_APP_LANGUAGES` + a lightweight `lib/i18n.ts` dictionary (context-free lookups only; **do not** add next-intl for an MVP) — cover the nav, itinerary wizard, and result page headers.
+  - **Camera/OCR:** defer until the phrase packs + UI i18n are live; then evaluate Google ML Kit (on-device, free) via a Web Worker rather than the paid Cloud Vision.
+  - **Acceptance:** toggling the UI to Hindi switches nav + wizard labels; every top-10 destination shows a "Phrases" card with its primary local language.
 
 ---
 
