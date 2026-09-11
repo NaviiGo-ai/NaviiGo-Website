@@ -95,9 +95,15 @@ export default function ItineraryMap({
             attributionControl: true,
         });
 
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+        const cartoApiKey = process.env.NEXT_PUBLIC_CARTO_API_KEY || 'eyJhbGciOiJIUzI1NiJ9.eyJhIjoiYWNfZzA3MjE4ZmciLCJqdGkiOiIwMTYyZWI2MiJ9.eqeGujku1mhnCY-KQ6hEOYbExD0EKV2KE8-TkdB13Xw';
+        const tileUrl = cartoApiKey
+            ? `https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?api_key=${cartoApiKey}`
+            : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+
+        L.tileLayer(tileUrl, {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>',
             maxZoom: 19,
+            subdomains: 'abcd',
         }).addTo(map);
 
         L.control.zoom({ position: 'topright' }).addTo(map);
