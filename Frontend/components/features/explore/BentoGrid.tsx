@@ -1,7 +1,7 @@
 'use client';
 
 import React, { memo } from 'react';
-import Image from 'next/image';
+import PlaceImage from '@/components/shared/PlaceImage';
 import { MapPin, Star, ArrowRight } from 'lucide-react';
 import { DestinationExploreItem } from '@/types';
 
@@ -21,13 +21,12 @@ export const BentoGrid = memo(({ destinations, onSelectDestination }: Props) => 
             idx % 5 === 0 ? 'md:col-span-2 md:h-[400px]' : 'h-[360px]'
           }`}
         >
-          <Image
-            src={item.image}
-            alt={item.name}
-            fill
-            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-            className="object-cover group-hover:scale-105 transition-transform duration-700"
-            unoptimized
+          <PlaceImage
+            name={item.name}
+            city={item.state}
+            fallbackUrl={item.image}
+            asBackground
+            className="absolute inset-0 w-full h-full group-hover:scale-105 transition-transform duration-700"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
           

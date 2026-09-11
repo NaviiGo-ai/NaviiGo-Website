@@ -17,19 +17,31 @@ interface PlaceImageProps {
     width?: number;
     style?: React.CSSProperties;
     asBackground?: boolean;
+    fallbackUrl?: string;
 }
 
-export default function PlaceImage({ name, city, className = '', width = 800, style, asBackground = false }: PlaceImageProps) {
+export default function PlaceImage({
+    name,
+    city,
+    className = '',
+    width = 800,
+    style,
+    asBackground = false,
+    fallbackUrl = '',
+}: PlaceImageProps) {
     const src = usePlacePhoto(name, city, width);
 
-    // If no photo is available from Google Places API, don't show anything (empty state)
-    const displaySrc = src || '';
+    // If no photo is available from Google Places API, use fallbackUrl
+    const displaySrc = src || fallbackUrl || '';
 
     if (asBackground) {
         return (
             <div
                 className={`bg-cover bg-center ${className}`}
-                style={{ ...style, backgroundImage: displaySrc ? `url(${displaySrc})` : 'none' }}
+                style={{
+                    ...style,
+                    backgroundImage: displaySrc ? `url("${displaySrc}")` : undefined,
+                }}
             />
         );
     }

@@ -14,6 +14,7 @@ import { toggleBucketListItem, getUserBucketList } from '@/lib/firestore';
 import ExploreHero from '@/components/features/explore/ExploreHero';
 import BentoGrid from '@/components/features/explore/BentoGrid';
 import CuisineSection from '@/components/features/explore/CuisineSection';
+import PlaceImage from '@/components/shared/PlaceImage';
 
 const CATEGORY_ICONS: Record<string, React.ReactNode> = {
   'All': <Globe className="w-3.5 h-3.5" />,
@@ -174,7 +175,13 @@ function ExplorePageContent() {
                   transition={{ delay: Math.min(i, 12) * 0.03, duration: 0.35, ease: 'easeOut' }}
                   className={`group relative h-full w-full rounded-xl overflow-hidden cursor-pointer bg-black shadow-sm ring-1 ring-black/5 dark:ring-white/10 hover:shadow-lg transition-shadow duration-300`}
                 >
-                  <motion.div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${d.image})` }} whileHover={{ scale: 1.03 }} transition={{ duration: 0.8, ease: 'easeOut' }} />
+                  <PlaceImage
+                    name={d.name}
+                    city={d.state}
+                    fallbackUrl={d.image}
+                    asBackground
+                    className="absolute inset-0 w-full h-full group-hover:scale-105 transition-transform duration-700"
+                  />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/10 transition-opacity duration-300 group-hover:opacity-90" />
 
                   {/* Like btn */}
@@ -257,7 +264,13 @@ function ExplorePageContent() {
                     className="group cursor-pointer">
                     <div className="relative rounded-2xl overflow-hidden bg-white dark:bg-[#111] border border-zinc-200 dark:border-zinc-800 shadow-sm hover:shadow-md transition-shadow duration-300">
                       <div className="relative h-48 overflow-hidden">
-                        <motion.div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${gem.image})` }} whileHover={{ scale: 1.03 }} transition={{ duration: 0.8, ease: 'easeOut' }} />
+                        <PlaceImage
+                          name={gem.name}
+                          city={gem.state}
+                          fallbackUrl={gem.image}
+                          asBackground
+                          className="absolute inset-0 w-full h-full group-hover:scale-105 transition-transform duration-700"
+                        />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                         <div className="absolute top-3 right-3 flex gap-2">
                           <span className="bg-white/90 text-zinc-900 text-[10px] px-2.5 py-1 rounded-sm font-bold shadow-sm">{gem.crowdLevel} crowd</span>
@@ -336,7 +349,13 @@ function ExplorePageContent() {
                 className="flex flex-col lg:flex-row bg-white dark:bg-[#111] rounded-2xl overflow-hidden border border-zinc-200 dark:border-zinc-800 shadow-sm relative">
                 {/* Image side */}
                 <div className="relative lg:w-1/2 h-72 lg:h-auto min-h-[300px] overflow-hidden">
-                  <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${CUISINES[selectedCuisine].image})` }} />
+                  <PlaceImage
+                    name={CUISINES[selectedCuisine]?.dishes?.[0]?.name || CUISINES[selectedCuisine]?.region || ''}
+                    city={CUISINES[selectedCuisine]?.dishes?.[0]?.city || ''}
+                    fallbackUrl={CUISINES[selectedCuisine]?.image || ''}
+                    asBackground
+                    className="absolute inset-0 w-full h-full"
+                  />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                   <div className="absolute bottom-6 left-6 right-6">
                     <div className="flex items-center gap-3 mb-2">
@@ -396,7 +415,13 @@ function ExplorePageContent() {
                 <div key={t.name}
                   onClick={() => go(t.name)}
                   className="group relative aspect-[4/5] rounded-xl overflow-hidden cursor-pointer shadow-sm ring-1 ring-zinc-200 dark:ring-zinc-800 hover:shadow-md transition-shadow duration-300">
-                  <motion.div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${t.image})` }} whileHover={{ scale: 1.03 }} transition={{ duration: 0.8 }} />
+                  <PlaceImage
+                    name={t.name}
+                    city={t.state}
+                    fallbackUrl={t.image}
+                    asBackground
+                    className="absolute inset-0 w-full h-full group-hover:scale-105 transition-transform duration-700"
+                  />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                   <div className="absolute bottom-5 left-5 right-5">
                     <div className="flex items-center gap-1.5 text-zinc-200 text-[10px] font-bold mb-2">
@@ -430,7 +455,12 @@ function ExplorePageContent() {
                   onClick={() => go(s.name)}
                   className="group flex flex-col md:flex-row rounded-xl overflow-hidden bg-white dark:bg-[#111] border border-zinc-200 dark:border-zinc-800 shadow-sm hover:shadow-md transition-shadow duration-300 cursor-pointer">
                   <div className="relative md:w-1/3 h-56 md:h-auto min-h-[200px] overflow-hidden">
-                    <motion.div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${s.image})` }} whileHover={{ scale: 1.03 }} transition={{ duration: 0.8 }} />
+                    <PlaceImage
+                      name={s.name}
+                      fallbackUrl={s.image}
+                      asBackground
+                      className="absolute inset-0 w-full h-full group-hover:scale-105 transition-transform duration-700"
+                    />
                     <div className="absolute top-4 left-4 bg-white/90 text-zinc-900 text-[10px] px-3 py-1 rounded-sm font-bold shadow-sm">{s.season}</div>
                   </div>
                   <div className="flex-1 p-6 md:p-8 flex flex-col justify-center">

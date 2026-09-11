@@ -12,6 +12,7 @@ import { trackDeepDiveVibe, startCityView, flushCityView } from '@/lib/browsingS
 import ReviewSection from '@/components/features/reviews/ReviewSection';
 import { getUpcomingFestivals, type Festival } from '@/lib/festivalCalendar';
 import { resolveImgSrc } from '@/lib/imageService';
+import PlaceImage from '@/components/shared/PlaceImage';
 import type { LocalEvent } from '@/types';
 
 
@@ -106,9 +107,11 @@ export default function DestinationDeepDive() {
             
             {/* HERO HEADER */}
             <div className="relative h-[45vh] sm:h-[50vh] min-h-[360px] sm:min-h-[400px] w-full bg-zinc-900 border-b border-zinc-200 dark:border-white/10 flex items-center justify-center">
-                <div 
-                    className="absolute inset-0 bg-cover bg-center opacity-40 mix-blend-overlay" 
-                    style={{ backgroundImage: `url('${resolveImgSrc(destination, 1920)}')` }}
+                <PlaceImage 
+                    name={destination} 
+                    asBackground 
+                    className="absolute inset-0 w-full h-full opacity-40 mix-blend-overlay" 
+                    width={1600} 
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#f5f5f7] dark:from-[#000000] via-transparent to-transparent" />
                 
