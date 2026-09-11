@@ -92,6 +92,7 @@ export async function GET(req: NextRequest) {
                 'Content-Type': 'application/json',
                 'X-Goog-Api-Key': GOOGLE_PLACES_KEY,
                 'X-Goog-FieldMask': PLACE_FIELD_MASK,
+                'Referer': 'https://naviigo.in/',
             },
             body: JSON.stringify(body),
             next: { revalidate: 86400 }, // Cache 24 hours
@@ -120,10 +121,8 @@ export async function GET(req: NextRequest) {
                 lng: place.lng,
                 isOpen: place.isOpen,
                 types: place.types,
-                // Absolute URL — the client renders it via `resolveImgSrc`, which
-                // only accepts http(s):// sources.
                 photo: place.photoName
-                    ? `${PYTHON_API_URL}${placesPhotoProxyPath(place.photoName, 400)}`
+                    ? `/api/places/photo?photoName=${encodeURIComponent(place.photoName)}&w=400`
                     : null,
             };
         });
