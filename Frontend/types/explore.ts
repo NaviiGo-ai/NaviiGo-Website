@@ -48,3 +48,25 @@ export interface SeasonalPickItem {
   note?: string;
   bestFor?: string;
 }
+
+/**
+ * A live local event, as returned by `POST {backend}/api/explore/events`
+ * (see `backend/services/events_engine.py`).
+ */
+export interface LocalEvent {
+  title: string;
+  date: {
+    start_date: string;
+    when: string;
+  };
+  address: string[];
+  link: string;
+  description: string;
+  thumbnail: string;
+  venue: {
+    name: string;
+    rating?: number;
+    reviews?: number;
+    link?: string;
+  };
+}

@@ -204,8 +204,8 @@ export default function Navbar() {
                 }}
                 className="flex items-center space-x-2.5"
               >
-                <div className="relative h-9 w-9 overflow-hidden rounded-full ring-2 ring-primary/20 shrink-0">
-                  <Image src="/content.png" alt="NaviiGo Logo" fill sizes="36px" className="object-cover" />
+                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary ring-2 ring-primary/20 shrink-0" aria-hidden="true">
+                  <Compass className="h-5 w-5 text-primary-foreground" strokeWidth={2.5} />
                 </div>
                 <span className="text-lg font-extrabold tracking-tight text-foreground font-sans pr-1">NaviiGo</span>
               </Link>
@@ -395,8 +395,8 @@ export default function Navbar() {
           <div className="p-6 pt-5 space-y-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <div className="relative h-9 w-9 overflow-hidden rounded-full">
-                  <Image src="/content.png" alt="NaviiGo" fill sizes="36px" className="object-cover" />
+                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary" aria-hidden="true">
+                  <Compass className="h-5 w-5 text-primary-foreground" strokeWidth={2.5} />
                 </div>
                 <span className="font-bold text-foreground text-lg tracking-tight font-sans">NaviiGo</span>
               </div>

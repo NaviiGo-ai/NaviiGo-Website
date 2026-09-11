@@ -1,4 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
+import {
+    PLACES_API_BASE,
+    PHOTO_FIELD_MASK,
+    isValidPhotoName,
+    placesApiError,
+    placesPhotoProxyPath,
+} from '@/lib/api/placesNew';
 
 const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY;
 const PYTHON_API_URL = process.env.NEXT_PUBLIC_PYTHON_API_URL || 'http://localhost:8000';
@@ -8,16 +15,16 @@ const photoCache = new Map<string, { url: string; ts: number }>();
 const CACHE_TTL = 1000 * 60 * 60 * 24; // 24 hours
 
 /**
- * Places Photo Proxy — resolves a place name + city into a real Google Places photo.
+ * Places Photo Resolver — turns a place name + city into a real Google photo.
  *
  * GET /api/places/photo?name=MG+Marg&city=Gangtok&w=800
  *
  * How it works:
- * 1. Google Places Text Search finds the place for the given name (+ city).
- * 2. We take the first result's photo_reference.
- * 3. We return the backend proxy URL (`{python-api}/api/places/photo/<ref>`).
+ * 1. Google Places `places:searchText` (API v1) finds the place for the given
+ *    name (+ city); we ask for the photo resource name only.
+ * 2. We return the backend proxy URL (`{python-api}/api/places/photo?name=...`).
  *    The backend streams the actual image bytes with the API key — the browser
- *    never sees a `maps.googleapis.com` URL carrying the key.
+ *    never sees a `places.googleapis.com` URL carrying the key.
  *
  * If no key is configured, the place has no photo, or the search fails we return
  * `{ url: '' }` so the caller keeps its local fallback image.
@@ -45,31 +52,33 @@ export async function GET(req: NextRequest) {
 
     try {
         const query = city ? `${name} ${city}` : name;
-        const params = new URLSearchParams({
-            query,
-            key: GOOGLE_PLACES_API_KEY,
-            inputtype: 'textquery',
+
+        const res = await fetch(`${PLACES_API_BASE}/places:searchText`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Goog-Api-Key': GOOGLE_PLACES_API_KEY,
+                'X-Goog-FieldMask': PHOTO_FIELD_MASK,
+            },
+            body: JSON.stringify({ textQuery: query, maxResultCount: 1 }),
         });
-        const searchUrl = `https://maps.googleapis.com/maps/api/place/textsearch/json?${params}`;
 
-        const res = await fetch(searchUrl);
-        if (!res.ok) throw new Error(`Google Places Text Search ${res.status}`);
+        const data = await res.json().catch(() => null);
 
-        const data = await res.json();
-        if (data?.status && data.status !== 'OK') {
-            // Google returns HTTP 200 even for denied/bad-key requests — surface it.
-            console.error(
-                `[Places Photo] ${data.status}${data.error_message ? `: ${data.error_message}` : ''}`
-            );
-            return NextResponse.json({ url: '' });
-        }
-        const photoReference = data?.results?.[0]?.photos?.[0]?.photo_reference;
-        if (!photoReference) {
+        if (!res.ok) {
+            // The New API uses real HTTP status codes, unlike the legacy API
+            // which returned 200 with an error body — surface the detail either way.
+            console.error(`[Places Photo] ${placesApiError(data, res.status)}`);
             return NextResponse.json({ url: '' });
         }
 
-        // Serve bytes via the backend proxy so the API key never reaches the client.
-        const url = `${PYTHON_API_URL}/api/places/photo/${encodeURIComponent(photoReference)}?maxwidth=${maxWidth}`;
+        const photoName = data?.places?.[0]?.photos?.[0]?.name;
+        if (!isValidPhotoName(photoName)) {
+            return NextResponse.json({ url: '' });
+        }
+
+        // Absolute URL — the API key never reaches the client.
+        const url = `${PYTHON_API_URL}${placesPhotoProxyPath(photoName, maxWidth)}`;
 
         photoCache.set(cacheKey, { url, ts: Date.now() });
 

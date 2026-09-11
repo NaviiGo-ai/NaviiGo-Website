@@ -116,23 +116,16 @@ export default function LoadingScreen({ form, uuid, onDone }: LoadingScreenProps
                 if (result.success && result.itinerary) {
                     setApiData(result.itinerary);
                     if (uuid && typeof window !== 'undefined') {
-                        try {
-                            sessionStorage.setItem(`navii_itin_${uuid}`, JSON.stringify({
+                        // Save to Firestore from client as well for instant cross-device/browser link sharing
+                        import('@/lib/firestore').then(({ saveItineraryByUUID }) => {
+                            saveItineraryByUUID(uuid, {
                                 form,
                                 generatedData: result.itinerary,
-                                destName: destName,
-                            }));
-                            // Save to Firestore from client as well for instant cross-device/browser link sharing
-                            import('@/lib/firestore').then(({ saveItineraryByUUID }) => {
-                                saveItineraryByUUID(uuid, {
-                                    form,
-                                    generatedData: result.itinerary,
-                                    destName,
-                                    userId: (form.userId as string) ?? null,
-                                    isPublic: true,
-                                }).catch(err => console.warn('[LoadingScreen] Firestore save fallback error:', err));
-                            });
-                        } catch (e) { }
+                                destName,
+                                userId: (form.userId as string) ?? null,
+                                isPublic: true,
+                            }).catch(err => console.warn('[LoadingScreen] Firestore save fallback error:', err));
+                        });
                     }
                 }
             } catch (err) {

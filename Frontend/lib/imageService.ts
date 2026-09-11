@@ -2,10 +2,11 @@
 // Utilities for resolving images across the app.
 // - Local destination images (primary)
 // - Unsplash ID → full URL (legacy fallback)
-// - Google Places photo reference → URL
+// - Google Places photo resource name → URL
 // - Category-aware fallback with name-based hashing for variety
 // - Fallback gradient for broken images
 
+import { placesPhotoProxyPath } from './api/placesNew';
 
 // ─── Unsplash ─────────────────────────────────────────────────────────────────
 
@@ -21,11 +22,13 @@ export function unsplashUrl(photoId: string, options: {
 
 // ─── Google Places Photo ──────────────────────────────────────────────────────
 
-export function placesPhotoUrl(photoReference: string, maxWidth: number = 800): string {
-    if (!photoReference) return '';
+export function placesPhotoUrl(photoName: string, maxWidth: number = 800): string {
+    if (!photoName) return '';
     // Serve bytes via the backend proxy so the API key never reaches the client.
+    // `photoName` is an API-v1 resource name (`places/{id}/photos/{id}`), so it
+    // travels as a query parameter — it contains slashes and cannot be a path segment.
     const base = process.env.NEXT_PUBLIC_PYTHON_API_URL || 'http://localhost:8000';
-    return `${base}/api/places/photo/${encodeURIComponent(photoReference)}?maxwidth=${maxWidth}`;
+    return `${base}${placesPhotoProxyPath(photoName, maxWidth)}`;
 }
 
 // ─── Fallback Gradient ────────────────────────────────────────────────────────
@@ -96,11 +99,11 @@ function inferCategory(tags?: string[], category?: string): string {
 
 export function resolveImage(
     unsplashId?: string,
-    placesPhotoRef?: string,
+    placesPhotoName?: string,
     category?: string
 ): { url: string; type: 'unsplash' | 'places' | 'fallback' } {
-    if (placesPhotoRef) {
-        const url = placesPhotoUrl(placesPhotoRef);
+    if (placesPhotoName) {
+        const url = placesPhotoUrl(placesPhotoName);
         if (url) return { url, type: 'places' };
     }
     return { url: '', type: 'fallback' };

@@ -1,4 +1,5 @@
 'use client';
+
 import { useEffect, useState, useCallback, Suspense } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
@@ -25,29 +26,9 @@ function DayViewContent() {
     const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(uuid);
     const isInvalid = !uuid || !isValidUUID || isNaN(dayNumber) || dayNumber < 1;
 
-    const [cached] = useState(() => {
-        if (typeof window === 'undefined' || isInvalid) return null;
-        try {
-            const stored = sessionStorage.getItem(`navii_itin_${uuid}`);
-            if (stored) {
-                const parsed = JSON.parse(stored);
-                if (parsed.generatedData) {
-                    const totalDays = parsed.generatedData?.dayPlans?.length ?? 0;
-                    if (dayNumber <= totalDays) {
-                        return { form: parsed.form ?? {}, generatedData: parsed.generatedData };
-                    }
-                }
-            }
-        } catch {}
-        return null;
-    });
-
-    const [phase, setPhase] = useState<'loading' | 'ready' | 'not-found'>(() => {
-        if (isInvalid) return 'not-found';
-        return cached ? 'ready' : 'loading';
-    });
-    const [form, setForm] = useState<Record<string, unknown>>(() => cached?.form ?? {});
-    const [generatedData, setGeneratedData] = useState<any>(() => cached?.generatedData ?? null);
+    const [phase, setPhase] = useState<'loading' | 'ready' | 'generating' | 'not-found'>('loading');
+    const [form, setForm] = useState<Record<string, unknown>>({});
+    const [generatedData, setGeneratedData] = useState<any>(null);
 
     useEffect(() => {
         if (isInvalid) return;
@@ -65,15 +46,18 @@ function DayViewContent() {
                 setForm(data.form ?? {});
                 setGeneratedData(data.generatedData);
                 setPhase('ready');
-            } else if (!cached) {
+            } else if (data?.form) {
+                setForm(data.form ?? {});
+                setPhase('generating');
+            } else {
                 setPhase('not-found');
             }
         }).catch(() => {
-            if (active && !cached) setPhase('not-found');
+            if (active) setPhase('not-found');
         });
 
         return () => { active = false; };
-    }, [uuid, dayNumber, isInvalid, router, cached]);
+    }, [uuid, dayNumber, isInvalid, router]);
 
 
     const handleBack = useCallback(() => {

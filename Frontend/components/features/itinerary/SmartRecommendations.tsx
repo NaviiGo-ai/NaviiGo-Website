@@ -2,7 +2,7 @@
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { resolveImgSrc } from '@/lib/imageService';
-
+import { getPersonalizationTaste, savePersonalizationTaste } from '@/lib/firestore';
 import { getBrowsingSignals } from '@/lib/browsingSignals';
 
 interface SmartRecommendationsProps {
@@ -29,21 +29,41 @@ export default function SmartRecommendations({
         setLoading(true);
         setSelected(null);
 
-        const baseUrl = '';
-        fetch(`${baseUrl}/api/recommendations`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                uid: userId, budget, month: new Date().getMonth() + 1,
-                group, purpose, pastDestinations: [],
-                tasteVector: JSON.parse(localStorage.getItem('naviigo_taste_vector') || '[]'),
-                browsingSignals: getBrowsingSignals(),
-            }),
-        })
-            .then(r => r.json())
-            .then(data => { if (data.success) setRecs(data.recommendations.slice(0, 4)); })
-            .catch(() => { })
-            .finally(() => { setLoading(false); });
+        const fetchRecs = async () => {
+            const baseUrl = '';
+            let tasteVector: number[] = [];
+            if (userId) {
+                const taste = await getPersonalizationTaste(userId);
+                tasteVector = taste?.vector ?? [];
+            }
+            try {
+                const browsingSignals = await getBrowsingSignals();
+                const resp = await fetch(`${baseUrl}/api/recommendations`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        uid: userId ?? '',
+                        budget,
+                        month: new Date().getMonth() + 1,
+                        group,
+                        purpose,
+                        pastDestinations: [],
+                        tasteVector,
+                        browsingSignals,
+                    }),
+                });
+                const data = await resp.json();
+                if (data.success) {
+                    setRecs(data.recommendations.slice(0, 4));
+                }
+            } catch (err) {
+                console.error('Failed to fetch recommendations:', err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchRecs();
     }, [purpose, group, budget, userId, refreshKey]);
 
     if (!purpose) return null;
@@ -51,27 +71,31 @@ export default function SmartRecommendations({
     const handleSelect = (id: string, name: string) => { onSelect(id, name); setSelected(id); };
     const handleGo = (id: string, name: string) => {
         // Fire and forget taste vector update
-        const baseUrl = '';
-        fetch(`${baseUrl}/api/taste/update`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                currentVector: JSON.parse(localStorage.getItem('naviigo_taste_vector') || '[]'),
-                selectedDestId: id,
-                purpose
-            })
-        }).then(r => r.json()).then(async d => {
-            if (d.success) {
-                localStorage.setItem('naviigo_taste_vector', JSON.stringify(d.newVector));
-                // Persist to Firestore for cross-device sync
-                if (userId) {
-                    try {
-                        const { savePersonalizationTaste } = await import('@/lib/firestore');
-                        await savePersonalizationTaste(userId, d.newVector);
-                    } catch {}
+        const updateTaste = async () => {
+            try {
+                const { getPersonalizationTaste, savePersonalizationTaste } = await import('@/lib/firestore');
+                const currentTaste = userId ? await getPersonalizationTaste(userId) : null;
+                const currentVector = currentTaste?.vector || [];
+
+                const baseUrl = '';
+                const r = await fetch(`${baseUrl}/api/taste/update`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        currentVector,
+                        selectedDestId: id,
+                        purpose
+                    })
+                });
+                const d = await r.json();
+                if (d.success && userId) {
+                    await savePersonalizationTaste(userId, d.newVector);
                 }
+            } catch (err) {
+                console.error(err);
             }
-        }).catch(console.error);
+        };
+        updateTaste();
 
         if (onSelectAndNext) onSelectAndNext(id, name);
         else handleSelect(id, name);

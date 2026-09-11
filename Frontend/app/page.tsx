@@ -61,16 +61,22 @@ export default function Home() {
           SECTION 01 — HERO
          ————————————————————————————————————————————————───────────────── */}
       <section className="relative min-h-screen min-h-dvh flex items-center justify-center border-b border-border overflow-hidden">
-        {/* Mobile / Android Dedicated Background Image (Maximum Visibility in Light & Dark Theme) */}
+        {/* Mobile Background Wash — self-contained gradient, no image asset required */}
         <div
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-100 dark:opacity-85 dark:invert dark:hue-rotate-180 mix-blend-multiply dark:mix-blend-luminosity pointer-events-none transition-all duration-500 sm:hidden"
-          style={{ backgroundImage: "url('/home_Assets/android.png')" }}
+          className="absolute inset-0 pointer-events-none transition-all duration-500 sm:hidden"
+          style={{
+            background:
+              'radial-gradient(900px 520px at 78% 12%, rgba(14,165,233,0.22), transparent 62%), radial-gradient(720px 460px at 12% 86%, rgba(99,102,241,0.20), transparent 62%)',
+          }}
         />
 
-        {/* Desktop / Tablet Background Image */}
+        {/* Desktop / Tablet Background Wash */}
         <div
-          className="hidden sm:block absolute inset-0 bg-cover bg-center bg-no-repeat opacity-95 dark:opacity-60 dark:invert dark:hue-rotate-180 mix-blend-multiply dark:mix-blend-luminosity pointer-events-none transition-all duration-500"
-          style={{ backgroundImage: "url('/home_bg.png')" }}
+          className="hidden sm:block absolute inset-0 pointer-events-none transition-all duration-500 dark:opacity-70"
+          style={{
+            background:
+              'radial-gradient(1200px 620px at 72% 18%, rgba(14,165,233,0.20), transparent 62%), radial-gradient(980px 540px at 18% 82%, rgba(99,102,241,0.18), transparent 62%), radial-gradient(760px 420px at 92% 88%, rgba(45,212,191,0.14), transparent 62%)',
+          }}
         />
         {/* Ultra-Light Vignette Mask for Maximum Android Background Visibility */}
         <div className="absolute inset-0 bg-gradient-to-r from-background/35 via-background/15 to-transparent sm:from-background/75 sm:via-background/45 dark:from-background/45 dark:via-background/20 pointer-events-none" />

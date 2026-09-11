@@ -628,6 +628,7 @@ export async function getActiveTripProgress(uid: string, tripId: string): Promis
 
 export { db };
 
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // PERSONALIZATION — users/{uid}/personalization/signals + taste
 // ═══════════════════════════════════════════════════════════════════════════════

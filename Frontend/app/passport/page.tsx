@@ -418,7 +418,7 @@ export default function PassportPage() {
                                 {leaderboard.slice(3).map((entry, i) => (
                                     <div key={entry.uid} className="flex items-center gap-4 p-5 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors">
                                         <div className="w-8 text-center font-black text-zinc-400 text-lg">{i + 4}</div>
-                                        <Image src={entry.photoURL || '/placeholder.jpg'} alt="" width={48} height={48} className="w-12 h-12 rounded-full object-cover bg-zinc-200" />
+                                        <Image src={entry.photoURL || ''} alt="" width={48} height={48} className="w-12 h-12 rounded-full object-cover bg-zinc-200" />
                                         <div className="flex-1 min-w-0">
                                             <div className="font-bold text-zinc-900 dark:text-white truncate">{entry.displayName}</div>
                                             <div className="text-xs text-zinc-500">Level {entry.level}</div>

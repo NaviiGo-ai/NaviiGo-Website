@@ -118,6 +118,11 @@ NEXT_PUBLIC_FIREBASE_APP_ID=1:123456789:web:abc123
 NEXT_PUBLIC_PYTHON_API_URL=http://localhost:8000
 
 # ── Google APIs (optional) ────────────────
+# Powers place photos, nearby/typed search and the itinerary place lookup.
+# Enable "Places API (New)" on the key — the code targets places.googleapis.com/v1
+# only and does not call the legacy maps.googleapis.com/maps/api/place/* endpoints.
+# The calls are server-side, so restrict the key by IP (or leave unrestricted);
+# an HTTP-referrer restriction will make every request fail with "API key not valid".
 GOOGLE_PLACES_API_KEY=your_places_key
 GOOGLE_DISTANCE_MATRIX_KEY=your_distance_matrix_key
 

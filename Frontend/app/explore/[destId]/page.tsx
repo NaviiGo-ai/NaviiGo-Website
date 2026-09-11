@@ -12,7 +12,7 @@ import { trackDeepDiveVibe, startCityView, flushCityView } from '@/lib/browsingS
 import ReviewSection from '@/components/features/reviews/ReviewSection';
 import { getUpcomingFestivals, type Festival } from '@/lib/festivalCalendar';
 import { resolveImgSrc } from '@/lib/imageService';
-import { LocalEvent } from '@/lib/api/googleEvents';
+import type { LocalEvent } from '@/types';
 
 
 interface DeepDiveData {

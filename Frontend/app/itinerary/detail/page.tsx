@@ -29,15 +29,8 @@ function DetailContent() {
         setMounted(true);
         let dataToSet = null;
 
-        // Check localStorage first if it's a dynamically generated item
-        if (isFromLocal) {
-            try {
-                const localStr = localStorage.getItem('navii_detail_item');
-                if (localStr) dataToSet = JSON.parse(localStr);
-            } catch (e) {
-                console.error('Failed to parse local item data', e);
-            }
-        }
+        // Removed localStorage usage; rely on Firestore or other sources
+        // No localStorage read here
 
         // Fallback to hardcoded DEST_DATA
         if (!dataToSet) {

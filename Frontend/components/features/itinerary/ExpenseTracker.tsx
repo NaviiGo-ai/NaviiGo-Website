@@ -4,14 +4,14 @@
 // Per-trip expense log (Phase 5c): log what you actually spent while travelling
 // and see it against your planned budget in real time.
 //
-// Storage: localStorage keyed by trip uuid (`navii_expenses_<uuid>`) — works
-// offline (PWA) and for guest itineraries without requiring Firestore auth.
-// Reads are held in React state so there is no hydration mismatch and two open
-// tabs stay in sync via the `storage` event.
+// Storage: Firestore backed keyed by itinerary uuid (`itineraries/<shareId>`).
 // Currency: ₹ INR via Intl.NumberFormat('en-IN').
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, useReducer } from 'react';
 import { Plus, Trash2, Wallet } from 'lucide-react';
+import { db } from '@/lib/firebase';
+import { doc, updateDoc, setDoc, onSnapshot } from 'firebase/firestore';
+import { useAuth } from '@/lib/AuthContext';
 
 interface Expense {
   id: string;
@@ -20,13 +20,6 @@ interface Expense {
   note: string;
   date: string; // ISO date of entry
 }
-
-interface StoredState {
-  expenses: Expense[];
-  budget: number;
-}
-
-const EMPTY: StoredState = { expenses: [], budget: 0 };
 
 const CATEGORIES = [
   { id: 'transport', label: 'Transport', emoji: '🚆' },
@@ -44,78 +37,123 @@ interface ExpenseTrackerProps {
   budget?: number;
 }
 
-// ─── localStorage-backed expense store ────────────────────────────────────────
-// The raw stored string lives in React state: `undefined` until the mount effect
-// reads localStorage, so the server render and the first client paint both show
-// EMPTY and hydration matches. Parsing it in a memo keyed by that string keeps
-// the returned object referentially stable — effects and memo deps rely on that,
-// and returning a fresh object per call is what used to blow the render loop up.
-function useStoredExpenses(key: string, fallbackBudget: number) {
-  const [raw, setRaw] = useState<string | null | undefined>(undefined);
+// ─── Firestore-backed expense store ────────────────────────────────────────
+// Expense state stored under users/{uid}/trips/{tripId}/expenseState
+// Structure: { expenses: Expense[], budget: number }
+// Realtime sync via onSnapshot keeps tabs in sync.
+// Uses userId from auth context; falls back to guest mode with shareId as tripId
+// when no user is signed in (for backward compatibility with existing shares).
 
-  const write = useCallback(
-    (next: StoredState) => {
-      const serialized = JSON.stringify(next);
-      try {
-        window.localStorage.setItem(key, serialized);
-      } catch {
-        // non-fatal (private mode / quota exceeded)
-      }
-      setRaw(serialized);
-    },
-    [key]
-  );
+function useFirestoreExpenses(shareId: string | null | undefined, fallbackBudget: number, uid: string | null) {
+  // Reducer for expense state
+  type State = {
+    expenses: Expense[];
+    budget: number;
+    loading: boolean;
+  };
+  type Action =
+    | { type: 'SET_EXPENSES'; payload: Expense[] }
+    | { type: 'SET_BUDGET'; payload: number }
+    | { type: 'SET_LOADING'; payload: boolean }
+    | { type: 'SET_GUEST_STATE'; payload: { expenses: Expense[]; budget: number; loading: boolean } };
 
-  useEffect(() => {
-    const read = () => {
-      try {
-        setRaw(window.localStorage.getItem(key));
-      } catch {
-        setRaw(null);
-      }
-    };
-    read();
-    // Another tab writing the same key fires this; same-tab writes go through `write`.
-    const onStorage = (e: StorageEvent) => {
-      if (e.key === key) read();
-    };
-    window.addEventListener('storage', onStorage);
-    return () => window.removeEventListener('storage', onStorage);
-  }, [key]);
-
-  const stored = useMemo<StoredState>(() => {
-    if (raw === undefined) return EMPTY;
-    // Nothing stored yet: fall back to the planned budget without persisting it,
-    // so a guest who never logs anything leaves no entry behind. The first write
-    // (adding an expense, editing the budget) persists it for real.
-    if (raw === null) return fallbackBudget > 0 ? { expenses: [], budget: fallbackBudget } : EMPTY;
-    try {
-      const parsed = JSON.parse(raw);
-      return {
-        expenses: Array.isArray(parsed.expenses) ? parsed.expenses : [],
-        budget: typeof parsed.budget === 'number' ? parsed.budget : 0,
-      };
-    } catch {
-      return EMPTY;
+  function expenseReducer(state: State, action: Action): State {
+    switch (action.type) {
+      case 'SET_EXPENSES':
+        return { ...state, expenses: action.payload };
+      case 'SET_BUDGET':
+        return { ...state, budget: action.payload };
+      case 'SET_LOADING':
+        return { ...state, loading: action.payload };
+      case 'SET_GUEST_STATE':
+        return {
+          expenses: action.payload.expenses,
+          budget: action.payload.budget,
+          loading: action.payload.loading,
+        };
+      default:
+        return state;
     }
-  }, [raw, fallbackBudget]);
+  }
 
-  const setExpenses = useCallback(
-    (list: Expense[]) => write({ expenses: list, budget: stored.budget }),
-    [stored.budget, write]
-  );
-  const setBudget = useCallback(
-    (b: number) => write({ expenses: stored.expenses, budget: b }),
-    [stored.expenses, write]
-  );
+  const [state, dispatch] = useReducer(expenseReducer, {
+    expenses: [],
+    budget: fallbackBudget || 0,
+    loading: true,
+  });
 
-  return { expenses: stored.expenses, budget: stored.budget, setExpenses, setBudget };
+  // Determine the trip ID to use for Firestore storage
+  const tripId = uid ? shareId ?? 'default' : (shareId || 'guest');
+  const expenseRef = uid
+    ? doc(db, 'users', uid, 'trips', tripId)
+    : null;
+
+  // Load initial state from Firestore (if user) or initialize empty
+  useEffect(() => {
+    if (!uid || !expenseRef) {
+      // Guest mode or no auth: set to empty state
+      dispatch({ type: 'SET_GUEST_STATE', payload: { expenses: [], budget: fallbackBudget || 0, loading: false } });
+      return;
+    }
+
+    const unsubscribe = onSnapshot(expenseRef, (docSnap) => {
+      if (!docSnap.exists()) {
+        // No existing document: initialize with fallback budget
+        dispatch({ type: 'SET_EXPENSES', payload: [] });
+        dispatch({ type: 'SET_BUDGET', payload: fallbackBudget || 0 });
+        // Create the document with initial state
+        setDoc(expenseRef, { expenseState: { expenses: [], budget: fallbackBudget || 0 } });
+        dispatch({ type: 'SET_LOADING', payload: false });
+      } else {
+        const data = docSnap.data();
+        const expenseState = data.expenseState || { expenses: [], budget: 0 };
+        dispatch({ type: 'SET_EXPENSES', payload: expenseState.expenses || [] });
+        dispatch({ type: 'SET_BUDGET', payload: expenseState.budget || 0 });
+        dispatch({ type: 'SET_LOADING', payload: false });
+      }
+    }, (error) => {
+      console.warn('[ExpenseTracker] Firestore error:', error);
+      dispatch({ type: 'SET_LOADING', payload: false });
+    });
+
+    return () => unsubscribe();
+  }, [uid, expenseRef, fallbackBudget]);
+
+  // Write expenses to Firestore
+  const writeExpenses = useCallback(async (newExpenses: Expense[], newBudget: number) => {
+    if (!uid || !expenseRef) return;
+    try {
+      await updateDoc(expenseRef, {
+        expenseState: {
+          expenses: newExpenses,
+          budget: newBudget
+        }
+      });
+    } catch (error) {
+      console.warn('[ExpenseTracker] Failed to write to Firestore:', error);
+    }
+  }, [uid, expenseRef]);
+
+  return {
+    expenses: state.expenses,
+    budget: state.budget,
+    setExpenses: (newExpenses: Expense[]) => {
+      dispatch({ type: 'SET_EXPENSES', payload: newExpenses });
+      writeExpenses(newExpenses, state.budget);
+    },
+    setBudget: (newBudget: number) => {
+      dispatch({ type: 'SET_BUDGET', payload: newBudget });
+      writeExpenses(state.expenses, newBudget);
+    },
+    loading: state.loading
+  };
 }
 
   
 export default function ExpenseTracker({ shareId, budget = 0 }: ExpenseTrackerProps) {
-  const storageKey = `navii_expenses_${shareId || 'guest'}`;
-  const { expenses, budget: editableBudget, setExpenses, setBudget } = useStoredExpenses(storageKey, Number(budget) || 0);
+  const { user } = useAuth();
+  const uid = user?.uid ?? null;
+  const { expenses, budget: editableBudget, setExpenses, setBudget, loading } = useFirestoreExpenses(shareId, Number(budget) || 0, uid);
 
   const [amount, setAmount] = useState('');
   const [category, setCategory] = useState<string>(CATEGORIES[0].id);

@@ -29,19 +29,9 @@ export interface DayProgress {
     isComplete: boolean;
 }
 
-const STORAGE_PREFIX = 'naviigo_trip_';
-
-function buildTripId(destId: string): string {
-    return `${destId}_${Date.now()}`;
-}
-
-function getStorageKey(tripId: string): string {
-    return `${STORAGE_PREFIX}${tripId}`;
-}
-
 // ─── Hook ────────────────────────────────────────────────────────────────────
 
-import { createTrackingSession, updateActivityStatus, stopTrackingSession } from '@/lib/firestore';
+import { createTrackingSession, updateActivityStatus, stopTrackingSession, saveActiveTripProgress } from '@/lib/firestore';
 import { useAuth } from '@/lib/AuthContext';
 
 // ─── Hook ────────────────────────────────────────────────────────────────────
@@ -54,23 +44,7 @@ export function useCheckpoints(
     dayPlans: { day: number; activities: { name: string; lat?: number; lng?: number }[] }[]
 ) {
     const { user } = useAuth();
-    const getSavedCheckpoint = useCallback((): CheckpointState | null => {
-        if (typeof window === 'undefined') return null;
-        for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            if (key?.startsWith(STORAGE_PREFIX)) {
-                try {
-                    const saved = JSON.parse(localStorage.getItem(key) || '');
-                    if (saved.destId === destId && !saved.isComplete) {
-                        return saved;
-                    }
-                } catch { /* skip corrupt entries */ }
-            }
-        }
-        return null;
-    }, [destId]);
-
-    const [checkpoint, setCheckpoint] = useState<CheckpointState | null>(getSavedCheckpoint);
+    const [checkpoint, setCheckpoint] = useState<CheckpointState | null>(null);
     const [isTripActive, setIsTripActive] = useState(() => checkpoint !== null);
     const [justCompleted, setJustCompleted] = useState<string | null>(null);
     const [dayJustCompleted, setDayJustCompleted] = useState<number | null>(null);
@@ -79,16 +53,27 @@ export function useCheckpoints(
     const [prevDestId, setPrevDestId] = useState(destId);
     if (destId !== prevDestId) {
         setPrevDestId(destId);
-        const saved = getSavedCheckpoint();
-        setCheckpoint(saved);
-        setIsTripActive(saved !== null);
+        // Reset checkpoint when destination changes
+        setCheckpoint(null);
+        setIsTripActive(false);
+        setJustCompleted(null);
+        setDayJustCompleted(null);
+        setTripJustCompleted(false);
     }
 
-    // Persist checkpoint to localStorage on every change
+    // Persist checkpoint to Firestore on every change
     useEffect(() => {
-        if (!checkpoint || typeof window === 'undefined') return;
-        localStorage.setItem(getStorageKey(checkpoint.tripId), JSON.stringify(checkpoint));
-    }, [checkpoint]);
+        if (!checkpoint || !user?.uid) return;
+        // Save progress to Firestore
+        const progress = {
+            completed: checkpoint.completedSet.length,
+            total: checkpoint.totalActivities,
+            percent: checkpoint.totalActivities > 0 ? Math.round((checkpoint.completedSet.length / checkpoint.totalActivities) * 100) : 0
+        };
+        saveActiveTripProgress(user.uid, checkpoint.tripId, progress).catch(err => {
+            console.warn('[useCheckpoints] Failed to save progress to Firestore:', err);
+        });
+    }, [checkpoint, user?.uid]);
 
     const startTrip = useCallback(() => {
         const dayTotals: Record<number, number> = {};
@@ -109,7 +94,7 @@ export function useCheckpoints(
             });
         });
 
-        const tripId = buildTripId(destId);
+        const tripId = `${destId}_${Date.now()}`;
 
         const newState: CheckpointState = {
             tripId,
@@ -146,11 +131,8 @@ export function useCheckpoints(
     }, [destId, destName, stateName, purpose, dayPlans, user]);
 
     const stopTrip = useCallback(() => {
-        if (checkpoint) {
-            localStorage.removeItem(getStorageKey(checkpoint.tripId));
-            if (user?.uid) {
-                stopTrackingSession(user.uid, checkpoint.tripId).catch(err => console.warn('Live tracking stop failed:', err));
-            }
+        if (checkpoint && user?.uid) {
+            stopTrackingSession(user.uid, checkpoint.tripId).catch(err => console.warn('Live tracking stop failed:', err));
         }
         setCheckpoint(null);
         setIsTripActive(false);

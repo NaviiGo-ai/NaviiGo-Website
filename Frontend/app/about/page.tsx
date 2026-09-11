@@ -90,15 +90,8 @@ export default function AboutPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {/* Team Member 1 */}
             <div className="group relative rounded-[2rem] overflow-hidden bg-white dark:bg-[#0a0a0a] border border-zinc-200 dark:border-zinc-800/50 p-6 transition-all hover:-translate-y-2 hover:shadow-2xl dark:hover:shadow-blue-900/20">
-              <div className="aspect-square w-full rounded-3xl overflow-hidden mb-6 relative">
-                <div className="absolute inset-0 bg-zinc-200 dark:bg-zinc-800" />
-                <Image 
-                  src="/team/param.png" 
-                  alt="Param Nainani"
-                  fill
-                  className="object-cover transition-transform duration-700 group-hover:scale-110 relative z-10"
-                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                />
+              <div className="aspect-square w-full rounded-3xl overflow-hidden mb-6 relative flex items-center justify-center bg-gradient-to-br from-blue-600 to-indigo-700 dark:from-blue-800 dark:to-indigo-950" role="img" aria-label="Param Nainani">
+                <span aria-hidden="true" className="text-5xl font-black tracking-tight text-white/90 select-none transition-transform duration-700 group-hover:scale-110">PN</span>
               </div>
               <h3 className="text-2xl font-bold tracking-tight">Param Nainani</h3>
               <p className="text-blue-600 dark:text-blue-400 font-medium mb-3">CEO</p>
@@ -106,15 +99,8 @@ export default function AboutPage() {
 
             {/* Team Member 2 */}
             <div className="group relative rounded-[2rem] overflow-hidden bg-white dark:bg-[#0a0a0a] border border-zinc-200 dark:border-zinc-800/50 p-6 transition-all hover:-translate-y-2 hover:shadow-2xl dark:hover:shadow-blue-900/20">
-              <div className="aspect-square w-full rounded-3xl overflow-hidden mb-6 relative">
-                <div className="absolute inset-0 bg-zinc-200 dark:bg-zinc-800" />
-                <Image 
-                  src="/team/manpreet.png" 
-                  alt="Manpreet Singh"
-                  fill
-                  className="object-cover transition-transform duration-700 group-hover:scale-110 relative z-10"
-                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                />
+              <div className="aspect-square w-full rounded-3xl overflow-hidden mb-6 relative flex items-center justify-center bg-gradient-to-br from-indigo-600 to-purple-700 dark:from-indigo-800 dark:to-purple-950" role="img" aria-label="Manpreet Singh">
+                <span aria-hidden="true" className="text-5xl font-black tracking-tight text-white/90 select-none transition-transform duration-700 group-hover:scale-110">MS</span>
               </div>
               <h3 className="text-2xl font-bold tracking-tight">Manpreet Singh</h3>
               <p className="text-blue-600 dark:text-blue-400 font-medium mb-3">COO</p>
@@ -122,15 +108,8 @@ export default function AboutPage() {
 
             {/* Team Member 3 */}
             <div className="group relative rounded-[2rem] overflow-hidden bg-white dark:bg-[#0a0a0a] border border-zinc-200 dark:border-zinc-800/50 p-6 transition-all hover:-translate-y-2 hover:shadow-2xl dark:hover:shadow-blue-900/20">
-              <div className="aspect-square w-full rounded-3xl overflow-hidden mb-6 relative">
-                <div className="absolute inset-0 bg-zinc-200 dark:bg-zinc-800" />
-                <Image 
-                  src="/team/ojaswee.png" 
-                  alt="Ojaswee Upadhyay"
-                  fill
-                  className="object-cover transition-transform duration-700 group-hover:scale-110 relative z-10"
-                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                />
+              <div className="aspect-square w-full rounded-3xl overflow-hidden mb-6 relative flex items-center justify-center bg-gradient-to-br from-sky-600 to-blue-800 dark:from-sky-800 dark:to-blue-950" role="img" aria-label="Ojaswee Upadhyay">
+                <span aria-hidden="true" className="text-5xl font-black tracking-tight text-white/90 select-none transition-transform duration-700 group-hover:scale-110">OU</span>
               </div>
               <h3 className="text-2xl font-bold tracking-tight">Ojaswee Upadhyay</h3>
               <p className="text-blue-600 dark:text-blue-400 font-medium mb-3">CTO</p>
@@ -138,15 +117,8 @@ export default function AboutPage() {
 
             {/* Team Member 4 */}
             <div className="group relative rounded-[2rem] overflow-hidden bg-white dark:bg-[#0a0a0a] border border-zinc-200 dark:border-zinc-800/50 p-6 transition-all hover:-translate-y-2 hover:shadow-2xl dark:hover:shadow-blue-900/20">
-              <div className="aspect-square w-full rounded-3xl overflow-hidden mb-6 relative">
-                <div className="absolute inset-0 bg-zinc-200 dark:bg-zinc-800" />
-                <Image 
-                  src="/team/lavish.png" 
-                  alt="Lavish Sharma"
-                  fill
-                  className="object-cover transition-transform duration-700 group-hover:scale-110 relative z-10"
-                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                />
+              <div className="aspect-square w-full rounded-3xl overflow-hidden mb-6 relative flex items-center justify-center bg-gradient-to-br from-violet-600 to-fuchsia-700 dark:from-violet-800 dark:to-fuchsia-950" role="img" aria-label="Lavish Sharma">
+                <span aria-hidden="true" className="text-5xl font-black tracking-tight text-white/90 select-none transition-transform duration-700 group-hover:scale-110">LS</span>
               </div>
               <h3 className="text-2xl font-bold tracking-tight">Lavish Sharma</h3>
               <p className="text-blue-600 dark:text-blue-400 font-medium mb-3">CFO</p>
@@ -154,15 +126,8 @@ export default function AboutPage() {
 
             {/* Team Member 5 */}
             <div className="group relative rounded-[2rem] overflow-hidden bg-white dark:bg-[#0a0a0a] border border-zinc-200 dark:border-zinc-800/50 p-6 transition-all hover:-translate-y-2 hover:shadow-2xl dark:hover:shadow-blue-900/20">
-              <div className="aspect-square w-full rounded-3xl overflow-hidden mb-6 relative">
-                <div className="absolute inset-0 bg-zinc-200 dark:bg-zinc-800" />
-                <Image 
-                  src="/team/nikhil.png" 
-                  alt="Nikhil Bhatt"
-                  fill
-                  className="object-cover transition-transform duration-700 group-hover:scale-110 relative z-10"
-                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                />
+              <div className="aspect-square w-full rounded-3xl overflow-hidden mb-6 relative flex items-center justify-center bg-gradient-to-br from-cyan-600 to-teal-700 dark:from-cyan-800 dark:to-teal-950" role="img" aria-label="Nikhil Bhatt">
+                <span aria-hidden="true" className="text-5xl font-black tracking-tight text-white/90 select-none transition-transform duration-700 group-hover:scale-110">NB</span>
               </div>
               <h3 className="text-2xl font-bold tracking-tight">Nikhil Bhatt</h3>
               <p className="text-blue-600 dark:text-blue-400 font-medium mb-3">CMO</p>
