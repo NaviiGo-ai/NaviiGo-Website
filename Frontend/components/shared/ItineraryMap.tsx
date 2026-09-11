@@ -95,7 +95,7 @@ export default function ItineraryMap({
             attributionControl: true,
         });
 
-        const cartoApiKey = process.env.NEXT_PUBLIC_CARTO_API_KEY || 'eyJhbGciOiJIUzI1NiJ9.eyJhIjoiYWNfZzA3MjE4ZmciLCJqdGkiOiIwMTYyZWI2MiJ9.eqeGujku1mhnCY-KQ6hEOYbExD0EKV2KE8-TkdB13Xw';
+        const cartoApiKey = process.env.NEXT_PUBLIC_CARTO_API_KEY;
         const tileUrl = cartoApiKey
             ? `https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?api_key=${cartoApiKey}`
             : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
