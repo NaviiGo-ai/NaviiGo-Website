@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useState, useEffect } from "react";
 import { DEST_DATA, DESTINATIONS } from "@/app/itinerary/data";
 import { resolveImgSrc } from '@/lib/imageService';
+import PlaceImage from '@/components/shared/PlaceImage';
 
 function DetailContent() {
     const router = useRouter();
@@ -101,7 +102,14 @@ function DetailContent() {
     return (
         <div className="min-h-screen bg-[#f7f8fc] dark:bg-[#0a0a0f] pb-20">
             <div className="relative h-[50vh] min-h-[400px]">
-                <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${bgUrl})` }} />
+                <PlaceImage
+                    name={itemData.name}
+                    city={destInfo?.name || destId}
+                    fallbackUrl={itemData.img}
+                    asBackground
+                    className="absolute inset-0 w-full h-full"
+                    width={1600}
+                />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#f7f8fc] dark:from-[#0a0a0f] via-black/40 to-black/20" />
 
                 {/* Top Navbar */}

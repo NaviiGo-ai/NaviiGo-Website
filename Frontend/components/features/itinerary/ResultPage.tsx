@@ -311,7 +311,13 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                 {/* Hero */}
                 <div className="bg-white dark:bg-zinc-900 rounded-[2rem] border border-zinc-100 dark:border-zinc-800 shadow-sm overflow-hidden mb-8 relative">
                     <div className="relative h-64 md:h-80 flex flex-col justify-end p-6 md:p-10">
-                        <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${resolveImgSrc(destInfo?.img || '', 1400)})` }} />
+                        <PlaceImage
+                            name={destName}
+                            fallbackUrl={destInfo?.img}
+                            asBackground
+                            className="absolute inset-0 w-full h-full"
+                            width={1600}
+                        />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
                         <div className="relative z-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
                             <div>
@@ -570,7 +576,14 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                                         <motion.div key={`gem-card-${i}-${g.placeId || g.name || 'item'}`} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
                                             className="bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl p-4 border border-zinc-100 dark:border-zinc-800">
                                             <div className="flex gap-3">
-                                                {g.photo && <Image src={g.photo} alt={g.name} width={64} height={64} className="w-16 h-16 rounded-xl object-cover" />}
+                                                <PlaceImage
+                                                    name={g.name}
+                                                    city={destName}
+                                                    fallbackUrl={g.photo}
+                                                    className="w-16 h-16 rounded-xl shrink-0"
+                                                    asBackground
+                                                    width={200}
+                                                />
                                                 <div className="flex-1 min-w-0">
                                                     <h3 className="font-bold text-zinc-900 dark:text-white text-sm line-clamp-1">{g.name}</h3>
                                                     <div className="text-xs text-emerald-600 font-medium mb-1">{g.type}</div>

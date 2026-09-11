@@ -2,6 +2,7 @@
 import { motion } from 'framer-motion';
 import { useState, useEffect } from 'react';
 import { resolveImgSrc } from '@/lib/imageService';
+import PlaceImage from '@/components/shared/PlaceImage';
 import { getPersonalizationTaste, savePersonalizationTaste } from '@/lib/firestore';
 import { getBrowsingSignals } from '@/lib/browsingSignals';
 
@@ -145,8 +146,12 @@ export default function SmartRecommendations({
                                 transition={{ delay: i * 0.07 }}
                                 className={`rounded-2xl overflow-hidden border-2 transition-all ${selected === rec.id ? 'border-emerald-500 shadow-lg shadow-emerald-500/10' : 'border-transparent hover:border-zinc-600'}`}>
                                 <div className="relative h-28 cursor-pointer group" onClick={() => handleSelect(rec.id, rec.name)}>
-                                    <div className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
-                                        style={{ backgroundImage: `url(${imgFor(rec.id)})` }} />
+                                    <PlaceImage
+                                        name={rec.name}
+                                        asBackground
+                                        className="absolute inset-0 w-full h-full transition-transform duration-500 group-hover:scale-105"
+                                        width={600}
+                                    />
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
                                     
                                     <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-md text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border border-white/10 shadow-sm">

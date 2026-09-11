@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { Navigation, MapPin, Calendar, Clock, ChevronRight, Plane, LogIn } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import PlaceImage from '@/components/shared/PlaceImage';
 import { useAuth } from '@/lib/AuthContext';
 import { getUserItineraries } from '@/lib/firestore';
 import type { SavedItineraryDoc } from '@/lib/firestoreSchema';
@@ -128,7 +129,13 @@ export default function OngoingTripsPage() {
                             >
                                 <div className="flex flex-col md:flex-row">
                                     <div className="relative md:w-72 h-48 md:h-auto shrink-0">
-                                        <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${trip.image})` }} />
+                                        <PlaceImage
+                                            name={trip.destination}
+                                            fallbackUrl={trip.image}
+                                            asBackground
+                                            className="absolute inset-0 w-full h-full"
+                                            width={800}
+                                        />
                                         <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/20 to-transparent md:bg-gradient-to-t" />
                                         <div className="absolute bottom-4 left-4">
                                             <span className="bg-green-500 text-white text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-full shadow-lg flex items-center gap-1.5">

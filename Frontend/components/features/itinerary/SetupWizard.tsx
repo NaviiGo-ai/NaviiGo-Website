@@ -6,6 +6,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import CalendarPicker from '@/components/shared/CalendarPicker';
 import { PURPOSES, DESTINATIONS, GROUP_SIZES, TRAVELER_TYPES, ARRIVAL_TIMES, DEPARTURE_MODES, DEPARTURE_TIMES, HOTEL_AREAS } from '@/app/itinerary/data';
 import { resolveImgSrc } from '@/lib/imageService';
+import PlaceImage from '@/components/shared/PlaceImage';
 import { StepBar } from './helpers';
 import BuildFromLink from './BuildFromLink';
 import SmartRecommendations from './SmartRecommendations';
@@ -172,7 +173,14 @@ function CitySearch({ value, destName, onSelect }: { value: string; destName: st
                     {DESTINATIONS.slice(0, 8).map(d => (
                         <button key={d.id} onClick={() => { onSelect(d.id, d.name); setQuery(d.name); }}
                             className={`group relative h-32 sm:h-40 rounded-3xl overflow-hidden border-2 transition-all duration-300 text-left ${value === d.id ? 'border-emerald-500 shadow-xl shadow-emerald-500/20 scale-[1.02]' : 'border-transparent hover:border-zinc-300 dark:hover:border-zinc-700'}`}>
-                            <div className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-110" style={{ backgroundImage: `url(${resolveImgSrc(d.img, 400)})` }} />
+                            <PlaceImage
+                                name={d.name}
+                                city={d.state}
+                                fallbackUrl={d.img}
+                                asBackground
+                                className="absolute inset-0 w-full h-full transition-transform duration-700 group-hover:scale-110"
+                                width={400}
+                            />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                             {value === d.id && (
                                 <div className="absolute top-3 right-3 w-7 h-7 bg-emerald-500 rounded-full flex items-center justify-center shadow-lg">

@@ -2,6 +2,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
 import { resolveImgSrc } from '@/lib/imageService';
+import PlaceImage from '@/components/shared/PlaceImage';
 
 
 const VIBES = [
@@ -241,8 +242,13 @@ export default function VibeMatch({ onSelect }: VibeMatchProps) {
                             <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
                                 className={`rounded-2xl overflow-hidden border-2 shadow-lg ${topMatch.warning ? 'border-red-400/50' : 'border-emerald-500/60 shadow-emerald-500/10'}`}>
                                 <div className="relative h-40 cursor-pointer group" onClick={() => onSelect(topMatch.id, topMatch.name, vibeToPurpose(topMatch.matchedVibes))}>
-                                    <div className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
-                                        style={{ backgroundImage: `url(${resolveImgSrc(topMatch.img || '', 700)})` }} />
+                                    <PlaceImage
+                                        name={topMatch.name}
+                                        fallbackUrl={topMatch.img}
+                                        asBackground
+                                        className="absolute inset-0 w-full h-full transition-transform duration-500 group-hover:scale-105"
+                                        width={800}
+                                    />
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
 
                                     {/* Best match badge */}
@@ -292,8 +298,13 @@ export default function VibeMatch({ onSelect }: VibeMatchProps) {
                                     transition={{ delay: (i + 1) * 0.07 }}
                                     className={`rounded-2xl overflow-hidden border-2 transition-all ${dest.warning ? 'border-red-400/30' : 'border-transparent hover:border-zinc-500'}`}>
                                     <div className="relative h-24 cursor-pointer group" onClick={() => onSelect(dest.id, dest.name, vibeToPurpose(dest.matchedVibes))}>
-                                        <div className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105"
-                                            style={{ backgroundImage: `url(${resolveImgSrc(dest.img || '', 400)})` }} />
+                                        <PlaceImage
+                                            name={dest.name}
+                                            fallbackUrl={dest.img}
+                                            asBackground
+                                            className="absolute inset-0 w-full h-full transition-transform duration-500 group-hover:scale-105"
+                                            width={400}
+                                        />
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
 
                                         {/* Weather badge */}

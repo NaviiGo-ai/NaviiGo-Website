@@ -1,7 +1,7 @@
 'use client';
 
 import React, { memo } from 'react';
-import Image from 'next/image';
+import PlaceImage from '@/components/shared/PlaceImage';
 import { Utensils } from 'lucide-react';
 import { CuisineTrailItem } from '@/types';
 
@@ -30,13 +30,12 @@ export const CuisineSection = memo(({ cuisineTrails }: Props) => {
           >
             <div>
               <div className="relative h-44 rounded-2xl overflow-hidden mb-4 border border-border">
-                <Image
-                  src={trail.image}
-                  alt={trail.region}
-                  fill
-                  sizes="(max-width: 768px) 100vw, 33vw"
-                  className="object-cover"
-                  unoptimized
+                <PlaceImage
+                  name={trail.dishes[0] ? `${trail.dishes[0]} ${trail.region}` : trail.region}
+                  fallbackUrl={trail.image}
+                  asBackground
+                  className="absolute inset-0 w-full h-full"
+                  width={600}
                 />
                 <div className="absolute top-3 left-3 bg-background/80 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold text-foreground border border-border">
                   {trail.icon} {trail.region}

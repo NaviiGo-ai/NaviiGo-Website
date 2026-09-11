@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { Clock, Calendar, Users, Sparkles, CheckCircle, Circle, Plane, LogIn } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import PlaceImage from '@/components/shared/PlaceImage';
 import { useAuth } from '@/lib/AuthContext';
 import { getUserItineraries } from '@/lib/firestore';
 import type { SavedItineraryDoc } from '@/lib/firestoreSchema';
@@ -130,7 +131,13 @@ export default function UpcomingTripsPage() {
                                 className="bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-100 dark:border-zinc-800 shadow-sm overflow-hidden"
                             >
                                 <div className="relative h-44">
-                                    <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${trip.image})` }} />
+                                    <PlaceImage
+                                        name={trip.destination}
+                                        fallbackUrl={trip.image}
+                                        asBackground
+                                        className="absolute inset-0 w-full h-full"
+                                        width={800}
+                                    />
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
                                     <div className="absolute bottom-4 left-5 right-5 flex items-end justify-between">
                                         <div>

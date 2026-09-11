@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { History, Star, MapPin, Calendar, Camera, TrendingUp, Plane, LogIn } from 'lucide-react';
 import { useState, useEffect } from 'react';
+import PlaceImage from '@/components/shared/PlaceImage';
 import { useAuth } from '@/lib/AuthContext';
 import { getUserItineraries } from '@/lib/firestore';
 import type { SavedItineraryDoc } from '@/lib/firestoreSchema';
@@ -135,7 +136,13 @@ export default function TripHistoryPage() {
                             >
                                 <div className="flex flex-col md:flex-row">
                                     <div className="relative md:w-64 h-48 md:h-auto shrink-0 overflow-hidden">
-                                        <div className="absolute inset-0 bg-cover bg-center group-hover:scale-105 transition-transform duration-700" style={{ backgroundImage: `url(${trip.image})` }} />
+                                        <PlaceImage
+                                            name={trip.destination}
+                                            fallbackUrl={trip.image}
+                                            asBackground
+                                            className="absolute inset-0 w-full h-full group-hover:scale-105 transition-transform duration-700"
+                                            width={800}
+                                        />
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent md:bg-gradient-to-r" />
                                     </div>
                                     <div className="flex-1 p-5">

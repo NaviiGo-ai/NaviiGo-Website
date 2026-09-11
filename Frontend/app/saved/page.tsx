@@ -9,6 +9,7 @@ import { getUserItineraries, deleteItineraryFromFirestore } from '@/lib/firestor
 import type { SavedItineraryDoc } from '@/lib/firestoreSchema';
 import { DESTINATIONS } from '@/app/itinerary/data';
 import { resolveImgSrc } from '@/lib/imageService';
+import PlaceImage from '@/components/shared/PlaceImage';
 import { Plane, LogIn } from 'lucide-react';
 
 export default function SavedPage() {
@@ -123,13 +124,13 @@ export default function SavedPage() {
                   className="group cursor-pointer bg-card text-card-foreground rounded-3xl p-3 border border-border shadow-sm hover:shadow-xl transition-all"
                 >
                   <div className="relative h-48 rounded-2xl overflow-hidden mb-4 border border-border">
-                    {imgUrl ? (
-                      <Image src={imgUrl} alt={title} fill className="object-cover group-hover:scale-105 transition-transform duration-700 ease-out" sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" />
-                    ) : (
-                      <div className="w-full h-full bg-primary/20 flex items-center justify-center">
-                        <Plane className="w-12 h-12 text-primary" />
-                      </div>
-                    )}
+                    <PlaceImage
+                      name={saved.destName}
+                      fallbackUrl={imgUrl}
+                      asBackground
+                      className="absolute inset-0 w-full h-full group-hover:scale-105 transition-transform duration-700 ease-out"
+                      width={800}
+                    />
                     <div className="absolute top-3 left-3 bg-background/90 backdrop-blur-sm px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider text-foreground border border-border shadow-xs">
                       {typeLabel}
                     </div>

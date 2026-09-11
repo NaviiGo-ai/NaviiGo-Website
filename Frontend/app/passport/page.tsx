@@ -3,6 +3,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRef, useLayoutEffect, useState, useEffect } from 'react';
 import Image from 'next/image';
+import PlaceImage from '@/components/shared/PlaceImage';
 import gsap from 'gsap';
 import { X, MapPin, Calendar, CheckCircle2, Trophy, Flame, Star, Target, ChevronRight, Zap, Globe2, TrendingUp, Award, Heart, Lock, ArrowRight, Activity, Plane } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -456,9 +457,14 @@ export default function PassportPage() {
                                         onClick={() => router.push(`/itinerary?load=${item.id}`)}
                                     >
                                         <div className="relative h-56 bg-zinc-100 dark:bg-zinc-800">
-                                            {item.image && (
-                                                <div className="absolute inset-0 bg-cover bg-center transform group-hover:scale-110 transition-transform duration-700" style={{ backgroundImage: `url(${item.image})` }} />
-                                            )}
+                                            <PlaceImage
+                                                name={item.name}
+                                                city={item.location}
+                                                fallbackUrl={item.image}
+                                                asBackground
+                                                className="absolute inset-0 w-full h-full transform group-hover:scale-110 transition-transform duration-700"
+                                                width={800}
+                                            />
                                             <div className="absolute inset-0 bg-gradient-to-t from-zinc-900 via-zinc-900/20 to-transparent opacity-80" />
                                             <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-lg">
                                                 <Heart className="w-5 h-5 fill-rose-500 text-rose-500" />
