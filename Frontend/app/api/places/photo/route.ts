@@ -8,39 +8,78 @@ import {
 } from '@/lib/api/placesNew';
 
 const GOOGLE_PLACES_API_KEY = process.env.GOOGLE_PLACES_API_KEY;
-const PYTHON_API_URL = process.env.NEXT_PUBLIC_PYTHON_API_URL || 'http://localhost:8000';
+const GOOGLE_REFERER = 'https://naviigo.in/';
 
 // In-memory cache to avoid repeated API calls for the same place
 const photoCache = new Map<string, { url: string; ts: number }>();
 const CACHE_TTL = 1000 * 60 * 60 * 24; // 24 hours
 
 /**
+ * Resolves a Google Places photo resource name into a direct Google CDN URL.
+ * Google's /media endpoint issues a 302 redirect to https://lh3.googleusercontent.com/...
+ * which can be rendered directly by any client without exposing the API key.
+ */
+async function resolvePhotoCdnUrl(photoName: string, maxWidth: number): Promise<string | null> {
+    if (!GOOGLE_PLACES_API_KEY || !isValidPhotoName(photoName)) return null;
+    try {
+        const mediaRes = await fetch(
+            `${PLACES_API_BASE}/${photoName}/media?maxWidthPx=${maxWidth}&key=${GOOGLE_PLACES_API_KEY}`,
+            {
+                headers: { 'Referer': GOOGLE_REFERER },
+                redirect: 'manual',
+            }
+        );
+
+        const location = mediaRes.headers.get('location');
+        if (location) return location;
+
+        return null;
+    } catch (err: any) {
+        console.error('[Places Photo] Failed to resolve media redirect:', err?.message || err);
+        return null;
+    }
+}
+
+/**
  * Places Photo Resolver — turns a place name + city into a real Google photo.
  *
  * GET /api/places/photo?name=MG+Marg&city=Gangtok&w=800
- *
- * How it works:
- * 1. Google Places `places:searchText` (API v1) finds the place for the given
- *    name (+ city); we ask for the photo resource name only.
- * 2. We return the backend proxy URL (`{python-api}/api/places/photo?name=...`).
- *    The backend streams the actual image bytes with the API key — the browser
- *    never sees a `places.googleapis.com` URL carrying the key.
- *
- * If no key is configured, the place has no photo, or the search fails we return
- * `{ url: '' }` so the caller keeps its local fallback image.
+ * GET /api/places/photo?photoName=places/.../photos/...&w=800
  */
 export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
-    const name = searchParams.get('name');
+    const photoNameParam = searchParams.get('photoName');
+    const nameParam = searchParams.get('name');
     const city = searchParams.get('city') || '';
     const rawWidth = parseInt(searchParams.get('w') || '800', 10);
     const maxWidth = Math.min(1600, Math.max(100, Number.isFinite(rawWidth) ? rawWidth : 800));
 
-    if (!name) {
-        return NextResponse.json({ error: 'Missing "name" parameter' }, { status: 400 });
+    // Check if directly resolving a photo resource name
+    const directPhotoName = isValidPhotoName(photoNameParam)
+        ? photoNameParam
+        : (isValidPhotoName(nameParam) ? nameParam : null);
+
+    if (directPhotoName) {
+        const cdnUrl = await resolvePhotoCdnUrl(directPhotoName, maxWidth);
+        if (!cdnUrl) {
+            return NextResponse.json({ url: '' });
+        }
+
+        // If requested directly as an image (e.g. from <img> src tag)
+        const accept = req.headers.get('accept') || '';
+        if (accept.includes('image/') && !accept.includes('application/json')) {
+            return NextResponse.redirect(cdnUrl, 307);
+        }
+
+        return NextResponse.json({ url: cdnUrl });
     }
 
-    const cacheKey = `${name}|${city}`.toLowerCase();
+    const name = nameParam;
+    if (!name) {
+        return NextResponse.json({ error: 'Missing "name" or "photoName" parameter' }, { status: 400 });
+    }
+
+    const cacheKey = `${name}|${city}|${maxWidth}`.toLowerCase();
     const cached = photoCache.get(cacheKey);
     if (cached && Date.now() - cached.ts < CACHE_TTL) {
         return NextResponse.json({ url: cached.url });
@@ -59,6 +98,7 @@ export async function GET(req: NextRequest) {
                 'Content-Type': 'application/json',
                 'X-Goog-Api-Key': GOOGLE_PLACES_API_KEY,
                 'X-Goog-FieldMask': PHOTO_FIELD_MASK,
+                'Referer': GOOGLE_REFERER,
             },
             body: JSON.stringify({ textQuery: query, maxResultCount: 1 }),
         });
@@ -66,8 +106,6 @@ export async function GET(req: NextRequest) {
         const data = await res.json().catch(() => null);
 
         if (!res.ok) {
-            // The New API uses real HTTP status codes, unlike the legacy API
-            // which returned 200 with an error body — surface the detail either way.
             console.error(`[Places Photo] ${placesApiError(data, res.status)}`);
             return NextResponse.json({ url: '' });
         }
@@ -77,12 +115,15 @@ export async function GET(req: NextRequest) {
             return NextResponse.json({ url: '' });
         }
 
-        // Absolute URL — the API key never reaches the client.
-        const url = `${PYTHON_API_URL}${placesPhotoProxyPath(photoName, maxWidth)}`;
+        // Resolve direct Google CDN URL (lh3.googleusercontent.com)
+        const cdnUrl = await resolvePhotoCdnUrl(photoName, maxWidth);
+        const finalUrl = cdnUrl || '';
 
-        photoCache.set(cacheKey, { url, ts: Date.now() });
+        if (finalUrl) {
+            photoCache.set(cacheKey, { url: finalUrl, ts: Date.now() });
+        }
 
-        return NextResponse.json({ url });
+        return NextResponse.json({ url: finalUrl });
     } catch (err: any) {
         console.error('[Places Photo] Error:', err?.message || err);
         return NextResponse.json({ url: '' });

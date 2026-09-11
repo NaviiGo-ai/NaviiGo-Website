@@ -129,8 +129,8 @@ export function resolveImgSrc(src: string, width: number = 800, name?: string, _
     if (!src || src === 'placeholder') {
         return '';
     }
-    // Only accept full URLs (http/https)
-    if (src.startsWith('http://') || src.startsWith('https://')) {
+    // Accept full URLs (http/https) and root-relative paths (/api/..., /images/...)
+    if (src.startsWith('http://') || src.startsWith('https://') || src.startsWith('/')) {
         return src;
     }
     // Everything else is considered unavailable; return empty string

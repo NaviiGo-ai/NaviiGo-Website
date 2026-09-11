@@ -177,6 +177,7 @@ async def place_details(lat: float = 20.5937, lng: float = 78.9629, type: str = 
                     "Content-Type": "application/json",
                     "X-Goog-Api-Key": GOOGLE_PLACES_KEY,
                     "X-Goog-FieldMask": PLACE_FIELD_MASK,
+                    "Referer": "https://naviigo.in/",
                 },
                 json=body,
             )
@@ -217,7 +218,7 @@ async def get_photo(name: str = "", maxwidth: int = 400):
 
     try:
         async with httpx.AsyncClient(timeout=10.0, follow_redirects=True) as client:
-            resp = await client.get(url)
+            resp = await client.get(url, headers={"Referer": "https://naviigo.in/"})
         if resp.status_code != 200:
             raise HTTPException(status_code=502, detail="Photo unavailable")
         return Response(content=resp.content, media_type=resp.headers.get("content-type", "image/jpeg"))
