@@ -70,8 +70,10 @@ export const CuisineSection = memo(({ cuisines, selectedIndex, onSelect, onExplo
           transition={{ duration: 0.2 }}
           className="flex flex-col lg:flex-row bg-card rounded-2xl overflow-hidden border border-border shadow-sm relative"
         >
-          {/* Image side */}
-          <div className="relative lg:w-1/2 h-72 lg:h-auto min-h-[300px] overflow-hidden">
+          {/* Image side — the region gradient sits behind the photo so each
+              cuisine keeps its own colour identity when the image is slow,
+              blocked, or missing (every CUISINES entry ships image: ''). */}
+          <div className={`relative lg:w-1/2 h-72 lg:h-auto min-h-[300px] overflow-hidden bg-gradient-to-br ${activeCuisine.gradient ?? 'from-saffron via-marigold to-temple-red'}`}>
             <PlaceImage
               name={activeCuisine.dishes?.[0]?.name || activeCuisine.region}
               city={activeCuisine.dishes?.[0]?.city || ''}

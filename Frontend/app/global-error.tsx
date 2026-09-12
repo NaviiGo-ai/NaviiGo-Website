@@ -3,6 +3,14 @@
 import { useEffect } from 'react';
 import * as Sentry from '@sentry/nextjs';
 
+/**
+ * Global error boundary.
+ *
+ * This component REPLACES the root layout, so the stylesheet imported by
+ * layout.tsx is not guaranteed to be present. Everything here is therefore
+ * styled inline against the Soul of India palette rather than with Tailwind
+ * classes, which would render unstyled if the sheet is missing.
+ */
 export default function GlobalError({
   error,
   reset,
@@ -16,18 +24,69 @@ export default function GlobalError({
 
   return (
     <html lang="en">
-      <body className="bg-slate-950 font-sans text-white">
-        <div className="min-h-screen flex flex-col items-center justify-center p-6 text-center">
-          <div className="w-20 h-20 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center mb-6">
-            <span className="text-4xl text-red-500" aria-hidden="true">!</span>
+      <body
+        style={{
+          margin: 0,
+          backgroundColor: '#1C1A19',
+          color: '#F5EDE4',
+          fontFamily: 'Lato, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif',
+        }}
+      >
+        <div
+          style={{
+            minHeight: '100vh',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '1.5rem',
+            textAlign: 'center',
+          }}
+        >
+          <div
+            style={{
+              width: '5rem',
+              height: '5rem',
+              borderRadius: '9999px',
+              background: 'rgba(178, 34, 34, 0.10)',
+              border: '1px solid rgba(178, 34, 34, 0.30)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginBottom: '1.5rem',
+            }}
+          >
+            <span style={{ fontSize: '2.25rem', color: '#B22222' }} aria-hidden="true">
+              !
+            </span>
           </div>
-          <h1 className="text-3xl font-bold text-white mb-3">Something went wrong</h1>
-          <p className="text-slate-400 max-w-md mb-8">
+          <h1
+            style={{
+              fontFamily: '"Playfair Display", Georgia, serif',
+              fontSize: '1.875rem',
+              fontWeight: 700,
+              margin: '0 0 0.75rem',
+              color: '#F5EDE4',
+            }}
+          >
+            Something went wrong
+          </h1>
+          <p style={{ color: '#B8AFA6', maxWidth: '28rem', margin: '0 0 2rem', lineHeight: 1.6 }}>
             Our monitoring team has been automatically notified about this issue. We apologize for the inconvenience!
           </p>
           <button
             onClick={() => reset()}
-            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-colors cursor-pointer"
+            style={{
+              padding: '0.75rem 1.5rem',
+              backgroundColor: '#FF9933',
+              color: '#FFFFFF',
+              fontWeight: 600,
+              fontSize: '1rem',
+              border: 'none',
+              borderRadius: '0.75rem',
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+            }}
           >
             Try again
           </button>

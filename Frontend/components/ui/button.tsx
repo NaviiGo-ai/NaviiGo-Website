@@ -11,8 +11,7 @@ const buttonVariants = cva(
         secondary: 'border border-saffron bg-transparent text-saffron hover:bg-saffron/10 focus-visible:ring-saffron/20',
         outline: 'border border-saffron bg-transparent text-saffron hover:bg-saffron/10 focus-visible:ring-saffron/20',
         destructive: 'bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20',
-        outline-destructive: 'border border-destructive bg-transparent text-destructive hover:bg-destructive/10 focus-visible:ring-destructive/20',
-        secondary: 'border border-border bg-transparent text-foreground hover:bg-accent/10 focus-visible:ring-accent/20',
+        'outline-destructive': 'border border-destructive bg-transparent text-destructive hover:bg-destructive/10 focus-visible:ring-destructive/20',
         ghost: 'hover:bg-accent/10 hover:text-accent focus-visible:ring-accent/20',
         link: 'text-saffron underline-offset-4 hover:underline focus-visible:ring-saffron/20',
       },
@@ -30,25 +29,17 @@ const buttonVariants = cva(
   }
 );
 
-interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement>, VariantProps<typeof buttonVariants> {
-  asChild?: boolean;
-}
+interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement>, VariantProps<typeof buttonVariants> {}
 
-const Button = React.forwardRef<
-  HTMLButtonElement | HTMLElement,
-  ButtonProps
->(({ className, variant, size, asChild = false, ...props }, ref) => {
-  const Component = asChild ? React.Fragment : 'button';
-  return (
-    <Component
+const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ className, variant, size, ...props }, ref) => (
+    <button
       ref={ref}
-      className={cn(buttonVariants({ variant, size, className }), !asChild && className)}
+      className={cn(buttonVariants({ variant, size }), className)}
       {...props}
-    >
-      {asChild ? props.children : null}
-    </Component>
-  );
-});
+    />
+  )
+);
 
 Button.displayName = 'Button';
 

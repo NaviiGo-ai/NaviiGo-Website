@@ -195,7 +195,7 @@ export default function Home() {
 
                 {/* Floating AI Bubble Pill */}
                 <div className="absolute -bottom-5 -left-2 sm:-left-4 rounded-2xl border-2 border-saffron/30 bg-saffron text-white p-3 sm:p-4 shadow-2xl shadow-saffron/30 flex items-center gap-3 backdrop-blur-md z-20 max-w-[calc(100%-16px)]">
-                  <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-saffron-foreground/20 text-white flex items-center justify-center font-bold shrink-0">
+                  <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-white/20 text-white flex items-center justify-center font-bold shrink-0">
                     <Bot className="w-4 h-4 sm:w-5 sm:h-5" />
                   </div>
                   <div>
