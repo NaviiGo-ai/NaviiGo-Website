@@ -1,0 +1,10 @@
+:root {
+  /* Border radius — consumed by tailwind.config.ts borderRadius tokens.
+     Only the radius tokens are declared here; globals.css owns the
+     --shadow-* scale so its values win by source order. */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-full: 9999px;
+}

@@ -1,0 +1,16 @@
+:root {
+  /* Transition durations — consumed by tailwind.config.ts transitionDuration tokens */
+  --duration-fast: 150ms;
+  --duration-normal: 300ms;
+  --duration-slow: 500ms;
+
+  /* Transition timing functions — consumed by transitionTimingFunction tokens */
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* The fade-up / slide-up / scale-in / pulse-subtle @keyframes live in
+   tailwind.config.ts (theme.extend.keyframes) and are emitted by Tailwind
+   when animate-* utilities are used, so they are intentionally not
+   duplicated here. */
