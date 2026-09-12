@@ -97,8 +97,22 @@ const config: Config = {
         center: true,
       },
       animation: {
+        'fade-up': 'fade-up var(--duration-normal) ease-out',
+        'slide-up': 'slide-up var(--duration-normal) ease-out',
+        'scale-in': 'scale-in var(--duration-normal) ease-out',
+        'pulse-subtle': 'pulse-subtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
         aurora: "aurora 60s linear infinite",
         shimmer: "shimmer 1.5s infinite linear",
+      },
+      transitionDuration: {
+        '150': 'var(--duration-fast)',
+        '300': 'var(--duration-normal)',
+        '500': 'var(--duration-slow)',
+      },
+      transitionTimingFunction: {
+        'in': 'var(--ease-in)',
+        'out': 'var(--ease-out)',
+        'in-out': 'var(--ease-in-out)',
       },
       keyframes: {
         aurora: {
@@ -109,6 +123,44 @@ const config: Config = {
           from: { transform: "translateX(-100%)" },
           to: { transform: "translateX(100%)" },
         },
+        fade-up: {
+          from: {
+            opacity: 0,
+            transform: 'translateY(20px)'
+          },
+          to: {
+            opacity: 1,
+            transform: 'translateY(0)'
+          }
+        },
+        slide-up: {
+          from: {
+            opacity: 0,
+            transform: 'translateY(30px)'
+          },
+          to: {
+            opacity: 1,
+            transform: 'translateY(0)'
+          }
+        },
+        scale-in: {
+          from: {
+            opacity: 0,
+            transform: 'scale(0.95)'
+          },
+          to: {
+            opacity: 1,
+            transform: 'scale(1)'
+          }
+        },
+        pulse-subtle: {
+          '0%, 100%': {
+            opacity: 1
+          },
+          '50%': {
+            opacity: 0.8
+          }
+        }
       },
     },
   },
