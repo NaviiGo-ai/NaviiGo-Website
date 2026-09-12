@@ -66,7 +66,7 @@ export default function Home() {
           className="absolute inset-0 pointer-events-none transition-all duration-500 sm:hidden"
           style={{
             background:
-              'radial-gradient(900px 520px at 78% 12%, rgba(14,165,233,0.22), transparent 62%), radial-gradient(720px 460px at 12% 86%, rgba(99,102,241,0.20), transparent 62%)',
+              'radial-gradient(900px 520px at 78% 12%, rgba(255,153,51,0.22), transparent 62%), radial-gradient(720px 460px at 12% 86%, rgba(75,0,130,0.20), transparent 62%)',
           }}
         />
 
@@ -75,26 +75,26 @@ export default function Home() {
           className="hidden sm:block absolute inset-0 pointer-events-none transition-all duration-500 dark:opacity-70"
           style={{
             background:
-              'radial-gradient(1200px 620px at 72% 18%, rgba(14,165,233,0.20), transparent 62%), radial-gradient(980px 540px at 18% 82%, rgba(99,102,241,0.18), transparent 62%), radial-gradient(760px 420px at 92% 88%, rgba(45,212,191,0.14), transparent 62%)',
+              'radial-gradient(1200px 620px at 72% 18%, rgba(255,153,51,0.20), transparent 62%), radial-gradient(980px 540px at 18% 82%, rgba(75,0,130,0.18), transparent 62%), radial-gradient(760px 420px at 92% 88%, rgba(46,139,87,0.14), transparent 62%)',
           }}
         />
         {/* Ultra-Light Vignette Mask for Maximum Android Background Visibility */}
-        <div className="absolute inset-0 bg-gradient-to-r from-background/35 via-background/15 to-transparent sm:from-background/75 sm:via-background/45 dark:from-background/45 dark:via-background/20 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-r from-warm-ivory/35 via-warm-ivory/15 to-transparent sm:from-warm-ivory/75 sm:via-warm-ivory/45 dark:from-warm-ivory/45 dark:via-warm-ivory/20 pointer-events-none" />
 
         {/* Dotted Flight Paths & Animated Plane Icons (Mobile Only — Hidden on Desktop View) */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden z-[5] sm:hidden">
           <svg className="w-full h-full opacity-55 dark:opacity-35" viewBox="0 0 1200 800" fill="none">
             {/* Dotted Flight Path 1 */}
-            <path d="M-50 420 C 250 180, 550 520, 1250 220" stroke="currentColor" strokeWidth="2.5" strokeDasharray="8 8" className="text-primary/75" />
+            <path d="M-50 420 C 250 180, 550 520, 1250 220" stroke="currentColor" strokeWidth="2.5" strokeDasharray="8 8" className="text-saffron/75" />
             {/* Dotted Flight Path 2 */}
-            <path d="M80 720 C 380 380, 780 620, 1150 120" stroke="currentColor" strokeWidth="2" strokeDasharray="6 6" className="text-secondary/65" />
+            <path d="M80 720 C 380 380, 780 620, 1150 120" stroke="currentColor" strokeWidth="2" strokeDasharray="6 6" className="text-indigo/65" />
           </svg>
           {/* Floating Plane Icon 1 */}
-          <div className="absolute top-[22%] right-[12%] text-primary animate-pulse transform rotate-45">
+          <div className="absolute top-[22%] right-[12%] text-saffron animate-pulse transform rotate-45">
             <Plane className="w-6 h-6 drop-shadow-md" />
           </div>
           {/* Floating Plane Icon 2 */}
-          <div className="absolute bottom-[28%] left-[6%] text-secondary transform -rotate-12">
+          <div className="absolute bottom-[28%] left-[6%] text-indigo transform -rotate-12">
             <Plane className="w-5 h-5 drop-shadow-sm" />
           </div>
         </div>
@@ -106,7 +106,7 @@ export default function Home() {
             <div className="lg:col-span-7">
               <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }} className="text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-extrabold tracking-tight text-foreground font-serif leading-[1.02]">
                 Your Journey.{' '}
-                <span className="text-primary block sm:inline">Intelligently Navigated.</span>
+                <span className="text-saffron block sm:inline">Intelligently Navigated.</span>
               </motion.h1>
 
               <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }} className="mt-7 sm:mt-10 max-w-xl text-lg sm:text-xl leading-relaxed text-muted-foreground font-sans font-semibold">
@@ -114,13 +114,13 @@ export default function Home() {
               </motion.p>
 
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }} className="mt-7 sm:mt-6 flex flex-col sm:flex-row items-stretch sm:items-center gap-4 sm:gap-4">
-                <Link href="/itinerary?new=true" className="inline-flex items-center justify-center gap-3.5 rounded-2xl bg-primary px-7 sm:px-8 py-3.5 text-lg sm:text-xl font-extrabold text-primary-foreground shadow-md transition-all hover:scale-[1.02] hover:bg-primary/90">
+                <Link href="/itinerary?new=true" className="inline-flex items-center justify-center gap-3.5 rounded-2xl bg-saffron px-7 sm:px-8 py-3.5 text-lg sm:text-xl font-extrabold text-white shadow-md transition-all hover:scale-[1.02] hover:bg-saffron/90">
                   <Navigation className="w-5.5 h-5.5" />
                   <span>Plan My Journey</span>
                 </Link>
 
-                <Link href="/explore" className="inline-flex items-center justify-center gap-3 rounded-2xl bg-card/90 border border-border px-7 py-3.5 text-lg sm:text-xl font-extrabold text-card-foreground hover:bg-accent transition-all shadow-xs backdrop-blur-xs">
-                  <Compass className="w-5.5 h-5.5 text-primary" />
+                <Link href="/explore" className="inline-flex items-center justify-center gap-3 rounded-2xl bg-warm-ivory/90 border border-border px-7 py-3.5 text-lg sm:text-xl font-extrabold text-saffron hover:bg-saffron/20 transition-all shadow-xs backdrop-blur-xs">
+                  <Compass className="w-5.5 h-5.5 text-saffron" />
                   <span>Explore India</span>
                 </Link>
               </motion.div>
@@ -129,24 +129,24 @@ export default function Home() {
               <div className="mt-8 sm:mt-7 flex flex-col gap-4 sm:gap-3.5 pt-6 border-t border-border/60">
                 {/* Top Row: 2 items side-by-side on desktop */}
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3.5 sm:gap-8">
-                  <div className="flex items-center gap-3 text-base sm:text-lg font-extrabold text-foreground tracking-wide">
-                    <div className="w-7 h-7 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
-                      <CheckCircle2 className="w-4.5 h-4.5 text-primary" />
+                  <div className="flex items-center gap-3 text-base sm:text-lg font-extrabold text-saffron tracking-wide">
+                    <div className="w-7 h-7 rounded-full bg-saffron/15 flex items-center justify-center shrink-0">
+                      <CheckCircle2 className="w-4.5 h-4.5 text-saffron" />
                     </div>
                     <span>60s AI Itineraries</span>
                   </div>
-                  <div className="flex items-center gap-3 text-base sm:text-lg font-extrabold text-foreground tracking-wide">
-                    <div className="w-7 h-7 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
-                      <CheckCircle2 className="w-4.5 h-4.5 text-primary" />
+                  <div className="flex items-center gap-3 text-base sm:text-lg font-extrabold text-saffron tracking-wide">
+                    <div className="w-7 h-7 rounded-full bg-saffron/15 flex items-center justify-center shrink-0">
+                      <CheckCircle2 className="w-4.5 h-4.5 text-saffron" />
                     </div>
                     <span>500+ OTA Comparison</span>
                   </div>
                 </div>
 
                 {/* Bottom Row: 1 item below on desktop */}
-                <div className="flex items-center gap-3 text-base sm:text-lg font-extrabold text-foreground tracking-wide">
-                  <div className="w-7 h-7 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
-                    <CheckCircle2 className="w-4.5 h-4.5 text-primary" />
+                <div className="flex items-center gap-3 text-base sm:text-lg font-extrabold text-saffron tracking-wide">
+                  <div className="w-7 h-7 rounded-full bg-saffron/15 flex items-center justify-center shrink-0">
+                    <CheckCircle2 className="w-4.5 h-4.5 text-saffron" />
                   </div>
                   <span>Digital Pilgrim Passport</span>
                 </div>
@@ -158,16 +158,16 @@ export default function Home() {
               <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.6, delay: 0.2 }} className="relative mx-auto max-w-md">
                 
                 {/* Main Product Card Preview */}
-                <div className="rounded-[32px] border-2 border-primary/25 bg-card backdrop-blur-xl p-5 sm:p-7 pb-8 sm:pb-9 shadow-2xl shadow-primary/10 flex flex-col justify-between gap-4 sm:gap-5 hover:border-primary/40 transition-all duration-300 relative z-10">
+                <div className="rounded-[32px] border-2 border-saffron/25 bg-card backdrop-blur-xl p-5 sm:p-7 pb-8 sm:pb-9 shadow-2xl shadow-saffron/10 flex flex-col justify-between gap-4 sm:gap-5 hover:border-saffron/40 transition-all duration-300 relative z-10">
                   
                   {/* Top Header */}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center font-bold shadow-md shrink-0">
+                      <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-saffron text-white flex items-center justify-center font-bold shadow-md shrink-0">
                         <MapPin className="w-5 h-5 sm:w-5.5 sm:h-5.5" />
                       </div>
                       <div>
-                        <div className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-primary font-mono">NEXT TRIP PREVIEW</div>
+                        <div className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-saffron font-mono">NEXT TRIP PREVIEW</div>
                         <div className="text-lg sm:text-2xl font-extrabold text-card-foreground font-serif leading-snug">Varanasi Heritage Circuit</div>
                       </div>
                     </div>
@@ -178,7 +178,7 @@ export default function Home() {
                   <div className="p-3.5 sm:p-4.5 rounded-2xl bg-muted/40 border border-border/80 space-y-1.5 text-card-foreground shadow-xs">
                     <div className="flex items-center justify-between font-bold">
                       <span className="text-foreground text-xs sm:text-base font-bold">Day 01 • Evening Aarti</span>
-                      <span className="text-primary text-[11px] sm:text-sm font-mono font-bold">18:00 IST</span>
+                      <span className="text-saffron text-[11px] sm:text-sm font-mono font-bold">18:00 IST</span>
                     </div>
                     <p className="text-muted-foreground text-xs sm:text-sm leading-relaxed font-medium">Dashashwamedh Ghat Ganga Aarti ceremony with reserved boat viewing.</p>
                   </div>
@@ -186,21 +186,21 @@ export default function Home() {
                   {/* Passport Stamp Badge Preview */}
                   <div className="flex items-center justify-between pt-3 border-t border-border">
                     <div className="flex items-center gap-2 text-xs sm:text-sm font-bold text-card-foreground">
-                      <Award className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-primary shrink-0" />
+                      <Award className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-saffron shrink-0" />
                       <span>Kashi Vishwanath Stamp</span>
                     </div>
-                    <span className="text-xs sm:text-sm font-mono font-bold text-primary bg-primary/10 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg border border-primary/20">+150 XP</span>
+                    <span className="text-xs sm:text-sm font-mono font-bold text-saffron bg-saffron/10 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg border border-saffron/20">+150 XP</span>
                   </div>
                 </div>
 
                 {/* Floating AI Bubble Pill */}
-                <div className="absolute -bottom-5 -left-2 sm:-left-4 rounded-2xl border-2 border-primary/30 bg-primary text-primary-foreground p-3 sm:p-4 shadow-2xl shadow-primary/30 flex items-center gap-3 backdrop-blur-md z-20 max-w-[calc(100%-16px)]">
-                  <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-primary-foreground/20 text-primary-foreground flex items-center justify-center font-bold shrink-0">
+                <div className="absolute -bottom-5 -left-2 sm:-left-4 rounded-2xl border-2 border-saffron/30 bg-saffron text-white p-3 sm:p-4 shadow-2xl shadow-saffron/30 flex items-center gap-3 backdrop-blur-md z-20 max-w-[calc(100%-16px)]">
+                  <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-saffron-foreground/20 text-white flex items-center justify-center font-bold shrink-0">
                     <Bot className="w-4 h-4 sm:w-5 sm:h-5" />
                   </div>
                   <div>
-                    <div className="text-xs sm:text-sm font-extrabold tracking-wide text-primary-foreground">Ask NaviiGo AI</div>
-                    <div className="text-primary-foreground/90 text-[11px] sm:text-xs font-medium truncate">&quot;Best time for Morning Boat Ride?&quot;</div>
+                    <div className="text-xs sm:text-sm font-extrabold tracking-wide text-white">Ask NaviiGo AI</div>
+                    <div className="text-white/90 text-[11px] sm:text-xs font-medium truncate">&quot;Best time for Morning Boat Ride?&quot;</div>
                   </div>
                 </div>
 
@@ -216,7 +216,7 @@ export default function Home() {
          ————————————————————————————————————————————————————————————————─ */}
       <section className="relative z-10 py-20 sm:py-28 px-4 sm:px-6 bg-card border-b border-border">
         <div className="max-w-6xl mx-auto text-center">
-          <motion.span initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} className="text-xs font-bold uppercase tracking-[0.3em] text-primary mb-3 block">
+          <motion.span initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} className="text-xs font-bold uppercase tracking-[0.3em] text-saffron mb-3 block">
             THE FRAGMENTATION PROBLEM
           </motion.span>
           <motion.h2 initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={1} className="text-3xl sm:text-5xl font-bold tracking-tight text-foreground font-serif max-w-3xl mx-auto">
@@ -249,14 +249,14 @@ export default function Home() {
             </div>
 
             {/* The NaviiGo Unified Way */}
-            <div className="rounded-3xl border border-primary/40 bg-primary/5 p-6 sm:p-8 space-y-4 relative overflow-hidden">
+            <div className="rounded-3xl border border-saffron/40 bg-saffron/5 p-6 sm:p-8 space-y-4 relative overflow-hidden">
               <div className="flex items-center justify-between mb-4">
-                <span className="text-xs font-bold uppercase tracking-wider text-primary font-mono">THE NAVIIGO UNIFIED WAY</span>
-                <span className="text-xs font-bold text-primary">1 Intelligent Platform</span>
+                <span className="text-xs font-bold uppercase tracking-wider text-saffron font-mono">THE NAVIIGO UNIFIED WAY</span>
+                <span className="text-xs font-bold text-saffron">1 Intelligent Platform</span>
               </div>
               <div className="p-4 rounded-2xl bg-card border border-border space-y-2">
                 <div className="flex items-center gap-2 text-sm font-bold text-card-foreground font-serif">
-                  <Sparkles className="w-4 h-4 text-primary" />
+                  <Sparkles className="w-4 h-4 text-saffron" />
                   <span>Discover → Plan → Book → Navigate → Remember</span>
                 </div>
                 <p className="text-xs text-muted-foreground leading-relaxed">
@@ -274,7 +274,7 @@ export default function Home() {
       <section className="relative z-10 py-20 sm:py-28 px-4 sm:px-6 bg-background">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <span className="text-xs font-bold uppercase tracking-[0.3em] text-primary mb-3 block">THE NAVIIGO PROMISE</span>
+            <span className="text-xs font-bold uppercase tracking-[0.3em] text-saffron mb-3 block">THE NAVIIGO PROMISE</span>
             <h2 className="text-3xl sm:text-5xl font-bold tracking-tight text-foreground font-serif">
               One journey. Five intelligent layers.
             </h2>
@@ -289,13 +289,13 @@ export default function Home() {
               { num: '05', title: 'REMEMBER', desc: 'Collect digital stamps and XP badges in your Passport.', link: '/passport' },
             ].map((layer, idx) => (
               <Link href={layer.link} key={layer.num} className="group">
-                <div className="h-full rounded-3xl border border-border bg-card p-6 flex flex-col justify-between hover:border-primary/50 transition-all duration-300 shadow-xs">
+                <div className="h-full rounded-3xl border border-border bg-card p-6 flex flex-col justify-between hover:border-saffron/50 transition-all duration-300 shadow-xs">
                   <div>
-                    <span className="text-xs font-mono font-bold text-primary block mb-3">{layer.num}</span>
-                    <h3 className="text-lg font-bold text-card-foreground font-serif mb-2 group-hover:text-primary transition-colors">{layer.title}</h3>
+                    <span className="text-xs font-mono font-bold text-saffron block mb-3">{layer.num}</span>
+                    <h3 className="text-lg font-bold text-card-foreground font-serif mb-2 group-hover:text-saffron transition-colors">{layer.title}</h3>
                     <p className="text-xs text-muted-foreground leading-relaxed">{layer.desc}</p>
                   </div>
-                  <span className="inline-flex items-center gap-1 text-xs text-primary font-bold mt-6">
+                  <span className="inline-flex items-center gap-1 text-xs text-saffron font-bold mt-6">
                     Learn More <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
                   </span>
                 </div>
@@ -313,10 +313,10 @@ export default function Home() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
             
             <div className="lg:col-span-5">
-              <span className="text-xs font-bold uppercase tracking-[0.3em] text-primary mb-3 block">AI TRAVEL ORCHESTRATION</span>
-              <h2 className="text-3xl sm:text-5xl font-bold tracking-tight text-foreground font-serif leading-tight">
+              <span className="text-xs font-bold uppercase tracking-[0.3em] text-saffron mb-3 block">AI TRAVEL ORCHESTRATION</span>
+              <h2 className="text-3xl sm:text-5xl font-bold tracking-tight text-saffron font-serif leading-tight">
                 Tell us where you want to go.{' '}
-                <span className="text-primary">We&apos;ll figure out the journey.</span>
+                <span className="text-saffron">We&apos;ll figure out the journey.</span>
               </h2>
               <p className="mt-4 text-base sm:text-lg text-muted-foreground leading-relaxed">
                 Select your travel style and let our cultural AI engine build an optimized itinerary complete with temple Aarti timings, local food spots, and weather windows.
@@ -334,7 +334,7 @@ export default function Home() {
                       onClick={() => setSelectedVibe(vibe.name)}
                       className={`w-full p-3.5 rounded-2xl border text-left flex items-center justify-between transition-all ${
                         isSel
-                          ? 'border-primary bg-primary/10 text-primary font-bold shadow-xs'
+                          ? 'border-saffron bg-saffron/10 text-saffron font-bold shadow-xs'
                           : 'border-border bg-card text-card-foreground hover:bg-accent'
                       }`}
                     >
@@ -349,7 +349,7 @@ export default function Home() {
               </div>
 
               <div className="mt-8">
-                <Link href="/itinerary?new=true" className="inline-flex items-center gap-3 rounded-2xl bg-primary px-8 py-4 text-base font-bold text-primary-foreground shadow-md hover:bg-primary/90 transition-all">
+                <Link href="/itinerary?new=true" className="inline-flex items-center gap-3 rounded-2xl bg-saffron px-8 py-4 text-base font-bold text-white shadow-md hover:bg-saffron/90 transition-all">
                   <span>Build My Itinerary</span>
                   <ArrowRight className="w-5 h-5" />
                 </Link>
@@ -361,17 +361,17 @@ export default function Home() {
               <div className="rounded-3xl border border-border bg-card p-6 sm:p-8 shadow-xl space-y-6">
                 <div className="flex items-center justify-between pb-4 border-b border-border">
                   <div>
-                    <span className="text-xs font-mono font-bold text-primary uppercase">GENERATED ITINERARY</span>
+                    <span className="text-xs font-mono font-bold text-saffron uppercase">GENERATED ITINERARY</span>
                     <h3 className="text-2xl font-bold text-card-foreground font-serif">{selectedVibe} Exploration Circuit</h3>
                   </div>
-                  <span className="px-3.5 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-bold border border-primary/20">
+                  <span className="px-3.5 py-1.5 rounded-full bg-saffron/10 text-saffron text-xs font-bold border border-saffron/20">
                     60s AI Generation
                   </span>
                 </div>
 
                 <div className="space-y-4">
                   <div className="p-4 rounded-2xl bg-background border border-border space-y-2">
-                    <div className="flex items-center justify-between text-xs font-bold text-primary">
+                    <div className="flex items-center justify-between text-xs font-bold text-saffron">
                       <span>DAY 01 • ARRIVAL & HERITAGE WALK</span>
                       <span>09:00 AM</span>
                     </div>
@@ -380,7 +380,7 @@ export default function Home() {
                   </div>
 
                   <div className="p-4 rounded-2xl bg-background border border-border space-y-2">
-                    <div className="flex items-center justify-between text-xs font-bold text-primary">
+                    <div className="flex items-center justify-between text-xs font-bold text-saffron">
                       <span>DAY 02 • SACRED CEREMONIES</span>
                       <span>05:30 PM</span>
                     </div>
@@ -401,10 +401,10 @@ export default function Home() {
       <section className="relative z-10 py-20 sm:py-28 px-4 sm:px-6 bg-background">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <span className="text-xs font-bold uppercase tracking-[0.3em] text-primary mb-3 block">CULTURAL DIVERSITY</span>
+            <span className="text-xs font-bold uppercase tracking-[0.3em] text-saffron mb-3 block">CULTURAL DIVERSITY</span>
             <h2 className="text-3xl sm:text-5xl font-bold tracking-tight text-foreground font-serif max-w-3xl mx-auto">
               India changes with every journey.{' '}
-              <span className="text-primary">NaviiGo understands the difference.</span>
+              <span className="text-saffron">NaviiGo understands the difference.</span>
             </h2>
           </div>
 
@@ -417,8 +417,8 @@ export default function Home() {
               { title: 'Northeast India', desc: 'Meghalaya, Sikkim, Tawang', tag: 'Living Roots', link: '/explore' },
             ].map((region, i) => (
               <Link href={region.link} key={region.title} className="group">
-                <div className="h-56 rounded-3xl border border-border bg-card p-6 flex flex-col justify-between hover:border-primary/50 transition-all duration-300 shadow-xs">
-                  <span className="text-xs font-bold text-primary uppercase tracking-wider">{region.tag}</span>
+                <div className="h-56 rounded-3xl border border-border bg-card p-6 flex flex-col justify-between hover:border-saffron/50 transition-all duration-300 shadow-xs">
+                  <span className="text-xs font-bold text-saffron uppercase tracking-wider">{region.tag}</span>
                   <div>
                     <h3 className="text-xl font-bold text-card-foreground font-serif mb-1 group-hover:translate-x-1 transition-transform">{region.title}</h3>
                     <p className="text-xs text-muted-foreground">{region.desc}</p>
@@ -437,13 +437,13 @@ export default function Home() {
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row items-start md:items-end justify-between mb-12 gap-6">
             <div>
-              <span className="text-xs font-bold uppercase tracking-[0.3em] text-primary mb-3 block">DESTINATION INTELLIGENCE</span>
+              <span className="text-xs font-bold uppercase tracking-[0.3em] text-saffron mb-3 block">DESTINATION INTELLIGENCE</span>
               <h2 className="text-3xl sm:text-5xl font-bold tracking-tight text-foreground font-serif">
                 Don&apos;t just know where to go.{' '}
-                <span className="text-primary block sm:inline">Know what it feels like to be there.</span>
+                <span className="text-saffron block sm:inline">Know what it feels like to be there.</span>
               </h2>
             </div>
-            <Link href="/explore" className="px-7 py-3 rounded-full bg-primary text-primary-foreground font-bold text-sm hover:bg-primary/90 transition-all shrink-0">
+            <Link href="/explore" className="px-7 py-3 rounded-full bg-saffron text-white font-bold text-sm hover:bg-saffron/90 transition-all shrink-0">
               Explore All Destinations &rarr;
             </Link>
           </div>
@@ -472,10 +472,10 @@ export default function Home() {
                 tip: 'Visit Hawa Mahal during morning light for best photos.'
               }
             ].map((card) => (
-              <div key={card.name} className="rounded-3xl border border-border bg-card p-6 sm:p-8 space-y-4 shadow-xs hover:border-primary/50 transition-all">
+              <div key={card.name} className="rounded-3xl border border-border bg-card p-6 sm:p-8 space-y-4 shadow-xs hover:border-saffron/50 transition-all">
                 <div className="flex items-center justify-between">
                   <h3 className="text-2xl font-bold text-card-foreground font-serif">{card.name}</h3>
-                  <span className="text-xs font-bold text-primary bg-primary/10 px-3 py-1 rounded-full">{card.window}</span>
+                  <span className="text-xs font-bold text-saffron bg-saffron/10 px-3 py-1 rounded-full">{card.window}</span>
                 </div>
                 <div className="text-xs text-muted-foreground font-semibold">{card.vibe}</div>
                 <div className="pt-3 border-t border-border/50 space-y-2 text-xs">
@@ -494,7 +494,7 @@ export default function Home() {
       <section className="relative z-10 py-20 sm:py-28 px-4 sm:px-6 bg-background">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <span className="text-xs font-bold uppercase tracking-[0.3em] text-primary mb-3 block">UNIVERSAL BOOKING ENGINE</span>
+            <span className="text-xs font-bold uppercase tracking-[0.3em] text-saffron mb-3 block">UNIVERSAL BOOKING ENGINE</span>
             <h2 className="text-3xl sm:text-5xl font-bold tracking-tight text-foreground font-serif">
               From &quot;Let&apos;s go&quot; to &quot;Booked.&quot;
             </h2>
@@ -513,7 +513,7 @@ export default function Home() {
               const BIcon = item.icon;
               return (
                 <div key={item.label} className="rounded-3xl border border-border bg-card p-6 space-y-3 shadow-xs">
-                  <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center mx-auto">
+                  <div className="w-12 h-12 rounded-2xl bg-saffron/10 text-saffron flex items-center justify-center mx-auto">
                     <BIcon className="w-6 h-6" />
                   </div>
                   <h3 className="text-lg font-bold text-card-foreground font-serif">{item.label}</h3>
@@ -524,7 +524,7 @@ export default function Home() {
           </div>
 
           <div className="mt-12 text-center">
-            <Link href="/bookings" className="inline-flex items-center gap-3 px-9 py-4 rounded-2xl bg-primary text-primary-foreground font-bold text-base hover:bg-primary/90 transition-all shadow-md">
+            <Link href="/bookings" className="inline-flex items-center gap-3 px-9 py-4 rounded-2xl bg-saffron text-white font-bold text-base hover:bg-saffron/90 transition-all shadow-md">
               <span>Find My Way There</span>
               <ArrowRight className="w-5 h-5" />
             </Link>
@@ -540,7 +540,7 @@ export default function Home() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
             
             <div className="lg:col-span-5">
-              <span className="text-xs font-bold uppercase tracking-[0.3em] text-primary mb-3 block">GAMIFIED EXPLORATION</span>
+              <span className="text-xs font-bold uppercase tracking-[0.3em] text-saffron mb-3 block">GAMIFIED EXPLORATION</span>
               <h2 className="text-3xl sm:text-5xl font-bold tracking-tight text-foreground font-serif leading-tight">
                 Your journeys deserve a passport of their own.
               </h2>
@@ -552,7 +552,7 @@ export default function Home() {
               <div className="mt-8 space-y-3">
                 {['Explorer', 'Trail Seeker', 'Journey Maker', 'Master Navigator'].map((lvl, idx) => (
                   <div key={lvl} className="flex items-center gap-3 text-xs sm:text-sm font-bold text-card-foreground">
-                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${idx === 0 ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${idx === 0 ? 'bg-saffron text-white' : 'bg-muted text-muted-foreground'}`}>
                       {idx + 1}
                     </div>
                     <span>{lvl}</span>
@@ -561,7 +561,7 @@ export default function Home() {
               </div>
 
               <div className="mt-8">
-                <Link href="/passport" className="inline-flex items-center gap-3 rounded-2xl bg-primary px-8 py-4 text-base font-bold text-primary-foreground shadow-md hover:bg-primary/90 transition-all">
+                <Link href="/passport" className="inline-flex items-center gap-3 rounded-2xl bg-saffron px-8 py-4 text-base font-bold text-white shadow-md hover:bg-saffron/90 transition-all">
                   <span>Start My Passport</span>
                   <ArrowRight className="w-5 h-5" />
                 </Link>
@@ -573,10 +573,10 @@ export default function Home() {
               <div className="rounded-3xl border border-border bg-card p-6 sm:p-8 shadow-xl space-y-6">
                 <div className="flex items-center justify-between pb-4 border-b border-border">
                   <div>
-                    <div className="text-xs font-mono font-bold text-primary">NAVIIGO DIGITAL PASSPORT</div>
+                    <div className="text-xs font-mono font-bold text-saffron">NAVIIGO DIGITAL PASSPORT</div>
                     <div className="text-xl font-extrabold text-card-foreground font-serif">Explorer ID #8492</div>
                   </div>
-                  <span className="px-3.5 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-bold">
+                  <span className="px-3.5 py-1.5 rounded-full bg-saffron/10 text-saffron text-xs font-bold">
                     Level 07 • 2,480 XP
                   </span>
                 </div>
@@ -606,7 +606,7 @@ export default function Home() {
          ————————————————————————————————————————————————————————————————─ */}
       <section className="relative z-10 py-20 sm:py-28 px-4 sm:px-6 bg-background">
         <div className="max-w-6xl mx-auto text-center">
-          <span className="text-xs font-bold uppercase tracking-[0.3em] text-primary mb-3 block">CONTEXTUAL AI ASSISTANCE</span>
+          <span className="text-xs font-bold uppercase tracking-[0.3em] text-saffron mb-3 block">CONTEXTUAL AI ASSISTANCE</span>
           <h2 className="text-3xl sm:text-5xl font-bold tracking-tight text-foreground font-serif max-w-3xl mx-auto">
             And when plans change, NaviiGo changes with you.
           </h2>
@@ -627,7 +627,7 @@ export default function Home() {
               }
             ].map((scen, idx) => (
               <div key={idx} className="rounded-3xl border border-border bg-card p-6 space-y-4 shadow-xs">
-                <div className="text-sm font-bold text-primary font-mono">{scen.q}</div>
+                <div className="text-sm font-bold text-saffron font-mono">{scen.q}</div>
                 <div className="text-xs text-muted-foreground leading-relaxed pt-3 border-t border-border/50">
                   <strong className="text-card-foreground block mb-1">NaviiGo AI Response:</strong>
                   {scen.ans}
@@ -637,7 +637,7 @@ export default function Home() {
           </div>
 
           <div className="mt-10">
-            <button onClick={openAI} className="inline-flex items-center gap-2.5 px-8 py-4 rounded-2xl bg-primary text-primary-foreground font-bold text-base hover:bg-primary/90 transition-all shadow-md">
+            <button onClick={openAI} className="inline-flex items-center gap-2.5 px-8 py-4 rounded-2xl bg-saffron text-white font-bold text-base hover:bg-saffron/90 transition-all shadow-md">
               <Bot className="w-5 h-5" />
               <span>Ask NaviiGo</span>
             </button>
@@ -651,7 +651,7 @@ export default function Home() {
       <section className="relative z-10 py-20 sm:py-28 px-4 sm:px-6 bg-background">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <span className="text-xs font-bold uppercase tracking-[0.3em] text-primary mb-3 block">OUR PRINCIPLES</span>
+            <span className="text-xs font-bold uppercase tracking-[0.3em] text-saffron mb-3 block">OUR PRINCIPLES</span>
             <h2 className="text-3xl sm:text-5xl font-bold tracking-tight text-foreground font-serif">
               Built for the way India travels.
             </h2>
@@ -665,7 +665,7 @@ export default function Home() {
               { title: 'Human-Centered AI', desc: 'Assists your journey without taking away the joy of real exploration.' }
             ].map((prin) => (
               <div key={prin.title} className="rounded-3xl border border-border bg-card p-6 space-y-3 shadow-xs">
-                <div className="w-10 h-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center font-bold">
+                <div className="w-10 h-10 rounded-2xl bg-saffron/10 text-saffron flex items-center justify-center font-bold">
                   <CheckCircle2 className="w-5 h-5" />
                 </div>
                 <h3 className="text-lg font-bold text-card-foreground font-serif">{prin.title}</h3>
@@ -688,14 +688,14 @@ export default function Home() {
             Tell NaviiGo where you&apos;re going. We&apos;ll help you figure out the rest.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/itinerary?new=true" className="w-full sm:w-auto px-10 py-4.5 rounded-2xl bg-primary text-primary-foreground font-bold text-lg hover:bg-primary/90 transition-all hover:scale-105 shadow-md">
+            <Link href="/itinerary?new=true" className="w-full sm:w-auto px-10 py-4.5 rounded-2xl bg-saffron text-white font-bold text-lg hover:bg-saffron/90 transition-all hover:scale-105 shadow-md">
               Plan My Journey
             </Link>
             <Link href="/explore" className="w-full sm:w-auto px-10 py-4.5 rounded-2xl bg-card border border-border text-card-foreground font-bold text-lg hover:bg-accent transition-all">
               Explore India
             </Link>
           </div>
-          <div className="mt-14 text-sm font-bold tracking-[0.3em] text-primary uppercase font-mono">
+          <div className="mt-14 text-sm font-bold tracking-[0.3em] text-saffron uppercase font-mono">
             WE NAVIGATE, YOU GO.
           </div>
         </motion.div>

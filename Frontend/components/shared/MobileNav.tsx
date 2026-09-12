@@ -2,13 +2,19 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Globe, Heart, Info, Plane, LifeBuoy, User, X, Menu, ChevronDown, Compass, Navigation, Clock, History, BookOpen, Bookmark, LogOut, PlusCircle, Search } from 'lucide-react';
 import ThemeToggle from './ThemeToggle';
 import { useAuth } from '@/lib/AuthContext';
-import { ITINERARY_DROPDOWN } from '@/components/features/explore/exploreData';
+const ITINERARY_DROPDOWN = [
+  { name: 'Create New', href: '/itinerary?new=true', icon: PlusCircle, desc: 'AI-powered trip planner', accent: 'text-emerald-500' },
+  { name: 'Ongoing Trips', href: '/itinerary/ongoing', icon: Navigation, desc: 'Currently active journeys', accent: 'text-blue-500' },
+  { name: 'Upcoming Trips', href: '/itinerary/upcoming', icon: Clock, desc: 'Planned future adventures', accent: 'text-purple-500' },
+  { name: 'Trip History', href: '/itinerary/history', icon: History, desc: 'Past trips & memories', accent: 'text-amber-500' },
+];
 
-export default function MobileNav({ isOpen, toggleMenu }) {
+export default function MobileNav({ isOpen, toggleMenu }: { isOpen: boolean; toggleMenu: () => void }) {
   const { user, signInWithGoogle, signOut } = useAuth();
   const [mobileItineraryOpen, setMobileItineraryOpen] = useState(false);
 
@@ -130,11 +136,11 @@ export default function MobileNav({ isOpen, toggleMenu }) {
               </div>
             ) : (
               <>
-                <motion.button onClick={() => { toggleMenu(); signInWithGoogle(); }} className="w-full flex items-center justify-center space-x-2 px-4 py-3 rounded-lg bg-gradient-to-r from-saffron to-indigo text-saffron-foreground hover:shadow-lg transition-shadow" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                <motion.button onClick={() => { toggleMenu(); signInWithGoogle(); }} className="w-full flex items-center justify-center space-x-2 px-4 py-3 rounded-lg bg-gradient-to-r from-saffron to-indigo text-warm-ivory hover:shadow-lg transition-shadow" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                   <User className="w-4 h-4" />
                   <span className="font-medium">Sign In</span>
                 </motion.button>
-                <motion.button onClick={() => { toggleMenu(); signInWithGoogle(); }} className="w-full flex items-center justify-center space-x-2 px-4 py-3 rounded-lg border-2 border-saffron/20 text-saffron hover:border-saffron hover:text-saffron-foreground transition-colors dark:border-white/15 dark:text-slate-200 dark:hover:border-indigo dark:hover:text-indigo" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                <motion.button onClick={() => { toggleMenu(); signInWithGoogle(); }} className="w-full flex items-center justify-center space-x-2 px-4 py-3 rounded-lg border-2 border-saffron/20 text-saffron hover:border-saffron hover:text-warm-ivory transition-colors dark:border-white/15 dark:text-slate-200 dark:hover:border-indigo dark:hover:text-indigo" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                   <span className="font-medium">Create Account</span>
                 </motion.button>
               </>

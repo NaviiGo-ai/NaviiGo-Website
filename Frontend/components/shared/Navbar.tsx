@@ -229,15 +229,15 @@ export default function Navbar() {
                   onClick={() => setMoreMenuOpen(prev => !prev)}
                   className={`relative group flex items-center gap-2 px-4.5 py-3 text-base font-extrabold rounded-full transition-colors duration-200 ${
                     moreMenuOpen
-                      ? 'bg-saffron text-saffron-foreground shadow-xs'
+                      ? 'bg-saffron text-warm-ivory shadow-xs'
                       : 'text-muted-foreground hover:text-saffron'
                   }`}
                   whileTap={{ scale: 0.95 }}
                   aria-label="More navigation links"
                 >
-                  <Menu className={`w-4.5 h-4.5 ${moreMenuOpen ? 'text-saffron-foreground' : 'text-saffron'}`} />
+                  <Menu className={`w-4.5 h-4.5 ${moreMenuOpen ? 'text-warm-ivory' : 'text-saffron'}`} />
                   <span>More</span>
-                  <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${moreMenuOpen ? 'rotate-180 text-saffron-foreground' : ''}`} />
+                  <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${moreMenuOpen ? 'rotate-180 text-warm-ivory' : ''}`} />
                   {!moreMenuOpen && (
                     <span className="absolute bottom-1 left-4 right-4 h-[2.5px] bg-saffron rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
                   )}
@@ -257,7 +257,7 @@ export default function Navbar() {
                         onClick={() => setMoreMenuOpen(false)}
                         className="flex items-center gap-2.5 px-2.5 py-2 rounded-xl hover:bg-saffron/10 text-card-foreground transition-all group"
                       >
-                        <div className="w-7.5 h-7.5 rounded-lg bg-saffron/15 text-saffron flex items-center justify-center font-bold shadow-xs group-hover:bg-saffron group-hover:text-saffron-foreground transition-all shrink-0">
+                        <div className="w-7.5 h-7.5 rounded-lg bg-saffron/15 text-saffron flex items-center justify-center font-bold shadow-xs group-hover:bg-saffron group-hover:text-warm-ivory transition-all shrink-0">
                           <Bookmark className="w-3.5 h-3.5" />
                         </div>
                         <div>
@@ -271,7 +271,7 @@ export default function Navbar() {
                         onClick={() => setMoreMenuOpen(false)}
                         className="flex items-center gap-2.5 px-2.5 py-2 rounded-xl hover:bg-saffron/10 text-card-foreground transition-all group"
                       >
-                        <div className="w-7.5 h-7.5 rounded-lg bg-saffron/15 text-saffron flex items-center justify-center font-bold shadow-xs group-hover:bg-saffron group-hover:text-saffron-foreground transition-all shrink-0">
+                        <div className="w-7.5 h-7.5 rounded-lg bg-saffron/15 text-saffron flex items-center justify-center font-bold shadow-xs group-hover:bg-saffron group-hover:text-warm-ivory transition-all shrink-0">
                           <Info className="w-3.5 h-3.5" />
                         </div>
                         <div>
@@ -285,7 +285,7 @@ export default function Navbar() {
                         onClick={() => setMoreMenuOpen(false)}
                         className="flex items-center gap-2.5 px-2.5 py-2 rounded-xl hover:bg-saffron/10 text-card-foreground transition-all group"
                       >
-                        <div className="w-7.5 h-7.5 rounded-lg bg-saffron/15 text-saffron flex items-center justify-center font-bold shadow-xs group-hover:bg-saffron group-hover:text-saffron-foreground transition-all shrink-0">
+                        <div className="w-7.5 h-7.5 rounded-lg bg-saffron/15 text-saffron flex items-center justify-center font-bold shadow-xs group-hover:bg-saffron group-hover:text-warm-ivory transition-all shrink-0">
                           <LifeBuoy className="w-3.5 h-3.5" />
                         </div>
                         <div>
@@ -343,7 +343,7 @@ export default function Navbar() {
               ) : (
                 <motion.button
                   onClick={() => signInWithGoogle()}
-                  className="flex items-center space-x-2.5 px-6 py-3 rounded-full bg-gradient-to-br from-saffron to-indigo text-saffron-foreground shadow-md hover:bg-saffron/20 hover:text-saffron transition-all font-extrabold text-base tracking-wide"
+                  className="flex items-center space-x-2.5 px-6 py-3 rounded-full bg-gradient-to-br from-saffron to-indigo text-warm-ivory shadow-md hover:bg-saffron/20 hover:text-saffron transition-all font-extrabold text-base tracking-wide"
                   whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.97 }}
                 >

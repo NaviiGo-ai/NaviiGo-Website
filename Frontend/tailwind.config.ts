@@ -85,8 +85,7 @@ const config: Config = {
         xl: 'var(--shadow-xl)',
         '2xl': 'var(--shadow-2xl)',
       }),
-      spacing: ({ theme }) => theme('spacing'),
-      container: {
+            container: {
         padding: {
           DEFAULT: '1rem',
           sm: '2rem',
@@ -123,42 +122,42 @@ const config: Config = {
           from: { transform: "translateX(-100%)" },
           to: { transform: "translateX(100%)" },
         },
-        fade-up: {
+        'fade-up': {
           from: {
-            opacity: 0,
+            opacity: '0',
             transform: 'translateY(20px)'
           },
           to: {
-            opacity: 1,
+            opacity: '1',
             transform: 'translateY(0)'
           }
         },
-        slide-up: {
+        'slide-up': {
           from: {
-            opacity: 0,
+            opacity: '0',
             transform: 'translateY(30px)'
           },
           to: {
-            opacity: 1,
+            opacity: '1',
             transform: 'translateY(0)'
           }
         },
-        scale-in: {
+        'scale-in': {
           from: {
-            opacity: 0,
+            opacity: '0',
             transform: 'scale(0.95)'
           },
           to: {
-            opacity: 1,
+            opacity: '1',
             transform: 'scale(1)'
           }
         },
-        pulse-subtle: {
+        'pulse-subtle': {
           '0%, 100%': {
-            opacity: 1
+            opacity: '1'
           },
           '50%': {
-            opacity: 0.8
+            opacity: '0.8'
           }
         }
       },
