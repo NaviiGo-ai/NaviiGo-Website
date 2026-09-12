@@ -25,10 +25,10 @@ const PAGE_ENTRIES = [
 ];
 
 const ITINERARY_DROPDOWN = [
-  { name: 'Create New', href: '/itinerary?new=true', icon: PlusCircle, desc: 'AI-powered trip planner', accent: 'text-emerald-500' },
-  { name: 'Ongoing Trips', href: '/itinerary/ongoing', icon: Navigation, desc: 'Currently active journeys', accent: 'text-blue-500' },
-  { name: 'Upcoming Trips', href: '/itinerary/upcoming', icon: Clock, desc: 'Planned future adventures', accent: 'text-purple-500' },
-  { name: 'Trip History', href: '/itinerary/history', icon: History, desc: 'Past trips & memories', accent: 'text-amber-500' },
+  { name: 'Create New', href: '/itinerary?new=true', icon: PlusCircle, desc: 'AI-powered trip planner', accent: 'text-jungle-green-500' },
+  { name: 'Ongoing Trips', href: '/itinerary/ongoing', icon: Navigation, desc: 'Currently active journeys', accent: 'text-deep-sea-500' },
+  { name: 'Upcoming Trips', href: '/itinerary/upcoming', icon: Clock, desc: 'Planned future adventures', accent: 'text-indigo-500' },
+  { name: 'Trip History', href: '/itinerary/history', icon: History, desc: 'Past trips & memories', accent: 'text-saffron-500' },
 ];
 
 export default function Navbar() {
@@ -204,10 +204,10 @@ export default function Navbar() {
                 }}
                 className="flex items-center space-x-2.5"
               >
-                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary ring-2 ring-primary/20 shrink-0" aria-hidden="true">
+                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-saffron to-indigo ring-2 ring-saffron/20 shrink-0" aria-hidden="true">
                   <Compass className="h-5 w-5 text-primary-foreground" strokeWidth={2.5} />
                 </div>
-                <span className="text-lg font-extrabold tracking-tight text-foreground font-sans pr-1">NaviiGo</span>
+                <span className="text-lg font-extrabold tracking-tight text-saffron font-serif pr-1">NaviiGo</span>
               </Link>
             </motion.div>
 
@@ -229,17 +229,17 @@ export default function Navbar() {
                   onClick={() => setMoreMenuOpen(prev => !prev)}
                   className={`relative group flex items-center gap-2 px-4.5 py-3 text-base font-extrabold rounded-full transition-colors duration-200 ${
                     moreMenuOpen
-                      ? 'bg-primary text-primary-foreground shadow-xs'
-                      : 'text-muted-foreground hover:text-foreground'
+                      ? 'bg-saffron text-warm-ivory shadow-xs'
+                      : 'text-muted-foreground hover:text-saffron'
                   }`}
                   whileTap={{ scale: 0.95 }}
                   aria-label="More navigation links"
                 >
-                  <Menu className={`w-4.5 h-4.5 ${moreMenuOpen ? 'text-primary-foreground' : 'text-primary'}`} />
+                  <Menu className={`w-4.5 h-4.5 ${moreMenuOpen ? 'text-warm-ivory' : 'text-saffron'}`} />
                   <span>More</span>
-                  <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${moreMenuOpen ? 'rotate-180 text-primary-foreground' : ''}`} />
+                  <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${moreMenuOpen ? 'rotate-180 text-warm-ivory' : ''}`} />
                   {!moreMenuOpen && (
-                    <span className="absolute bottom-1 left-4 right-4 h-[2.5px] bg-primary rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                    <span className="absolute bottom-1 left-4 right-4 h-[2.5px] bg-saffron rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
                   )}
                 </motion.button>
 
@@ -250,18 +250,18 @@ export default function Navbar() {
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 12, scale: 0.96 }}
                       transition={{ duration: 0.18, ease: 'easeOut' }}
-                      className="absolute right-0 top-full mt-3 w-max min-w-[185px] max-w-[210px] rounded-2xl border-2 border-primary/25 bg-card p-1.5 shadow-2xl z-[100] space-y-0.5"
+                      className="absolute right-0 top-full mt-3 w-max min-w-[185px] max-w-[210px] rounded-2xl border-2 border-saffron/20 bg-card p-1.5 shadow-2xl z-[100] space-y-0.5"
                     >
                       <Link
                         href="/saved"
                         onClick={() => setMoreMenuOpen(false)}
-                        className="flex items-center gap-2.5 px-2.5 py-2 rounded-xl hover:bg-primary/10 text-card-foreground transition-all group"
+                        className="flex items-center gap-2.5 px-2.5 py-2 rounded-xl hover:bg-saffron/10 text-card-foreground transition-all group"
                       >
-                        <div className="w-7.5 h-7.5 rounded-lg bg-primary/15 text-primary flex items-center justify-center font-bold shadow-xs group-hover:bg-primary group-hover:text-primary-foreground transition-all shrink-0">
+                        <div className="w-7.5 h-7.5 rounded-lg bg-saffron/15 text-saffron flex items-center justify-center font-bold shadow-xs group-hover:bg-saffron group-hover:text-warm-ivory transition-all shrink-0">
                           <Bookmark className="w-3.5 h-3.5" />
                         </div>
                         <div>
-                          <div className="text-sm font-extrabold text-foreground group-hover:text-primary transition-colors leading-tight">Saved Trips</div>
+                          <div className="text-sm font-extrabold text-foreground group-hover:text-saffron transition-colors leading-tight">Saved Trips</div>
                           <div className="text-[11px] text-muted-foreground font-medium leading-tight">Bookmarks</div>
                         </div>
                       </Link>
@@ -269,13 +269,13 @@ export default function Navbar() {
                       <Link
                         href="/about"
                         onClick={() => setMoreMenuOpen(false)}
-                        className="flex items-center gap-2.5 px-2.5 py-2 rounded-xl hover:bg-primary/10 text-card-foreground transition-all group"
+                        className="flex items-center gap-2.5 px-2.5 py-2 rounded-xl hover:bg-saffron/10 text-card-foreground transition-all group"
                       >
-                        <div className="w-7.5 h-7.5 rounded-lg bg-primary/15 text-primary flex items-center justify-center font-bold shadow-xs group-hover:bg-primary group-hover:text-primary-foreground transition-all shrink-0">
+                        <div className="w-7.5 h-7.5 rounded-lg bg-saffron/15 text-saffron flex items-center justify-center font-bold shadow-xs group-hover:bg-saffron group-hover:text-warm-ivory transition-all shrink-0">
                           <Info className="w-3.5 h-3.5" />
                         </div>
                         <div>
-                          <div className="text-sm font-extrabold text-foreground group-hover:text-primary transition-colors leading-tight">About</div>
+                          <div className="text-sm font-extrabold text-foreground group-hover:text-saffron transition-colors leading-tight">About</div>
                           <div className="text-[11px] text-muted-foreground font-medium leading-tight">Our story</div>
                         </div>
                       </Link>
@@ -283,13 +283,13 @@ export default function Navbar() {
                       <Link
                         href="/support"
                         onClick={() => setMoreMenuOpen(false)}
-                        className="flex items-center gap-2.5 px-2.5 py-2 rounded-xl hover:bg-primary/10 text-card-foreground transition-all group"
+                        className="flex items-center gap-2.5 px-2.5 py-2 rounded-xl hover:bg-saffron/10 text-card-foreground transition-all group"
                       >
-                        <div className="w-7.5 h-7.5 rounded-lg bg-primary/15 text-primary flex items-center justify-center font-bold shadow-xs group-hover:bg-primary group-hover:text-primary-foreground transition-all shrink-0">
+                        <div className="w-7.5 h-7.5 rounded-lg bg-saffron/15 text-saffron flex items-center justify-center font-bold shadow-xs group-hover:bg-saffron group-hover:text-warm-ivory transition-all shrink-0">
                           <LifeBuoy className="w-3.5 h-3.5" />
                         </div>
                         <div>
-                          <div className="text-sm font-extrabold text-foreground group-hover:text-primary transition-colors leading-tight">Support</div>
+                          <div className="text-sm font-extrabold text-foreground group-hover:text-saffron transition-colors leading-tight">Support</div>
                           <div className="text-[11px] text-muted-foreground font-medium leading-tight">Help center</div>
                         </div>
                       </Link>
@@ -303,7 +303,7 @@ export default function Navbar() {
             <div className="hidden md:flex items-center space-x-2 pr-1 shrink-0">
               <motion.button
                 onClick={() => { setIsSearchOpen(true); setSearchQuery(''); setSelectedIndex(-1); }}
-                className="p-2.5 rounded-full hover:bg-accent hover:text-accent-foreground text-foreground transition-colors"
+                className="p-2.5 rounded-full hover:bg-saffron/20 hover:text-saffron text-foreground transition-colors"
                 whileHover={{ scale: 1.08 }}
                 whileTap={{ scale: 0.95 }}
                 aria-label="Open search"
@@ -323,7 +323,7 @@ export default function Navbar() {
                   {user.photoURL ? (
                     <motion.div whileHover={{ scale: 1.05 }} className="relative">
                       <Image src={user.photoURL!} alt="User" width={34} height={34} className="w-8.5 h-8.5 rounded-full border-2 border-border shadow-xs" />
-                      <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-primary rounded-full border-2 border-background"></div>
+                      <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-saffron rounded-full border-2 border-background"></div>
                     </motion.div>
                   ) : (
                     <div className="w-8.5 h-8.5 rounded-full bg-muted flex items-center justify-center">
@@ -332,7 +332,7 @@ export default function Navbar() {
                   )}
                   <motion.button
                     onClick={() => signOut()}
-                    className="p-2 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                    className="p-2 rounded-full text-saffron hover:text-[var(--color-temple-red)] hover:bg-[var(--color-temple-red)/10] transition-colors"
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9 }}
                     title="Sign Out"
@@ -343,7 +343,7 @@ export default function Navbar() {
               ) : (
                 <motion.button
                   onClick={() => signInWithGoogle()}
-                  className="flex items-center space-x-2.5 px-6 py-3 rounded-full bg-primary text-primary-foreground shadow-md hover:bg-primary/90 transition-all font-extrabold text-base tracking-wide"
+                  className="flex items-center space-x-2.5 px-6 py-3 rounded-full bg-gradient-to-br from-saffron to-indigo text-warm-ivory shadow-md hover:bg-saffron/20 hover:text-saffron transition-all font-extrabold text-base tracking-wide"
                   whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.97 }}
                 >
@@ -390,7 +390,7 @@ export default function Navbar() {
           animate={{ x: isOpen ? 0 : '100%' }}
           transition={{ type: 'spring', damping: 30, stiffness: 300 }}
           style={{ width: '100%' }}
-          className="absolute right-0 top-0 bottom-0 bg-white/95 backdrop-blur-xl shadow-2xl ring-1 ring-black/5 dark:bg-slate-950/95 dark:ring-white/10 overflow-y-auto"
+          className="absolute right-0 top-0 bottom-0 bg-white/95 backdrop-blur-xl shadow-2xl ring-1 ring-black/5 dark:bg-muted-950/95 dark:ring-white/10 overflow-y-auto"
         >
           <div className="p-6 pt-5 space-y-6">
             <div className="flex items-center justify-between">
@@ -412,7 +412,7 @@ export default function Navbar() {
               {navItems.map((item, index) => (
                 <div key={item.name}>
                   <motion.div
-                    className="flex items-center justify-between px-4 py-3 rounded-lg hover:bg-gradient-to-r hover:from-primary/10 hover:to-secondary/10 text-slate-800 hover:text-primary transition-colors dark:text-slate-200 dark:hover:text-secondary"
+                    className="flex items-center justify-between px-4 py-3 rounded-lg hover:bg-gradient-to-r hover:from-primary/10 hover:to-secondary/10 text-muted-800 hover:text-primary transition-colors dark:text-muted-200 dark:hover:text-secondary"
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: isOpen ? 1 : 0, x: isOpen ? 0 : 20 }}
                     transition={{ delay: index * 0.1 }}
@@ -437,11 +437,11 @@ export default function Navbar() {
                         <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} className="overflow-hidden">
                           <div className="pl-8 pr-2 py-1 space-y-1">
                             {ITINERARY_DROPDOWN.map((sub) => (
-                              <Link key={sub.name} href={sub.href} onClick={toggleMenu} className="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-primary dark:hover:text-secondary transition-colors">
+                              <Link key={sub.name} href={sub.href} onClick={toggleMenu} className="flex items-center gap-3 px-3 py-2 rounded-lg text-muted-600 dark:text-muted-400 hover:bg-muted-100 dark:hover:bg-white/5 hover:text-primary dark:hover:text-secondary transition-colors">
                                 <sub.icon className={`w-4 h-4 ${sub.accent}`} />
                                 <div>
                                   <div className="text-sm font-medium">{sub.name}</div>
-                                  <div className="text-[10px] text-slate-400">{sub.desc}</div>
+                                  <div className="text-[10px] text-muted-400">{sub.desc}</div>
                                 </div>
                               </Link>
                             ))}
@@ -459,23 +459,23 @@ export default function Navbar() {
               <ThemeToggle />
             </div>
 
-            <div className="space-y-3 pt-6 border-t border-gray-200 dark:border-slate-800" suppressHydrationWarning>
+            <div className="space-y-3 pt-6 border-t border-muted-200 dark:border-muted-800" suppressHydrationWarning>
               {user ? (
                 <div className="flex flex-col space-y-4">
                   <div className="flex items-center gap-3 px-2">
                     {user.photoURL ? (
-                      <Image src={user.photoURL!} alt="User" width={40} height={40} className="w-10 h-10 rounded-full border-2 border-white dark:border-slate-800 shadow-sm" />
+                      <Image src={user.photoURL!} alt="User" width={40} height={40} className="w-10 h-10 rounded-full border-2 border-white dark:border-muted-800 shadow-sm" />
                     ) : (
-                      <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center">
-                        <User className="w-5 h-5 text-slate-500 dark:text-slate-400" />
+                      <div className="w-10 h-10 rounded-full bg-muted-200 dark:bg-muted-700 flex items-center justify-center">
+                        <User className="w-5 h-5 text-muted-500 dark:text-muted-400" />
                       </div>
                     )}
                     <div className="flex flex-col flex-1 min-w-0">
-                      <span className="text-sm font-bold text-slate-800 dark:text-slate-200 leading-tight truncate" title={user.displayName || 'Traveler'}>{user.displayName || 'Traveler'}</span>
-                      <span className="text-[10px] text-slate-500 font-medium tracking-wide">MEMBER</span>
+                      <span className="text-sm font-bold text-muted-800 dark:text-muted-200 leading-tight truncate" title={user.displayName || 'Traveler'}>{user.displayName || 'Traveler'}</span>
+                      <span className="text-[10px] text-muted-500 font-medium tracking-wide">MEMBER</span>
                     </div>
                   </div>
-                  <motion.button onClick={() => { toggleMenu(); signOut(); }} className="w-full flex items-center justify-center space-x-2 px-4 py-3 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 transition-colors dark:border-red-900/50 dark:text-red-400 dark:hover:bg-red-900/20" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                  <motion.button onClick={() => { toggleMenu(); signOut(); }} className="w-full flex items-center justify-center space-x-2 px-4 py-3 rounded-lg border border-temple-red-200 text-temple-red-600 hover:bg-temple-red-50 transition-colors dark:border-temple-red-900/50 dark:text-temple-red-400 dark:hover:bg-temple-red-900/20" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                     <LogOut className="w-4 h-4" />
                     <span className="font-medium">Sign Out</span>
                   </motion.button>
@@ -486,7 +486,7 @@ export default function Navbar() {
                     <User className="w-4 h-4" />
                     <span className="font-medium">Sign In</span>
                   </motion.button>
-                  <motion.button onClick={() => { toggleMenu(); signInWithGoogle(); }} className="w-full flex items-center justify-center space-x-2 px-4 py-3 rounded-lg border-2 border-black/10 text-slate-800 hover:border-primary hover:text-primary transition-colors dark:border-white/15 dark:text-slate-200 dark:hover:border-secondary dark:hover:text-secondary" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                  <motion.button onClick={() => { toggleMenu(); signInWithGoogle(); }} className="w-full flex items-center justify-center space-x-2 px-4 py-3 rounded-lg border-2 border-black/10 text-muted-800 hover:border-primary hover:text-primary transition-colors dark:border-white/15 dark:text-muted-200 dark:hover:border-secondary dark:hover:text-secondary" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                     <span className="font-medium">Create Account</span>
                   </motion.button>
                 </>

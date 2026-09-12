@@ -27,11 +27,11 @@ export default function VideoCard({ destId, destName }: VideoCardProps) {
     const thumbUrl = `https://img.youtube.com/vi/${video.id}/hqdefault.jpg`;
 
     return (
-        <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-100 dark:border-zinc-800 overflow-hidden shadow-sm">
-            <div className="flex items-center gap-2 px-4 py-3 border-b border-zinc-100 dark:border-zinc-800">
-                <span className="text-red-500 text-lg">▶️</span>
-                <h3 className="font-bold text-zinc-900 dark:text-white text-sm">Watch: {destName} Guide</h3>
-                <span className="ml-auto text-[10px] font-bold bg-red-100 text-red-600 dark:bg-red-500/20 dark:text-red-400 px-2 py-0.5 rounded-full uppercase tracking-wider">YouTube</span>
+        <div className="bg-white dark:bg-muted-900 rounded-2xl border border-muted-100 dark:border-muted-800 overflow-hidden shadow-sm">
+            <div className="flex items-center gap-2 px-4 py-3 border-b border-muted-100 dark:border-muted-800">
+                <span className="text-temple-red-500 text-lg">▶️</span>
+                <h3 className="font-bold text-muted-900 dark:text-white text-sm">Watch: {destName} Guide</h3>
+                <span className="ml-auto text-[10px] font-bold bg-temple-red-100 text-temple-red-600 dark:bg-temple-red-500/20 dark:text-temple-red-400 px-2 py-0.5 rounded-full uppercase tracking-wider">YouTube</span>
             </div>
 
             <div className="relative" style={{ paddingBottom: '56.25%' }}>
@@ -61,7 +61,7 @@ export default function VideoCard({ destId, destName }: VideoCardProps) {
                         <div className="absolute inset-0 flex items-center justify-center">
                             <motion.div
                                 whileHover={{ scale: 1.1 }}
-                                className="w-16 h-16 bg-red-600 hover:bg-red-500 rounded-full flex items-center justify-center shadow-2xl shadow-red-500/40 transition-colors"
+                                className="w-16 h-16 bg-temple-red-600 hover:bg-temple-red-500 rounded-full flex items-center justify-center shadow-2xl shadow-temple-red-500/40 transition-colors"
                             >
                                 <div className="w-0 h-0 border-t-[12px] border-t-transparent border-b-[12px] border-b-transparent border-l-[20px] border-l-white ml-1" />
                             </motion.div>

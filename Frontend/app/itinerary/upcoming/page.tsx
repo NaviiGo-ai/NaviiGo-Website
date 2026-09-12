@@ -84,12 +84,12 @@ export default function UpcomingTripsPage() {
             <div className="max-w-5xl mx-auto px-4 md:px-8">
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
                     <div className="flex items-center gap-3 mb-2">
-                        <div className="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-500/15 flex items-center justify-center">
-                            <Clock className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                        <div className="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-500/15 flex items-center justify-center">
+                            <Clock className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
                         </div>
                         <div>
-                            <h1 className="text-3xl font-bold text-zinc-900 dark:text-white">Upcoming Trips</h1>
-                            <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                            <h1 className="text-3xl font-bold text-muted-900 dark:text-white">Upcoming Trips</h1>
+                            <p className="text-sm text-muted-500 dark:text-muted-400">
                                 {tripList.length > 0 ? `${tripList.length} adventure${tripList.length > 1 ? 's' : ''} planned` : 'Your planned future adventures'}
                             </p>
                         </div>
@@ -98,25 +98,25 @@ export default function UpcomingTripsPage() {
 
                 {!user && (
                     <div className="text-center py-20">
-                        <LogIn className="w-12 h-12 text-zinc-300 dark:text-zinc-600 mx-auto mb-4" />
-                        <h3 className="text-lg font-bold text-zinc-700 dark:text-zinc-300 mb-2">Sign in to view your upcoming trips</h3>
-                        <p className="text-sm text-zinc-500 mb-6">Your trips are synced across all your devices.</p>
-                        <button onClick={signInWithGoogle} className="bg-emerald-600 text-white px-6 py-3 rounded-xl font-bold text-sm hover:bg-emerald-500 transition-colors">Sign In with Google</button>
+                        <LogIn className="w-12 h-12 text-muted-300 dark:text-muted-600 mx-auto mb-4" />
+                        <h3 className="text-lg font-bold text-muted-700 dark:text-muted-300 mb-2">Sign in to view your upcoming trips</h3>
+                        <p className="text-sm text-muted-500 mb-6">Your trips are synced across all your devices.</p>
+                        <button onClick={signInWithGoogle} className="bg-jungle-green-600 text-white px-6 py-3 rounded-xl font-bold text-sm hover:bg-jungle-green-500 transition-colors">Sign In with Google</button>
                     </div>
                 )}
 
                 {user && loading && (
                     <div className="flex items-center justify-center py-20">
-                        <div className="w-8 h-8 border-3 border-purple-500 border-t-transparent rounded-full animate-spin" />
+                        <div className="w-8 h-8 border-3 border-indigo-500 border-t-transparent rounded-full animate-spin" />
                     </div>
                 )}
 
                 {user && !loading && tripList.length === 0 && (
                     <div className="text-center py-20">
-                        <Plane className="w-12 h-12 text-zinc-300 dark:text-zinc-600 mx-auto mb-4" />
-                        <h3 className="text-lg font-bold text-zinc-700 dark:text-zinc-300 mb-2">No upcoming trips</h3>
-                        <p className="text-sm text-zinc-500 mb-6">Plan an itinerary with a future date to see it here!</p>
-                        <Link href="/itinerary?new=true" className="bg-emerald-600 text-white px-6 py-3 rounded-xl font-bold text-sm hover:bg-emerald-500 transition-colors">Create Itinerary</Link>
+                        <Plane className="w-12 h-12 text-muted-300 dark:text-muted-600 mx-auto mb-4" />
+                        <h3 className="text-lg font-bold text-muted-700 dark:text-muted-300 mb-2">No upcoming trips</h3>
+                        <p className="text-sm text-muted-500 mb-6">Plan an itinerary with a future date to see it here!</p>
+                        <Link href="/itinerary?new=true" className="bg-jungle-green-600 text-white px-6 py-3 rounded-xl font-bold text-sm hover:bg-jungle-green-500 transition-colors">Create Itinerary</Link>
                     </div>
                 )}
 
@@ -128,7 +128,7 @@ export default function UpcomingTripsPage() {
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: i * 0.1 }}
-                                className="bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-100 dark:border-zinc-800 shadow-sm overflow-hidden"
+                                className="bg-white dark:bg-muted-900 rounded-3xl border border-muted-100 dark:border-muted-800 shadow-sm overflow-hidden"
                             >
                                 <div className="relative h-44">
                                     <PlaceImage
@@ -157,32 +157,32 @@ export default function UpcomingTripsPage() {
                                 <div className="p-5">
                                     <div className="flex items-center justify-between mb-3">
                                         <div className="flex items-center gap-2">
-                                            <Sparkles className="w-4 h-4 text-purple-500" />
-                                            <span className="text-sm font-bold text-zinc-900 dark:text-white">Trip Preparedness</span>
+                                            <Sparkles className="w-4 h-4 text-indigo-500" />
+                                            <span className="text-sm font-bold text-muted-900 dark:text-white">Trip Preparedness</span>
                                         </div>
-                                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${trip.preparedness >= 70 ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400' : trip.preparedness >= 40 ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400' : 'bg-red-100 text-red-600 dark:bg-red-500/15 dark:text-red-400'}`}>
+                                        <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${trip.preparedness >= 70 ? 'bg-jungle-green-100 text-jungle-green-700 dark:bg-jungle-green-500/15 dark:text-jungle-green-400' : trip.preparedness >= 40 ? 'bg-marigold-100 text-marigold-700 dark:bg-marigold-500/15 dark:text-marigold-400' : 'bg-temple-red-100 text-temple-red-600 dark:bg-temple-red-500/15 dark:text-temple-red-400'}`}>
                                             {trip.preparedness}% Ready
                                         </span>
                                     </div>
-                                    <div className="w-full h-2 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden mb-4">
+                                    <div className="w-full h-2 bg-muted-100 dark:bg-muted-800 rounded-full overflow-hidden mb-4">
                                         <motion.div initial={{ width: 0 }} animate={{ width: `${trip.preparedness}%` }} transition={{ duration: 1, ease: 'easeOut' }}
-                                            className={`h-full rounded-full ${trip.preparedness >= 70 ? 'bg-emerald-500' : trip.preparedness >= 40 ? 'bg-amber-400' : 'bg-red-500'}`} />
+                                            className={`h-full rounded-full ${trip.preparedness >= 70 ? 'bg-jungle-green-500' : trip.preparedness >= 40 ? 'bg-marigold-400' : 'bg-temple-red-500'}`} />
                                     </div>
 
                                     <div className="space-y-2">
                                         {trip.checklist.map((c) => (
-                                            <div key={c.item} className={`flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-colors ${c.done ? 'bg-emerald-50 dark:bg-emerald-500/5' : 'bg-zinc-50 dark:bg-zinc-800/50'}`}>
-                                                {c.done ? <CheckCircle className="w-4 h-4 text-emerald-500 shrink-0" /> : <Circle className="w-4 h-4 text-zinc-300 dark:text-zinc-600 shrink-0" />}
-                                                <span className={`${c.done ? 'line-through text-zinc-400' : 'text-zinc-700 dark:text-zinc-300'}`}>{c.item}</span>
+                                            <div key={c.item} className={`flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-colors ${c.done ? 'bg-jungle-green-50 dark:bg-jungle-green-500/5' : 'bg-muted-50 dark:bg-muted-800/50'}`}>
+                                                {c.done ? <CheckCircle className="w-4 h-4 text-jungle-green-500 shrink-0" /> : <Circle className="w-4 h-4 text-muted-300 dark:text-muted-600 shrink-0" />}
+                                                <span className={`${c.done ? 'line-through text-muted-400' : 'text-muted-700 dark:text-muted-300'}`}>{c.item}</span>
                                             </div>
                                         ))}
                                     </div>
 
                                     <div className="flex gap-3 mt-5">
-                                        <Link href={`/itinerary?load=${trip.id}`} className="flex-1 bg-purple-600 hover:bg-purple-500 text-white text-center py-2.5 rounded-xl font-bold text-sm transition-colors">
+                                        <Link href={`/itinerary?load=${trip.id}`} className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white text-center py-2.5 rounded-xl font-bold text-sm transition-colors">
                                             View Itinerary
                                         </Link>
-                                        <Link href="/bookings" className="px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 text-sm font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors">
+                                        <Link href="/bookings" className="px-4 py-2.5 rounded-xl border border-muted-200 dark:border-muted-700 text-sm font-semibold text-muted-700 dark:text-muted-300 hover:bg-muted-50 dark:hover:bg-muted-800 transition-colors">
                                             Book Transport
                                         </Link>
                                     </div>

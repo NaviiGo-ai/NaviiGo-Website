@@ -113,7 +113,7 @@ export const CUISINES = [
             { name: 'Chettinad Chicken', city: 'Karaikudi', note: 'Fiery pepper-and-star-anise gravy from Tamil Nadu\'s merchant princes, traded spice routes shaped this cuisine.' },
             { name: 'Appam & Stew', city: 'Kochi', note: 'Lacy coconut rice pancake with mild curry — a Syrian-Christian specialty blending Kerala and Portuguese flavors.' }
         ],
-        icon: '🫕', gradient: 'from-orange-500 via-red-500 to-rose-600',
+        icon: '🫕', gradient: 'from-jungle-green via-deep-sea to-indigo',
         image: '', states: 'Tamil Nadu, Kerala, Karnataka, Telangana'
     },
     {
@@ -124,7 +124,7 @@ export const CUISINES = [
             { name: 'Lucknowi Galouti Kebab', city: 'Lucknow', note: 'Melt-on-tongue minced meat patty — created for a toothless Nawab in the 18th century.' },
             { name: 'Rogan Josh', city: 'Srinagar', note: 'Slow-braised lamb in Kashmiri red chili — a Wazwan feast centerpiece from Mughal courts.' }
         ],
-        icon: '🍛', gradient: 'from-amber-500 via-orange-500 to-red-500',
+        icon: '🍛', gradient: 'from-saffron via-marigold to-temple-red',
         image: '', states: 'Punjab, Delhi, Uttar Pradesh, Kashmir'
     },
     {
@@ -135,7 +135,7 @@ export const CUISINES = [
             { name: 'Goan Vindaloo', city: 'Goa', note: 'Tangy, fiery pork in vinegar-garlic paste — Portuguese "carne de vinha d\'alhos" reimagined with Indian spices.' },
             { name: 'Dabeli', city: 'Kutch', note: 'Sweet-spicy potato slider with pomegranate — a Gujarati street food gem from the Kutch region.' }
         ],
-        icon: '🌶️', gradient: 'from-red-500 via-pink-500 to-fuchsia-500',
+        icon: '🌶️', gradient: 'from-marigold via-temple-red to-indigo',
         image: '', states: 'Maharashtra, Rajasthan, Gujarat, Goa'
     },
     {
@@ -146,7 +146,7 @@ export const CUISINES = [
             { name: 'Litti Chokha', city: 'Patna', note: 'Roasted wheat balls stuffed with sattu, with smoky vegetable mash — Bihar\'s ancient warrior fuel.' },
             { name: 'Bamboo Shoot Curry', city: 'Shillong', note: 'Fermented bamboo in pork gravy — Northeast tribal specialty using centuries-old preservation techniques.' }
         ],
-        icon: '🥘', gradient: 'from-emerald-500 via-teal-500 to-cyan-500',
+        icon: '🥘', gradient: 'from-deep-sea via-jungle-green to-marigold',
         image: '', states: 'Bengal, Sikkim, Bihar, Meghalaya'
     },
     {
@@ -157,7 +157,7 @@ export const CUISINES = [
             { name: 'Kathi Roll', city: 'Kolkata', note: 'Paratha-wrapped kebab on the go — Nizam\'s restaurant, Kolkata, invented it for British officers in 1932.' },
             { name: 'Jalebi-Fafda', city: 'Ahmedabad', note: 'Spiral-fried sweet with savory chickpea strips — Gujarat\'s Sunday morning ritual for centuries.' }
         ],
-        icon: '🍢', gradient: 'from-violet-500 via-purple-500 to-indigo-500',
+        icon: '🍢', gradient: 'from-temple-red via-saffron to-marigold',
         image: '', states: 'Mumbai, Delhi, Kolkata, Ahmedabad'
     },
 ];

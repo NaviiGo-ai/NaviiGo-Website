@@ -85,14 +85,14 @@ function DetailContent() {
     if (!mounted) return null; // Avoid hydration mismatch on initial render
 
     if (!itemData && !lookupComplete) {
-        return <div className="min-h-screen pt-20 sm:pt-32 flex items-center justify-center text-zinc-500">Loading place detailsâ€¦</div>;
+        return <div className="min-h-screen pt-20 sm:pt-32 flex items-center justify-center text-muted-500">Loading place detailsâ€¦</div>;
     }
 
     if (!itemData) {
         return (
-            <div className="min-h-screen pt-20 sm:pt-32 flex flex-col items-center justify-center text-zinc-500">
-                <h2 className="text-2xl font-bold mb-4 text-zinc-900 dark:text-white">Item not found</h2>
-                <button onClick={() => router.back()} className="px-6 py-2 bg-emerald-600 text-white rounded-full">Go Back</button>
+            <div className="min-h-screen pt-20 sm:pt-32 flex flex-col items-center justify-center text-muted-500">
+                <h2 className="text-2xl font-bold mb-4 text-muted-900 dark:text-white">Item not found</h2>
+                <button onClick={() => router.back()} className="px-6 py-2 bg-jungle-green-600 text-white rounded-full">Go Back</button>
             </div>
         );
     }
@@ -120,58 +120,58 @@ function DetailContent() {
                 {/* Hero Content */}
                 <div className="absolute bottom-10 left-0 right-0 px-6 md:px-12 max-w-5xl mx-auto z-10">
                     <div className="flex items-center gap-3 mb-4">
-                        <span className="bg-emerald-500 text-white px-3 py-1 text-xs font-bold uppercase tracking-wider rounded-full shadow-lg">{type}</span>
+                        <span className="bg-jungle-green-500 text-white px-3 py-1 text-xs font-bold uppercase tracking-wider rounded-full shadow-lg">{type}</span>
                         <span className="bg-black/50 backdrop-blur-md text-white px-3 py-1 text-xs font-bold uppercase tracking-wider rounded-full flex gap-1 items-center">📍 {destInfo?.name}</span>
                     </div>
                     <h1 className="text-3xl sm:text-4xl md:text-6xl font-bold text-white mb-2 leading-tight">{itemData.name}</h1>
-                    {type === 'restaurant' && <div className="text-emerald-400 font-bold text-xl flex items-center gap-2">⭐ {itemData.rating} • {itemData.cuisine}</div>}
-                    {type === 'hotel' && <div className="text-emerald-400 font-bold text-xl flex items-center gap-2">⭐ {itemData.rating} • {itemData.type}</div>}
+                    {type === 'restaurant' && <div className="text-jungle-green-400 font-bold text-xl flex items-center gap-2">⭐ {itemData.rating} • {itemData.cuisine}</div>}
+                    {type === 'hotel' && <div className="text-jungle-green-400 font-bold text-xl flex items-center gap-2">⭐ {itemData.rating} • {itemData.type}</div>}
                 </div>
             </div>
 
             <div className="max-w-5xl mx-auto px-6 md:px-12 -mt-4 relative z-20">
-                <div className="bg-white dark:bg-zinc-900 rounded-3xl p-6 md:p-10 shadow-xl border border-zinc-100 dark:border-white/5 flex flex-col md:flex-row gap-10">
+                <div className="bg-white dark:bg-muted-900 rounded-3xl p-6 md:p-10 shadow-xl border border-muted-100 dark:border-white/5 flex flex-col md:flex-row gap-10">
 
                     <div className="flex-1 space-y-8">
                         <section>
-                            <h2 className="text-2xl font-bold text-zinc-900 dark:text-white mb-4">About</h2>
-                            <p className="text-zinc-600 dark:text-zinc-400 leading-relaxed text-lg">{itemData.desc}</p>
+                            <h2 className="text-2xl font-bold text-muted-900 dark:text-white mb-4">About</h2>
+                            <p className="text-muted-600 dark:text-muted-400 leading-relaxed text-lg">{itemData.desc}</p>
                         </section>
 
                         <div className="grid grid-cols-2 gap-4">
                             {type === 'attraction' && (
                                 <>
-                                    <div className="bg-zinc-50 dark:bg-zinc-800/50 p-4 rounded-2xl">
-                                        <div className="text-xs text-zinc-400 font-bold uppercase tracking-wider mb-1">Best Months</div>
-                                        <div className="font-semibold text-zinc-900 dark:text-white text-lg">📅 {itemData.bestMonths}</div>
+                                    <div className="bg-muted-50 dark:bg-muted-800/50 p-4 rounded-2xl">
+                                        <div className="text-xs text-muted-400 font-bold uppercase tracking-wider mb-1">Best Months</div>
+                                        <div className="font-semibold text-muted-900 dark:text-white text-lg">📅 {itemData.bestMonths}</div>
                                     </div>
-                                    <div className="bg-zinc-50 dark:bg-zinc-800/50 p-4 rounded-2xl">
-                                        <div className="text-xs text-zinc-400 font-bold uppercase tracking-wider mb-1">Walking Activity</div>
-                                        <div className="font-semibold text-zinc-900 dark:text-white text-lg capitalize">🚶‍♂️ {itemData.walking}</div>
+                                    <div className="bg-muted-50 dark:bg-muted-800/50 p-4 rounded-2xl">
+                                        <div className="text-xs text-muted-400 font-bold uppercase tracking-wider mb-1">Walking Activity</div>
+                                        <div className="font-semibold text-muted-900 dark:text-white text-lg capitalize">🚶‍♂️ {itemData.walking}</div>
                                     </div>
                                 </>
                             )}
                             {type === 'restaurant' && (
                                 <>
-                                    <div className="bg-zinc-50 dark:bg-zinc-800/50 p-4 rounded-2xl">
-                                        <div className="text-xs text-zinc-400 font-bold uppercase tracking-wider mb-1">Price Range</div>
-                                        <div className="font-semibold text-zinc-900 dark:text-white text-lg">💰 {itemData.priceRange}</div>
+                                    <div className="bg-muted-50 dark:bg-muted-800/50 p-4 rounded-2xl">
+                                        <div className="text-xs text-muted-400 font-bold uppercase tracking-wider mb-1">Price Range</div>
+                                        <div className="font-semibold text-muted-900 dark:text-white text-lg">💰 {itemData.priceRange}</div>
                                     </div>
-                                    <div className="bg-zinc-50 dark:bg-zinc-800/50 p-4 rounded-2xl">
-                                        <div className="text-xs text-zinc-400 font-bold uppercase tracking-wider mb-1">Must Try</div>
-                                        <div className="font-semibold text-zinc-900 dark:text-white text-lg">🍽️ {itemData.mustTry}</div>
+                                    <div className="bg-muted-50 dark:bg-muted-800/50 p-4 rounded-2xl">
+                                        <div className="text-xs text-muted-400 font-bold uppercase tracking-wider mb-1">Must Try</div>
+                                        <div className="font-semibold text-muted-900 dark:text-white text-lg">🍽️ {itemData.mustTry}</div>
                                     </div>
                                 </>
                             )}
                             {type === 'hotel' && (
                                 <>
-                                    <div className="bg-zinc-50 dark:bg-zinc-800/50 p-4 rounded-2xl">
-                                        <div className="text-xs text-zinc-400 font-bold uppercase tracking-wider mb-1">Price</div>
-                                        <div className="font-semibold text-zinc-900 dark:text-white text-lg">💳 {itemData.priceRange}</div>
+                                    <div className="bg-muted-50 dark:bg-muted-800/50 p-4 rounded-2xl">
+                                        <div className="text-xs text-muted-400 font-bold uppercase tracking-wider mb-1">Price</div>
+                                        <div className="font-semibold text-muted-900 dark:text-white text-lg">💳 {itemData.priceRange}</div>
                                     </div>
-                                    <div className="bg-zinc-50 dark:bg-zinc-800/50 p-4 rounded-2xl">
-                                        <div className="text-xs text-zinc-400 font-bold uppercase tracking-wider mb-1">Property Type</div>
-                                        <div className="font-semibold text-zinc-900 dark:text-white text-lg">🏨 {itemData.type}</div>
+                                    <div className="bg-muted-50 dark:bg-muted-800/50 p-4 rounded-2xl">
+                                        <div className="text-xs text-muted-400 font-bold uppercase tracking-wider mb-1">Property Type</div>
+                                        <div className="font-semibold text-muted-900 dark:text-white text-lg">🏨 {itemData.type}</div>
                                     </div>
                                 </>
                             )}
@@ -179,18 +179,18 @@ function DetailContent() {
 
                         {type === 'attraction' && itemData.tags && (
                             <section>
-                                <h3 className="text-sm font-bold text-zinc-900 dark:text-white mb-3 uppercase tracking-wider">Known For</h3>
+                                <h3 className="text-sm font-bold text-muted-900 dark:text-white mb-3 uppercase tracking-wider">Known For</h3>
                                 <div className="flex flex-wrap gap-2">
-                                    {itemData.tags.map((t: string) => <span key={t} className="px-3 py-1 bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 rounded-full text-sm font-medium">{t}</span>)}
+                                    {itemData.tags.map((t: string) => <span key={t} className="px-3 py-1 bg-muted-100 dark:bg-muted-800 text-muted-600 dark:text-muted-300 rounded-full text-sm font-medium">{t}</span>)}
                                 </div>
                             </section>
                         )}
 
                         {type === 'hotel' && itemData.amenities && (
                             <section>
-                                <h3 className="text-sm font-bold text-zinc-900 dark:text-white mb-3 uppercase tracking-wider">Amenities</h3>
+                                <h3 className="text-sm font-bold text-muted-900 dark:text-white mb-3 uppercase tracking-wider">Amenities</h3>
                                 <div className="flex flex-wrap gap-2">
-                                    {itemData.amenities.map((a: string) => <span key={a} className="px-3 py-1 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 rounded-full text-sm font-medium">✓ {a}</span>)}
+                                    {itemData.amenities.map((a: string) => <span key={a} className="px-3 py-1 bg-jungle-green-50 dark:bg-jungle-green-500/10 text-jungle-green-700 dark:text-jungle-green-400 rounded-full text-sm font-medium">✓ {a}</span>)}
                                 </div>
                             </section>
                         )}
@@ -198,15 +198,15 @@ function DetailContent() {
 
                     {/* Right column: Action / CTA */}
                     <div className="md:w-72 lg:w-80 space-y-6">
-                        <div className="bg-zinc-50 dark:bg-zinc-800/50 p-6 rounded-3xl border border-zinc-100 dark:border-white/5 space-y-4">
-                            <h3 className="font-bold text-zinc-900 dark:text-white text-xl">Add to your trip?</h3>
-                            <p className="text-sm text-zinc-500">Go back to the itinerary planner and you can select this spot from the location editor.</p>
-                            <button onClick={() => router.back()} className="w-full bg-emerald-600 text-white font-bold py-3 rounded-xl hover:bg-emerald-500 transition-colors shadow-lg shadow-emerald-600/20 active:scale-[0.98]">
+                        <div className="bg-muted-50 dark:bg-muted-800/50 p-6 rounded-3xl border border-muted-100 dark:border-white/5 space-y-4">
+                            <h3 className="font-bold text-muted-900 dark:text-white text-xl">Add to your trip?</h3>
+                            <p className="text-sm text-muted-500">Go back to the itinerary planner and you can select this spot from the location editor.</p>
+                            <button onClick={() => router.back()} className="w-full bg-jungle-green-600 text-white font-bold py-3 rounded-xl hover:bg-jungle-green-500 transition-colors shadow-lg shadow-jungle-green-600/20 active:scale-[0.98]">
                                 Back to Plan
                             </button>
                         </div>
 
-                        <div className="aspect-square rounded-3xl overflow-hidden border border-zinc-100 dark:border-white/5 relative bg-zinc-200 dark:bg-zinc-800">
+                        <div className="aspect-square rounded-3xl overflow-hidden border border-muted-100 dark:border-white/5 relative bg-muted-200 dark:bg-muted-800">
                             {/* Static map representation */}
                             <div className="absolute inset-0 bg-[url('https://maps.wikimedia.org/osm-intl/12/2928/1749.png')] bg-cover bg-center opacity-60 dark:opacity-40" />
                             <div className="absolute inset-0 flex items-center justify-center">

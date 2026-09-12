@@ -205,10 +205,10 @@ export const GEN_STEPS = [
 ];
 
 // ─── BADGE COLORS ─────────────────────────────────────────────────────────────
-export const WALK_COLOR: Record<WalkLevel, string> = { Easy: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400', Medium: 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400', High: 'bg-red-100 text-red-600 dark:bg-red-500/15 dark:text-red-400' };
-export const VALUE_COLOR: Record<ValueLevel, string> = { Low: 'bg-zinc-100 text-zinc-600 dark:bg-zinc-700/50 dark:text-zinc-300', Medium: 'bg-blue-100 text-blue-700 dark:bg-blue-500/15 dark:text-blue-400', High: 'bg-purple-100 text-purple-700 dark:bg-purple-500/15 dark:text-purple-400' };
-export const CROWD_COLOR: Record<CrowdLevel, string> = { Low: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400', Medium: 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400', High: 'bg-red-100 text-red-600 dark:bg-red-500/15 dark:text-red-400' };
-export const CROWD_DOT: Record<CrowdLevel, string> = { Low: 'bg-emerald-500', Medium: 'bg-amber-500', High: 'bg-red-500' };
+export const WALK_COLOR: Record<WalkLevel, string> = { Easy: 'bg-jungle-green-100 text-jungle-green-800 dark:bg-jungle-green-800/15 dark:text-jungle-green-300', Medium: 'bg-marigold-100 text-marigold-800 dark:bg-marigold-800/15 dark:text-marigold-300', High: 'bg-temple-red-100 text-temple-red-800 dark:bg-temple-red-800/15 dark:text-temple-red-300' };
+export const VALUE_COLOR: Record<ValueLevel, string> = { Low: 'bg-temple-red-100 text-temple-red-800 dark:bg-temple-red-800/15 dark:text-temple-red-300', Medium: 'bg-saffron-100 text-saffron-800 dark:bg-saffron-800/15 dark:text-saffron-300', High: 'bg-jungle-green-100 text-jungle-green-800 dark:bg-jungle-green-800/15 dark:text-jungle-green-300' };
+export const CROWD_COLOR: Record<CrowdLevel, string> = { Low: 'bg-jungle-green-100 text-jungle-green-800 dark:bg-jungle-green-800/15 dark:text-jungle-green-300', Medium: 'bg-marigold-100 text-marigold-800 dark:bg-marigold-800/15 dark:text-marigold-300', High: 'bg-temple-red-100 text-temple-red-800 dark:bg-temple-red-800/15 dark:text-temple-red-300' };
+export const CROWD_DOT: Record<CrowdLevel, string> = { Low: 'bg-jungle-green-500', Medium: 'bg-marigold-500', High: 'bg-temple-red-500' };
 
 // ─── DESTINATION DATA ──────────────────────────────────────────────────────────
 export const DEST_DATA: Record<string, DestInfo> = {

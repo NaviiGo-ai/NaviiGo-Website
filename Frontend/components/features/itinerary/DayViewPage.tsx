@@ -274,14 +274,14 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
     return (
         <div className="min-h-screen bg-[#f7f8fc] dark:bg-[#0a0a0f] pt-16 sm:pt-20">
             {/* Top bar */}
-            <div className="sticky top-16 sm:top-20 z-40 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-lg border-b border-zinc-100 dark:border-white/5 px-3 sm:px-4 py-2.5 sm:py-3 flex items-center gap-2 sm:gap-4">
-                <button onClick={onBack} className="w-9 h-9 rounded-full border border-zinc-200 dark:border-zinc-700 flex items-center justify-center hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors text-sm text-zinc-600 dark:text-zinc-300">←</button>
-                <button onClick={() => router.push('/itinerary?new=true')} className="hidden sm:flex w-9 h-9 rounded-full border border-emerald-500/30 items-center justify-center hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-colors text-emerald-600 dark:text-emerald-400" title="Create New Itinerary">
+            <div className="sticky top-16 sm:top-20 z-40 bg-white/80 dark:bg-muted-900/80 backdrop-blur-lg border-b border-muted-100 dark:border-white/5 px-3 sm:px-4 py-2.5 sm:py-3 flex items-center gap-2 sm:gap-4">
+                <button onClick={onBack} className="w-9 h-9 rounded-full border border-muted-200 dark:border-muted-700 flex items-center justify-center hover:bg-muted-50 dark:hover:bg-muted-800 transition-colors text-sm text-muted-600 dark:text-muted-300">←</button>
+                <button onClick={() => router.push('/itinerary?new=true')} className="hidden sm:flex w-9 h-9 rounded-full border border-jungle-green-500/30 items-center justify-center hover:bg-jungle-green-50 dark:hover:bg-jungle-green-500/10 transition-colors text-jungle-green-600 dark:text-jungle-green-400" title="Create New Itinerary">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"/></svg>
                 </button>
                 <div className="flex-1">
-                    <h1 className="font-bold text-zinc-900 dark:text-white text-sm truncate">{destName} — <span className="hidden sm:inline">Day-by-Day </span>Itinerary</h1>
-                    <p className="text-xs text-zinc-400 hidden sm:block">Full plan with crowd & weather alerts</p>
+                    <h1 className="font-bold text-muted-900 dark:text-white text-sm truncate">{destName} — <span className="hidden sm:inline">Day-by-Day </span>Itinerary</h1>
+                    <p className="text-xs text-muted-400 hidden sm:block">Full plan with crowd & weather alerts</p>
                 </div>
                 <ShareDropdown onCopyLink={handleShare} destName={destName} isSharing={isSharing} collaborators={collaborators} planData={{ ...data, dayPlans: customPlans }} />
                 {user && (
@@ -290,8 +290,8 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                         onClick={() => isTripActive ? stopTrip() : startTrip()}
                         className={`px-4 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-all ${
                             isTripActive
-                                ? 'bg-red-500/10 text-red-500 border border-red-500/30 hover:bg-red-500/20'
-                                : 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/40'
+                                ? 'bg-temple-red-500/10 text-temple-red-500 border border-temple-red-500/30 hover:bg-temple-red-500/20'
+                                : 'bg-gradient-to-r from-jungle-green-500 to-deep-sea-500 text-white shadow-lg shadow-jungle-green-500/20 hover:shadow-jungle-green-500/40'
                         }`}
                     >
                         <Rocket className="w-3.5 h-3.5" />
@@ -306,13 +306,13 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                     setIsSaved(true);
                     alert('📍 Itinerary successfully saved to your Passport!');
                 }} disabled={isSaved}
-                    className={`px-4 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-colors ${isSaved ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 cursor-default' : 'bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 hover:bg-zinc-800 dark:hover:bg-zinc-200'}`}>
+                    className={`px-4 py-1.5 rounded-full text-xs font-semibold flex items-center gap-1.5 transition-colors ${isSaved ? 'bg-jungle-green-100 dark:bg-jungle-green-500/20 text-jungle-green-700 dark:text-jungle-green-400 cursor-default' : 'bg-muted-900 dark:bg-white text-white dark:text-muted-900 hover:bg-muted-800 dark:hover:bg-muted-200'}`}>
                     {isSaved ? '✓ Saved' : '💾 Save'}
                 </motion.button>
             </div>
 
             {/* Day tabs */}
-            <div className="sticky top-[104px] sm:top-[120px] z-10 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-lg border-b border-zinc-100 dark:border-white/5 px-3 sm:px-4 py-2 overflow-x-auto no-scrollbar">
+            <div className="sticky top-[104px] sm:top-[120px] z-10 bg-white/80 dark:bg-muted-900/80 backdrop-blur-lg border-b border-muted-100 dark:border-white/5 px-3 sm:px-4 py-2 overflow-x-auto no-scrollbar">
                 <div className="flex gap-2">
                     {data.dayPlans.map((dp: DayPlan, i: number) => (
                         <button key={dp.day} onClick={() => {
@@ -327,7 +327,7 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                             }
                         }}
                             className={`flex-shrink-0 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all
-                ${activeDay === i ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/25' : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-700'}`}>
+                ${activeDay === i ? 'bg-jungle-green-500 text-white shadow-md shadow-jungle-green-500/25' : 'bg-muted-100 dark:bg-muted-800 text-muted-600 dark:text-muted-400 hover:bg-muted-200 dark:hover:bg-muted-700'}`}>
                             Day {dp.day}
                         </button>
                     ))}
@@ -335,17 +335,17 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
 
                 {isTripActive && (() => {
                     const progress = getProgress();
-                    const pColor = progress.percent < 34 ? 'from-blue-500 to-cyan-500' :
-                                progress.percent < 67 ? 'from-amber-500 to-orange-500' :
-                                progress.percent < 100 ? 'from-emerald-500 to-teal-500' :
-                                'from-amber-400 to-yellow-300';
+                    const pColor = progress.percent < 34 ? 'from-deep-sea-500 to-cyan-500' :
+                                progress.percent < 67 ? 'from-marigold-500 to-saffron-500' :
+                                progress.percent < 100 ? 'from-jungle-green-500 to-deep-sea-500' :
+                                'from-marigold-400 to-yellow-300';
                     return (
-                        <div className="mt-2 pt-2 border-t border-zinc-100 dark:border-zinc-800">
+                        <div className="mt-2 pt-2 border-t border-muted-100 dark:border-muted-800">
                             <div className="flex items-center justify-between text-[10px] font-bold mb-1">
-                                <span className="text-zinc-500">Trip Progress</span>
-                                <span className="text-zinc-700 dark:text-zinc-300">{progress.completed}/{progress.total} activities ({progress.percent}%)</span>
+                                <span className="text-muted-500">Trip Progress</span>
+                                <span className="text-muted-700 dark:text-muted-300">{progress.completed}/{progress.total} activities ({progress.percent}%)</span>
                             </div>
-                            <div className="h-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
+                            <div className="h-1.5 bg-muted-100 dark:bg-muted-800 rounded-full overflow-hidden">
                                 <motion.div
                                     initial={{ width: 0 }}
                                     animate={{ width: `${progress.percent}%` }}
@@ -374,7 +374,7 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                                 {/* DAY DASHBOARD */}
                                 <div className="mb-8">
                             <div className="flex items-center justify-between mb-4">
-                                <h2 className="text-xl sm:text-3xl md:text-4xl font-bold text-zinc-900 dark:text-white truncate">Day {plan.day}: {plan.title}</h2>
+                                <h2 className="text-xl sm:text-3xl md:text-4xl font-bold text-muted-900 dark:text-white truncate">Day {plan.day}: {plan.title}</h2>
                                 <motion.button whileTap={{ scale: 0.98 }} onClick={() => {
                                     const baseDate = form.startDate ? new Date(form.startDate as string) : new Date();
                                     baseDate.setDate(baseDate.getDate() + activeDay);
@@ -396,68 +396,68 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                                     ics += "END:VCALENDAR";
                                     const url = URL.createObjectURL(new Blob([ics], { type: 'text/calendar' }));
                                     const a = document.createElement('a'); a.href = url; a.download = `NaviiGo_Day${plan.day}.ics`; a.click();
-                                }} className="text-xs bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 px-3 py-1.5 rounded-full font-bold shadow-sm hover:scale-105 transition-transform hidden sm:flex items-center gap-1.5 shrink-0">
+                                }} className="text-xs bg-muted-900 dark:bg-white text-white dark:text-muted-900 px-3 py-1.5 rounded-full font-bold shadow-sm hover:scale-105 transition-transform hidden sm:flex items-center gap-1.5 shrink-0">
                                     <span>📅</span> Add to Calendar
                                 </motion.button>
                             </div>
 
                             {/* Top Dashboard Grid */}
                             {data.crowdNote && (
-                                <div className="mb-4 bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 rounded-2xl p-4 flex items-start gap-4 shadow-sm">
+                                <div className="mb-4 bg-gradient-to-r from-marigold-500/10 to-saffron-500/10 border border-marigold-500/20 rounded-2xl p-4 flex items-start gap-4 shadow-sm">
                                     <div className="text-2xl mt-1">🤖</div>
                                     <div>
-                                        <div className="text-xs font-bold text-amber-700 dark:text-amber-500 uppercase tracking-wider mb-1 flex items-center gap-2">Live AI Crowd Alert <span className="relative flex h-2 w-2"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span><span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span></span></div>
-                                        <div className="text-sm font-medium text-amber-900 dark:text-amber-400 leading-snug">{data.crowdNote}</div>
+                                        <div className="text-xs font-bold text-marigold-700 dark:text-marigold-500 uppercase tracking-wider mb-1 flex items-center gap-2">Live AI Crowd Alert <span className="relative flex h-2 w-2"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-marigold-400 opacity-75"></span><span className="relative inline-flex rounded-full h-2 w-2 bg-marigold-500"></span></span></div>
+                                        <div className="text-sm font-medium text-marigold-900 dark:text-marigold-400 leading-snug">{data.crowdNote}</div>
                                     </div>
                                 </div>
                             )}
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
                                 {/* Weather */}
-                                <div className={`rounded-2xl border p-4 flex items-center gap-4 shadow-sm transition-all ${plan.weather.temp.includes('°C') ? 'bg-gradient-to-br from-blue-500/10 to-cyan-500/10 border-blue-500/20' : 'bg-white dark:bg-zinc-900 border-zinc-100 dark:border-zinc-800'}`}>
+                                <div className={`rounded-2xl border p-4 flex items-center gap-4 shadow-sm transition-all ${plan.weather.temp.includes('°C') ? 'bg-gradient-to-br from-deep-sea-500/10 to-cyan-500/10 border-deep-sea-500/20' : 'bg-white dark:bg-muted-900 border-muted-100 dark:border-muted-800'}`}>
                                     <span className="text-4xl">{plan.weather.temp.includes('°C') ? '🌤️' : plan.weather.emoji}</span>
                                     <div>
                                         <div className="flex items-center gap-2">
-                                            <div className="font-bold text-lg text-zinc-900 dark:text-white leading-tight">{plan.weather.temp}</div>
-                                            {plan.weather.temp.includes('°C') && <span className="text-[9px] bg-blue-500 text-white px-1.5 py-0.5 rounded uppercase font-bold tracking-wider">Live</span>}
+                                            <div className="font-bold text-lg text-muted-900 dark:text-white leading-tight">{plan.weather.temp}</div>
+                                            {plan.weather.temp.includes('°C') && <span className="text-[9px] bg-deep-sea-500 text-white px-1.5 py-0.5 rounded uppercase font-bold tracking-wider">Live</span>}
                                         </div>
-                                        <div className="text-xs text-zinc-500">{plan.weather.temp.includes('°C') ? 'Exact Forecast' : plan.weather.condition}</div>
-                                        <div className="text-xs text-emerald-600 dark:text-emerald-400 mt-0.5 font-medium flex items-center gap-1">
+                                        <div className="text-xs text-muted-500">{plan.weather.temp.includes('°C') ? 'Exact Forecast' : plan.weather.condition}</div>
+                                        <div className="text-xs text-jungle-green-600 dark:text-jungle-green-400 mt-0.5 font-medium flex items-center gap-1">
                                             <span className="text-[10px]">💡</span> {plan.weather.tip}
                                         </div>
                                     </div>
                                 </div>
 
                                 {/* Daily Budget Progress */}
-                                <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-100 dark:border-zinc-800 p-4 shadow-sm flex flex-col justify-center hover:shadow-md transition-shadow">
+                                <div className="bg-white dark:bg-muted-900 rounded-2xl border border-muted-100 dark:border-muted-800 p-4 shadow-sm flex flex-col justify-center hover:shadow-md transition-shadow">
                                     <div className="flex justify-between items-center mb-2">
-                                        <h4 className="text-xs font-bold text-zinc-700 dark:text-zinc-300 flex items-center gap-1.5"><span>💳</span> Daily Budget Use</h4>
-                                        <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-500/10 px-1.5 py-0.5 rounded">
+                                        <h4 className="text-xs font-bold text-muted-700 dark:text-muted-300 flex items-center gap-1.5"><span>💳</span> Daily Budget Use</h4>
+                                        <span className="text-[10px] font-bold text-jungle-green-600 bg-jungle-green-50 dark:bg-jungle-green-500/10 px-1.5 py-0.5 rounded">
                                             ₹{(form.budget as number / (form.days as number || 1)).toLocaleString('en-IN', { maximumFractionDigits: 0 })} cap
                                         </span>
                                     </div>
-                                    <div className="w-full h-2 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden flex">
-                                        <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min(100, (plan.activities.length * 20))}%` }} transition={{ duration: 1 }} className={`h-full ${plan.activities.length > 4 ? 'bg-amber-400' : 'bg-emerald-500'}`} />
+                                    <div className="w-full h-2 bg-muted-100 dark:bg-muted-800 rounded-full overflow-hidden flex">
+                                        <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min(100, (plan.activities.length * 20))}%` }} transition={{ duration: 1 }} className={`h-full ${plan.activities.length > 4 ? 'bg-marigold-400' : 'bg-jungle-green-500'}`} />
                                     </div>
                                     {data.estimatedTravelCost ? (
-                                        <div className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 mt-2 line-clamp-1" title={data.estimatedTravelCost}>
+                                        <div className="text-[9px] font-bold text-jungle-green-600 dark:text-jungle-green-400 mt-2 line-clamp-1" title={data.estimatedTravelCost}>
                                             ✈️ {data.estimatedTravelCost}
                                         </div>
                                     ) : (
-                                        <div className="text-[10px] text-zinc-400 mt-2 text-right">{plan.activities.length} activities planned</div>
+                                        <div className="text-[10px] text-muted-400 mt-2 text-right">{plan.activities.length} activities planned</div>
                                     )}
                                 </div>
 
                                 {/* Crowd Context */}
-                                <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-100 dark:border-zinc-800 p-4 shadow-sm flex flex-col justify-center hover:shadow-md transition-shadow">
-                                    <h4 className="text-xs font-bold text-zinc-700 dark:text-zinc-300 mb-2 flex items-center gap-1.5"><span>👥</span> Crowd Level</h4>
+                                <div className="bg-white dark:bg-muted-900 rounded-2xl border border-muted-100 dark:border-muted-800 p-4 shadow-sm flex flex-col justify-center hover:shadow-md transition-shadow">
+                                    <h4 className="text-xs font-bold text-muted-700 dark:text-muted-300 mb-2 flex items-center gap-1.5"><span>👥</span> Crowd Level</h4>
                                     <div className="flex gap-2">
                                         {(['Low', 'Medium', 'High'] as CrowdLevel[]).map(level => {
                                             const count = plan.activities.filter(a => a.crowd === level).length;
                                             if (count === 0) return null;
                                             return (
-                                                <div key={level} className="flex-1 bg-zinc-50 dark:bg-zinc-800 rounded-lg p-1.5 text-center">
+                                                <div key={level} className="flex-1 bg-muted-50 dark:bg-muted-800 rounded-lg p-1.5 text-center">
                                                     <CrowdDot level={level} />
-                                                    <div className="text-[10px] font-medium text-zinc-600 dark:text-zinc-400 mt-0.5">{count} {level}</div>
+                                                    <div className="text-[10px] font-medium text-muted-600 dark:text-muted-400 mt-0.5">{count} {level}</div>
                                                 </div>
                                             );
                                         })}
@@ -466,21 +466,21 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
 
                                 {/* Route Info */}
                                 {dayRouteInfo && routeIsSane ? (
-                                    <div className="bg-gradient-to-br from-indigo-50 to-blue-50 dark:from-indigo-500/10 dark:to-blue-500/10 rounded-2xl border border-indigo-100 dark:border-indigo-500/20 p-4 shadow-sm flex flex-col justify-center hover:shadow-md transition-shadow">
+                                    <div className="bg-gradient-to-br from-indigo-50 to-deep-sea-50 dark:from-indigo-500/10 dark:to-deep-sea-500/10 rounded-2xl border border-indigo-100 dark:border-indigo-500/20 p-4 shadow-sm flex flex-col justify-center hover:shadow-md transition-shadow">
                                         <div className="flex items-center gap-2 mb-1"><span className="text-xl">🗺️</span><span className="font-bold text-xs text-indigo-900 dark:text-indigo-300 uppercase tracking-wide">Today&apos;s Commute</span></div>
                                         <div className="font-bold text-indigo-700 dark:text-indigo-400 text-lg leading-tight">{dayRouteInfo.time}</div>
                                         <div className="text-[11px] text-indigo-600/70 dark:text-indigo-400/70 font-medium">{dayRouteInfo.distance} total travel</div>
                                     </div>
                                 ) : dayRouteInfo && !routeIsSane ? (
-                                    <div className="bg-amber-50 dark:bg-amber-500/10 rounded-2xl border border-amber-200 dark:border-amber-500/20 p-4 shadow-sm flex flex-col justify-center">
-                                        <div className="flex items-center gap-2 mb-1"><span className="text-xl">🚶</span><span className="font-bold text-xs text-amber-800 dark:text-amber-300 uppercase tracking-wide">Within City</span></div>
-                                        <div className="font-bold text-amber-700 dark:text-amber-400 text-sm leading-tight">All spots are within the city</div>
-                                        <div className="text-[11px] text-amber-600/70 dark:text-amber-400/70 font-medium">Auto/cab between activities</div>
+                                    <div className="bg-marigold-50 dark:bg-marigold-500/10 rounded-2xl border border-marigold-200 dark:border-marigold-500/20 p-4 shadow-sm flex flex-col justify-center">
+                                        <div className="flex items-center gap-2 mb-1"><span className="text-xl">🚶</span><span className="font-bold text-xs text-marigold-800 dark:text-marigold-300 uppercase tracking-wide">Within City</span></div>
+                                        <div className="font-bold text-marigold-700 dark:text-marigold-400 text-sm leading-tight">All spots are within the city</div>
+                                        <div className="text-[11px] text-marigold-600/70 dark:text-marigold-400/70 font-medium">Auto/cab between activities</div>
                                     </div>
                                 ) : (
-                                    <div className="bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-800 p-4 shadow-sm flex flex-col items-center justify-center text-center opacity-70">
+                                    <div className="bg-muted-50 dark:bg-muted-800/50 rounded-2xl border border-muted-100 dark:border-muted-800 p-4 shadow-sm flex flex-col items-center justify-center text-center opacity-70">
                                         <div className="text-base mb-1">📍</div>
-                                        <div className="text-[10px] font-medium text-zinc-500">Calculating route...</div>
+                                        <div className="text-[10px] font-medium text-muted-500">Calculating route...</div>
                                     </div>
                                 )}
                             </div>
@@ -488,23 +488,23 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                             {/* Top Stays */}
                             {data.hotels && data.hotels.length > 0 && (
                                 <div className="mb-8">
-                                    <h3 className="text-xs font-bold text-zinc-900 dark:text-white uppercase tracking-widest mb-3 flex items-center gap-2">
+                                    <h3 className="text-xs font-bold text-muted-900 dark:text-white uppercase tracking-widest mb-3 flex items-center gap-2">
                                         <span>🏨</span> Top Stays For Your Budget
                                     </h3>
                                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                                         {data.hotels.slice(0, 3).map((hotel: any, i: number) => (
-                                            <div key={i} className="group relative bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-100 dark:border-zinc-800 overflow-hidden shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all flex flex-col">
+                                            <div key={i} className="group relative bg-white dark:bg-muted-900 rounded-2xl border border-muted-100 dark:border-muted-800 overflow-hidden shadow-sm hover:shadow-xl hover:-tranmuted-y-1 transition-all flex flex-col">
                                                 <PlaceImage name={hotel.name} city={destName} className="h-28 w-full shrink-0" asBackground />
                                                 <div className="p-3 flex-1 flex flex-col">
-                                                    <div className="font-bold text-sm text-zinc-900 dark:text-white line-clamp-1 mb-0.5">{hotel.name}</div>
-                                                    <div className="text-[11px] text-zinc-500 line-clamp-2 mb-3 flex-1">{hotel.desc}</div>
+                                                    <div className="font-bold text-sm text-muted-900 dark:text-white line-clamp-1 mb-0.5">{hotel.name}</div>
+                                                    <div className="text-[11px] text-muted-500 line-clamp-2 mb-3 flex-1">{hotel.desc}</div>
                                                     <div className="flex items-center justify-between mt-auto">
                                                         <div>
-                                                            <div className="text-[10px] font-bold text-amber-500">★ {hotel.rating}</div>
-                                                            <div className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">{hotel.priceRange}</div>
+                                                            <div className="text-[10px] font-bold text-marigold-500">★ {hotel.rating}</div>
+                                                            <div className="text-xs font-semibold text-jungle-green-600 dark:text-jungle-green-400">{hotel.priceRange}</div>
                                                         </div>
                                                         {hotel.bookingLink && (
-                                                            <a href={hotel.bookingLink} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-bold rounded-lg hover:bg-emerald-100 dark:hover:bg-emerald-500/20 transition-colors">
+                                                            <a href={hotel.bookingLink} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 bg-jungle-green-50 dark:bg-jungle-green-500/10 text-jungle-green-600 dark:text-jungle-green-400 text-xs font-bold rounded-lg hover:bg-jungle-green-100 dark:hover:bg-jungle-green-500/20 transition-colors">
                                                                 Book
                                                             </a>
                                                         )}
@@ -520,22 +520,22 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                             {(isRaining || isExhausting || plan.activities.length > 5) && (
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     {isRaining && (
-                                        <div className="bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 rounded-2xl p-4 flex gap-3 shadow-sm items-center">
+                                        <div className="bg-deep-sea-50 dark:bg-deep-sea-500/10 border border-deep-sea-200 dark:border-deep-sea-500/20 rounded-2xl p-4 flex gap-3 shadow-sm items-center">
                                             <div className="text-3xl">🌧️</div>
                                             <div>
-                                                <h4 className="text-sm font-bold text-blue-900 dark:text-blue-400 mb-0.5">Rain Expected</h4>
-                                                <p className="text-xs text-blue-700 dark:text-blue-300">{plan.weather.rain}% chance of rain today. Keep an umbrella handy!</p>
+                                                <h4 className="text-sm font-bold text-deep-sea-900 dark:text-deep-sea-400 mb-0.5">Rain Expected</h4>
+                                                <p className="text-xs text-deep-sea-700 dark:text-deep-sea-300">{plan.weather.rain}% chance of rain today. Keep an umbrella handy!</p>
                                             </div>
                                         </div>
                                     )}
                                     {isExhausting && (
-                                        <div className="bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 rounded-2xl p-4 flex gap-3 shadow-sm items-center">
+                                        <div className="bg-temple-red-50 dark:bg-temple-red-500/10 border border-temple-red-200 dark:border-temple-red-500/20 rounded-2xl p-4 flex gap-3 shadow-sm items-center">
                                             <div className="text-3xl">⚠️</div>
                                             <div className="flex-1">
-                                                <h4 className="text-sm font-bold text-red-900 dark:text-red-400 mb-0.5">Overstuffed Schedule</h4>
-                                                <p className="text-[11px] text-red-700 dark:text-red-300 leading-tight">This day involves ~{Math.round(totalHours)} hours of activity. Consider removing an item to avoid exhaustion.</p>
+                                                <h4 className="text-sm font-bold text-temple-red-900 dark:text-temple-red-400 mb-0.5">Overstuffed Schedule</h4>
+                                                <p className="text-[11px] text-temple-red-700 dark:text-temple-red-300 leading-tight">This day involves ~{Math.round(totalHours)} hours of activity. Consider removing an item to avoid exhaustion.</p>
                                             </div>
-                                            <motion.button whileTap={{ scale: 0.98 }} onClick={() => removeActivity(plan.activities.length - 1)} className="shrink-0 text-[10px] bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-300 font-bold px-2.5 py-1.5 rounded-lg hover:bg-red-200 transition-colors">
+                                            <motion.button whileTap={{ scale: 0.98 }} onClick={() => removeActivity(plan.activities.length - 1)} className="shrink-0 text-[10px] bg-temple-red-100 dark:bg-temple-red-500/20 text-temple-red-700 dark:text-temple-red-300 font-bold px-2.5 py-1.5 rounded-lg hover:bg-temple-red-200 transition-colors">
                                                 Drop Last
                                             </motion.button>
                                         </div>
@@ -546,7 +546,7 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
 
                         <div className="space-y-6">
                             {/* Action Bar */}
-                                <div className="flex gap-3 flex-wrap bg-white dark:bg-zinc-900 border border-zinc-100 dark:border-zinc-800 rounded-2xl p-2 shadow-sm">
+                                <div className="flex gap-3 flex-wrap bg-white dark:bg-muted-900 border border-muted-100 dark:border-muted-800 rounded-2xl p-2 shadow-sm">
                                     <motion.button whileTap={{ scale: 0.98 }} onClick={(e) => {
                                         e.stopPropagation();
                                         const currentPlans = customPlans.length > 0 ? [...customPlans] : [...data.dayPlans];
@@ -560,7 +560,7 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                                         currentPlans[activeDay] = { ...plan, activities: optimizedActivities };
                                         setCustomPlans(currentPlans);
                                     }}
-                                        className="flex-1 bg-zinc-900 dark:bg-white hover:bg-zinc-800 dark:hover:bg-zinc-100 text-white dark:text-zinc-900 transition-all px-4 py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2">
+                                        className="flex-1 bg-muted-900 dark:bg-white hover:bg-muted-800 dark:hover:bg-muted-100 text-white dark:text-muted-900 transition-all px-4 py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2">
                                         <span>✨</span> Optimize Order
                                     </motion.button>
                                     <motion.button whileTap={{ scale: 0.98 }} onClick={(e) => {
@@ -575,7 +575,7 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                                         currentPlans[activeDay] = { ...plan, activities: newActivities };
                                         setCustomPlans(currentPlans);
                                     }}
-                                        className="flex-1 bg-zinc-50 dark:bg-zinc-800 text-zinc-900 dark:text-white hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-all px-4 py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2">
+                                        className="flex-1 bg-muted-50 dark:bg-muted-800 text-muted-900 dark:text-white hover:bg-muted-100 dark:hover:bg-muted-700 transition-all px-4 py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2">
                                         <span>😌</span> Make it Relaxed
                                     </motion.button>
                                 </div>
@@ -583,13 +583,13 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                                 {/* Last Day Departure Buffer Banner */}
                                 {activeDay === customPlans.length - 1 && data.departureInfo && (
                                     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-                                        className="bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-500/5 dark:to-amber-500/5 rounded-2xl p-4 border border-orange-200/50 dark:border-orange-500/20 flex items-center gap-3 mt-2 mb-4">
+                                        className="bg-gradient-to-r from-saffron-50 to-marigold-50 dark:from-saffron-500/5 dark:to-marigold-500/5 rounded-2xl p-4 border border-saffron-200/50 dark:border-saffron-500/20 flex items-center gap-3 mt-2 mb-4">
                                         <div className="text-2xl">
                                             {data.departureInfo.departureMode === 'flight' ? '✈️' : data.departureInfo.departureMode === 'train' ? '🚆' : data.departureInfo.departureMode === 'bus' ? '🚌' : '🚗'}
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <div className="text-xs font-bold text-orange-600 dark:text-orange-400">Departure Day</div>
-                                            <div className="text-[11px] text-zinc-600 dark:text-zinc-300 mt-0.5">
+                                            <div className="text-xs font-bold text-saffron-600 dark:text-saffron-400">Departure Day</div>
+                                            <div className="text-[11px] text-muted-600 dark:text-muted-300 mt-0.5">
                                                 Checkout {data.departureInfo.checkoutTime} · Depart {data.departureInfo.departureTime} · {data.departureInfo.availableHoursAfterCheckout}h free window
                                             </div>
                                         </div>
@@ -614,9 +614,9 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                                             >
                                                 {slotChanged && (
                                                     <div className="flex items-center gap-3 mb-6 mt-8 first:mt-0">
-                                                        <span className="text-xl bg-white dark:bg-zinc-800 rounded-full w-8 h-8 flex items-center justify-center shadow-sm border border-zinc-200 dark:border-zinc-700">{slotEmoji[act.slot]}</span>
-                                                        <span className="text-sm font-bold text-zinc-800 dark:text-zinc-200 uppercase tracking-widest">{act.slot}</span>
-                                                        <div className="flex-1 h-px bg-zinc-200 dark:bg-zinc-800" />
+                                                        <span className="text-xl bg-white dark:bg-muted-800 rounded-full w-8 h-8 flex items-center justify-center shadow-sm border border-muted-200 dark:border-muted-700">{slotEmoji[act.slot]}</span>
+                                                        <span className="text-sm font-bold text-muted-800 dark:text-muted-200 uppercase tracking-widest">{act.slot}</span>
+                                                        <div className="flex-1 h-px bg-muted-200 dark:bg-muted-800" />
                                                     </div>
                                                 )}
                                                 {act.travelFromPrev && i > 0 && plan.activities[i-1]?.lat && act.lat && (
@@ -632,11 +632,11 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                                                 {act.travelFromPrev && (!act.lat || i === 0 || !plan.activities[i-1]?.lat) && (
                                                     <div className="flex items-center gap-3 ml-[38px] mb-4">
                                                         <div className="w-1.5 flex flex-col gap-1.5 items-center justify-center h-10">
-                                                            <div className="w-[3px] h-[3px] bg-zinc-300 dark:bg-zinc-700 rounded-full" />
-                                                            <div className="w-[3px] h-[3px] bg-zinc-300 dark:bg-zinc-700 rounded-full" />
-                                                            <div className="w-[3px] h-[3px] bg-zinc-300 dark:bg-zinc-700 rounded-full" />
+                                                            <div className="w-[3px] h-[3px] bg-muted-300 dark:bg-muted-700 rounded-full" />
+                                                            <div className="w-[3px] h-[3px] bg-muted-300 dark:bg-muted-700 rounded-full" />
+                                                            <div className="w-[3px] h-[3px] bg-muted-300 dark:bg-muted-700 rounded-full" />
                                                         </div>
-                                                        <span className="text-[10px] font-black tracking-tight text-zinc-500 dark:text-zinc-400 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-lg px-2.5 py-1.5 flex items-center gap-2 shadow-sm">
+                                                        <span className="text-[10px] font-black tracking-tight text-muted-500 dark:text-muted-400 bg-white dark:bg-muted-800 border border-muted-200 dark:border-muted-700 rounded-lg px-2.5 py-1.5 flex items-center gap-2 shadow-sm">
                                                             <span className="text-sm opacity-100 group-hover:scale-125 transition-transform">🚗</span>
                                                             {act.travelFromPrev}
                                                         </span>
@@ -655,67 +655,67 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                                                                         initial={{ scale: 0 }}
                                                                         animate={{ scale: 1 }}
                                                                         transition={{ type: 'spring', stiffness: 400, damping: 15 }}
-                                                                        className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-500/30"
+                                                                        className="w-10 h-10 rounded-full bg-gradient-to-br from-jungle-green-400 to-deep-sea-500 flex items-center justify-center shadow-lg shadow-jungle-green-500/30"
                                                                     >
                                                                         <CheckCircle2 className="w-5 h-5 text-white" />
                                                                     </motion.div>
                                                                 ) : (
-                                                                    <div className="w-10 h-10 rounded-full border-2 border-dashed border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-900 flex items-center justify-center text-zinc-400 group-hover/check:border-emerald-400 group-hover/check:text-emerald-400 transition-colors">
+                                                                    <div className="w-10 h-10 rounded-full border-2 border-dashed border-muted-300 dark:border-muted-600 bg-white dark:bg-muted-900 flex items-center justify-center text-muted-400 group-hover/check:border-jungle-green-400 group-hover/check:text-jungle-green-400 transition-colors">
                                                                         <Circle className="w-5 h-5" />
                                                                     </div>
                                                                 )}
                                                             </button>
                                                         ) : (
                                                             <div className={`w-10 h-10 rounded-full text-white text-sm font-bold flex items-center justify-center shadow-lg shrink-0 transition-transform duration-300
-                                                                ${isActive ? 'bg-zinc-900 dark:bg-emerald-500 scale-110' : 'bg-emerald-500 dark:bg-zinc-800'}`}>{i + 1}</div>
+                                                                ${isActive ? 'bg-muted-900 dark:bg-jungle-green-500 scale-110' : 'bg-jungle-green-500 dark:bg-muted-800'}`}>{i + 1}</div>
                                                         )}
-                                                        {!isLast && <div className={`w-0.5 flex-1 mt-3 rounded-full transition-colors ${isActive ? 'bg-zinc-900 dark:bg-emerald-500' : 'bg-emerald-100 dark:bg-zinc-800'}`} />}
+                                                        {!isLast && <div className={`w-0.5 flex-1 mt-3 rounded-full transition-colors ${isActive ? 'bg-muted-900 dark:bg-jungle-green-500' : 'bg-jungle-green-100 dark:bg-muted-800'}`} />}
                                                     </div>
-                                                    <div className={`flex-1 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-xl rounded-[1.5rem] border p-5 transition-all relative overflow-hidden group-hover:shadow-lg
-                            ${isActive ? 'border-zinc-500 dark:border-emerald-500/50 shadow-xl scale-[1.02]' : 'border-white/20 dark:border-zinc-700/50 shadow-sm'} ${isTripActive && isChecked(activeDay, act.name) ? 'opacity-60 grayscale-[30%]' : ''}`}>
+                                                    <div className={`flex-1 bg-white/80 dark:bg-muted-900/80 backdrop-blur-xl rounded-[1.5rem] border p-5 transition-all relative overflow-hidden group-hover:shadow-lg
+                            ${isActive ? 'border-muted-500 dark:border-jungle-green-500/50 shadow-xl scale-[1.02]' : 'border-white/20 dark:border-muted-700/50 shadow-sm'} ${isTripActive && isChecked(activeDay, act.name) ? 'opacity-60 grayscale-[30%]' : ''}`}>
                                                         <div className="flex items-start justify-between mb-3">
                                                             <div className="pr-4">
                                                                 <div className="inline-flex items-center gap-2 mb-2">
-                                                                    <span className="px-2.5 py-1 bg-zinc-100 dark:bg-zinc-800 rounded-lg text-xs font-bold text-zinc-700 dark:text-zinc-300 font-mono tracking-tight">{act.time}</span>
+                                                                    <span className="px-2.5 py-1 bg-muted-100 dark:bg-muted-800 rounded-lg text-xs font-bold text-muted-700 dark:text-muted-300 font-mono tracking-tight">{act.time}</span>
                                                                     <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${CROWD_COLOR[act.crowd]}`}>
                                                                         <CrowdDot level={act.crowd} /> {act.crowd}
                                                                     </div>
                                                                 </div>
-                                                                <h4 className={"font-bold text-zinc-900 dark:text-white text-lg leading-tight transition-all" + (isTripActive && isChecked(activeDay, act.name) ? ' line-through text-zinc-400 dark:text-zinc-500' : '')}>{act.name}</h4>
+                                                                <h4 className={"font-bold text-muted-900 dark:text-white text-lg leading-tight transition-all" + (isTripActive && isChecked(activeDay, act.name) ? ' line-through text-muted-400 dark:text-muted-500' : '')}>{act.name}</h4>
                                                             </div>
-                                                            <div className="opacity-0 group-hover:opacity-100 transition-opacity flex bg-zinc-100 dark:bg-zinc-800 rounded-xl text-zinc-500 overflow-hidden shrink-0 border border-zinc-200 dark:border-zinc-700 shadow-sm items-center">
-                                                                <div className="px-2 cursor-grab active:cursor-grabbing text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200">
+                                                            <div className="opacity-0 group-hover:opacity-100 transition-opacity flex bg-muted-100 dark:bg-muted-800 rounded-xl text-muted-500 overflow-hidden shrink-0 border border-muted-200 dark:border-muted-700 shadow-sm items-center">
+                                                                <div className="px-2 cursor-grab active:cursor-grabbing text-muted-400 hover:text-muted-600 dark:hover:text-muted-200">
                                                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" y1="8" x2="20" y2="8"></line><line x1="4" y1="16" x2="20" y2="16"></line></svg>
                                                                 </div>
-                                                                <button onClick={(e) => { e.stopPropagation(); removeActivity(i); }} className="w-8 h-8 flex items-center justify-center hover:bg-red-500 hover:text-white transition-colors border-l border-zinc-200 dark:border-zinc-700">✕</button>
+                                                                <button onClick={(e) => { e.stopPropagation(); removeActivity(i); }} className="w-8 h-8 flex items-center justify-center hover:bg-temple-red-500 hover:text-white transition-colors border-l border-muted-200 dark:border-muted-700">✕</button>
                                                             </div>
                                                         </div>
-                                                        <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-3 leading-relaxed line-clamp-3">{act.desc}</p>
+                                                        <p className="text-sm text-muted-600 dark:text-muted-400 mb-3 leading-relaxed line-clamp-3">{act.desc}</p>
 
                                                         {/* V2: Category badge */}
                                                         <div className="flex flex-wrap items-center gap-2 mb-3">
                                                             {act.category === 'hidden-gem' && (
-                                                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-purple-50 text-purple-700 dark:bg-purple-500/15 dark:text-purple-400 border border-purple-200 dark:border-purple-500/30">
+                                                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/30">
                                                                     💎 Hidden Gem
                                                                 </span>
                                                             )}
                                                             {act.category === 'local-secret' && (
-                                                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-rose-50 text-rose-700 dark:bg-rose-500/15 dark:text-rose-400 border border-rose-200 dark:border-rose-500/30">
+                                                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-temple-red-50 text-temple-red-700 dark:bg-temple-red-500/15 dark:text-temple-red-400 border border-temple-red-200 dark:border-temple-red-500/30">
                                                                     🤫 Local Secret
                                                                 </span>
                                                             )}
                                                             {act.category === 'experience' && (
-                                                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-50 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400 border border-amber-200 dark:border-amber-500/30">
+                                                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-marigold-50 text-marigold-700 dark:bg-marigold-500/15 dark:text-marigold-400 border border-marigold-200 dark:border-marigold-500/30">
                                                                     ✨ Experience
                                                                 </span>
                                                             )}
                                                             {act.entryFee && (
-                                                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20">
+                                                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-jungle-green-50 text-jungle-green-700 dark:bg-jungle-green-500/10 dark:text-jungle-green-400 border border-jungle-green-200 dark:border-jungle-green-500/20">
                                                                     🎟️ {act.entryFee}
                                                                 </span>
                                                             )}
                                                             {act.openingHours && (
-                                                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-medium bg-zinc-50 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700">
+                                                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-medium bg-muted-50 text-muted-600 dark:bg-muted-800 dark:text-muted-400 border border-muted-200 dark:border-muted-700">
                                                                     🕐 {act.openingHours}
                                                                 </span>
                                                             )}
@@ -723,11 +723,11 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
 
                                                         {/* V2: Insider tip (replaces generic blue tip when available) */}
                                                         {act.insiderTip ? (
-                                                            <div className="text-[11px] font-semibold px-3 py-2 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-500/10 dark:to-orange-500/10 text-amber-800 dark:text-amber-300 border border-amber-200/60 dark:border-amber-500/20 mb-3 leading-relaxed">
+                                                            <div className="text-[11px] font-semibold px-3 py-2 rounded-xl bg-gradient-to-r from-marigold-50 to-saffron-50 dark:from-marigold-500/10 dark:to-saffron-500/10 text-marigold-800 dark:text-marigold-300 border border-marigold-200/60 dark:border-marigold-500/20 mb-3 leading-relaxed">
                                                                 🤫 <span className="font-bold">Insider:</span> {act.insiderTip}
                                                             </div>
                                                         ) : (
-                                                            <div className="text-[11px] font-semibold px-2.5 py-1.5 rounded-lg bg-blue-50/80 text-blue-700 dark:bg-blue-500/10 dark:text-blue-400 border border-blue-100 dark:border-blue-500/20 inline-flex items-center gap-1.5 mb-3">
+                                                            <div className="text-[11px] font-semibold px-2.5 py-1.5 rounded-lg bg-deep-sea-50/80 text-deep-sea-700 dark:bg-deep-sea-500/10 dark:text-deep-sea-400 border border-deep-sea-100 dark:border-deep-sea-500/20 inline-flex items-center gap-1.5 mb-3">
                                                                 {act.slot === 'Morning' ? '👍 Best time: Early' : (act.desc.toLowerCase().includes('rain') ? '⚠️ Skip if raining' : '☕ Pair with nearby cafe')}
                                                             </div>
                                                         )}
@@ -741,17 +741,17 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
 
                                                         {/* V2: What to wear advisory */}
                                                         {act.whatToWear && (
-                                                            <div className="text-[11px] px-3 py-1.5 rounded-lg bg-zinc-50 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700 inline-flex items-center gap-1.5 mb-3">
+                                                            <div className="text-[11px] px-3 py-1.5 rounded-lg bg-muted-50 text-muted-600 dark:bg-muted-800 dark:text-muted-400 border border-muted-200 dark:border-muted-700 inline-flex items-center gap-1.5 mb-3">
                                                                 👔 {act.whatToWear}
                                                             </div>
                                                         )}
 
-                                                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pt-3 border-t border-zinc-100 dark:border-zinc-800/80 gap-2">
+                                                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pt-3 border-t border-muted-100 dark:border-muted-800/80 gap-2">
                                                             <div className="flex flex-wrap gap-2">
-                                                                <div className="flex items-center gap-1.5 text-xs font-medium bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 rounded-lg px-3 py-1 max-w-[300px]">
+                                                                <div className="flex items-center gap-1.5 text-xs font-medium bg-marigold-50 dark:bg-marigold-500/10 text-marigold-700 dark:text-marigold-400 rounded-lg px-3 py-1 max-w-[300px]">
                                                                     <span className="shrink-0">💡</span> <span className="line-clamp-2">{act.crowdTip}</span>
                                                                 </div>
-                                                                <div className="flex items-center gap-1.5 text-xs font-bold text-zinc-700 dark:text-zinc-300 bg-zinc-50 dark:bg-zinc-800 rounded-lg px-3 py-1 border border-zinc-200 dark:border-zinc-700 shadow-sm">
+                                                                <div className="flex items-center gap-1.5 text-xs font-bold text-muted-700 dark:text-muted-300 bg-muted-50 dark:bg-muted-800 rounded-lg px-3 py-1 border border-muted-200 dark:border-muted-700 shadow-sm">
                                                                     <span>💳</span> ₹{act.priceBase || [250, 400, 800, 1500][i % 4]}
                                                                 </div>
                                                             </div>
@@ -762,7 +762,7 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                                                                         target="_blank"
                                                                         rel="noopener noreferrer"
                                                                         onClick={(e) => e.stopPropagation()}
-                                                                        className="text-xs font-bold bg-blue-600 text-white px-4 py-1.5 rounded-xl hover:bg-blue-700 transition-colors shadow-sm flex items-center gap-1.5"
+                                                                        className="text-xs font-bold bg-deep-sea-600 text-white px-4 py-1.5 rounded-xl hover:bg-deep-sea-700 transition-colors shadow-sm flex items-center gap-1.5"
                                                                     >
                                                                         {act.type === 'restaurant' ? 'Reserve Table' : 'Get Tickets'} ➔
                                                                     </a>
@@ -771,7 +771,7 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                                                                     e.stopPropagation(); 
                                                                     router.push(itineraryPlaceHref((act.type === 'restaurant' || act.type === 'hotel') ? act.type : 'attraction', destId, act));
                                                                 }}
-                                                                    className="text-xs font-bold bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400 px-4 py-1.5 rounded-xl hover:bg-emerald-100 dark:hover:bg-emerald-500/20 transition-colors">
+                                                                    className="text-xs font-bold bg-jungle-green-50 text-jungle-green-700 dark:bg-jungle-green-500/10 dark:text-jungle-green-400 px-4 py-1.5 rounded-xl hover:bg-jungle-green-100 dark:hover:bg-jungle-green-500/20 transition-colors">
                                                                     Explorer ➔
                                                                 </motion.button>
                                                             </div>
@@ -779,11 +779,11 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
 
                                                         {/* V2: Nearby gem mini-card */}
                                                         {act.nearbyGem && (
-                                                            <div className="mt-3 pt-3 border-t border-dashed border-zinc-200 dark:border-zinc-700/50">
-                                                                <div className="flex items-start gap-2 text-xs text-zinc-600 dark:text-zinc-400 bg-zinc-50/80 dark:bg-zinc-800/50 rounded-xl px-3 py-2 border border-zinc-100 dark:border-zinc-700/50">
+                                                            <div className="mt-3 pt-3 border-t border-dashed border-muted-200 dark:border-muted-700/50">
+                                                                <div className="flex items-start gap-2 text-xs text-muted-600 dark:text-muted-400 bg-muted-50/80 dark:bg-muted-800/50 rounded-xl px-3 py-2 border border-muted-100 dark:border-muted-700/50">
                                                                     <span className="text-sm shrink-0 mt-0.5">📍</span>
                                                                     <div>
-                                                                        <span className="font-bold text-zinc-700 dark:text-zinc-300">While you&apos;re here:</span>{' '}
+                                                                        <span className="font-bold text-muted-700 dark:text-muted-300">While you&apos;re here:</span>{' '}
                                                                         {act.nearbyGem}
                                                                     </div>
                                                                 </div>
@@ -800,18 +800,18 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                                     <motion.div
                                         initial={{ opacity: 0, y: 20 }}
                                         animate={{ opacity: 1, y: 0 }}
-                                        className="mt-8 relative overflow-hidden rounded-3xl border border-zinc-200/50 dark:border-white/10 bg-white/40 dark:bg-zinc-900/40 backdrop-blur-xl p-8 text-center shadow-lg"
+                                        className="mt-8 relative overflow-hidden rounded-3xl border border-muted-200/50 dark:border-white/10 bg-white/40 dark:bg-muted-900/40 backdrop-blur-xl p-8 text-center shadow-lg"
                                     >
-                                        <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-teal-500/5" />
+                                        <div className="absolute inset-0 bg-gradient-to-br from-jungle-green-500/5 to-deep-sea-500/5" />
                                         <div className="relative z-10 flex flex-col items-center">
-                                            <div className="w-16 h-16 bg-white dark:bg-zinc-800 rounded-full flex items-center justify-center shadow-md mb-4 text-2xl">
+                                            <div className="w-16 h-16 bg-white dark:bg-muted-800 rounded-full flex items-center justify-center shadow-md mb-4 text-2xl">
                                                 🏖️
                                             </div>
-                                            <h3 className="text-xl font-bold text-zinc-900 dark:text-white mb-2">A Blank Canvas</h3>
-                                            <p className="text-sm text-zinc-500 dark:text-zinc-400 max-w-sm mb-6">
+                                            <h3 className="text-xl font-bold text-muted-900 dark:text-white mb-2">A Blank Canvas</h3>
+                                            <p className="text-sm text-muted-500 dark:text-muted-400 max-w-sm mb-6">
                                                 This day is completely free! Take a break, or add a custom activity to keep the adventure going.
                                             </p>
-                                            <button onClick={() => setShowAddActivity(true)} className="px-6 py-2.5 rounded-xl bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 text-sm font-bold hover:scale-105 transition-transform shadow-lg">
+                                            <button onClick={() => setShowAddActivity(true)} className="px-6 py-2.5 rounded-xl bg-muted-900 text-white dark:bg-white dark:text-muted-900 text-sm font-bold hover:scale-105 transition-transform shadow-lg">
                                                 + Add Activity
                                             </button>
                                         </div>
@@ -824,51 +824,51 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                                             initial={{ opacity: 0, y: 20, scale: 0.95 }}
                                             animate={{ opacity: 1, y: 0, scale: 1 }}
                                             exit={{ opacity: 0, y: -10 }}
-                                            className="mt-4 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/20 rounded-2xl p-4 flex items-center gap-4 shadow-sm"
+                                            className="mt-4 bg-gradient-to-r from-jungle-green-500/10 to-deep-sea-500/10 border border-jungle-green-500/20 rounded-2xl p-4 flex items-center gap-4 shadow-sm"
                                         >
-                                            <div className="w-12 h-12 rounded-full bg-emerald-500 flex items-center justify-center text-2xl shadow-lg shadow-emerald-500/30 shrink-0">🎉</div>
+                                            <div className="w-12 h-12 rounded-full bg-jungle-green-500 flex items-center justify-center text-2xl shadow-lg shadow-jungle-green-500/30 shrink-0">🎉</div>
                                             <div className="flex-1">
-                                                <div className="font-bold text-emerald-700 dark:text-emerald-400">Day {(dayJustCompleted || 0) + 1} Complete!</div>
-                                                <div className="text-xs font-semibold text-emerald-600 dark:text-emerald-500">+100 XP Day Bonus (saved on trip end)</div>
+                                                <div className="font-bold text-jungle-green-700 dark:text-jungle-green-400">Day {(dayJustCompleted || 0) + 1} Complete!</div>
+                                                <div className="text-xs font-semibold text-jungle-green-600 dark:text-jungle-green-500">+100 XP Day Bonus (saved on trip end)</div>
                                             </div>
-                                            <button onClick={clearDayJustCompleted} className="text-xs text-emerald-600 hover:text-emerald-800 bg-emerald-500/20 px-3 py-1.5 rounded-lg font-bold transition-colors">Dismiss</button>
+                                            <button onClick={clearDayJustCompleted} className="text-xs text-jungle-green-600 hover:text-jungle-green-800 bg-jungle-green-500/20 px-3 py-1.5 rounded-lg font-bold transition-colors">Dismiss</button>
                                         </motion.div>
                                     )}
                                 </AnimatePresence>
 
                                 {/* Nearby Recommendations */}
                                 {(data.hotels?.length > 0 || data.restaurants?.length > 0) && (
-                                    <div className="mt-8 pt-8 border-t border-zinc-200 dark:border-zinc-800">
-                                        <h3 className="text-zinc-900 dark:text-white font-bold text-xl mb-4">Nearby Recommendations</h3>
+                                    <div className="mt-8 pt-8 border-t border-muted-200 dark:border-muted-800">
+                                        <h3 className="text-muted-900 dark:text-white font-bold text-xl mb-4">Nearby Recommendations</h3>
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                             {data.hotels && data.hotels.length > 0 && (
-                                                <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 shadow-sm group cursor-pointer hover:shadow-md transition-all"
+                                                <div className="bg-white dark:bg-muted-900 border border-muted-200 dark:border-muted-800 rounded-2xl p-4 shadow-sm group cursor-pointer hover:shadow-md transition-all"
                                                     onClick={() => {
                                                         router.push(itineraryPlaceHref('hotel', destId, data.hotels[0]));
                                                     }}>
-                                                    <div className="flex items-center gap-3 mb-2 text-xs font-bold text-zinc-400 uppercase tracking-widest"><span className="text-base leading-none">🏨</span> Place to stay</div>
+                                                    <div className="flex items-center gap-3 mb-2 text-xs font-bold text-muted-400 uppercase tracking-widest"><span className="text-base leading-none">🏨</span> Place to stay</div>
                                                     <div className="flex gap-4">
                                                         <PlaceImage name={data.hotels[0].name} city={destName} className="w-16 h-16 rounded-xl shrink-0" asBackground />
                                                         <div className="flex flex-col justify-center">
-                                                            <div className="font-bold text-base text-zinc-900 dark:text-white line-clamp-1 group-hover:text-emerald-500 transition-colors">{data.hotels[0].name}</div>
-                                                            <div className="text-xs text-zinc-500 mt-0.5">{data.hotels[0].type} • {data.hotels[0].priceRange}</div>
-                                                            <div className="text-xs font-bold text-amber-500 mt-1">★ {data.hotels[0].rating}</div>
+                                                            <div className="font-bold text-base text-muted-900 dark:text-white line-clamp-1 group-hover:text-jungle-green-500 transition-colors">{data.hotels[0].name}</div>
+                                                            <div className="text-xs text-muted-500 mt-0.5">{data.hotels[0].type} • {data.hotels[0].priceRange}</div>
+                                                            <div className="text-xs font-bold text-marigold-500 mt-1">★ {data.hotels[0].rating}</div>
                                                         </div>
                                                     </div>
                                                 </div>
                                             )}
                                             {data.restaurants && data.restaurants.length > 0 && (
-                                                <div className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 shadow-sm group cursor-pointer hover:shadow-md transition-all"
+                                                <div className="bg-white dark:bg-muted-900 border border-muted-200 dark:border-muted-800 rounded-2xl p-4 shadow-sm group cursor-pointer hover:shadow-md transition-all"
                                                     onClick={() => {
                                                         router.push(itineraryPlaceHref('restaurant', destId, data.restaurants[0]));
                                                     }}>
-                                                    <div className="flex items-center gap-3 mb-2 text-xs font-bold text-zinc-400 uppercase tracking-widest"><span className="text-base leading-none">🍽️</span> Where to eat</div>
+                                                    <div className="flex items-center gap-3 mb-2 text-xs font-bold text-muted-400 uppercase tracking-widest"><span className="text-base leading-none">🍽️</span> Where to eat</div>
                                                     <div className="flex gap-4">
                                                         <PlaceImage name={data.restaurants[0].name} city={destName} className="w-16 h-16 rounded-xl shrink-0" asBackground />
                                                         <div className="flex flex-col justify-center">
-                                                            <div className="font-bold text-base text-zinc-900 dark:text-white line-clamp-1 group-hover:text-amber-500 transition-colors">{data.restaurants[0].name}</div>
-                                                            <div className="text-xs text-zinc-500 mt-0.5">{data.restaurants[0].cuisine}</div>
-                                                            <div className="text-xs font-bold text-amber-500 mt-1">★ {data.restaurants[0].rating}</div>
+                                                            <div className="font-bold text-base text-muted-900 dark:text-white line-clamp-1 group-hover:text-marigold-500 transition-colors">{data.restaurants[0].name}</div>
+                                                            <div className="text-xs text-muted-500 mt-0.5">{data.restaurants[0].cuisine}</div>
+                                                            <div className="text-xs font-bold text-marigold-500 mt-1">★ {data.restaurants[0].rating}</div>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -878,41 +878,41 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                                 )}
 
                                 {/* Search & Add Panel */}
-                                <div className="mt-8 bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-[2rem] p-6 shadow-inner">
-                                    <h4 className="font-bold text-lg text-zinc-900 dark:text-white mb-4 flex items-center gap-2">
-                                        <span className="p-2 bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-xl">➕</span>
+                                <div className="mt-8 bg-muted-100 dark:bg-muted-900 border border-muted-200 dark:border-muted-800 rounded-[2rem] p-6 shadow-inner">
+                                    <h4 className="font-bold text-lg text-muted-900 dark:text-white mb-4 flex items-center gap-2">
+                                        <span className="p-2 bg-jungle-green-100 dark:bg-jungle-green-500/20 text-jungle-green-600 dark:text-jungle-green-400 rounded-xl">➕</span>
                                         Add a spot
                                     </h4>
                                     <form onSubmit={handleSearch} className="flex gap-3">
                                         <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search cafes, hidden gems..."
-                                            className="flex-1 bg-white dark:bg-zinc-800 border border-zinc-300 dark:border-zinc-700 rounded-2xl px-5 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all shadow-sm" />
-                                        <button type="submit" disabled={isSearching} className="bg-emerald-600 text-white px-6 rounded-2xl text-sm font-bold shadow-md hover:bg-emerald-500 hover:shadow-lg disabled:opacity-50 transition-all active:scale-95">
+                                            className="flex-1 bg-white dark:bg-muted-800 border border-muted-300 dark:border-muted-700 rounded-2xl px-5 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-jungle-green-500 focus:border-transparent transition-all shadow-sm" />
+                                        <button type="submit" disabled={isSearching} className="bg-jungle-green-600 text-white px-6 rounded-2xl text-sm font-bold shadow-md hover:bg-jungle-green-500 hover:shadow-lg disabled:opacity-50 transition-all active:scale-95">
                                             {isSearching ? '...' : 'Search'}
                                         </button>
                                     </form>
                                     {searchRes.length > 0 && (
-                                        <div className="mt-4 bg-white dark:bg-zinc-800 rounded-2xl border border-zinc-200 dark:border-zinc-700 overflow-hidden divide-y divide-zinc-100 dark:divide-zinc-700/50">
+                                        <div className="mt-4 bg-white dark:bg-muted-800 rounded-2xl border border-muted-200 dark:border-muted-700 overflow-hidden divide-y divide-muted-100 dark:divide-muted-700/50">
                                             {searchRes.map(res => (
-                                                <div key={res.place_id} className="p-3 flex items-center justify-between gap-4 hover:bg-zinc-50 dark:hover:bg-zinc-700/50 transition-colors">
+                                                <div key={res.place_id} className="p-3 flex items-center justify-between gap-4 hover:bg-muted-50 dark:hover:bg-muted-700/50 transition-colors">
                                                     <div className="flex-1 min-w-0">
-                                                        <div className="font-bold text-sm text-zinc-900 dark:text-white line-clamp-1">{res.name || res.display_name.split(',')[0]}</div>
-                                                        <div className="text-[11px] text-zinc-500 line-clamp-1 mt-0.5">{res.display_name}</div>
+                                                        <div className="font-bold text-sm text-muted-900 dark:text-white line-clamp-1">{res.name || res.display_name.split(',')[0]}</div>
+                                                        <div className="text-[11px] text-muted-500 line-clamp-1 mt-0.5">{res.display_name}</div>
                                                     </div>
-                                                    <button onClick={() => addCustomActivity(res)} className="px-4 py-1.5 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 rounded-xl text-xs font-bold hover:scale-105 transition-transform shrink-0 shadow-sm">Add</button>
+                                                    <button onClick={() => addCustomActivity(res)} className="px-4 py-1.5 bg-muted-900 dark:bg-white text-white dark:text-muted-900 rounded-xl text-xs font-bold hover:scale-105 transition-transform shrink-0 shadow-sm">Add</button>
                                                 </div>
                                             ))}
                                         </div>
                                     )}
-                                    <div className="mt-6 pt-6 border-t border-zinc-200 dark:border-zinc-800/80">
-                                        <h4 className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3">Or Pick a Top Highlight</h4>
+                                    <div className="mt-6 pt-6 border-t border-muted-200 dark:border-muted-800/80">
+                                        <h4 className="text-xs font-bold text-muted-500 uppercase tracking-widest mb-3">Or Pick a Top Highlight</h4>
                                         <div className="grid grid-cols-2 gap-3">
                                             {data.highlights?.filter((a: any) => !plan.activities.find((pa: any) => pa.name === a.name)).slice(0, 4).map((sug: any) => (
-                                                <div key={sug.name} className="bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl p-2.5 flex gap-3 group cursor-pointer hover:border-emerald-400 hover:shadow-md transition-all"
+                                                <div key={sug.name} className="bg-white dark:bg-muted-800 border border-muted-200 dark:border-muted-700 rounded-xl p-2.5 flex gap-3 group cursor-pointer hover:border-jungle-green-400 hover:shadow-md transition-all"
                                                     onClick={() => addCustomActivity({ name: sug.name, display_name: sug.desc, lat: sug.lat || data.mapCenter.lat, lon: sug.lng || data.mapCenter.lng })}>
                                                     <PlaceImage name={sug.name} city={destName} className="w-10 h-10 rounded-lg shrink-0" asBackground />
                                                     <div className="min-w-0 flex flex-col justify-center">
-                                                        <div className="text-[11px] font-bold text-zinc-900 dark:text-white truncate group-hover:text-emerald-600 transition-colors">{sug.name}</div>
-                                                        <div className="text-[9px] text-zinc-500 truncate mt-0.5">{sug.desc}</div>
+                                                        <div className="text-[11px] font-bold text-muted-900 dark:text-white truncate group-hover:text-jungle-green-600 transition-colors">{sug.name}</div>
+                                                        <div className="text-[9px] text-muted-500 truncate mt-0.5">{sug.desc}</div>
                                                     </div>
                                                 </div>
                                             ))}
@@ -926,7 +926,7 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
 
                 {/* Right Column: Sticky Map */}
                 <div className="hidden lg:block lg:w-[400px] xl:w-[500px] shrink-0 self-start sticky top-[100px] z-10 pb-4">
-                    <div className="h-[calc(100vh-140px)] min-h-[500px] rounded-[2rem] overflow-hidden border-4 border-white dark:border-zinc-800 shadow-xl bg-zinc-100 dark:bg-zinc-900">
+                    <div className="h-[calc(100vh-140px)] min-h-[500px] rounded-[2rem] overflow-hidden border-4 border-white dark:border-muted-800 shadow-xl bg-muted-100 dark:bg-muted-900">
                         <ItineraryMap
                             pins={mapPins}
                             center={data.mapCenter}

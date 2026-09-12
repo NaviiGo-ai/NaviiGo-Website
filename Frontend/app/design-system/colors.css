@@ -1,0 +1,18 @@
+:root {
+  --color-saffron: #FF9933;
+  --color-indigo: #4B0082;
+  --color-marigold: #FFC107;
+  --color-warm-ivory: #FFF8F0;
+  --color-deep-charcoal: #2D2D2D;
+  --color-temple-red: #B22222;
+  --color-jungle-green: #2E8B57;
+  --color-deep-sea: #006994;
+
+  /* Shades and tints for depth */
+  --color-saffron-light: #FFB84D;
+  --color-saffron-dark: #E68A00;
+  --color-indigo-light: #6B1EA0;
+  --color-indigo-dark: #3A0066;
+  --color-marigold-light: #FFD54D;
+  --color-marigold-dark: #CC9A00;
+}

@@ -114,8 +114,8 @@ export default function PlaceAutocomplete({
     <div ref={wrapperRef} className={`relative ${className}`}>
       <input type="hidden" name={name} value={query} />
       <div className="relative group">
-        <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center justify-center">
-          <IconComponent className="w-4 h-4 text-zinc-400 group-focus-within:text-orange-500 transition-colors" />
+        <div className="absolute left-4 top-1/2 -tranmuted-y-1/2 flex items-center justify-center">
+          <IconComponent className="w-4 h-4 text-muted-400 group-focus-within:text-saffron-500 transition-colors" />
         </div>
         <input
           type="text"
@@ -135,12 +135,12 @@ export default function PlaceAutocomplete({
           }}
           onFocus={handleFocus}
           placeholder={placeholder}
-          className="w-full bg-zinc-50 dark:bg-zinc-900 border-2 border-zinc-100 dark:border-zinc-800 rounded-xl py-3.5 pl-11 pr-10 outline-none text-sm font-medium transition-all focus:border-orange-500 focus:bg-white dark:focus:bg-zinc-950 focus:ring-4 focus:ring-orange-500/10 text-zinc-900 dark:text-zinc-100 placeholder:text-zinc-400"
+          className="w-full bg-muted-50 dark:bg-muted-900 border-2 border-muted-100 dark:border-muted-800 rounded-xl py-3.5 pl-11 pr-10 outline-none text-sm font-medium transition-all focus:border-saffron-500 focus:bg-white dark:focus:bg-muted-950 focus:ring-4 focus:ring-saffron-500/10 text-muted-900 dark:text-muted-100 placeholder:text-muted-400"
           autoComplete="off"
         />
         {loading && (
-          <div className="absolute right-4 top-1/2 -translate-y-1/2">
-            <div className="w-4 h-4 border-2 border-orange-500 border-t-transparent rounded-full animate-spin" />
+          <div className="absolute right-4 top-1/2 -tranmuted-y-1/2">
+            <div className="w-4 h-4 border-2 border-saffron-500 border-t-transparent rounded-full animate-spin" />
           </div>
         )}
       </div>
@@ -152,7 +152,7 @@ export default function PlaceAutocomplete({
             initial={{ opacity: 0, y: 8, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.98 }}
-            className="absolute z-[999] left-0 right-0 mt-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-2xl overflow-hidden"
+            className="absolute z-[999] left-0 right-0 mt-2 bg-white dark:bg-muted-900 border border-muted-200 dark:border-muted-800 rounded-2xl shadow-2xl overflow-hidden"
           >
             <div className="p-1.5 max-h-[300px] overflow-y-auto custom-scrollbar">
               {results.map((r: any, i: number) => (
@@ -160,20 +160,20 @@ export default function PlaceAutocomplete({
                   key={r.place_id || i}
                   type="button"
                   onClick={() => handleSelect(r.description.split(',')[0].trim())}
-                  className="w-full flex items-center gap-3.5 px-3.5 py-3 text-left hover:bg-orange-50 dark:hover:bg-orange-900/20 rounded-xl transition-all group/item"
+                  className="w-full flex items-center gap-3.5 px-3.5 py-3 text-left hover:bg-saffron-50 dark:hover:bg-saffron-900/20 rounded-xl transition-all group/item"
                 >
-                  <div className="w-9 h-9 bg-zinc-100 dark:bg-zinc-800 rounded-lg flex items-center justify-center text-lg group-hover/item:bg-orange-100 dark:group-hover/item:bg-orange-500/20 transition-colors">
+                  <div className="w-9 h-9 bg-muted-100 dark:bg-muted-800 rounded-lg flex items-center justify-center text-lg group-hover/item:bg-saffron-100 dark:group-hover/item:bg-saffron-500/20 transition-colors">
                     📍
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-zinc-900 dark:text-white truncate">
+                    <p className="text-sm font-bold text-muted-900 dark:text-white truncate">
                       {r.description}
                     </p>
-                    <p className="text-[10px] text-zinc-500 dark:text-zinc-400 truncate font-semibold uppercase tracking-wider">
+                    <p className="text-[10px] text-muted-500 dark:text-muted-400 truncate font-semibold uppercase tracking-wider">
                       {r.sub || 'India'}
                     </p>
                   </div>
-                  <span className="text-zinc-300 dark:text-zinc-600 opacity-0 group-hover/item:opacity-100 transition-opacity">
+                  <span className="text-muted-300 dark:text-muted-600 opacity-0 group-hover/item:opacity-100 transition-opacity">
                     →
                   </span>
                 </button>
@@ -190,11 +190,11 @@ export default function PlaceAutocomplete({
             initial={{ opacity: 0, y: 8, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.98 }}
-            className="absolute z-[999] left-0 right-0 mt-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-2xl overflow-hidden"
+            className="absolute z-[999] left-0 right-0 mt-2 bg-white dark:bg-muted-900 border border-muted-200 dark:border-muted-800 rounded-2xl shadow-2xl overflow-hidden"
           >
             <div className="px-4 pt-3 pb-1 flex items-center gap-2">
-              <TrendingUp className="w-3.5 h-3.5 text-orange-500" />
-              <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Popular Cities</p>
+              <TrendingUp className="w-3.5 h-3.5 text-saffron-500" />
+              <p className="text-[10px] font-black uppercase tracking-widest text-muted-400">Popular Cities</p>
             </div>
             <div className="p-1.5 max-h-[300px] overflow-y-auto custom-scrollbar">
               {POPULAR_CITIES.map((city) => (
@@ -202,20 +202,20 @@ export default function PlaceAutocomplete({
                   key={city.name}
                   type="button"
                   onClick={() => handleSelect(city.name)}
-                  className="w-full flex items-center gap-3.5 px-3.5 py-2.5 text-left hover:bg-orange-50 dark:hover:bg-orange-900/20 rounded-xl transition-all group/item"
+                  className="w-full flex items-center gap-3.5 px-3.5 py-2.5 text-left hover:bg-saffron-50 dark:hover:bg-saffron-900/20 rounded-xl transition-all group/item"
                 >
-                  <div className="w-8 h-8 bg-orange-50 dark:bg-orange-900/20 rounded-lg flex items-center justify-center text-sm group-hover/item:bg-orange-100 dark:group-hover/item:bg-orange-500/30 transition-colors">
+                  <div className="w-8 h-8 bg-saffron-50 dark:bg-saffron-900/20 rounded-lg flex items-center justify-center text-sm group-hover/item:bg-saffron-100 dark:group-hover/item:bg-saffron-500/30 transition-colors">
                     ✈️
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-zinc-900 dark:text-white truncate">
+                    <p className="text-sm font-bold text-muted-900 dark:text-white truncate">
                       {city.name}
                     </p>
-                    <p className="text-[10px] text-zinc-500 dark:text-zinc-400 truncate font-semibold uppercase tracking-wider">
+                    <p className="text-[10px] text-muted-500 dark:text-muted-400 truncate font-semibold uppercase tracking-wider">
                       {city.sub}
                     </p>
                   </div>
-                  <span className="text-zinc-300 dark:text-zinc-600 opacity-0 group-hover/item:opacity-100 transition-opacity">
+                  <span className="text-muted-300 dark:text-muted-600 opacity-0 group-hover/item:opacity-100 transition-opacity">
                     →
                   </span>
                 </button>

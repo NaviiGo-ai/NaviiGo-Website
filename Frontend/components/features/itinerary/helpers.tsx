@@ -17,7 +17,7 @@ export function StepBar({ step, total }: { step: number; total: number }) {
     return (
         <div className="flex items-center gap-1.5">
             {Array.from({ length: total }).map((_, i) => (
-                <div key={i} className={`h-1.5 rounded-full transition-all duration-500 ${i < step ? 'bg-emerald-500' : 'bg-zinc-200 dark:bg-zinc-700'}`}
+                <div key={i} className={`h-1.5 rounded-full transition-all duration-500 ${i < step ? 'bg-saffron' : 'bg-muted/[0.2] dark:bg-muted/[0.6]'}`}
                     style={{ width: i < step ? 40 : 24 }} />
             ))}
         </div>

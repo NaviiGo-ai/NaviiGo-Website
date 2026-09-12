@@ -62,3 +62,6 @@ download_*.js
 fetch_*.js
 patch_*.js
 
+dev.log
+dev.pid
+dev2.pid

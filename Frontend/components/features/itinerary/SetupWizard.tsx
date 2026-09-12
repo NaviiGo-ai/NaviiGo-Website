@@ -82,7 +82,7 @@ function CitySearch({ value, destName, onSelect }: { value: string; destName: st
         <div className="space-y-8 max-w-4xl">
             {/* Search Input Section */}
             <div ref={wrapperRef} className="relative group">
-                <label className="block text-xs font-bold uppercase tracking-[0.2em] text-zinc-500 mb-2 ml-1">Search Your Destination</label>
+                <label className="block text-xs font-bold uppercase tracking-[0.2em] text-muted-500 mb-2 ml-1">Search Your Destination</label>
                 <div className="relative">
                     <input
                         type="text"
@@ -90,14 +90,14 @@ function CitySearch({ value, destName, onSelect }: { value: string; destName: st
                         onChange={e => { setQuery(e.target.value); setIsOpen(true); }}
                         onFocus={() => { if (query.length >= 2) setIsOpen(true); }}
                         placeholder="Type any city in India (e.g. Manali, Kochi, Munnar...)"
-                        className="w-full bg-white dark:bg-zinc-800 border-2 border-zinc-200 dark:border-zinc-700/50 rounded-[1.25rem] px-6 py-5 text-lg font-semibold text-zinc-900 dark:text-white placeholder-zinc-400 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all shadow-sm group-hover:border-zinc-300 dark:group-hover:border-zinc-600"
+                        className="w-full bg-warm-ivory dark:bg-muted-800 border-2 border-muted-200 dark:border-muted-700/50 rounded-[1.25rem] px-6 py-5 text-lg font-semibold text-muted-900 dark:text-white placeholder-muted-400 focus:border-jungle-green-500 focus:ring-4 focus:ring-jungle-green-500/10 outline-none transition-all shadow-sm group-hover:border-muted-300 dark:group-hover:border-muted-600"
                     />
-                    <div className="absolute right-5 top-1/2 -translate-y-1/2 flex items-center gap-3">
+                    <div className="absolute right-5 top-1/2 -tranmuted-y-1/2 flex items-center gap-3">
                         {loading ? (
-                            <div className="w-5 h-5 border-3 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+                            <div className="w-5 h-5 border-3 border-jungle-green-500 border-t-transparent rounded-full animate-spin" />
                         ) : (
-                            <div className="p-2.5 bg-zinc-100 dark:bg-zinc-700/50 rounded-xl">
-                                <svg className="w-5 h-5 text-zinc-500 dark:text-zinc-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div className="p-2.5 bg-muted-100 dark:bg-muted-700/50 rounded-xl">
+                                <svg className="w-5 h-5 text-muted-500 dark:text-muted-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                                 </svg>
                             </div>
@@ -112,7 +112,7 @@ function CitySearch({ value, destName, onSelect }: { value: string; destName: st
                             initial={{ opacity: 0, y: 10, scale: 0.98 }}
                             animate={{ opacity: 1, y: 0, scale: 1 }}
                             exit={{ opacity: 0, y: 10, scale: 0.98 }}
-                            className="absolute z-[100] left-0 right-0 mt-3 bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-3xl shadow-2xl overflow-hidden backdrop-blur-xl dark:bg-zinc-800/95"
+                            className="absolute z-[100] left-0 right-0 mt-3 bg-warm-ivory dark:bg-muted-800 border border-muted-200 dark:border-muted-700 rounded-3xl shadow-2xl overflow-hidden backdrop-blur-xl dark:bg-muted-800/95"
                         >
                             <div className="p-2">
                                 {results.map((r, i) => (
@@ -128,19 +128,19 @@ function CitySearch({ value, destName, onSelect }: { value: string; destName: st
                                             setQuery(displayName);
                                             setIsOpen(false);
                                         }}
-                                        className="w-full flex items-center gap-4 px-5 py-4 text-left hover:bg-emerald-50 dark:hover:bg-emerald-500/10 rounded-2xl transition-all group/item"
+                                        className="w-full flex items-center gap-4 px-5 py-4 text-left hover:bg-jungle-green-50 dark:hover:bg-jungle-green-500/10 rounded-2xl transition-all group/item"
                                     >
-                                        <div className="w-10 h-10 bg-zinc-100 dark:bg-zinc-700/50 rounded-xl flex items-center justify-center text-lg group-hover/item:bg-emerald-100 dark:group-hover/item:bg-emerald-500/20 transition-colors">📍</div>
+                                        <div className="w-10 h-10 bg-muted-100 dark:bg-muted-700/50 rounded-xl flex items-center justify-center text-lg group-hover/item:bg-jungle-green-100 dark:group-hover/item:bg-jungle-green-500/20 transition-colors">📍</div>
                                         <div className="flex-1 min-w-0">
-                                            <p className="text-base font-bold text-zinc-900 dark:text-white truncate">{r.description}</p>
-                                            <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate font-medium">{r.sub || 'India'}</p>
+                                            <p className="text-base font-bold text-muted-900 dark:text-white truncate">{r.description}</p>
+                                            <p className="text-xs text-muted-500 dark:text-muted-400 truncate font-medium">{r.sub || 'India'}</p>
                                         </div>
                                         {value === (r.place_id || r.description.split(',')[0].trim().toLowerCase()) ? (
-                                            <div className="w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                                            <div className="w-6 h-6 bg-jungle-green-500 rounded-full flex items-center justify-center shadow-lg shadow-jungle-green-500/20">
                                                 <span className="text-white text-[10px] font-black">✓</span>
                                             </div>
                                         ) : (
-                                            <span className="text-zinc-300 dark:text-zinc-600 opacity-0 group-hover/item:opacity-100 transition-opacity">→</span>
+                                            <span className="text-muted-300 dark:text-muted-600 opacity-0 group-hover/item:opacity-100 transition-opacity">→</span>
                                         )}
                                     </button>
                                 ))}
@@ -153,12 +153,12 @@ function CitySearch({ value, destName, onSelect }: { value: string; destName: st
             {/* Selected Status */}
             {value && (
                 <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-                    className="flex items-center gap-3 bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-500/20 rounded-2xl px-5 py-4"
+                    className="flex items-center gap-3 bg-jungle-green-50 dark:bg-jungle-green-500/10 border border-jungle-green-100 dark:border-jungle-green-500/20 rounded-2xl px-5 py-4"
                 >
-                    <div className="w-8 h-8 bg-emerald-500 rounded-full flex items-center justify-center text-white text-sm">✨</div>
+                    <div className="w-8 h-8 bg-jungle-green-500 rounded-full flex items-center justify-center text-white text-sm">✨</div>
                     <div className="flex-1">
-                        <span className="text-xs font-bold text-emerald-600/60 uppercase tracking-widest block mb-0.5">Current Selection</span>
-                        <span className="text-lg font-black text-emerald-800 dark:text-emerald-300">{destName}</span>
+                        <span className="text-xs font-bold text-jungle-green-600/60 uppercase tracking-widest block mb-0.5">Current Selection</span>
+                        <span className="text-lg font-black text-jungle-green-800 dark:text-jungle-green-300">{destName}</span>
                     </div>
                 </motion.div>
             )}
@@ -166,13 +166,13 @@ function CitySearch({ value, destName, onSelect }: { value: string; destName: st
             {/* Quick Picks */}
             <div>
                 <div className="flex items-center justify-between mb-4 px-1">
-                    <p className="text-xs font-bold uppercase tracking-[0.2em] text-zinc-500">Popular Quick Picks</p>
-                    <span className="text-[10px] font-bold text-zinc-400 bg-zinc-100 dark:bg-zinc-800 px-2 py-1 rounded-md">8 DESTINATIONS</span>
+                    <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted-500">Popular Quick Picks</p>
+                    <span className="text-[10px] font-bold text-muted-400 bg-muted-100 dark:bg-muted-800 px-2 py-1 rounded-md">8 DESTINATIONS</span>
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                     {DESTINATIONS.slice(0, 8).map(d => (
                         <button key={d.id} onClick={() => { onSelect(d.id, d.name); setQuery(d.name); }}
-                            className={`group relative h-32 sm:h-40 rounded-3xl overflow-hidden border-2 transition-all duration-300 text-left ${value === d.id ? 'border-emerald-500 shadow-xl shadow-emerald-500/20 scale-[1.02]' : 'border-transparent hover:border-zinc-300 dark:hover:border-zinc-700'}`}>
+                            className={`group relative h-32 sm:h-40 rounded-3xl overflow-hidden border-2 transition-all duration-300 text-left ${value === d.id ? 'border-jungle-green-500 shadow-xl shadow-jungle-green-500/20 scale-[1.02]' : 'border-transparent hover:border-muted-300 dark:hover:border-muted-700'}`}>
                             <PlaceImage
                                 name={d.name}
                                 city={d.state}
@@ -183,12 +183,12 @@ function CitySearch({ value, destName, onSelect }: { value: string; destName: st
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                             {value === d.id && (
-                                <div className="absolute top-3 right-3 w-7 h-7 bg-emerald-500 rounded-full flex items-center justify-center shadow-lg">
+                                <div className="absolute top-3 right-3 w-7 h-7 bg-jungle-green-500 rounded-full flex items-center justify-center shadow-lg">
                                     <span className="text-white text-[10px] font-black">✓</span>
                                 </div>
                             )}
                             <div className="absolute bottom-0 left-0 p-3 sm:p-4 w-full">
-                                <div className="font-bold text-white text-sm sm:text-base leading-tight group-hover:translate-x-1 transition-transform">{d.name}</div>
+                                <div className="font-bold text-white text-sm sm:text-base leading-tight group-hover:tranmuted-x-1 transition-transform">{d.name}</div>
                                 <div className="text-white/70 text-[10px] uppercase tracking-wider font-bold mt-1">{d.sub}</div>
                             </div>
                         </button>
@@ -297,10 +297,10 @@ export default function SetupWizard({ onDone }: SetupWizardProps) {
     return (
         <div className="min-h-screen bg-[#f7f8fc] dark:bg-[#0a0a0f] pt-16 sm:pt-20">
             <AuthRequiredModal open={showAuthRequired} onClose={() => setShowAuthRequired(false)} />
-            <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-md border-b border-zinc-200 dark:border-white/5 sticky top-16 sm:top-20 z-40 py-2.5 sm:py-3 flex items-center px-3 sm:px-6 md:px-12 lg:px-16 justify-between gap-2">
-                {step > 1 && !buildFromReel && !vibeMatchMode && <button onClick={back} className="w-9 h-9 rounded-full border border-zinc-200 dark:border-zinc-700 flex items-center justify-center hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors text-zinc-600 dark:text-zinc-300 text-sm">←</button>}
+            <div className="bg-warm-ivory/80 dark:bg-muted-900/80 backdrop-blur-md border-b border-muted-200 dark:border-white/5 sticky top-16 sm:top-20 z-40 py-2.5 sm:py-3 flex items-center px-3 sm:px-6 md:px-12 lg:px-16 justify-between gap-2">
+                {step > 1 && !buildFromReel && !vibeMatchMode && <button onClick={back} className="w-9 h-9 rounded-full border border-muted-200 dark:border-muted-700 flex items-center justify-center hover:bg-muted-50 dark:hover:bg-muted-800 transition-colors text-muted-600 dark:text-muted-300 text-sm">←</button>}
                 <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1"><span className="text-lg">🗺️</span><span className="text-xs font-bold tracking-widest text-zinc-500 uppercase">Setting Up Your Trip</span></div>
+                    <div className="flex items-center gap-2 mb-1"><span className="text-lg">🗺️</span><span className="text-xs font-bold tracking-widest text-muted-500 uppercase">Setting Up Your Trip</span></div>
                     {!buildFromReel && !vibeMatchMode && <StepBar step={step} total={TOTAL_STEPS} />}
                 </div>
                 {/* Mode toggles */}
@@ -308,8 +308,8 @@ export default function SetupWizard({ onDone }: SetupWizardProps) {
                     <button
                         onClick={() => { setVibeMatchMode(v => !v); setBuildFromReel(false); }}
                         className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold transition-all border ${vibeMatchMode
-                                ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white border-transparent shadow-lg shadow-emerald-500/20'
-                                : 'border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 hover:border-emerald-400 hover:text-emerald-600'
+                                ? 'bg-gradient-to-r from-jungle-green-500 to-deep-sea-500 text-white border-transparent shadow-lg shadow-jungle-green-500/20'
+                                : 'border-muted-200 dark:border-muted-700 text-muted-600 dark:text-muted-300 hover:border-jungle-green-400 hover:text-jungle-green-600'
                             }`}
                     >
                         <span>🎯</span>
@@ -318,8 +318,8 @@ export default function SetupWizard({ onDone }: SetupWizardProps) {
                     <button
                         onClick={() => { setBuildFromReel(r => !r); setVibeMatchMode(false); }}
                         className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold transition-all border ${buildFromReel
-                                ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white border-transparent shadow-lg shadow-purple-500/20'
-                                : 'border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-300 hover:border-purple-400 hover:text-purple-600'
+                                ? 'bg-gradient-to-r from-indigo-600 to-temple-red-600 text-white border-transparent shadow-lg shadow-indigo-500/20'
+                                : 'border-muted-200 dark:border-muted-700 text-muted-600 dark:text-muted-300 hover:border-indigo-400 hover:text-indigo-600'
                             }`}
                     >
                         <span>📸</span>
@@ -370,8 +370,8 @@ export default function SetupWizard({ onDone }: SetupWizardProps) {
                         </motion.div>
                     ) : buildFromReel ? (
                         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
-                            <h1 className="text-3xl md:text-4xl font-bold text-zinc-900 dark:text-white mb-2 leading-tight">Build from a Reel 📸</h1>
-                            <p className="text-zinc-400 mb-8 text-sm">Paste an Instagram, YouTube or travel post — AI extracts the destination and vibe.</p>
+                            <h1 className="text-3xl md:text-4xl font-bold text-muted-900 dark:text-white mb-2 leading-tight">Build from a Reel 📸</h1>
+                            <p className="text-muted-400 mb-8 text-sm">Paste an Instagram, YouTube or travel post — AI extracts the destination and vibe.</p>
                             <BuildFromLink
                                 onExtracted={(destId, destName, purpose, days) => {
                                     setForm(p => ({
@@ -392,20 +392,20 @@ export default function SetupWizard({ onDone }: SetupWizardProps) {
                             <div className="flex-1">
                                 <AnimatePresence mode="wait" custom={dir}>
                                     <motion.div key={step} custom={dir} variants={variants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.22, ease: 'easeInOut' }}>
-                                        <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-zinc-900 dark:text-white mb-2 leading-tight">{STEP_TITLES[step - 1]}</h1>
-                                        <p className="text-zinc-400 mb-6 sm:mb-8 text-sm md:text-base">{STEP_SUBS[step - 1]}</p>
+                                        <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-muted-900 dark:text-white mb-2 leading-tight">{STEP_TITLES[step - 1]}</h1>
+                                        <p className="text-muted-400 mb-6 sm:mb-8 text-sm md:text-base">{STEP_SUBS[step - 1]}</p>
 
                                         {step === 1 && (
                                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 max-w-2xl w-full">
                                                 {PURPOSES.map(p => (
                                                     <button key={p.id} onClick={() => set('purpose', p.id)}
-                                                        className={`flex items-center gap-3 sm:gap-4 bg-white dark:bg-zinc-800/50 rounded-2xl p-3 sm:p-4 border-2 text-left transition-all duration-200 w-full ${form.purpose === p.id ? 'border-emerald-500 shadow-lg shadow-emerald-500/10 scale-[1.01]' : 'border-zinc-100 dark:border-zinc-700 hover:border-zinc-200 dark:hover:border-zinc-600 hover:shadow-sm'}`}>
+                                                        className={`flex items-center gap-3 sm:gap-4 bg-warm-ivory dark:bg-muted-800/50 rounded-2xl p-3 sm:p-4 border-2 text-left transition-all duration-200 w-full ${form.purpose === p.id ? 'border-jungle-green-500 shadow-lg shadow-jungle-green-500/10 scale-[1.01]' : 'border-muted-100 dark:border-muted-700 hover:border-muted-200 dark:hover:border-muted-600 hover:shadow-sm'}`}>
                                                         <span className="text-2xl sm:text-3xl shrink-0">{p.emoji}</span>
                                                         <div className="flex-1 min-w-0">
-                                                            <div className="font-semibold text-zinc-900 dark:text-white text-sm">{p.label}</div>
-                                                            <div className="text-[11px] sm:text-xs text-zinc-400 mt-0.5 leading-snug whitespace-normal break-words">{p.desc}</div>
+                                                            <div className="font-semibold text-muted-900 dark:text-white text-sm">{p.label}</div>
+                                                            <div className="text-[11px] sm:text-xs text-muted-400 mt-0.5 leading-snug whitespace-normal break-words">{p.desc}</div>
                                                         </div>
-                                                        {form.purpose === p.id && <div className="w-5 h-5 bg-emerald-500 rounded-full flex items-center justify-center flex-shrink-0"><span className="text-white text-[10px]">✓</span></div>}
+                                                        {form.purpose === p.id && <div className="w-5 h-5 bg-jungle-green-500 rounded-full flex items-center justify-center flex-shrink-0"><span className="text-white text-[10px]">✓</span></div>}
                                                     </button>
                                                 ))}
                                             </div>
@@ -431,32 +431,32 @@ export default function SetupWizard({ onDone }: SetupWizardProps) {
                                                 />
 
                                                 {form.destination && (
-                                                    <div className="mt-6 max-w-4xl rounded-2xl border border-violet-200 bg-violet-50/70 p-4 dark:border-violet-500/20 dark:bg-violet-500/5">
+                                                    <div className="mt-6 max-w-4xl rounded-2xl border border-indigo-200 bg-indigo-50/70 p-4 dark:border-indigo-500/20 dark:bg-indigo-500/5">
                                                         <div className="flex items-center justify-between gap-3 mb-3">
-                                                            <div><h3 className="text-sm font-bold text-zinc-900 dark:text-white">Your route</h3><p className="text-xs text-zinc-500 dark:text-zinc-400">Select every city here. NaviiGo reserves one transit day between consecutive cities.</p></div>
-                                                            <span className="rounded-full bg-violet-600 px-2.5 py-1 text-xs font-bold text-white">{form.routeStops.length + 1} cities</span>
+                                                            <div><h3 className="text-sm font-bold text-muted-900 dark:text-white">Your route</h3><p className="text-xs text-muted-500 dark:text-muted-400">Select every city here. NaviiGo reserves one transit day between consecutive cities.</p></div>
+                                                            <span className="rounded-full bg-indigo-600 px-2.5 py-1 text-xs font-bold text-white">{form.routeStops.length + 1} cities</span>
                                                         </div>
                                                         <div className="space-y-2">
                                                             {[{ name: form.destName, primary: true }, ...form.routeStops.map(stop => ({ name: stop.name, primary: false }))].map((city, index) => (
-                                                                <div key={`${city.name}-${index}`} className="flex flex-wrap items-center gap-2 rounded-xl bg-white px-3 py-2.5 shadow-sm dark:bg-zinc-800">
-                                                                    <span className="w-6 text-center text-xs font-black text-violet-600">{index + 1}</span>
-                                                                    <span className="min-w-[130px] flex-1 text-sm font-bold text-zinc-900 dark:text-white">{city.name}</span>
-                                                                    <button type="button" onClick={() => removeRouteCity(index)} className="text-xs font-bold text-rose-600 hover:text-rose-500">Remove</button>
+                                                                <div key={`${city.name}-${index}`} className="flex flex-wrap items-center gap-2 rounded-xl bg-warm-ivory px-3 py-2.5 shadow-sm dark:bg-muted-800">
+                                                                    <span className="w-6 text-center text-xs font-black text-indigo-600">{index + 1}</span>
+                                                                    <span className="min-w-[130px] flex-1 text-sm font-bold text-muted-900 dark:text-white">{city.name}</span>
+                                                                    <button type="button" onClick={() => removeRouteCity(index)} className="text-xs font-bold text-temple-red-600 hover:text-temple-red-500">Remove</button>
                                                                 </div>
                                                             ))}
                                                         </div>
-                                                        {form.routeStops.length > 0 && <p className="mt-3 text-xs font-medium text-violet-700 dark:text-violet-300">Next, choose dates and then add the travel details for every city-to-city leg.</p>}
+                                                        {form.routeStops.length > 0 && <p className="mt-3 text-xs font-medium text-indigo-700 dark:text-indigo-300">Next, choose dates and then add the travel details for every city-to-city leg.</p>}
                                                     </div>
                                                 )}
 
                                                 {/* Must-Do Pinning */}
                                                 {form.destination && (
-                                                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-6 p-4 rounded-2xl bg-white dark:bg-zinc-800/80 border border-zinc-200 dark:border-zinc-700 max-w-2xl">
+                                                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-6 p-4 rounded-2xl bg-warm-ivory dark:bg-muted-800/80 border border-muted-200 dark:border-muted-700 max-w-2xl">
                                                         <div className="flex items-center gap-2 mb-1">
                                                             <span className="text-base">📌</span>
-                                                            <span className="text-xs font-bold text-zinc-800 dark:text-zinc-200">Must-Do Experiences (Optional)</span>
+                                                            <span className="text-xs font-bold text-muted-800 dark:text-muted-200">Must-Do Experiences (Optional)</span>
                                                         </div>
-                                                        <p className="text-[11px] text-zinc-400 mb-3">Pin places or experiences you definitely don&apos;t want to miss in {form.destName}.</p>
+                                                        <p className="text-[11px] text-muted-400 mb-3">Pin places or experiences you definitely don&apos;t want to miss in {form.destName}.</p>
                                                         
                                                         <div className="flex gap-2 mb-3">
                                                             <input
@@ -476,7 +476,7 @@ export default function SetupWizard({ onDone }: SetupWizardProps) {
                                                                     }
                                                                 }}
                                                                 placeholder="e.g. Ganga Aarti, Taj Mahal, Scuba Diving..."
-                                                                className="flex-1 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl px-3 py-2 text-xs font-medium text-zinc-900 dark:text-white outline-none focus:border-emerald-500"
+                                                                className="flex-1 bg-muted-50 dark:bg-muted-900 border border-muted-200 dark:border-muted-700 rounded-xl px-3 py-2 text-xs font-medium text-muted-900 dark:text-white outline-none focus:border-jungle-green-500"
                                                             />
                                                             <button
                                                                 type="button"
@@ -489,7 +489,7 @@ export default function SetupWizard({ onDone }: SetupWizardProps) {
                                                                         setMustDoInput('');
                                                                     }
                                                                 }}
-                                                                className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition-colors shrink-0"
+                                                                className="px-4 py-2 rounded-xl bg-jungle-green-600 hover:bg-jungle-green-500 text-white font-bold text-xs transition-colors shrink-0"
                                                             >
                                                                 + Pin
                                                             </button>
@@ -498,7 +498,7 @@ export default function SetupWizard({ onDone }: SetupWizardProps) {
                                                         {mustDoPins.length > 0 && (
                                                             <div className="flex flex-wrap gap-2">
                                                                 {mustDoPins.map(pin => (
-                                                                    <span key={pin} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-xs font-semibold">
+                                                                    <span key={pin} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-jungle-green-50 dark:bg-jungle-green-500/10 border border-jungle-green-500/30 text-jungle-green-700 dark:text-jungle-green-300 text-xs font-semibold">
                                                                         📌 {pin}
                                                                         <button
                                                                             type="button"
@@ -507,7 +507,7 @@ export default function SetupWizard({ onDone }: SetupWizardProps) {
                                                                                 setMustDoPins(updated);
                                                                                 setForm(p => ({ ...p, mustDo: updated.map(n => ({ name: n, dayIndex: null })) }));
                                                                             }}
-                                                                            className="hover:text-red-500 ml-1 text-xs"
+                                                                            className="hover:text-temple-red-500 ml-1 text-xs"
                                                                         >
                                                                             ×
                                                                         </button>
@@ -541,11 +541,11 @@ export default function SetupWizard({ onDone }: SetupWizardProps) {
                                             <div className="space-y-8 max-w-2xl">
                                                 {/* Group Size */}
                                                 <div>
-                                                    <div className="text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-3">Group Size</div>
+                                                    <div className="text-sm font-semibold text-muted-700 dark:text-muted-300 mb-3">Group Size</div>
                                                     <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
                                                         {GROUP_SIZES.map(g => (
-                                                            <button key={g.id} onClick={() => set('group', g.id)} className={`flex flex-col items-center gap-1 p-3 rounded-2xl border-2 transition-all ${form.group === g.id ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10 shadow-md' : 'border-zinc-100 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:border-zinc-200'}`}>
-                                                                <span className="text-2xl">{g.emoji}</span><span className="text-xs font-semibold text-zinc-800 dark:text-zinc-200">{g.label}</span>
+                                                            <button key={g.id} onClick={() => set('group', g.id)} className={`flex flex-col items-center gap-1 p-3 rounded-2xl border-2 transition-all ${form.group === g.id ? 'border-jungle-green-500 bg-jungle-green-50 dark:bg-jungle-green-500/10 shadow-md' : 'border-muted-100 dark:border-muted-700 bg-warm-ivory dark:bg-muted-800 hover:border-muted-200'}`}>
+                                                                <span className="text-2xl">{g.emoji}</span><span className="text-xs font-semibold text-muted-800 dark:text-muted-200">{g.label}</span>
                                                             </button>
                                                         ))}
                                                     </div>
@@ -553,24 +553,24 @@ export default function SetupWizard({ onDone }: SetupWizardProps) {
 
                                                 {/* Budget */}
                                                 <div>
-                                                    <div className="flex items-center justify-between mb-3"><span className="text-sm font-semibold text-zinc-700 dark:text-zinc-300">Budget (per person)</span><span className="text-2xl font-bold text-emerald-500">₹{form.budget.toLocaleString('en-IN')}</span></div>
-                                                    <input type="range" min={3000} max={200000} step={1000} value={form.budget} onChange={e => set('budget', Number(e.target.value))} className="w-full accent-emerald-500 h-2 cursor-pointer" />
-                                                    <div className="flex justify-between text-xs text-zinc-400 mt-1"><span>₹3,000</span><span>₹2,00,000</span></div>
+                                                    <div className="flex items-center justify-between mb-3"><span className="text-sm font-semibold text-muted-700 dark:text-muted-300">Budget (per person)</span><span className="text-2xl font-bold text-jungle-green-500">₹{form.budget.toLocaleString('en-IN')}</span></div>
+                                                    <input type="range" min={3000} max={200000} step={1000} value={form.budget} onChange={e => set('budget', Number(e.target.value))} className="w-full accent-jungle-green-500 h-2 cursor-pointer" />
+                                                    <div className="flex justify-between text-xs text-muted-400 mt-1"><span>₹3,000</span><span>₹2,00,000</span></div>
                                                 </div>
 
                                                 {/* Traveler Type */}
                                                 <div>
-                                                    <div className="text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-3">Your Travel Pace</div>
+                                                    <div className="text-sm font-semibold text-muted-700 dark:text-muted-300 mb-3">Your Travel Pace</div>
                                                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                                                         {TRAVELER_TYPES.map(t => (
                                                             <button key={t.id} onClick={() => set('travelerType', t.id)}
-                                                                className={`flex items-center gap-3 p-3 rounded-2xl border-2 text-left transition-all ${form.travelerType === t.id ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10 shadow-md' : 'border-zinc-100 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:border-zinc-200'}`}>
+                                                                className={`flex items-center gap-3 p-3 rounded-2xl border-2 text-left transition-all ${form.travelerType === t.id ? 'border-jungle-green-500 bg-jungle-green-50 dark:bg-jungle-green-500/10 shadow-md' : 'border-muted-100 dark:border-muted-700 bg-warm-ivory dark:bg-muted-800 hover:border-muted-200'}`}>
                                                                 <span className="text-xl">{t.emoji}</span>
                                                                 <div className="flex-1 min-w-0">
-                                                                    <div className="text-xs font-bold text-zinc-900 dark:text-white">{t.label}</div>
-                                                                    <div className="text-[10px] text-zinc-400 truncate">{t.desc}</div>
+                                                                    <div className="text-xs font-bold text-muted-900 dark:text-white">{t.label}</div>
+                                                                    <div className="text-[10px] text-muted-400 truncate">{t.desc}</div>
                                                                 </div>
-                                                                {form.travelerType === t.id && <div className="w-4 h-4 bg-emerald-500 rounded-full flex items-center justify-center flex-shrink-0"><span className="text-white text-[8px]">✓</span></div>}
+                                                                {form.travelerType === t.id && <div className="w-4 h-4 bg-jungle-green-500 rounded-full flex items-center justify-center flex-shrink-0"><span className="text-white text-[8px]">✓</span></div>}
                                                             </button>
                                                         ))}
                                                     </div>
@@ -578,14 +578,14 @@ export default function SetupWizard({ onDone }: SetupWizardProps) {
 
                                                 {/* Origin City */}
                                                 <div>
-                                                    <div className="text-sm font-semibold text-zinc-700 dark:text-zinc-300 mb-2">Your Origin City</div>
-                                                    <p className="text-xs text-zinc-400 mb-2">Auto-detected. Override if needed.</p>
+                                                    <div className="text-sm font-semibold text-muted-700 dark:text-muted-300 mb-2">Your Origin City</div>
+                                                    <p className="text-xs text-muted-400 mb-2">Auto-detected. Override if needed.</p>
                                                     <input
                                                         type="text"
                                                         value={form.originCity}
                                                         onChange={e => set('originCity', e.target.value)}
                                                         placeholder="e.g. Mumbai, Delhi, Bangalore..."
-                                                        className="w-full bg-white dark:bg-zinc-800 border-2 border-zinc-200 dark:border-zinc-700/50 rounded-xl px-4 py-3 text-sm font-semibold text-zinc-900 dark:text-white placeholder-zinc-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/10 outline-none transition-all"
+                                                        className="w-full bg-warm-ivory dark:bg-muted-800 border-2 border-muted-200 dark:border-muted-700/50 rounded-xl px-4 py-3 text-sm font-semibold text-muted-900 dark:text-white placeholder-muted-400 focus:border-jungle-green-500 focus:ring-2 focus:ring-jungle-green-500/10 outline-none transition-all"
                                                     />
                                                 </div>
                                             </div>
@@ -594,51 +594,51 @@ export default function SetupWizard({ onDone }: SetupWizardProps) {
                                         {step === 5 && (
                                             <div className="space-y-8 max-w-2xl">
                                                 {form.routeStops.length > 0 && (
-                                                    <div className="rounded-2xl border border-violet-200 bg-gradient-to-br from-violet-50 to-indigo-50 p-5 dark:border-violet-500/20 dark:from-violet-900/10 dark:to-indigo-900/10">
-                                                        <div className="mb-1 flex items-center gap-2"><span className="text-lg">Route</span><span className="text-sm font-bold text-zinc-900 dark:text-white">Inter-city travel</span></div>
-                                                        <p className="mb-5 text-xs text-zinc-500 dark:text-zinc-400">Set how and when you will travel between each pair of cities. NaviiGo will make these dedicated transit days.</p>
+                                                    <div className="rounded-2xl border border-indigo-200 bg-gradient-to-br from-indigo-50 to-indigo-50 p-5 dark:border-indigo-500/20 dark:from-indigo-900/10 dark:to-indigo-900/10">
+                                                        <div className="mb-1 flex items-center gap-2"><span className="text-lg">Route</span><span className="text-sm font-bold text-muted-900 dark:text-white">Inter-city travel</span></div>
+                                                        <p className="mb-5 text-xs text-muted-500 dark:text-muted-400">Set how and when you will travel between each pair of cities. NaviiGo will make these dedicated transit days.</p>
                                                         <div className="space-y-5">
                                                             {form.routeStops.map((stop, index) => {
                                                                 const fromCity = index === 0 ? form.destName : form.routeStops[index - 1].name;
-                                                                return <div key={`${fromCity}-${stop.name}`} className="rounded-xl border border-violet-100 bg-white p-4 dark:border-violet-500/15 dark:bg-zinc-800/80">
-                                                                    <div className="mb-4 flex items-center justify-between gap-3"><div><p className="text-xs font-bold uppercase tracking-wider text-violet-600 dark:text-violet-300">Leg {index + 1}</p><h3 className="text-base font-bold text-zinc-900 dark:text-white">{fromCity} to {stop.name}</h3></div><span className="rounded-full bg-violet-100 px-2.5 py-1 text-[10px] font-bold text-violet-700 dark:bg-violet-500/15 dark:text-violet-300">Transit day</span></div>
-                                                                    <div className="mb-4"><p className="mb-2 text-xs font-semibold text-zinc-600 dark:text-zinc-400">How will you travel?</p><div className="flex flex-wrap gap-2">{DEPARTURE_MODES.map(mode => <button type="button" key={mode.id} onClick={() => setForm(previous => ({ ...previous, routeStops: previous.routeStops.map((routeStop, stopIndex) => stopIndex === index ? { ...routeStop, travelMode: mode.id } : routeStop) }))} className={`rounded-xl border-2 px-3 py-2 text-xs font-bold transition-all ${stop.travelMode === mode.id ? 'border-violet-500 bg-violet-50 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300' : 'border-zinc-200 bg-white text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300'}`}><span className="mr-1">{mode.emoji}</span>{mode.label}</button>)}</div></div>
-                                                                    <div className="mb-4"><p className="mb-2 text-xs font-semibold text-zinc-600 dark:text-zinc-400">When will you leave {fromCity}?</p><div className="grid grid-cols-2 gap-2 sm:grid-cols-4">{ARRIVAL_TIMES.map(time => <button type="button" key={time.id} onClick={() => setForm(previous => ({ ...previous, routeStops: previous.routeStops.map((routeStop, stopIndex) => stopIndex === index ? { ...routeStop, travelTime: time.id } : routeStop) }))} className={`rounded-xl border-2 p-2 text-center transition-all ${stop.travelTime === time.id ? 'border-violet-500 bg-violet-50 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300' : 'border-zinc-200 bg-white text-zinc-600 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300'}`}><span className="block text-base">{time.emoji}</span><span className="text-[10px] font-bold">{time.label}</span></button>)}</div></div>
-                                                                    <label className="flex items-center justify-between gap-3 text-xs font-semibold text-zinc-600 dark:text-zinc-400">How many days will you stay in {stop.name}?<input aria-label={`Days in ${stop.name}`} type="number" min="1" max="14" value={stop.stayDays} onChange={event => setForm(previous => ({ ...previous, routeStops: previous.routeStops.map((routeStop, stopIndex) => stopIndex === index ? { ...routeStop, stayDays: Math.max(1, Number(event.target.value) || 1) } : routeStop) }))} className="w-16 rounded-lg border border-zinc-200 bg-white px-2 py-1.5 text-center text-sm font-bold text-zinc-900 outline-none focus:border-violet-500 dark:border-zinc-700 dark:bg-zinc-900 dark:text-white" /></label>
+                                                                return <div key={`${fromCity}-${stop.name}`} className="rounded-xl border border-indigo-100 bg-warm-ivory p-4 dark:border-indigo-500/15 dark:bg-muted-800/80">
+                                                                    <div className="mb-4 flex items-center justify-between gap-3"><div><p className="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-300">Leg {index + 1}</p><h3 className="text-base font-bold text-muted-900 dark:text-white">{fromCity} to {stop.name}</h3></div><span className="rounded-full bg-indigo-100 px-2.5 py-1 text-[10px] font-bold text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300">Transit day</span></div>
+                                                                    <div className="mb-4"><p className="mb-2 text-xs font-semibold text-muted-600 dark:text-muted-400">How will you travel?</p><div className="flex flex-wrap gap-2">{DEPARTURE_MODES.map(mode => <button type="button" key={mode.id} onClick={() => setForm(previous => ({ ...previous, routeStops: previous.routeStops.map((routeStop, stopIndex) => stopIndex === index ? { ...routeStop, travelMode: mode.id } : routeStop) }))} className={`rounded-xl border-2 px-3 py-2 text-xs font-bold transition-all ${stop.travelMode === mode.id ? 'border-indigo-500 bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300' : 'border-muted-200 bg-warm-ivory text-muted-600 dark:border-muted-700 dark:bg-muted-900 dark:text-muted-300'}`}><span className="mr-1">{mode.emoji}</span>{mode.label}</button>)}</div></div>
+                                                                    <div className="mb-4"><p className="mb-2 text-xs font-semibold text-muted-600 dark:text-muted-400">When will you leave {fromCity}?</p><div className="grid grid-cols-2 gap-2 sm:grid-cols-4">{ARRIVAL_TIMES.map(time => <button type="button" key={time.id} onClick={() => setForm(previous => ({ ...previous, routeStops: previous.routeStops.map((routeStop, stopIndex) => stopIndex === index ? { ...routeStop, travelTime: time.id } : routeStop) }))} className={`rounded-xl border-2 p-2 text-center transition-all ${stop.travelTime === time.id ? 'border-indigo-500 bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300' : 'border-muted-200 bg-warm-ivory text-muted-600 dark:border-muted-700 dark:bg-muted-900 dark:text-muted-300'}`}><span className="block text-base">{time.emoji}</span><span className="text-[10px] font-bold">{time.label}</span></button>)}</div></div>
+                                                                    <label className="flex items-center justify-between gap-3 text-xs font-semibold text-muted-600 dark:text-muted-400">How many days will you stay in {stop.name}?<input aria-label={`Days in ${stop.name}`} type="number" min="1" max="14" value={stop.stayDays} onChange={event => setForm(previous => ({ ...previous, routeStops: previous.routeStops.map((routeStop, stopIndex) => stopIndex === index ? { ...routeStop, stayDays: Math.max(1, Number(event.target.value) || 1) } : routeStop) }))} className="w-16 rounded-lg border border-muted-200 bg-warm-ivory px-2 py-1.5 text-center text-sm font-bold text-muted-900 outline-none focus:border-indigo-500 dark:border-muted-700 dark:bg-muted-900 dark:text-white" /></label>
                                                                 </div>;
                                                             })}
                                                         </div>
                                                     </div>
                                                 )}
                                                 {/* Arrival Info */}
-                                                <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/10 dark:to-indigo-900/10 rounded-2xl p-5 border border-blue-100 dark:border-blue-500/20">
+                                                <div className="bg-gradient-to-br from-deep-sea-50 to-indigo-50 dark:from-deep-sea-900/10 dark:to-indigo-900/10 rounded-2xl p-5 border border-deep-sea-100 dark:border-deep-sea-500/20">
                                                     <div className="flex items-center gap-2 mb-4">
                                                         <span className="text-lg">🛬</span>
-                                                        <span className="text-sm font-bold text-zinc-900 dark:text-white">Arrival Info</span>
-                                                        <span className="text-[10px] text-zinc-400 ml-auto">Optional — helps optimize Day 1</span>
+                                                        <span className="text-sm font-bold text-muted-900 dark:text-white">Arrival Info</span>
+                                                        <span className="text-[10px] text-muted-400 ml-auto">Optional — helps optimize Day 1</span>
                                                     </div>
 
                                                     <div className="space-y-4">
                                                         <div>
-                                                            <div className="text-xs font-semibold text-zinc-600 dark:text-zinc-400 mb-2">When do you expect to reach {form.destName || 'your destination'}?</div>
+                                                            <div className="text-xs font-semibold text-muted-600 dark:text-muted-400 mb-2">When do you expect to reach {form.destName || 'your destination'}?</div>
                                                             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                                                                 {ARRIVAL_TIMES.map(t => (
                                                                     <button key={t.id} onClick={() => set('arrivalTime', t.id)}
-                                                                        className={`flex flex-col items-center gap-1 p-3 rounded-xl border-2 transition-all ${form.arrivalTime === t.id ? 'border-blue-500 bg-blue-50 dark:bg-blue-500/10 shadow-sm' : 'border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:border-zinc-300'}`}>
+                                                                        className={`flex flex-col items-center gap-1 p-3 rounded-xl border-2 transition-all ${form.arrivalTime === t.id ? 'border-deep-sea-500 bg-deep-sea-50 dark:bg-deep-sea-500/10 shadow-sm' : 'border-muted-200 dark:border-muted-700 bg-warm-ivory dark:bg-muted-800 hover:border-muted-300'}`}>
                                                                         <span className="text-lg">{t.emoji}</span>
-                                                                        <span className="text-xs font-bold text-zinc-800 dark:text-zinc-200">{t.label}</span>
-                                                                        <span className="text-[10px] text-zinc-400">{t.desc}</span>
+                                                                        <span className="text-xs font-bold text-muted-800 dark:text-muted-200">{t.label}</span>
+                                                                        <span className="text-[10px] text-muted-400">{t.desc}</span>
                                                                     </button>
                                                                 ))}
                                                             </div>
                                                         </div>
 
                                                         <div>
-                                                            <div className="text-xs font-semibold text-zinc-600 dark:text-zinc-400 mb-2">Arriving by</div>
+                                                            <div className="text-xs font-semibold text-muted-600 dark:text-muted-400 mb-2">Arriving by</div>
                                                             <div className="flex flex-wrap gap-2">
                                                                 {DEPARTURE_MODES.map(m => (
                                                                     <button key={m.id} onClick={() => set('arrivalMode', m.id)}
-                                                                        className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 transition-all text-sm font-medium ${form.arrivalMode === m.id ? 'border-blue-500 bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-300' : 'border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:border-zinc-300'}`}>
+                                                                        className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 transition-all text-sm font-medium ${form.arrivalMode === m.id ? 'border-deep-sea-500 bg-deep-sea-50 dark:bg-deep-sea-500/10 text-deep-sea-700 dark:text-deep-sea-300' : 'border-muted-200 dark:border-muted-700 bg-warm-ivory dark:bg-muted-800 text-muted-700 dark:text-muted-300 hover:border-muted-300'}`}>
                                                                         <span>{m.emoji}</span> {m.label}
                                                                     </button>
                                                                 ))}
@@ -648,20 +648,20 @@ export default function SetupWizard({ onDone }: SetupWizardProps) {
                                                 </div>
 
                                                 {/* Departure Info */}
-                                                <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/10 dark:to-orange-900/10 rounded-2xl p-5 border border-amber-100 dark:border-amber-500/20">
+                                                <div className="bg-gradient-to-br from-marigold-50 to-saffron-50 dark:from-marigold-900/10 dark:to-saffron-900/10 rounded-2xl p-5 border border-marigold-100 dark:border-marigold-500/20">
                                                     <div className="flex items-center gap-2 mb-4">
                                                         <span className="text-lg">🛫</span>
-                                                        <span className="text-sm font-bold text-zinc-900 dark:text-white">Departure Info</span>
-                                                        <span className="text-[10px] text-zinc-400 ml-auto">Optional — helps optimize last day</span>
+                                                        <span className="text-sm font-bold text-muted-900 dark:text-white">Departure Info</span>
+                                                        <span className="text-[10px] text-muted-400 ml-auto">Optional — helps optimize last day</span>
                                                     </div>
 
                                                     <div className="space-y-4">
                                                         <div>
-                                                            <div className="text-xs font-semibold text-zinc-600 dark:text-zinc-400 mb-2">Departure time</div>
+                                                            <div className="text-xs font-semibold text-muted-600 dark:text-muted-400 mb-2">Departure time</div>
                                                             <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
                                                                 {DEPARTURE_TIMES.map(t => (
                                                                     <button key={t.id} onClick={() => set('departureTime', t.id)}
-                                                                        className={`px-3 py-2.5 rounded-xl border-2 text-sm font-bold text-center transition-all ${form.departureTime === t.id ? 'border-amber-500 bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300 shadow-sm' : 'border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:border-zinc-300'}`}>
+                                                                        className={`px-3 py-2.5 rounded-xl border-2 text-sm font-bold text-center transition-all ${form.departureTime === t.id ? 'border-marigold-500 bg-marigold-50 dark:bg-marigold-500/10 text-marigold-700 dark:text-marigold-300 shadow-sm' : 'border-muted-200 dark:border-muted-700 bg-warm-ivory dark:bg-muted-800 text-muted-700 dark:text-muted-300 hover:border-muted-300'}`}>
                                                                         {t.label}
                                                                     </button>
                                                                 ))}
@@ -669,11 +669,11 @@ export default function SetupWizard({ onDone }: SetupWizardProps) {
                                                         </div>
 
                                                         <div>
-                                                            <div className="text-xs font-semibold text-zinc-600 dark:text-zinc-400 mb-2">Leaving by</div>
+                                                            <div className="text-xs font-semibold text-muted-600 dark:text-muted-400 mb-2">Leaving by</div>
                                                             <div className="flex flex-wrap gap-2">
                                                                 {DEPARTURE_MODES.map(m => (
                                                                     <button key={m.id} onClick={() => set('departureMode', m.id)}
-                                                                        className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 transition-all text-sm font-medium ${form.departureMode === m.id ? 'border-amber-500 bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-300' : 'border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:border-zinc-300'}`}>
+                                                                        className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 transition-all text-sm font-medium ${form.departureMode === m.id ? 'border-marigold-500 bg-marigold-50 dark:bg-marigold-500/10 text-marigold-700 dark:text-marigold-300' : 'border-muted-200 dark:border-muted-700 bg-warm-ivory dark:bg-muted-800 text-muted-700 dark:text-muted-300 hover:border-muted-300'}`}>
                                                                         <span>{m.emoji}</span> {m.label}
                                                                     </button>
                                                                 ))}
@@ -686,13 +686,13 @@ export default function SetupWizard({ onDone }: SetupWizardProps) {
                                                 <div>
                                                     <div className="flex items-center gap-2 mb-3">
                                                         <span className="text-lg">🏨</span>
-                                                        <span className="text-sm font-bold text-zinc-900 dark:text-white">Preferred Hotel Area</span>
-                                                        <span className="text-[10px] text-zinc-400 ml-auto">Optional</span>
+                                                        <span className="text-sm font-bold text-muted-900 dark:text-white">Preferred Hotel Area</span>
+                                                        <span className="text-[10px] text-muted-400 ml-auto">Optional</span>
                                                     </div>
                                                     <div className="flex flex-wrap gap-2">
                                                         {HOTEL_AREAS.map(a => (
                                                             <button key={a.id} onClick={() => set('hotelArea', form.hotelArea === a.id ? '' : a.id)}
-                                                                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 transition-all text-sm font-medium ${form.hotelArea === a.id ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300' : 'border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 hover:border-zinc-300'}`}>
+                                                                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 transition-all text-sm font-medium ${form.hotelArea === a.id ? 'border-jungle-green-500 bg-jungle-green-50 dark:bg-jungle-green-500/10 text-jungle-green-700 dark:text-jungle-green-300' : 'border-muted-200 dark:border-muted-700 bg-warm-ivory dark:bg-muted-800 text-muted-700 dark:text-muted-300 hover:border-muted-300'}`}>
                                                                 <span>{a.emoji}</span> {a.label}
                                                             </button>
                                                         ))}
@@ -702,12 +702,12 @@ export default function SetupWizard({ onDone }: SetupWizardProps) {
                                                 {/* Buffer Time Preview */}
                                                 {form.departureTime && form.departureMode && (
                                                     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-                                                        className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/10 dark:to-teal-900/10 border border-emerald-100 dark:border-emerald-500/20 rounded-2xl p-4">
+                                                        className="bg-gradient-to-r from-jungle-green-50 to-deep-sea-50 dark:from-jungle-green-900/10 dark:to-deep-sea-900/10 border border-jungle-green-100 dark:border-jungle-green-500/20 rounded-2xl p-4">
                                                         <div className="flex items-center gap-2 mb-2">
                                                             <span className="text-sm">⏱️</span>
-                                                            <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400">Last Day Buffer Preview</span>
+                                                            <span className="text-xs font-bold text-jungle-green-700 dark:text-jungle-green-400">Last Day Buffer Preview</span>
                                                         </div>
-                                                        <p className="text-xs text-zinc-600 dark:text-zinc-400 leading-relaxed">
+                                                        <p className="text-xs text-muted-600 dark:text-muted-400 leading-relaxed">
                                                             With a <strong>{form.departureTime.replace(':', ' ')} departure by {form.departureMode}</strong>,
                                                             you&apos;ll have until approximately <strong>
                                                                 {(() => {
@@ -733,11 +733,11 @@ export default function SetupWizard({ onDone }: SetupWizardProps) {
                             </div>{/* end scrollable */}
 
                             {/* Sticky Next/Back buttons — always visible */}
-                            <div className="sticky bottom-0 left-0 right-0 p-4 bg-white/90 dark:bg-zinc-900/90 backdrop-blur-md border-t border-zinc-200 dark:border-zinc-800 lg:relative lg:bg-transparent lg:dark:bg-transparent lg:border-t-0 lg:p-0 z-[100] lg:z-auto">
-                                <div className="flex gap-3 max-w-2xl mx-auto lg:mx-0 lg:pt-4 lg:border-t lg:border-zinc-100 lg:dark:border-zinc-800 lg:mt-4">
-                                    {step > 1 && <motion.button whileTap={{ scale: 0.98 }} onClick={back} className="flex-1 py-3.5 rounded-2xl border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 font-medium hover:bg-zinc-50 dark:hover:bg-white/5 transition-colors">← Back</motion.button>}
+                            <div className="sticky bottom-0 left-0 right-0 p-4 bg-warm-ivory/90 dark:bg-muted-900/90 backdrop-blur-md border-t border-muted-200 dark:border-muted-800 lg:relative lg:bg-transparent lg:dark:bg-transparent lg:border-t-0 lg:p-0 z-[100] lg:z-auto">
+                                <div className="flex gap-3 max-w-2xl mx-auto lg:mx-0 lg:pt-4 lg:border-t lg:border-muted-100 lg:dark:border-muted-800 lg:mt-4">
+                                    {step > 1 && <motion.button whileTap={{ scale: 0.98 }} onClick={back} className="flex-1 py-3.5 rounded-2xl border border-muted-200 dark:border-muted-700 text-muted-700 dark:text-muted-300 font-medium hover:bg-muted-50 dark:hover:bg-warm-ivory/5 transition-colors">← Back</motion.button>}
                                     <motion.button whileTap={canNext && !isSubmitting && !isTransitioning ? { scale: 0.98 } : {}} onClick={step < TOTAL_STEPS ? () => { setIsTransitioning(true); setTimeout(() => { setIsTransitioning(false); next(); }, 300); } : handleSubmit} disabled={!canNext || isSubmitting || isTransitioning}
-                                        className={`flex-[2] py-3.5 rounded-2xl font-bold text-base transition-all flex items-center justify-center gap-2 ${canNext && !isSubmitting && !isTransitioning ? 'bg-emerald-600 text-white hover:bg-emerald-500 shadow-lg shadow-emerald-500/25' : 'bg-zinc-200 dark:bg-zinc-700 text-zinc-400 cursor-not-allowed'}`}>
+                                        className={`flex-[2] py-3.5 rounded-2xl font-bold text-base transition-all flex items-center justify-center gap-2 ${canNext && !isSubmitting && !isTransitioning ? 'bg-jungle-green-600 text-white hover:bg-jungle-green-500 shadow-lg shadow-jungle-green-500/25' : 'bg-muted-200 dark:bg-muted-700 text-muted-400 cursor-not-allowed'}`}>
                                         {isSubmitting || isTransitioning ? (
                                             <>
                                                 <Loader2 className="w-5 h-5 animate-spin" />
@@ -752,15 +752,15 @@ export default function SetupWizard({ onDone }: SetupWizardProps) {
                         </div>
                     )}
                 </div>
-                <div className="hidden lg:flex w-[420px] bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/10 items-center justify-center border-l border-zinc-100 dark:border-white/5">
+                <div className="hidden lg:flex w-[420px] bg-gradient-to-br from-jungle-green-50 to-deep-sea-50 dark:from-jungle-green-900/20 dark:to-deep-sea-900/10 items-center justify-center border-l border-muted-100 dark:border-white/5">
                     <motion.div key={`${step}-${vibeMatchMode}-${buildFromReel}`} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.4 }} className="text-center">
                         <div className="text-8xl mb-6">
                             {vibeMatchMode ? '🎯' : buildFromReel ? '📸' : STEP_VISUALS[step - 1]}
                         </div>
-                        <h3 className="text-lg font-bold text-zinc-700 dark:text-zinc-200">
+                        <h3 className="text-lg font-bold text-muted-700 dark:text-muted-200">
                             {vibeMatchMode ? 'Vibe Match' : buildFromReel ? 'Build from Content' : `Step ${step} of ${TOTAL_STEPS}`}
                         </h3>
-                        <p className="text-sm text-zinc-400 mt-1">
+                        <p className="text-sm text-muted-400 mt-1">
                             {vibeMatchMode ? 'Pick vibes → AI finds your destination' : buildFromReel ? 'AI extracts your trip from social media' : STEP_TITLES[step - 1]}
                         </p>
                     </motion.div>

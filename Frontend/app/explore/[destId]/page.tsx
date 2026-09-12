@@ -106,7 +106,7 @@ export default function DestinationDeepDive() {
         <div className="min-h-screen bg-[#f5f5f7] dark:bg-[#000000] pb-24 overflow-x-hidden">
             
             {/* HERO HEADER */}
-            <div className="relative h-[45vh] sm:h-[50vh] min-h-[360px] sm:min-h-[400px] w-full bg-zinc-900 border-b border-zinc-200 dark:border-white/10 flex items-center justify-center">
+            <div className="relative h-[45vh] sm:h-[50vh] min-h-[360px] sm:min-h-[400px] w-full bg-muted-900 border-b border-muted-200 dark:border-white/10 flex items-center justify-center">
                 <PlaceImage 
                     name={destination} 
                     asBackground 
@@ -150,7 +150,7 @@ export default function DestinationDeepDive() {
                         </select>
                         <button
                             onClick={() => fetchDeepDive()} disabled={loading}
-                            className="bg-white text-black px-6 py-2.5 rounded-xl font-bold text-sm shadow-md hover:bg-zinc-200 transition-colors disabled:opacity-50"
+                            className="bg-white text-black px-6 py-2.5 rounded-xl font-bold text-sm shadow-md hover:bg-muted-200 transition-colors disabled:opacity-50"
                         >
                             {loading ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : 'Update Vibe'}
                         </button>
@@ -161,65 +161,65 @@ export default function DestinationDeepDive() {
             {/* CONTENT GRID */}
             <div className="max-w-6xl mx-auto px-3 sm:px-4 md:px-8 -mt-10 relative z-20">
                 {error && (
-                    <div className="bg-red-500/10 border border-red-500/30 text-red-500 p-4 rounded-xl text-center mb-8 font-semibold">
+                    <div className="bg-temple-red-500/10 border border-temple-red-500/30 text-temple-red-500 p-4 rounded-xl text-center mb-8 font-semibold">
                         {error}
                     </div>
                 )}
 
                 {loading ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-pulse">
-                        <div className="bg-white dark:bg-[#111] h-64 rounded-[2rem] border border-zinc-200 dark:border-white/10" />
-                        <div className="bg-white dark:bg-[#111] h-64 rounded-[2rem] border border-zinc-200 dark:border-white/10" />
-                        <div className="bg-white dark:bg-[#111] h-96 rounded-[2rem] border border-zinc-200 dark:border-white/10 md:col-span-2" />
+                        <div className="bg-white dark:bg-[#111] h-64 rounded-[2rem] border border-muted-200 dark:border-white/10" />
+                        <div className="bg-white dark:bg-[#111] h-64 rounded-[2rem] border border-muted-200 dark:border-white/10" />
+                        <div className="bg-white dark:bg-[#111] h-96 rounded-[2rem] border border-muted-200 dark:border-white/10 md:col-span-2" />
                     </div>
                 ) : data ? (
                     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         
                         {/* REDDIT CONSENSUS */}
-                        <div className="md:col-span-2 bg-gradient-to-br from-orange-50 to-amber-50 dark:from-[#1a1400] dark:to-[#110d00] border border-orange-100 dark:border-orange-900/30 p-5 sm:p-8 rounded-2xl sm:rounded-[2rem] shadow-sm">
+                        <div className="md:col-span-2 bg-gradient-to-br from-saffron-50 to-saffron-50 dark:from-[#1a1400] dark:to-[#110d00] border border-saffron-100 dark:border-saffron-900/30 p-5 sm:p-8 rounded-2xl sm:rounded-[2rem] shadow-sm">
                             <div className="flex items-center gap-3 mb-4">
-                                <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center text-white shadow-lg">
+                                <div className="w-10 h-10 bg-saffron-500 rounded-full flex items-center justify-center text-white shadow-lg">
                                     <MessageSquare className="w-5 h-5" />
                                 </div>
                                 <div>
-                                    <h2 className="text-xl font-bold text-orange-900 dark:text-orange-400">The Word on the Street</h2>
-                                    <p className="text-xs font-semibold uppercase tracking-widest text-orange-600/70 dark:text-orange-500/50">Reddit & Travel Blog Consensus</p>
+                                    <h2 className="text-xl font-bold text-saffron-900 dark:text-saffron-400">The Word on the Street</h2>
+                                    <p className="text-xs font-semibold uppercase tracking-widest text-saffron-600/70 dark:text-saffron-500/50">Reddit & Travel Blog Consensus</p>
                                 </div>
                             </div>
-                            <p className="text-lg md:text-xl font-medium text-orange-800 dark:text-orange-200/90 leading-relaxed">
+                            <p className="text-lg md:text-xl font-medium text-saffron-800 dark:text-saffron-200/90 leading-relaxed">
                                 &quot;{data.redditConsensus}&quot;
                             </p>
                         </div>
 
                         {/* HIDDEN GEMS */}
-                        <div className="bg-white dark:bg-[#111] border border-zinc-200 dark:border-white/10 p-5 sm:p-8 rounded-2xl sm:rounded-[2rem] shadow-sm flex flex-col">
+                        <div className="bg-white dark:bg-[#111] border border-muted-200 dark:border-white/10 p-5 sm:p-8 rounded-2xl sm:rounded-[2rem] shadow-sm flex flex-col">
                             <div className="flex items-center gap-3 mb-6">
-                                <Sparkles className="w-6 h-6 text-emerald-500" />
-                                <h3 className="text-2xl font-bold text-zinc-900 dark:text-white">Hidden Gems</h3>
+                                <Sparkles className="w-6 h-6 text-jungle-green-500" />
+                                <h3 className="text-2xl font-bold text-muted-900 dark:text-white">Hidden Gems</h3>
                             </div>
                             <div className="space-y-5 flex-1">
                                 {(data?.hiddenGems ?? []).map((gem, i) => (
                                     <div key={i} className="group">
-                                        <h4 className="text-base font-bold text-zinc-900 dark:text-white group-hover:text-emerald-500 transition-colors">{gem.name}</h4>
-                                        <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1 leading-relaxed">{gem.desc}</p>
+                                        <h4 className="text-base font-bold text-muted-900 dark:text-white group-hover:text-jungle-green-500 transition-colors">{gem.name}</h4>
+                                        <p className="text-sm text-muted-500 dark:text-muted-400 mt-1 leading-relaxed">{gem.desc}</p>
                                     </div>
                                 ))}
                             </div>
                         </div>
 
                         {/* TOURIST TRAPS */}
-                        <div className="bg-rose-50/50 dark:bg-rose-950/10 border border-rose-100 dark:border-rose-900/20 p-5 sm:p-8 rounded-2xl sm:rounded-[2rem] shadow-sm flex flex-col">
+                        <div className="bg-temple-red-50/50 dark:bg-temple-red-950/10 border border-temple-red-100 dark:border-temple-red-900/20 p-5 sm:p-8 rounded-2xl sm:rounded-[2rem] shadow-sm flex flex-col">
                             <div className="flex items-center gap-3 mb-6">
-                                <AlertTriangle className="w-6 h-6 text-rose-500" />
-                                <h3 className="text-2xl font-bold text-rose-900 dark:text-rose-400">Skip the Traps</h3>
+                                <AlertTriangle className="w-6 h-6 text-temple-red-500" />
+                                <h3 className="text-2xl font-bold text-temple-red-900 dark:text-temple-red-400">Skip the Traps</h3>
                             </div>
                             <div className="space-y-6 flex-1">
                                 {(data?.touristTrapsToAvoid ?? []).map((trap, i) => (
-                                    <div key={i} className="bg-white dark:bg-black/40 border border-rose-100 dark:border-rose-900/20 rounded-2xl p-4">
-                                        <div className="flex items-center gap-2 text-rose-600 dark:text-rose-400 font-bold mb-1 line-through opacity-70 flex-wrap">
+                                    <div key={i} className="bg-white dark:bg-black/40 border border-temple-red-100 dark:border-temple-red-900/20 rounded-2xl p-4">
+                                        <div className="flex items-center gap-2 text-temple-red-600 dark:text-temple-red-400 font-bold mb-1 line-through opacity-70 flex-wrap">
                                             <span className="text-sm">❌</span> {trap.trap}
                                         </div>
-                                        <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 font-bold text-sm mt-2 flex-wrap">
+                                        <div className="flex items-center gap-2 text-jungle-green-600 dark:text-jungle-green-400 font-bold text-sm mt-2 flex-wrap">
                                             <span className="text-base">✅</span> {trap.betterAlternative}
                                         </div>
                                     </div>
@@ -228,20 +228,20 @@ export default function DestinationDeepDive() {
                         </div>
 
                         {/* FOOD */}
-                        <div className="bg-white dark:bg-[#111] border border-zinc-200 dark:border-white/10 p-5 sm:p-8 rounded-2xl sm:rounded-[2rem] shadow-sm">
+                        <div className="bg-white dark:bg-[#111] border border-muted-200 dark:border-white/10 p-5 sm:p-8 rounded-2xl sm:rounded-[2rem] shadow-sm">
                             <div className="flex items-center gap-3 mb-6">
-                                <Utensils className="w-6 h-6 text-amber-500" />
-                                <h3 className="text-2xl font-bold text-zinc-900 dark:text-white">Local Bites</h3>
+                                <Utensils className="w-6 h-6 text-saffron-500" />
+                                <h3 className="text-2xl font-bold text-muted-900 dark:text-white">Local Bites</h3>
                             </div>
                             <div className="space-y-4">
                                 {(data?.localFoodMustHaves ?? []).map((food, i) => (
-                                    <div key={i} className="flex gap-4 items-start border-b border-zinc-100 dark:border-white/5 pb-4 last:border-0 last:pb-0">
-                                        <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold shrink-0">
+                                    <div key={i} className="flex gap-4 items-start border-b border-muted-100 dark:border-white/5 pb-4 last:border-0 last:pb-0">
+                                        <div className="w-10 h-10 rounded-xl bg-saffron-50 dark:bg-saffron-500/10 text-saffron-600 dark:text-saffron-400 flex items-center justify-center font-bold shrink-0">
                                             {i + 1}
                                         </div>
                                         <div>
-                                            <h4 className="text-base font-bold text-zinc-900 dark:text-white">{food.dish}</h4>
-                                            <p className="text-xs font-semibold tracking-wide text-zinc-500 mt-1 uppercase">📍 {food.where}</p>
+                                            <h4 className="text-base font-bold text-muted-900 dark:text-white">{food.dish}</h4>
+                                            <p className="text-xs font-semibold tracking-wide text-muted-500 mt-1 uppercase">📍 {food.where}</p>
                                         </div>
                                     </div>
                                 ))}
@@ -249,16 +249,16 @@ export default function DestinationDeepDive() {
                         </div>
 
                         {/* INSTA SPOTS */}
-                        <div className="bg-white dark:bg-[#111] border border-zinc-200 dark:border-white/10 p-5 sm:p-8 rounded-2xl sm:rounded-[2rem] shadow-sm">
+                        <div className="bg-white dark:bg-[#111] border border-muted-200 dark:border-white/10 p-5 sm:p-8 rounded-2xl sm:rounded-[2rem] shadow-sm">
                             <div className="flex items-center gap-3 mb-6">
-                                <Camera className="w-6 h-6 text-blue-500" />
-                                <h3 className="text-2xl font-bold text-zinc-900 dark:text-white">Aesthetic Spots</h3>
+                                <Camera className="w-6 h-6 text-deep-sea-500" />
+                                <h3 className="text-2xl font-bold text-muted-900 dark:text-white">Aesthetic Spots</h3>
                             </div>
                             <div className="grid grid-cols-1 gap-3">
                                 {(data?.instagramWorthy ?? []).map((spot, i) => (
-                                    <div key={i} className="bg-zinc-50 dark:bg-zinc-900/50 rounded-xl p-4 flex flex-col gap-2 hover:shadow-md transition-shadow cursor-default">
-                                        <div className="font-bold text-sm text-zinc-900 dark:text-white">{spot.spot}</div>
-                                        <div className="text-[10px] font-bold bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-400 px-2 py-1.5 rounded w-fit leading-relaxed">
+                                    <div key={i} className="bg-muted-50 dark:bg-muted-900/50 rounded-xl p-4 flex flex-col gap-2 hover:shadow-md transition-shadow cursor-default">
+                                        <div className="font-bold text-sm text-muted-900 dark:text-white">{spot.spot}</div>
+                                        <div className="text-[10px] font-bold bg-deep-sea-100 text-deep-sea-700 dark:bg-deep-sea-500/20 dark:text-deep-sea-400 px-2 py-1.5 rounded w-fit leading-relaxed">
                                             {spot.bestTime}
                                         </div>
                                     </div>
@@ -273,27 +273,27 @@ export default function DestinationDeepDive() {
                     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="mt-12">
                         <div className="flex items-center justify-between mb-6">
                             <div>
-                                <h3 className="text-2xl font-bold text-zinc-900 dark:text-white flex items-center gap-2">
-                                    <Sparkles className="w-6 h-6 text-emerald-500" /> Live Local Events
+                                <h3 className="text-2xl font-bold text-muted-900 dark:text-white flex items-center gap-2">
+                                    <Sparkles className="w-6 h-6 text-jungle-green-500" /> Live Local Events
                                 </h3>
-                                <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">Gigs, flea markets, and pop-ups happening in {destination}</p>
+                                <p className="text-sm text-muted-500 dark:text-muted-400 mt-1">Gigs, flea markets, and pop-ups happening in {destination}</p>
                             </div>
                         </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                             {liveEvents.map((event, i) => (
-                                <a key={i} href={event.link} target="_blank" rel="noopener noreferrer" className="group block bg-white dark:bg-[#111] border border-zinc-200 dark:border-white/10 rounded-2xl overflow-hidden hover:shadow-xl transition-all hover:-translate-y-1">
-                                    <div className="h-32 w-full relative overflow-hidden bg-zinc-100 dark:bg-zinc-800">
+                                <a key={i} href={event.link} target="_blank" rel="noopener noreferrer" className="group block bg-white dark:bg-[#111] border border-muted-200 dark:border-white/10 rounded-2xl overflow-hidden hover:shadow-xl transition-all hover:-tranmuted-y-1">
+                                    <div className="h-32 w-full relative overflow-hidden bg-muted-100 dark:bg-muted-800">
                                         <Image src={event.thumbnail} alt={event.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                                         <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider">
                                             {event.date.when}
                                         </div>
                                     </div>
                                     <div className="p-4">
-                                        <h4 className="font-bold text-sm text-zinc-900 dark:text-white line-clamp-2 mb-2 group-hover:text-emerald-500 transition-colors">{event.title}</h4>
-                                        <p className="text-xs text-zinc-500 dark:text-zinc-400 flex items-center gap-1 mt-1 truncate">
+                                        <h4 className="font-bold text-sm text-muted-900 dark:text-white line-clamp-2 mb-2 group-hover:text-jungle-green-500 transition-colors">{event.title}</h4>
+                                        <p className="text-xs text-muted-500 dark:text-muted-400 flex items-center gap-1 mt-1 truncate">
                                             <MapPin className="w-3 h-3" /> {event.venue?.name || 'Local Venue'}
                                         </p>
-                                        <div className="mt-3 text-xs font-semibold text-blue-600 dark:text-blue-400 flex items-center gap-1 group-hover:gap-2 transition-all">
+                                        <div className="mt-3 text-xs font-semibold text-deep-sea-600 dark:text-deep-sea-400 flex items-center gap-1 group-hover:gap-2 transition-all">
                                             Get Tickets <ArrowRight className="w-3 h-3" />
                                         </div>
                                     </div>
@@ -306,15 +306,15 @@ export default function DestinationDeepDive() {
                 {/* CALL TO ACTION */}
                 {data && (
                     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
-                        className="mt-12 bg-blue-600 dark:bg-blue-600 rounded-[2rem] p-10 text-center shadow-xl shadow-blue-500/20"
+                        className="mt-12 bg-deep-sea-600 dark:bg-deep-sea-600 rounded-[2rem] p-10 text-center shadow-xl shadow-deep-sea-500/20"
                     >
                         <h2 className="text-3xl font-bold text-white mb-4">Ready to lock it in?</h2>
-                        <p className="text-blue-100 mb-8 max-w-xl mx-auto font-medium">
+                        <p className="text-deep-sea-100 mb-8 max-w-xl mx-auto font-medium">
                             Take these authentic insights and instantly generate a fully mapped day-by-day itinerary tailored precisely to you.
                         </p>
                         <button 
                             onClick={() => router.push(`/itinerary?destination=${encodeURIComponent(destination)}`)}
-                            className="bg-white text-blue-600 px-8 py-4 rounded-xl font-bold text-base shadow-lg hover:scale-105 transition-transform flex items-center gap-2 mx-auto"
+                            className="bg-white text-deep-sea-600 px-8 py-4 rounded-xl font-bold text-base shadow-lg hover:scale-105 transition-transform flex items-center gap-2 mx-auto"
                         >
                             Build My Itinerary <ArrowRight className="w-5 h-5" />
                         </button>
@@ -323,8 +323,8 @@ export default function DestinationDeepDive() {
 
                 {/* Festival Banner */}
                 {festivals.length > 0 && (
-                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mt-8 p-5 bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 rounded-2xl">
-                        <h3 className="font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2 mb-3">
+                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mt-8 p-5 bg-gradient-to-r from-saffron-500/10 to-saffron-500/10 border border-saffron-500/20 rounded-2xl">
+                        <h3 className="font-bold text-lg text-muted-900 dark:text-white flex items-center gap-2 mb-3">
                             🎉 Upcoming Festivals
                         </h3>
                         <div className="space-y-3">
@@ -332,10 +332,10 @@ export default function DestinationDeepDive() {
                                 <div key={i} className="flex items-start gap-3">
                                     <span className="text-2xl">{f.emoji}</span>
                                     <div>
-                                        <div className="font-semibold text-sm text-slate-900 dark:text-white">{f.name}</div>
-                                        <p className="text-xs text-slate-500">{f.description}</p>
+                                        <div className="font-semibold text-sm text-muted-900 dark:text-white">{f.name}</div>
+                                        <p className="text-xs text-muted-500">{f.description}</p>
                                         {f.travelImpact.warnings.length > 0 && (
-                                            <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">⚠️ {f.travelImpact.warnings[0]}</p>
+                                            <p className="text-xs text-saffron-600 dark:text-saffron-400 mt-1">⚠️ {f.travelImpact.warnings[0]}</p>
                                         )}
                                     </div>
                                 </div>

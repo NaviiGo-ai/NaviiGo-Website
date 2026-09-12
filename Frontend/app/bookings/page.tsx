@@ -39,9 +39,9 @@ const SORT_OPTIONS = ['Price: Low to High', 'Price: High to Low', 'Duration', 'D
 function CompareBadge({ badge }: { badge: string | null }) {
   if (!badge) return null;
   const config = {
-    cheapest: { icon: TrendingDown, label: '🟢 Cheapest', cls: 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/40' },
-    fastest: { icon: Zap, label: '⚡ Fastest', cls: 'bg-amber-50  dark:bg-amber-900/20  text-amber-700  dark:text-amber-400  border-amber-200  dark:border-amber-800/40' },
-    bestvalue: { icon: Award, label: '⭐ Best Value', cls: 'bg-violet-50 dark:bg-violet-900/20 text-violet-700 dark:text-violet-400 border-violet-200 dark:border-violet-800/40' },
+    cheapest: { icon: TrendingDown, label: '🟢 Cheapest', cls: 'bg-jungle-green-50 dark:bg-jungle-green-900/20 text-jungle-green-700 dark:text-jungle-green-400 border-jungle-green-200 dark:border-jungle-green-800/40' },
+    fastest: { icon: Zap, label: '⚡ Fastest', cls: 'bg-saffron-50  dark:bg-saffron-900/20  text-saffron-700  dark:text-saffron-400  border-saffron-200  dark:border-saffron-800/40' },
+    bestvalue: { icon: Award, label: '⭐ Best Value', cls: 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800/40' },
   }[badge];
   if (!config) return null;
   return (
@@ -73,19 +73,19 @@ function SmartInsights({ tab }: { tab: string }) {
   };
   const list = insights[tab] ?? [];
   return (
-    <div className="mt-6 rounded-2xl border border-zinc-100 dark:border-white/5 bg-white dark:bg-[#111] p-5">
+    <div className="mt-6 rounded-2xl border border-muted-100 dark:border-white/5 bg-white dark:bg-[#111] p-5">
       <div className="flex items-center gap-2 mb-4">
-        <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-orange-400 to-rose-500 flex items-center justify-center">
+        <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-saffron-400 to-temple-red-500 flex items-center justify-center">
           <TrendingUp className="w-4 h-4 text-white" />
         </div>
-        <p className="font-bold text-sm text-slate-800 dark:text-white">Smart Price Insights</p>
-        <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400 border border-orange-200 dark:border-orange-800/30">AI Powered</span>
+        <p className="font-bold text-sm text-muted-800 dark:text-white">Smart Price Insights</p>
+        <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-saffron-50 dark:bg-saffron-900/20 text-saffron-600 dark:text-saffron-400 border border-saffron-200 dark:border-saffron-800/30">AI Powered</span>
       </div>
       <div className="space-y-2.5">
         {list.map((ins, i) => (
-          <div key={i} className={`flex items-start gap-3 px-3.5 py-2.5 rounded-xl text-sm ${ins.type === 'warn' ? 'bg-amber-50 dark:bg-amber-900/10 text-amber-800 dark:text-amber-300'
-            : ins.type === 'tip' ? 'bg-emerald-50 dark:bg-emerald-900/10 text-emerald-800 dark:text-emerald-300'
-              : 'bg-zinc-50 dark:bg-white/5 text-zinc-700 dark:text-zinc-300'
+          <div key={i} className={`flex items-start gap-3 px-3.5 py-2.5 rounded-xl text-sm ${ins.type === 'warn' ? 'bg-saffron-50 dark:bg-saffron-900/10 text-saffron-800 dark:text-saffron-300'
+            : ins.type === 'tip' ? 'bg-jungle-green-50 dark:bg-jungle-green-900/10 text-jungle-green-800 dark:text-jungle-green-300'
+              : 'bg-muted-50 dark:bg-white/5 text-muted-700 dark:text-muted-300'
             }`}>
             <span className="text-base shrink-0 mt-0.5">{ins.icon}</span>
             <p className="leading-snug font-medium">{ins.text}</p>
@@ -103,14 +103,14 @@ function FlightForm({ onTravelersChange }: { onTravelersChange: (val: string) =>
     <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr_1fr_1.2fr] gap-4 items-center">
       <PlaceAutocomplete name="from" placeholder="From City" icon="plane" />
 
-      <button type="button" className="flex items-center justify-center w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 hover:bg-orange-100 dark:hover:bg-orange-900/30 transition-all shrink-0 mx-auto border border-zinc-200 dark:border-zinc-700 hover:rotate-180">
-        <ArrowRightLeft className="w-4 h-4 text-zinc-500" />
+      <button type="button" className="flex items-center justify-center w-10 h-10 rounded-full bg-muted-100 dark:bg-muted-800 hover:bg-saffron-100 dark:hover:bg-saffron-900/30 transition-all shrink-0 mx-auto border border-muted-200 dark:border-muted-700 hover:rotate-180">
+        <ArrowRightLeft className="w-4 h-4 text-muted-500" />
       </button>
 
       <PlaceAutocomplete name="to" placeholder="To City" icon="plane" />
 
       <div className="relative group">
-        <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 group-focus-within:text-orange-500 transition-colors pointer-events-none" />
+        <Calendar className="absolute left-4 top-1/2 -tranmuted-y-1/2 w-4 h-4 text-muted-400 group-focus-within:text-saffron-500 transition-colors pointer-events-none" />
         <input name="date" type="date" className="input-field pl-11" />
       </div>
 
@@ -124,14 +124,14 @@ function TrainForm({ onTravelersChange }: { onTravelersChange: (val: string) => 
     <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr_1fr_1fr] gap-4 items-center">
       <PlaceAutocomplete name="from" placeholder="From Station" icon="train" />
 
-      <button type="button" className="flex items-center justify-center w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-all shrink-0 mx-auto border border-zinc-200 dark:border-zinc-700 hover:rotate-180">
-        <ArrowRightLeft className="w-4 h-4 text-zinc-500" />
+      <button type="button" className="flex items-center justify-center w-10 h-10 rounded-full bg-muted-100 dark:bg-muted-800 hover:bg-deep-sea-100 dark:hover:bg-deep-sea-900/30 transition-all shrink-0 mx-auto border border-muted-200 dark:border-muted-700 hover:rotate-180">
+        <ArrowRightLeft className="w-4 h-4 text-muted-500" />
       </button>
 
       <PlaceAutocomplete name="to" placeholder="To Station" icon="train" />
 
       <div className="relative group">
-        <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 group-focus-within:text-blue-500 transition-colors pointer-events-none" />
+        <Calendar className="absolute left-4 top-1/2 -tranmuted-y-1/2 w-4 h-4 text-muted-400 group-focus-within:text-deep-sea-500 transition-colors pointer-events-none" />
         <input name="date" type="date" className="input-field pl-11" />
       </div>
 
@@ -145,14 +145,14 @@ function CabForm({ onTravelersChange }: { onTravelersChange: (val: string) => vo
     <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr_1fr_1fr] gap-4 items-center">
       <PlaceAutocomplete name="from" placeholder="Pickup City" icon="map" />
 
-      <button type="button" className="flex items-center justify-center w-10 h-10 rounded-full bg-zinc-100 dark:bg-zinc-800 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 transition-all shrink-0 mx-auto border border-zinc-200 dark:border-zinc-700 hover:rotate-180">
-        <ArrowRightLeft className="w-4 h-4 text-zinc-500" />
+      <button type="button" className="flex items-center justify-center w-10 h-10 rounded-full bg-muted-100 dark:bg-muted-800 hover:bg-jungle-green-100 dark:hover:bg-jungle-green-900/30 transition-all shrink-0 mx-auto border border-muted-200 dark:border-muted-700 hover:rotate-180">
+        <ArrowRightLeft className="w-4 h-4 text-muted-500" />
       </button>
 
       <PlaceAutocomplete name="to" placeholder="Dropoff City" icon="map" />
 
       <div className="relative group">
-        <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 group-focus-within:text-emerald-500 transition-colors pointer-events-none" />
+        <Calendar className="absolute left-4 top-1/2 -tranmuted-y-1/2 w-4 h-4 text-muted-400 group-focus-within:text-jungle-green-500 transition-colors pointer-events-none" />
         <input name="date" type="date" className="input-field pl-11" />
       </div>
 
@@ -168,11 +168,11 @@ function HotelForm({ onTravelersChange }: { onTravelersChange: (val: string) => 
 
       <div className="grid grid-cols-2 gap-4">
         <div className="relative group">
-          <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 group-focus-within:text-violet-500 transition-colors pointer-events-none" />
+          <Calendar className="absolute left-4 top-1/2 -tranmuted-y-1/2 w-4 h-4 text-muted-400 group-focus-within:text-indigo-500 transition-colors pointer-events-none" />
           <input name="checkin" type="date" className="input-field pl-11" />
         </div>
         <div className="relative group">
-          <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 group-focus-within:text-violet-500 transition-colors pointer-events-none" />
+          <Calendar className="absolute left-4 top-1/2 -tranmuted-y-1/2 w-4 h-4 text-muted-400 group-focus-within:text-indigo-500 transition-colors pointer-events-none" />
           <input name="checkout" type="date" className="input-field pl-11" />
         </div>
       </div>
@@ -186,10 +186,10 @@ function HotelForm({ onTravelersChange }: { onTravelersChange: (val: string) => 
 // ─── MAIN PAGE ────────────────────────────────────────────────────────────────
 
 const tabConfig = [
-  { id: 'flights', icon: Plane, label: 'Flights', color: 'text-orange-500', accent: 'from-orange-500 to-rose-500' },
-  { id: 'trains', icon: Train, label: 'Trains', color: 'text-blue-500', accent: 'from-blue-500 to-indigo-500' },
-  { id: 'cabs', icon: Car, label: 'Cabs', color: 'text-emerald-500', accent: 'from-emerald-500 to-teal-500' },
-  { id: 'hotels', icon: Building2, label: 'Hotels', color: 'text-violet-500', accent: 'from-violet-500 to-purple-500' },
+  { id: 'flights', icon: Plane, label: 'Flights', color: 'text-saffron-500', accent: 'from-saffron-500 to-temple-red-500' },
+  { id: 'trains', icon: Train, label: 'Trains', color: 'text-deep-sea-500', accent: 'from-deep-sea-500 to-indigo-500' },
+  { id: 'cabs', icon: Car, label: 'Cabs', color: 'text-jungle-green-500', accent: 'from-jungle-green-500 to-deep-sea-500' },
+  { id: 'hotels', icon: Building2, label: 'Hotels', color: 'text-indigo-500', accent: 'from-indigo-500 to-indigo-500' },
 ] as const;
 
 const filtersByTab = { flights: flightFilters, trains: trainFilters, cabs: cabFilters, hotels: hotelFilters };
@@ -514,48 +514,48 @@ export default function BookingsPage() {
           <div ref={listRef} className="space-y-4">
             {isSearching ? (
               <div className="space-y-4">
-                <div className="bg-white dark:bg-[#111] rounded-2xl p-5 border border-zinc-100 dark:border-white/5">
+                <div className="bg-white dark:bg-[#111] rounded-2xl p-5 border border-muted-100 dark:border-white/5">
                   <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-xl bg-zinc-100 dark:bg-zinc-800 animate-pulse" />
+                    <div className="w-10 h-10 rounded-xl bg-muted-100 dark:bg-muted-800 animate-pulse" />
                     <div className="flex-1 space-y-2">
-                      <div className="h-3 bg-zinc-100 dark:bg-zinc-800 rounded-full animate-pulse w-32" />
-                      <div className="h-2.5 bg-zinc-100 dark:bg-zinc-800 rounded-full animate-pulse w-20" />
+                      <div className="h-3 bg-muted-100 dark:bg-muted-800 rounded-full animate-pulse w-32" />
+                      <div className="h-2.5 bg-muted-100 dark:bg-muted-800 rounded-full animate-pulse w-20" />
                     </div>
-                    <div className="h-8 w-24 bg-zinc-100 dark:bg-zinc-800 rounded-xl animate-pulse" />
+                    <div className="h-8 w-24 bg-muted-100 dark:bg-muted-800 rounded-xl animate-pulse" />
                   </div>
                   <div className="flex justify-center gap-8">
-                    <div className="h-8 w-12 bg-zinc-100 dark:bg-zinc-800 rounded animate-pulse" />
-                    <div className="flex-1 h-px bg-zinc-100 dark:bg-zinc-800 self-center animate-pulse" />
-                    <div className="h-8 w-12 bg-zinc-100 dark:bg-zinc-800 rounded animate-pulse" />
+                    <div className="h-8 w-12 bg-muted-100 dark:bg-muted-800 rounded animate-pulse" />
+                    <div className="flex-1 h-px bg-muted-100 dark:bg-muted-800 self-center animate-pulse" />
+                    <div className="h-8 w-12 bg-muted-100 dark:bg-muted-800 rounded animate-pulse" />
                   </div>
                 </div>
                 {[1, 2, 3].map(i => (
-                  <div key={i} className="bg-white dark:bg-[#111] rounded-2xl p-5 border border-zinc-100 dark:border-white/5">
+                  <div key={i} className="bg-white dark:bg-[#111] rounded-2xl p-5 border border-muted-100 dark:border-white/5">
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-zinc-100 dark:bg-zinc-800 animate-pulse" />
+                      <div className="w-12 h-12 rounded-xl bg-muted-100 dark:bg-muted-800 animate-pulse" />
                       <div className="flex-1 space-y-2">
-                        <div className="h-3 bg-zinc-100 dark:bg-zinc-800 rounded-full animate-pulse" style={{ width: `${50 + i * 10}%` }} />
-                        <div className="h-2.5 bg-zinc-100 dark:bg-zinc-800 rounded-full animate-pulse w-24" />
+                        <div className="h-3 bg-muted-100 dark:bg-muted-800 rounded-full animate-pulse" style={{ width: `${50 + i * 10}%` }} />
+                        <div className="h-2.5 bg-muted-100 dark:bg-muted-800 rounded-full animate-pulse w-24" />
                       </div>
                       <div className="text-right space-y-2">
-                        <div className="h-5 w-20 bg-zinc-100 dark:bg-zinc-800 rounded animate-pulse" />
-                        <div className="h-8 w-24 bg-zinc-100 dark:bg-zinc-800 rounded-xl animate-pulse" />
+                        <div className="h-5 w-20 bg-muted-100 dark:bg-muted-800 rounded animate-pulse" />
+                        <div className="h-8 w-24 bg-muted-100 dark:bg-muted-800 rounded-xl animate-pulse" />
                       </div>
                     </div>
                   </div>
                 ))}
-                <p className="text-center text-xs text-zinc-400 animate-pulse pt-2">🔍 Searching 120+ sites for the best deals…</p>
+                <p className="text-center text-xs text-muted-400 animate-pulse pt-2">🔍 Searching 120+ sites for the best deals…</p>
               </div>
             ) : !hasSearched ? (
               <motion.div
                 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
                 className="flex flex-col items-center justify-center py-20 px-4 text-center opacity-70"
               >
-                <div className="w-20 h-20 bg-zinc-100 dark:bg-zinc-800/50 rounded-full flex items-center justify-center mb-5">
-                  <Search className="w-8 h-8 text-zinc-400" />
+                <div className="w-20 h-20 bg-muted-100 dark:bg-muted-800/50 rounded-full flex items-center justify-center mb-5">
+                  <Search className="w-8 h-8 text-muted-400" />
                 </div>
-                <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-2">Ready to explore?</h3>
-                <p className="text-sm text-zinc-500 max-w-[300px]">Enter your destination and dates above to unlock live deals and dynamic routes.</p>
+                <h3 className="text-xl font-bold text-muted-800 dark:text-white mb-2">Ready to explore?</h3>
+                <p className="text-sm text-muted-500 max-w-[300px]">Enter your destination and dates above to unlock live deals and dynamic routes.</p>
               </motion.div>
             ) : (
               <>
@@ -566,7 +566,7 @@ export default function BookingsPage() {
                   <button
                     onClick={handleLoadMore}
                     disabled={loadingMore}
-                    className="flex items-center gap-2 px-6 py-3 rounded-xl border-2 border-dashed border-zinc-200 dark:border-zinc-700 text-zinc-500 dark:text-zinc-400 hover:border-orange-400 hover:text-orange-500 dark:hover:border-orange-600 dark:hover:text-orange-400 font-semibold text-sm transition-all duration-200 disabled:opacity-50"
+                    className="flex items-center gap-2 px-6 py-3 rounded-xl border-2 border-dashed border-muted-200 dark:border-muted-700 text-muted-500 dark:text-muted-400 hover:border-saffron-400 hover:text-saffron-500 dark:hover:border-saffron-600 dark:hover:text-saffron-400 font-semibold text-sm transition-all duration-200 disabled:opacity-50"
                   >
                     <BadgePercent className="w-4 h-4" />
                     {loadingMore ? 'Loading...' : 'Load more results'}

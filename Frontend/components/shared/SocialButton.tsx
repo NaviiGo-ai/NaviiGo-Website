@@ -100,7 +100,7 @@ export default function SocialButton({
           className={cn(
             "relative w-10 h-[160px] flex-col py-4",
             "bg-white dark:bg-black",
-            "hover:bg-gray-50 dark:hover:bg-gray-950",
+            "hover:bg-muted-50 dark:hover:bg-muted-950",
             "text-black dark:text-white",
             "border border-black/10 dark:border-white/10",
             "transition-colors duration-200 shadow-md",
@@ -141,7 +141,7 @@ export default function SocialButton({
               i === 0 && "rounded-t-md",
               i === 3 && "rounded-b-md",
               "border-white/10 border-b last:border-b-0 dark:border-black/10",
-              "hover:bg-gray-900 dark:hover:bg-gray-100",
+              "hover:bg-muted-900 dark:hover:bg-muted-100",
               "outline-none",
               "relative overflow-hidden",
               "transition-colors duration-200"

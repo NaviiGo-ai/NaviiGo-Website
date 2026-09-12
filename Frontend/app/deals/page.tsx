@@ -16,7 +16,7 @@ const pulse = `@keyframes skeletonPulse {
 function SkeletonBlock({ className }: { className?: string }) {
   return (
     <div
-      className={`bg-zinc-700 rounded-xl ${className ?? ""}`}
+      className={`bg-muted-700 rounded-xl ${className ?? ""}`}
       style={{ animation: "skeletonPulse 1.4s ease-in-out infinite" }}
     />
   );
@@ -77,13 +77,13 @@ function WidgetFallback() {
       animate={{ opacity: 1, y: 0 }}
       className="w-full"
     >
-      <div className="w-full bg-[#0c0c0e]/80 border border-orange-500/20 rounded-3xl p-8 md:p-12 backdrop-blur-xl shadow-2xl text-center">
+      <div className="w-full bg-[#0c0c0e]/80 border border-saffron-500/20 rounded-3xl p-8 md:p-12 backdrop-blur-xl shadow-2xl text-center">
         {/* Icon */}
-        <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-orange-500/10 flex items-center justify-center text-3xl">
+        <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-saffron-500/10 flex items-center justify-center text-3xl">
           ✈️
         </div>
         <h2 className="text-xl font-bold text-white mb-2">Deals engine is warming up</h2>
-        <p className="text-zinc-400 text-sm mb-8 max-w-md mx-auto">
+        <p className="text-muted-400 text-sm mb-8 max-w-md mx-auto">
           Our metasearch partner widget is taking longer than usual to load. Try
           refreshing the page, or browse deals directly on our partner platforms
           below.
@@ -101,13 +101,13 @@ function WidgetFallback() {
               href={p.href}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex flex-col items-center gap-2 p-5 rounded-2xl bg-white/5 border border-white/10 hover:border-orange-500/40 hover:bg-orange-500/5 transition-all group"
+              className="flex flex-col items-center gap-2 p-5 rounded-2xl bg-white/5 border border-white/10 hover:border-saffron-500/40 hover:bg-saffron-500/5 transition-all group"
             >
               <span className="text-2xl">{p.emoji}</span>
-              <span className="text-white font-semibold text-sm group-hover:text-orange-400 transition-colors">
+              <span className="text-white font-semibold text-sm group-hover:text-saffron-400 transition-colors">
                 {p.name}
               </span>
-              <span className="text-zinc-500 text-xs">{p.desc}</span>
+              <span className="text-muted-500 text-xs">{p.desc}</span>
             </a>
           ))}
         </div>
@@ -115,7 +115,7 @@ function WidgetFallback() {
         {/* Retry button */}
         <button
           onClick={() => window.location.reload()}
-          className="mt-8 px-6 py-2.5 rounded-xl bg-orange-500/10 border border-orange-500/30 text-orange-400 text-sm font-semibold hover:bg-orange-500/20 transition-colors"
+          className="mt-8 px-6 py-2.5 rounded-xl bg-saffron-500/10 border border-saffron-500/30 text-saffron-400 text-sm font-semibold hover:bg-saffron-500/20 transition-colors"
         >
           ↺ Retry
         </button>
@@ -197,10 +197,10 @@ export default function MetasearchDealsPage() {
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -8 }}
-                  className="inline-flex items-center gap-2 mt-6 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-zinc-400 text-xs"
+                  className="inline-flex items-center gap-2 mt-6 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-muted-400 text-xs"
                 >
                   <span
-                    className="w-2 h-2 rounded-full bg-orange-400"
+                    className="w-2 h-2 rounded-full bg-saffron-400"
                     style={{ animation: "skeletonPulse 1s ease-in-out infinite" }}
                   />
                   Loading deals engine…

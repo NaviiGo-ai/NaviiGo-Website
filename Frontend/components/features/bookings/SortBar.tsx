@@ -18,12 +18,12 @@ export const SortBar = memo(({ label = 'Sort By', sort, sortOption, onSortChange
 
   return (
     <div className="flex items-center gap-2">
-      <ArrowUpDown className="w-4 h-4 text-zinc-400" />
-      <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">{label}</span>
+      <ArrowUpDown className="w-4 h-4 text-muted-400" />
+      <span className="text-xs font-bold text-muted-400 uppercase tracking-wider">{label}</span>
       <select
         value={currentSort}
         onChange={(e) => onSortChange(e.target.value)}
-        className="bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-xl px-3 py-1.5 text-xs font-bold text-zinc-700 dark:text-zinc-300 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+        className="bg-white dark:bg-muted-900 border border-muted-200 dark:border-muted-800 rounded-xl px-3 py-1.5 text-xs font-bold text-muted-700 dark:text-muted-300 focus:outline-none focus:ring-2 focus:ring-jungle-green-500"
       >
         {options.map((opt) => (
           <option key={opt} value={opt}>

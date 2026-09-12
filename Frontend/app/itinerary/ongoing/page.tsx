@@ -81,12 +81,12 @@ export default function OngoingTripsPage() {
             <div className="max-w-5xl mx-auto px-4 md:px-8">
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
                     <div className="flex items-center gap-3 mb-2">
-                        <div className="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-500/15 flex items-center justify-center">
-                            <Navigation className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                        <div className="w-10 h-10 rounded-xl bg-deep-sea-100 dark:bg-deep-sea-500/15 flex items-center justify-center">
+                            <Navigation className="w-5 h-5 text-deep-sea-600 dark:text-deep-sea-400" />
                         </div>
                         <div>
-                            <h1 className="text-3xl font-bold text-zinc-900 dark:text-white">Ongoing Trips</h1>
-                            <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                            <h1 className="text-3xl font-bold text-muted-900 dark:text-white">Ongoing Trips</h1>
+                            <p className="text-sm text-muted-500 dark:text-muted-400">
                                 {tripList.length > 0 ? `${tripList.length} active journey${tripList.length > 1 ? 's' : ''}` : 'Your currently active journeys'}
                             </p>
                         </div>
@@ -95,25 +95,25 @@ export default function OngoingTripsPage() {
 
                 {!user && (
                     <div className="text-center py-20">
-                        <LogIn className="w-12 h-12 text-zinc-300 dark:text-zinc-600 mx-auto mb-4" />
-                        <h3 className="text-lg font-bold text-zinc-700 dark:text-zinc-300 mb-2">Sign in to view ongoing trips</h3>
-                        <p className="text-sm text-zinc-500 mb-6">Your trips sync across all your devices.</p>
-                        <button onClick={signInWithGoogle} className="bg-emerald-600 text-white px-6 py-3 rounded-xl font-bold text-sm hover:bg-emerald-500 transition-colors">Sign In with Google</button>
+                        <LogIn className="w-12 h-12 text-muted-300 dark:text-muted-600 mx-auto mb-4" />
+                        <h3 className="text-lg font-bold text-muted-700 dark:text-muted-300 mb-2">Sign in to view ongoing trips</h3>
+                        <p className="text-sm text-muted-500 mb-6">Your trips sync across all your devices.</p>
+                        <button onClick={signInWithGoogle} className="bg-jungle-green-600 text-white px-6 py-3 rounded-xl font-bold text-sm hover:bg-jungle-green-500 transition-colors">Sign In with Google</button>
                     </div>
                 )}
 
                 {user && loading && (
                     <div className="flex items-center justify-center py-20">
-                        <div className="w-8 h-8 border-3 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+                        <div className="w-8 h-8 border-3 border-jungle-green-500 border-t-transparent rounded-full animate-spin" />
                     </div>
                 )}
 
                 {user && !loading && tripList.length === 0 && (
                     <div className="text-center py-20">
-                        <Plane className="w-12 h-12 text-zinc-300 dark:text-zinc-600 mx-auto mb-4" />
-                        <h3 className="text-lg font-bold text-zinc-700 dark:text-zinc-300 mb-2">No ongoing trips</h3>
-                        <p className="text-sm text-zinc-500 mb-6">Trips that fall on today&apos;s date will appear here automatically.</p>
-                        <Link href="/itinerary?new=true" className="bg-emerald-600 text-white px-6 py-3 rounded-xl font-bold text-sm hover:bg-emerald-500 transition-colors">Create Itinerary</Link>
+                        <Plane className="w-12 h-12 text-muted-300 dark:text-muted-600 mx-auto mb-4" />
+                        <h3 className="text-lg font-bold text-muted-700 dark:text-muted-300 mb-2">No ongoing trips</h3>
+                        <p className="text-sm text-muted-500 mb-6">Trips that fall on today&apos;s date will appear here automatically.</p>
+                        <Link href="/itinerary?new=true" className="bg-jungle-green-600 text-white px-6 py-3 rounded-xl font-bold text-sm hover:bg-jungle-green-500 transition-colors">Create Itinerary</Link>
                     </div>
                 )}
 
@@ -125,7 +125,7 @@ export default function OngoingTripsPage() {
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: i * 0.1 }}
-                                className="bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-100 dark:border-zinc-800 shadow-sm overflow-hidden hover:shadow-lg transition-all"
+                                className="bg-white dark:bg-muted-900 rounded-3xl border border-muted-100 dark:border-muted-800 shadow-sm overflow-hidden hover:shadow-lg transition-all"
                             >
                                 <div className="flex flex-col md:flex-row">
                                     <div className="relative md:w-72 h-48 md:h-auto shrink-0">
@@ -147,40 +147,40 @@ export default function OngoingTripsPage() {
                                     <div className="flex-1 p-6">
                                         <div className="flex items-start justify-between mb-4">
                                             <div>
-                                                <h2 className="text-xl font-bold text-zinc-900 dark:text-white mb-1">{trip.destination}</h2>
-                                                <div className="flex items-center gap-3 text-xs text-zinc-500 dark:text-zinc-400">
+                                                <h2 className="text-xl font-bold text-muted-900 dark:text-white mb-1">{trip.destination}</h2>
+                                                <div className="flex items-center gap-3 text-xs text-muted-500 dark:text-muted-400">
                                                     <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {new Date(trip.startDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} – {new Date(trip.endDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</span>
                                                 </div>
                                             </div>
-                                            <span className="text-sm font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-500/10 px-3 py-1 rounded-full">{trip.status}</span>
+                                            <span className="text-sm font-bold text-deep-sea-600 dark:text-deep-sea-400 bg-deep-sea-50 dark:bg-deep-sea-500/10 px-3 py-1 rounded-full">{trip.status}</span>
                                         </div>
 
                                         <div className="mb-4">
-                                            <div className="flex justify-between text-xs text-zinc-500 mb-1.5">
+                                            <div className="flex justify-between text-xs text-muted-500 mb-1.5">
                                                 <span>{trip.completedActivities} of {trip.totalActivities} activities done</span>
-                                                <span className="font-bold text-emerald-600">{trip.progress}%</span>
+                                                <span className="font-bold text-jungle-green-600">{trip.progress}%</span>
                                             </div>
-                                            <div className="w-full h-2 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden">
-                                                <motion.div initial={{ width: 0 }} animate={{ width: `${trip.progress}%` }} transition={{ duration: 1, ease: 'easeOut' }} className="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full" />
+                                            <div className="w-full h-2 bg-muted-100 dark:bg-muted-800 rounded-full overflow-hidden">
+                                                <motion.div initial={{ width: 0 }} animate={{ width: `${trip.progress}%` }} transition={{ duration: 1, ease: 'easeOut' }} className="h-full bg-gradient-to-r from-jungle-green-500 to-deep-sea-500 rounded-full" />
                                             </div>
                                         </div>
 
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                            <div className="bg-emerald-50 dark:bg-emerald-500/10 rounded-xl p-3 border border-emerald-100 dark:border-emerald-500/20">
-                                                <div className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-1">📍 Current Activity</div>
-                                                <div className="text-sm font-semibold text-zinc-900 dark:text-white">{trip.currentActivity}</div>
+                                            <div className="bg-jungle-green-50 dark:bg-jungle-green-500/10 rounded-xl p-3 border border-jungle-green-100 dark:border-jungle-green-500/20">
+                                                <div className="text-[10px] font-bold text-jungle-green-600 dark:text-jungle-green-400 uppercase tracking-wider mb-1">📍 Current Activity</div>
+                                                <div className="text-sm font-semibold text-muted-900 dark:text-white">{trip.currentActivity}</div>
                                             </div>
-                                            <div className="bg-purple-50 dark:bg-purple-500/10 rounded-xl p-3 border border-purple-100 dark:border-purple-500/20">
-                                                <div className="text-[10px] font-bold text-purple-600 dark:text-purple-400 uppercase tracking-wider mb-1">⏭️ Next Up</div>
-                                                <div className="text-sm font-semibold text-zinc-900 dark:text-white">{trip.nextActivity}</div>
+                                            <div className="bg-indigo-50 dark:bg-indigo-500/10 rounded-xl p-3 border border-indigo-100 dark:border-indigo-500/20">
+                                                <div className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider mb-1">⏭️ Next Up</div>
+                                                <div className="text-sm font-semibold text-muted-900 dark:text-white">{trip.nextActivity}</div>
                                             </div>
                                         </div>
 
                                         <div className="flex gap-3 mt-4">
-                                            <Link href={`/itinerary?load=${trip.id}`} className="flex-1 bg-blue-600 hover:bg-blue-500 text-white text-center py-2.5 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2">
+                                            <Link href={`/itinerary?load=${trip.id}`} className="flex-1 bg-deep-sea-600 hover:bg-deep-sea-500 text-white text-center py-2.5 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2">
                                                 <MapPin className="w-4 h-4" /> View Itinerary
                                             </Link>
-                                            <Link href="/bookings" className="px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 text-sm font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors flex items-center gap-1">
+                                            <Link href="/bookings" className="px-4 py-2.5 rounded-xl border border-muted-200 dark:border-muted-700 text-sm font-semibold text-muted-700 dark:text-muted-300 hover:bg-muted-50 dark:hover:bg-muted-800 transition-colors flex items-center gap-1">
                                                 Bookings <ChevronRight className="w-4 h-4" />
                                             </Link>
                                         </div>

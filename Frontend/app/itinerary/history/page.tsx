@@ -70,12 +70,12 @@ export default function TripHistoryPage() {
             <div className="max-w-5xl mx-auto px-4 md:px-8">
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
                     <div className="flex items-center gap-3 mb-2">
-                        <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-500/15 flex items-center justify-center">
-                            <History className="w-5 h-5 text-amber-600 dark:text-amber-400" />
+                        <div className="w-10 h-10 rounded-xl bg-marigold-100 dark:bg-marigold-500/15 flex items-center justify-center">
+                            <History className="w-5 h-5 text-marigold-600 dark:text-marigold-400" />
                         </div>
                         <div>
-                            <h1 className="text-3xl font-bold text-zinc-900 dark:text-white">Trip History</h1>
-                            <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                            <h1 className="text-3xl font-bold text-muted-900 dark:text-white">Trip History</h1>
+                            <p className="text-sm text-muted-500 dark:text-muted-400">
                                 {tripList.length > 0 ? `${tripList.length} past adventure${tripList.length > 1 ? 's' : ''}` : 'Relive your past adventures'}
                             </p>
                         </div>
@@ -87,14 +87,14 @@ export default function TripHistoryPage() {
                     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
                         className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
                         {[
-                            { label: 'Total Trips', value: tripList.length, icon: '🗺️', color: 'text-blue-600 dark:text-blue-400' },
-                            { label: 'Destinations', value: new Set(tripList.map(t => t.destination)).size, icon: '📍', color: 'text-emerald-600 dark:text-emerald-400' },
-                            { label: 'Total Days', value: tripList.reduce((sum, t) => sum + parseInt(t.duration), 0), icon: '📅', color: 'text-purple-600 dark:text-purple-400' },
+                            { label: 'Total Trips', value: tripList.length, icon: '🗺️', color: 'text-deep-sea-600 dark:text-deep-sea-400' },
+                            { label: 'Destinations', value: new Set(tripList.map(t => t.destination)).size, icon: '📍', color: 'text-jungle-green-600 dark:text-jungle-green-400' },
+                            { label: 'Total Days', value: tripList.reduce((sum, t) => sum + parseInt(t.duration), 0), icon: '📅', color: 'text-indigo-600 dark:text-indigo-400' },
                         ].map((stat) => (
-                            <div key={stat.label} className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-100 dark:border-zinc-800 p-4 text-center shadow-sm">
+                            <div key={stat.label} className="bg-white dark:bg-muted-900 rounded-2xl border border-muted-100 dark:border-muted-800 p-4 text-center shadow-sm">
                                 <div className="text-2xl mb-1">{stat.icon}</div>
                                 <div className={`text-2xl font-bold ${stat.color}`}>{stat.value}</div>
-                                <div className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider mt-0.5">{stat.label}</div>
+                                <div className="text-[10px] font-bold text-muted-400 uppercase tracking-wider mt-0.5">{stat.label}</div>
                             </div>
                         ))}
                     </motion.div>
@@ -102,25 +102,25 @@ export default function TripHistoryPage() {
 
                 {!user && (
                     <div className="text-center py-20">
-                        <LogIn className="w-12 h-12 text-zinc-300 dark:text-zinc-600 mx-auto mb-4" />
-                        <h3 className="text-lg font-bold text-zinc-700 dark:text-zinc-300 mb-2">Sign in to view your trip history</h3>
-                        <p className="text-sm text-zinc-500 mb-6">Your past trips are saved to the cloud.</p>
-                        <button onClick={signInWithGoogle} className="bg-emerald-600 text-white px-6 py-3 rounded-xl font-bold text-sm hover:bg-emerald-500 transition-colors">Sign In with Google</button>
+                        <LogIn className="w-12 h-12 text-muted-300 dark:text-muted-600 mx-auto mb-4" />
+                        <h3 className="text-lg font-bold text-muted-700 dark:text-muted-300 mb-2">Sign in to view your trip history</h3>
+                        <p className="text-sm text-muted-500 mb-6">Your past trips are saved to the cloud.</p>
+                        <button onClick={signInWithGoogle} className="bg-jungle-green-600 text-white px-6 py-3 rounded-xl font-bold text-sm hover:bg-jungle-green-500 transition-colors">Sign In with Google</button>
                     </div>
                 )}
 
                 {user && loading && (
                     <div className="flex items-center justify-center py-20">
-                        <div className="w-8 h-8 border-3 border-amber-500 border-t-transparent rounded-full animate-spin" />
+                        <div className="w-8 h-8 border-3 border-marigold-500 border-t-transparent rounded-full animate-spin" />
                     </div>
                 )}
 
                 {user && !loading && tripList.length === 0 && (
                     <div className="text-center py-20">
-                        <Plane className="w-12 h-12 text-zinc-300 dark:text-zinc-600 mx-auto mb-4" />
-                        <h3 className="text-lg font-bold text-zinc-700 dark:text-zinc-300 mb-2">No past trips yet</h3>
-                        <p className="text-sm text-zinc-500 mb-6">Your completed trips will appear here automatically.</p>
-                        <Link href="/itinerary?new=true" className="bg-emerald-600 text-white px-6 py-3 rounded-xl font-bold text-sm hover:bg-emerald-500 transition-colors">Plan Your First Trip</Link>
+                        <Plane className="w-12 h-12 text-muted-300 dark:text-muted-600 mx-auto mb-4" />
+                        <h3 className="text-lg font-bold text-muted-700 dark:text-muted-300 mb-2">No past trips yet</h3>
+                        <p className="text-sm text-muted-500 mb-6">Your completed trips will appear here automatically.</p>
+                        <Link href="/itinerary?new=true" className="bg-jungle-green-600 text-white px-6 py-3 rounded-xl font-bold text-sm hover:bg-jungle-green-500 transition-colors">Plan Your First Trip</Link>
                     </div>
                 )}
 
@@ -132,7 +132,7 @@ export default function TripHistoryPage() {
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.15 + i * 0.1 }}
-                                className="bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-100 dark:border-zinc-800 shadow-sm overflow-hidden group hover:shadow-lg transition-all"
+                                className="bg-white dark:bg-muted-900 rounded-3xl border border-muted-100 dark:border-muted-800 shadow-sm overflow-hidden group hover:shadow-lg transition-all"
                             >
                                 <div className="flex flex-col md:flex-row">
                                     <div className="relative md:w-64 h-48 md:h-auto shrink-0 overflow-hidden">
@@ -148,8 +148,8 @@ export default function TripHistoryPage() {
                                     <div className="flex-1 p-5">
                                         <div className="flex items-start justify-between mb-3">
                                             <div>
-                                                <h2 className="text-xl font-bold text-zinc-900 dark:text-white mb-1">{trip.destination}</h2>
-                                                <div className="flex items-center gap-3 text-xs text-zinc-500 dark:text-zinc-400">
+                                                <h2 className="text-xl font-bold text-muted-900 dark:text-white mb-1">{trip.destination}</h2>
+                                                <div className="flex items-center gap-3 text-xs text-muted-500 dark:text-muted-400">
                                                     <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {trip.dates}</span>
                                                     <span>{trip.duration}</span>
                                                     <span>{trip.group}</span>
@@ -158,10 +158,10 @@ export default function TripHistoryPage() {
                                         </div>
 
                                         <div className="flex gap-3 mt-4">
-                                            <Link href={`/itinerary?load=${trip.id}`} className="flex-1 bg-amber-500 hover:bg-amber-400 text-white text-center py-2.5 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2">
+                                            <Link href={`/itinerary?load=${trip.id}`} className="flex-1 bg-marigold-500 hover:bg-marigold-400 text-white text-center py-2.5 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2">
                                                 <TrendingUp className="w-4 h-4" /> View Trip
                                             </Link>
-                                            <Link href="/itinerary?new=true" className="px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 text-sm font-semibold text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors">
+                                            <Link href="/itinerary?new=true" className="px-4 py-2.5 rounded-xl border border-muted-200 dark:border-muted-700 text-sm font-semibold text-muted-700 dark:text-muted-300 hover:bg-muted-50 dark:hover:bg-muted-800 transition-colors">
                                                 Re-plan
                                             </Link>
                                         </div>

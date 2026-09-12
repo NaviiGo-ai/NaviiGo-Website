@@ -57,20 +57,20 @@ export default function CheckpointToast({ toasts }: CheckpointToastProps) {
                         animate={{ opacity: 1, x: 0, scale: 1 }}
                         exit={{ opacity: 0, x: 40, scale: 0.9 }}
                         transition={{ type: 'spring', damping: 20, stiffness: 300 }}
-                        className="flex items-center gap-3 bg-zinc-900/95 backdrop-blur-xl border border-white/10 rounded-2xl px-4 py-3 shadow-2xl shadow-black/30 min-w-[220px]"
+                        className="flex items-center gap-3 bg-muted-900/95 backdrop-blur-xl border border-white/10 rounded-2xl px-4 py-3 shadow-2xl shadow-black/30 min-w-[220px]"
                     >
-                        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg shadow-orange-500/30">
+                        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-saffron-400 to-saffron-500 flex items-center justify-center shadow-lg shadow-saffron-500/30">
                             <Zap className="w-4 h-4 text-white" />
                         </div>
                         <div className="flex-1 min-w-0">
                             <div className="text-xs font-bold text-white truncate">{toast.activityName}</div>
-                            <div className="text-[10px] text-amber-400 font-semibold">+{toast.xp} Pending XP</div>
+                            <div className="text-[10px] text-saffron-400 font-semibold">+{toast.xp} Pending XP</div>
                         </div>
                         <motion.div
                             initial={{ scale: 0 }}
                             animate={{ scale: 1 }}
                             transition={{ delay: 0.2, type: 'spring', stiffness: 400 }}
-                            className="text-emerald-400 text-lg"
+                            className="text-jungle-green-400 text-lg"
                         >
                             ✓
                         </motion.div>

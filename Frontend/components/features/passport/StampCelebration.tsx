@@ -83,11 +83,11 @@ export default function StampCelebration({ result, onClose, onViewPassport }: St
                         animate={{ scale: 1, y: 0, opacity: 1 }}
                         exit={{ scale: 0.8, opacity: 0 }}
                         transition={{ type: 'spring', damping: 15, stiffness: 200 }}
-                        className="relative z-10 w-full max-w-md bg-gradient-to-b from-zinc-900 to-zinc-950 rounded-[2rem] border border-white/10 shadow-2xl overflow-hidden"
+                        className="relative z-10 w-full max-w-md bg-gradient-to-b from-muted-900 to-muted-950 rounded-[2rem] border border-white/10 shadow-2xl overflow-hidden"
                         onClick={e => e.stopPropagation()}
                     >
                         {/* Glow effect */}
-                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-64 bg-orange-500/20 rounded-full blur-[80px] pointer-events-none" />
+                        <div className="absolute top-0 left-1/2 -tranmuted-x-1/2 w-64 h-64 bg-saffron-500/20 rounded-full blur-[80px] pointer-events-none" />
 
                         {/* Stamp Animation */}
                         <div className="pt-10 pb-4 flex flex-col items-center relative">
@@ -96,7 +96,7 @@ export default function StampCelebration({ result, onClose, onViewPassport }: St
                                     initial={{ opacity: 0, y: -10 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ delay: 0.3 }}
-                                    className="mb-3 px-3 py-1 rounded-full bg-blue-500/20 text-blue-400 text-xs font-bold border border-blue-500/30"
+                                    className="mb-3 px-3 py-1 rounded-full bg-deep-sea-500/20 text-deep-sea-400 text-xs font-bold border border-deep-sea-500/30"
                                 >
                                     🔄 Return Visit
                                 </motion.div>
@@ -106,7 +106,7 @@ export default function StampCelebration({ result, onClose, onViewPassport }: St
                                 initial={{ scale: 3, rotate: -30, opacity: 0 }}
                                 animate={{ scale: 1, rotate: 0, opacity: 1 }}
                                 transition={{ type: 'spring', damping: 10, stiffness: 150, delay: 0.2 }}
-                                className="w-28 h-28 rounded-full bg-gradient-to-br from-orange-500 to-amber-400 flex items-center justify-center shadow-2xl shadow-orange-500/40 border-4 border-orange-300/30"
+                                className="w-28 h-28 rounded-full bg-gradient-to-br from-saffron-500 to-saffron-400 flex items-center justify-center shadow-2xl shadow-saffron-500/40 border-4 border-saffron-300/30"
                             >
                                 <span className="text-5xl">{stamp.icon}</span>
                             </motion.div>
@@ -123,7 +123,7 @@ export default function StampCelebration({ result, onClose, onViewPassport }: St
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 transition={{ delay: 0.6 }}
-                                className="text-sm text-zinc-400"
+                                className="text-sm text-muted-400"
                             >
                                 {stamp.state} · {stamp.type}
                             </motion.p>
@@ -137,30 +137,30 @@ export default function StampCelebration({ result, onClose, onViewPassport }: St
                             className="mx-6 mb-4 bg-white/5 rounded-2xl border border-white/10 p-4"
                         >
                             <div className="flex items-center gap-2 mb-3">
-                                <Zap className="w-4 h-4 text-amber-400" />
+                                <Zap className="w-4 h-4 text-saffron-400" />
                                 <span className="text-sm font-bold text-white">XP Earned</span>
-                                <span className="ml-auto text-lg font-black text-amber-400">+{xpBreakdown.total}</span>
+                                <span className="ml-auto text-lg font-black text-saffron-400">+{xpBreakdown.total}</span>
                             </div>
-                            <div className="space-y-1.5 text-xs text-zinc-400">
+                            <div className="space-y-1.5 text-xs text-muted-400">
                                 <div className="flex justify-between">
-                                    <span>Base completion</span><span className="text-zinc-300">+{xpBreakdown.base}</span>
+                                    <span>Base completion</span><span className="text-muted-300">+{xpBreakdown.base}</span>
                                 </div>
                                 <div className="flex justify-between">
-                                    <span>{xpBreakdown.activityCount} activities × 25</span><span className="text-zinc-300">+{xpBreakdown.activities}</span>
+                                    <span>{xpBreakdown.activityCount} activities × 25</span><span className="text-muted-300">+{xpBreakdown.activities}</span>
                                 </div>
                                 {xpBreakdown.daysCompleted > 0 && (
                                     <div className="flex justify-between">
-                                        <span>{xpBreakdown.daysCompleted} day{xpBreakdown.daysCompleted > 1 ? 's' : ''} completed × 100</span><span className="text-zinc-300">+{xpBreakdown.dayBonuses}</span>
+                                        <span>{xpBreakdown.daysCompleted} day{xpBreakdown.daysCompleted > 1 ? 's' : ''} completed × 100</span><span className="text-muted-300">+{xpBreakdown.dayBonuses}</span>
                                     </div>
                                 )}
                                 {xpBreakdown.streakBonus > 0 && (
                                     <div className="flex justify-between">
-                                        <span>🔥 Streak bonus</span><span className="text-emerald-400">+{xpBreakdown.streakBonus}</span>
+                                        <span>🔥 Streak bonus</span><span className="text-jungle-green-400">+{xpBreakdown.streakBonus}</span>
                                     </div>
                                 )}
                                 {xpBreakdown.returnVisitPenalty < 0 && (
                                     <div className="flex justify-between">
-                                        <span>Return visit</span><span className="text-red-400">{xpBreakdown.returnVisitPenalty}</span>
+                                        <span>Return visit</span><span className="text-temple-red-400">{xpBreakdown.returnVisitPenalty}</span>
                                     </div>
                                 )}
                             </div>
@@ -172,7 +172,7 @@ export default function StampCelebration({ result, onClose, onViewPassport }: St
                                 initial={{ opacity: 0, scale: 0.8 }}
                                 animate={{ opacity: 1, scale: 1 }}
                                 transition={{ delay: 1, type: 'spring' }}
-                                className="mx-6 mb-4 bg-gradient-to-r from-indigo-500/20 to-purple-500/20 rounded-2xl border border-indigo-500/30 p-4 text-center"
+                                className="mx-6 mb-4 bg-gradient-to-r from-indigo-500/20 to-indigo-500/20 rounded-2xl border border-indigo-500/30 p-4 text-center"
                             >
                                 <Star className="w-6 h-6 text-indigo-400 mx-auto mb-1" />
                                 <div className="text-white font-bold">Level Up!</div>
@@ -188,15 +188,15 @@ export default function StampCelebration({ result, onClose, onViewPassport }: St
                                 transition={{ delay: 1.2 }}
                                 className="mx-6 mb-4"
                             >
-                                <div className="text-xs font-bold text-zinc-500 uppercase tracking-wider mb-2">Achievements Unlocked</div>
+                                <div className="text-xs font-bold text-muted-500 uppercase tracking-wider mb-2">Achievements Unlocked</div>
                                 {newAchievements.map(ach => (
-                                    <div key={ach.id} className="flex items-center gap-3 bg-amber-500/10 border border-amber-500/20 rounded-xl px-3 py-2 mb-2">
+                                    <div key={ach.id} className="flex items-center gap-3 bg-saffron-500/10 border border-saffron-500/20 rounded-xl px-3 py-2 mb-2">
                                         <span className="text-xl">{ach.emoji}</span>
                                         <div>
                                             <div className="text-sm font-bold text-white">{ach.name}</div>
-                                            <div className="text-[10px] text-amber-400">+{ach.xpReward} XP</div>
+                                            <div className="text-[10px] text-saffron-400">+{ach.xpReward} XP</div>
                                         </div>
-                                        <Trophy className="w-4 h-4 text-amber-400 ml-auto" />
+                                        <Trophy className="w-4 h-4 text-saffron-400 ml-auto" />
                                     </div>
                                 ))}
                             </motion.div>
@@ -206,13 +206,13 @@ export default function StampCelebration({ result, onClose, onViewPassport }: St
                         <div className="px-6 pb-6 flex gap-3">
                             <button
                                 onClick={() => { setShow(false); onClose(); }}
-                                className="flex-1 py-3 rounded-xl bg-white/5 border border-white/10 text-sm font-semibold text-zinc-300 hover:bg-white/10 transition-colors"
+                                className="flex-1 py-3 rounded-xl bg-white/5 border border-white/10 text-sm font-semibold text-muted-300 hover:bg-white/10 transition-colors"
                             >
                                 Close
                             </button>
                             <button
                                 onClick={() => { setShow(false); onViewPassport(); }}
-                                className="flex-1 py-3 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 text-sm font-bold text-white shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50 transition-all flex items-center justify-center gap-2"
+                                className="flex-1 py-3 rounded-xl bg-gradient-to-r from-saffron-500 to-saffron-500 text-sm font-bold text-white shadow-lg shadow-saffron-500/30 hover:shadow-saffron-500/50 transition-all flex items-center justify-center gap-2"
                             >
                                 View Passport <ArrowRight className="w-4 h-4" />
                             </button>
