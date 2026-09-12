@@ -171,7 +171,7 @@ export default function Home() {
                         <div className="text-lg sm:text-2xl font-extrabold text-card-foreground font-serif leading-snug">Varanasi Heritage Circuit</div>
                       </div>
                     </div>
-                    <span className="px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-secondary text-secondary-foreground text-xs sm:text-sm font-extrabold border border-secondary/30 shadow-xs shrink-0 dark:bg-white dark:text-slate-950 dark:border-white/90">3 Days</span>
+                    <span className="px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-secondary text-secondary-foreground text-xs sm:text-sm font-extrabold border border-secondary/30 shadow-xs shrink-0 dark:bg-white dark:text-muted-950 dark:border-white/90">3 Days</span>
                   </div>
 
                   {/* Middle Item Box */}
@@ -296,7 +296,7 @@ export default function Home() {
                     <p className="text-xs text-muted-foreground leading-relaxed">{layer.desc}</p>
                   </div>
                   <span className="inline-flex items-center gap-1 text-xs text-saffron font-bold mt-6">
-                    Learn More <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                    Learn More <ArrowRight className="w-3.5 h-3.5 group-hover:tranmuted-x-1 transition-transform" />
                   </span>
                 </div>
               </Link>
@@ -420,7 +420,7 @@ export default function Home() {
                 <div className="h-56 rounded-3xl border border-border bg-card p-6 flex flex-col justify-between hover:border-saffron/50 transition-all duration-300 shadow-xs">
                   <span className="text-xs font-bold text-saffron uppercase tracking-wider">{region.tag}</span>
                   <div>
-                    <h3 className="text-xl font-bold text-card-foreground font-serif mb-1 group-hover:translate-x-1 transition-transform">{region.title}</h3>
+                    <h3 className="text-xl font-bold text-card-foreground font-serif mb-1 group-hover:tranmuted-x-1 transition-transform">{region.title}</h3>
                     <p className="text-xs text-muted-foreground">{region.desc}</p>
                   </div>
                 </div>

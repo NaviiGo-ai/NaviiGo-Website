@@ -78,7 +78,7 @@ export default function NotFound() {
 
       {/* Ambient glows */}
       <div className="pointer-events-none fixed inset-0 z-0">
-        <div className="absolute top-[-260px] left-1/2 -translate-x-1/2 w-[700px] h-[700px] rounded-full bg-[radial-gradient(circle,rgba(0,102,204,0.13)_0%,transparent_70%)]" />
+        <div className="absolute top-[-260px] left-1/2 -tranmuted-x-1/2 w-[700px] h-[700px] rounded-full bg-[radial-gradient(circle,rgba(0,102,204,0.13)_0%,transparent_70%)]" />
         <div className="absolute bottom-[-80px] left-[35%] w-[460px] h-[460px] rounded-full bg-[radial-gradient(circle,rgba(249,115,22,0.07)_0%,transparent_70%)]" />
       </div>
 
@@ -112,12 +112,12 @@ export default function NotFound() {
           transition={{ duration: 0.7, delay: 0.08, ease: [0.22, 0.61, 0.36, 1] }}
           className="mb-6"
         >
-          <div className="relative w-16 h-16 rounded-full border border-blue-500/30 bg-blue-600/[0.06] backdrop-blur-sm flex items-center justify-center">
+          <div className="relative w-16 h-16 rounded-full border border-deep-sea-500/30 bg-deep-sea-600/[0.06] backdrop-blur-sm flex items-center justify-center">
             {/* Dashed outer ring */}
-            <div className="absolute inset-[-10px] rounded-full border border-dashed border-blue-500/10 animate-spin" style={{ animationDuration: '18s' }} />
+            <div className="absolute inset-[-10px] rounded-full border border-dashed border-deep-sea-500/10 animate-spin" style={{ animationDuration: '18s' }} />
             {/* Spinning compass SVG */}
             <svg
-              className="w-7 h-7 text-blue-400 animate-spin"
+              className="w-7 h-7 text-deep-sea-400 animate-spin"
               style={{ animationDuration: '8s' }}
               viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
             >
@@ -132,7 +132,7 @@ export default function NotFound() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, delay: 0.14, ease: [0.22, 0.61, 0.36, 1] }}
-          className="text-[0.65rem] font-bold tracking-[0.25em] uppercase text-blue-400 mb-3"
+          className="text-[0.65rem] font-bold tracking-[0.25em] uppercase text-deep-sea-400 mb-3"
         >
           Lost on the Map
         </motion.p>
@@ -178,7 +178,7 @@ export default function NotFound() {
         >
           <Link
             href="/"
-            className="inline-flex items-center gap-2 px-8 py-3.5 rounded-[0.875rem] bg-[#0066CC] text-white font-bold text-sm shadow-[0_8px_28px_rgba(0,102,204,0.28)] hover:bg-[#0077ee] hover:-translate-y-0.5 hover:shadow-[0_14px_36px_rgba(0,102,204,0.38)] transition-all duration-200"
+            className="inline-flex items-center gap-2 px-8 py-3.5 rounded-[0.875rem] bg-[#0066CC] text-white font-bold text-sm shadow-[0_8px_28px_rgba(0,102,204,0.28)] hover:bg-[#0077ee] hover:-tranmuted-y-0.5 hover:shadow-[0_14px_36px_rgba(0,102,204,0.38)] transition-all duration-200"
           >
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />

@@ -68,8 +68,8 @@ function DayViewContent() {
         return (
             <div className="min-h-screen bg-[#f7f8fc] dark:bg-[#0a0a0f] pt-16 sm:pt-20 flex items-center justify-center">
                 <div className="flex flex-col items-center gap-4">
-                    <div className="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" />
-                    <p className="text-sm text-zinc-500 dark:text-zinc-400">Loading Day {dayNumber}…</p>
+                    <div className="w-10 h-10 border-4 border-jungle-green-500 border-t-transparent rounded-full animate-spin" />
+                    <p className="text-sm text-muted-500 dark:text-muted-400">Loading Day {dayNumber}…</p>
                 </div>
             </div>
         );
@@ -84,15 +84,15 @@ function DayViewContent() {
                     className="text-center max-w-md"
                 >
                     <div className="text-6xl mb-6">📅</div>
-                    <h1 className="text-2xl font-bold text-zinc-900 dark:text-white mb-3">
+                    <h1 className="text-2xl font-bold text-muted-900 dark:text-white mb-3">
                         Day Not Found
                     </h1>
-                    <p className="text-zinc-500 dark:text-zinc-400 text-sm mb-8">
+                    <p className="text-muted-500 dark:text-muted-400 text-sm mb-8">
                         This itinerary or day doesn&apos;t exist. It may have expired or the URL is invalid.
                     </p>
                     <button
                         onClick={() => router.push('/itinerary')}
-                        className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-8 py-3.5 rounded-2xl transition-colors shadow-lg shadow-emerald-500/20"
+                        className="bg-jungle-green-600 hover:bg-jungle-green-500 text-white font-bold px-8 py-3.5 rounded-2xl transition-colors shadow-lg shadow-jungle-green-500/20"
                     >
                         Create a New Itinerary ✨
                     </button>
@@ -115,7 +115,7 @@ export default function DayViewRoute() {
         <Suspense
             fallback={
                 <div className="min-h-screen bg-[#f7f8fc] dark:bg-[#0a0a0f] pt-16 sm:pt-20 flex items-center justify-center">
-                    <div className="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+                    <div className="w-10 h-10 border-4 border-jungle-green-500 border-t-transparent rounded-full animate-spin" />
                 </div>
             }
         >

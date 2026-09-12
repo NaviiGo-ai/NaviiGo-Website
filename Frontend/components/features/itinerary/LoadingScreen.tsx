@@ -203,26 +203,26 @@ export default function LoadingScreen({ form, uuid, onDone }: LoadingScreenProps
 
     return (
         <div className="min-h-screen bg-[#f7f8fc] dark:bg-[#0a0a0f] pt-20">
-            <div className="bg-white/80 dark:bg-zinc-900/80 backdrop-blur-lg border-b border-zinc-100 dark:border-white/5 px-6 py-3 text-center">
+            <div className="bg-white/80 dark:bg-muted-900/80 backdrop-blur-lg border-b border-muted-100 dark:border-white/5 px-6 py-3 text-center">
                 <div className="flex items-center justify-center gap-2">
                     <span className="text-xl">✨</span>
-                    <span className="font-bold text-zinc-900 dark:text-white">NaviiGo AI is crafting your trip</span>
+                    <span className="font-bold text-muted-900 dark:text-white">NaviiGo AI is crafting your trip</span>
                 </div>
-                <span className="text-[10px] bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 px-2 py-0.5 rounded-full font-bold uppercase tracking-wide">NaviiGo Personalization Engine</span>
+                <span className="text-[10px] bg-jungle-green-100 dark:bg-jungle-green-500/20 text-jungle-green-700 dark:text-jungle-green-400 px-2 py-0.5 rounded-full font-bold uppercase tracking-wide">NaviiGo Personalization Engine</span>
             </div>
 
             <div className="flex flex-col lg:flex-row max-w-7xl mx-auto px-4 md:px-8 py-8 gap-6 min-h-[calc(100vh-160px)]">
                 {/* Left: Timeline */}
                 <div className="flex-1 max-w-md mx-auto lg:mx-0">
-                    <div className="bg-white dark:bg-zinc-900 rounded-3xl shadow-sm border border-zinc-100 dark:border-zinc-800 p-6">
+                    <div className="bg-white dark:bg-muted-900 rounded-3xl shadow-sm border border-muted-100 dark:border-muted-800 p-6">
                         <div className="flex items-center justify-between mb-5">
                             <div>
-                                <div className="text-xs text-zinc-400 font-medium">Step {Math.min(currentStep + 1, GEN_STEPS.length)} of {GEN_STEPS.length}</div>
-                                <div className="w-32 h-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-full mt-1 overflow-hidden">
-                                    <motion.div className="h-full bg-emerald-500 rounded-full" animate={{ width: `${(Math.min(currentStep, GEN_STEPS.length) / GEN_STEPS.length) * 100}%` }} transition={{ duration: 0.5 }} />
+                                <div className="text-xs text-muted-400 font-medium">Step {Math.min(currentStep + 1, GEN_STEPS.length)} of {GEN_STEPS.length}</div>
+                                <div className="w-32 h-1.5 bg-muted-100 dark:bg-muted-800 rounded-full mt-1 overflow-hidden">
+                                    <motion.div className="h-full bg-jungle-green-500 rounded-full" animate={{ width: `${(Math.min(currentStep, GEN_STEPS.length) / GEN_STEPS.length) * 100}%` }} transition={{ duration: 0.5 }} />
                                 </div>
                             </div>
-                            <div className="text-xs text-zinc-400">{Math.round((currentStep / GEN_STEPS.length) * 100)}%</div>
+                            <div className="text-xs text-muted-400">{Math.round((currentStep / GEN_STEPS.length) * 100)}%</div>
                         </div>
 
                         <div className="space-y-4">
@@ -232,26 +232,26 @@ export default function LoadingScreen({ form, uuid, onDone }: LoadingScreenProps
                                     <div key={s.label} className="flex gap-3">
                                         <div className="flex flex-col items-center">
                                             <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-500 border-2
-                        ${done ? 'bg-emerald-500 border-emerald-500' : active ? 'border-emerald-500 bg-white dark:bg-zinc-900' : 'border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900'}`}>
-                                                {done ? <span className="text-white text-[10px]">✓</span> : active ? <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" /> : <div className="w-2 h-2 bg-zinc-200 rounded-full" />}
+                        ${done ? 'bg-jungle-green-500 border-jungle-green-500' : active ? 'border-jungle-green-500 bg-white dark:bg-muted-900' : 'border-muted-200 dark:border-muted-700 bg-white dark:bg-muted-900'}`}>
+                                                {done ? <span className="text-white text-[10px]">✓</span> : active ? <div className="w-2 h-2 bg-jungle-green-500 rounded-full animate-pulse" /> : <div className="w-2 h-2 bg-muted-200 rounded-full" />}
                                             </div>
-                                            {i < GEN_STEPS.length - 1 && <div className={`w-0.5 flex-1 mt-1 min-h-[16px] transition-colors duration-500 ${done ? 'bg-emerald-400' : 'bg-zinc-200 dark:bg-zinc-700'}`} />}
+                                            {i < GEN_STEPS.length - 1 && <div className={`w-0.5 flex-1 mt-1 min-h-[16px] transition-colors duration-500 ${done ? 'bg-jungle-green-400' : 'bg-muted-200 dark:bg-muted-700'}`} />}
                                         </div>
                                         <div className="pt-0.5 pb-3 flex-1">
-                                            <div className={`font-semibold text-sm transition-colors ${active ? 'text-emerald-600' : done ? 'text-zinc-900 dark:text-zinc-200' : 'text-zinc-400'}`}>{s.label}</div>
+                                            <div className={`font-semibold text-sm transition-colors ${active ? 'text-jungle-green-600' : done ? 'text-muted-900 dark:text-muted-200' : 'text-muted-400'}`}>{s.label}</div>
                                             {active && (
                                                 <div className="mt-2 space-y-1.5">
                                                     {i === 1 && (
                                                         <div className="flex flex-wrap gap-1.5 mb-2">
                                                             {[groupLabel, `${form.days} days`, purposeLabel, `₹${(form.budget as number).toLocaleString('en-IN')} budget`].map(tag => (
-                                                                <span key={tag} className="text-[11px] bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 rounded-full px-2.5 py-1 font-medium">{tag}</span>
+                                                                <span key={tag} className="text-[11px] bg-muted-100 dark:bg-muted-800 text-muted-600 dark:text-muted-400 rounded-full px-2.5 py-1 font-medium">{tag}</span>
                                                             ))}
                                                         </div>
                                                     )}
                                                     {s.sub.map((sub, j) => j <= currentSub && (
                                                         <motion.div key={sub} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.3 }}
-                                                            className="flex items-center gap-2 text-xs text-zinc-500 bg-zinc-50 dark:bg-zinc-800 rounded-xl px-3 py-2">
-                                                            {j < currentSub ? <span className="text-emerald-500 text-sm">✓</span> : <span className="w-3 h-3 rounded-full border-2 border-zinc-300 border-t-emerald-500 animate-spin inline-block" />}
+                                                            className="flex items-center gap-2 text-xs text-muted-500 bg-muted-50 dark:bg-muted-800 rounded-xl px-3 py-2">
+                                                            {j < currentSub ? <span className="text-jungle-green-500 text-sm">✓</span> : <span className="w-3 h-3 rounded-full border-2 border-muted-300 border-t-jungle-green-500 animate-spin inline-block" />}
                                                             {sub}
                                                         </motion.div>
                                                     ))}
@@ -263,16 +263,16 @@ export default function LoadingScreen({ form, uuid, onDone }: LoadingScreenProps
                             })}
                         </div>
 
-                        <div className="mt-4 pt-4 border-t border-zinc-100 dark:border-zinc-800 text-center">
-                            <span className="text-emerald-500 font-mono text-sm font-bold">{fmt(elapsed)}</span>
-                            <p className="text-[11px] text-zinc-400 mt-1">Personalizing with NaviiGo AI…</p>
+                        <div className="mt-4 pt-4 border-t border-muted-100 dark:border-muted-800 text-center">
+                            <span className="text-jungle-green-500 font-mono text-sm font-bold">{fmt(elapsed)}</span>
+                            <p className="text-[11px] text-muted-400 mt-1">Personalizing with NaviiGo AI…</p>
                         </div>
                     </div>
                 </div>
 
                 {/* Right: Interactive Map */}
                 <div className="flex-1 min-h-[400px] lg:min-h-0">
-                    <div className="h-full min-h-[400px] lg:h-full rounded-3xl overflow-hidden border border-zinc-100 dark:border-zinc-800 shadow-sm">
+                    <div className="h-full min-h-[400px] lg:h-full rounded-3xl overflow-hidden border border-muted-100 dark:border-muted-800 shadow-sm">
                         <ItineraryMap
                             pins={mapPins}
                             center={activeMapCenter}

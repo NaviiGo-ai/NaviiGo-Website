@@ -25,10 +25,10 @@ const PAGE_ENTRIES = [
 ];
 
 const ITINERARY_DROPDOWN = [
-  { name: 'Create New', href: '/itinerary?new=true', icon: PlusCircle, desc: 'AI-powered trip planner', accent: 'text-emerald-500' },
-  { name: 'Ongoing Trips', href: '/itinerary/ongoing', icon: Navigation, desc: 'Currently active journeys', accent: 'text-blue-500' },
-  { name: 'Upcoming Trips', href: '/itinerary/upcoming', icon: Clock, desc: 'Planned future adventures', accent: 'text-purple-500' },
-  { name: 'Trip History', href: '/itinerary/history', icon: History, desc: 'Past trips & memories', accent: 'text-amber-500' },
+  { name: 'Create New', href: '/itinerary?new=true', icon: PlusCircle, desc: 'AI-powered trip planner', accent: 'text-jungle-green-500' },
+  { name: 'Ongoing Trips', href: '/itinerary/ongoing', icon: Navigation, desc: 'Currently active journeys', accent: 'text-deep-sea-500' },
+  { name: 'Upcoming Trips', href: '/itinerary/upcoming', icon: Clock, desc: 'Planned future adventures', accent: 'text-indigo-500' },
+  { name: 'Trip History', href: '/itinerary/history', icon: History, desc: 'Past trips & memories', accent: 'text-saffron-500' },
 ];
 
 export default function Navbar() {
@@ -390,7 +390,7 @@ export default function Navbar() {
           animate={{ x: isOpen ? 0 : '100%' }}
           transition={{ type: 'spring', damping: 30, stiffness: 300 }}
           style={{ width: '100%' }}
-          className="absolute right-0 top-0 bottom-0 bg-white/95 backdrop-blur-xl shadow-2xl ring-1 ring-black/5 dark:bg-slate-950/95 dark:ring-white/10 overflow-y-auto"
+          className="absolute right-0 top-0 bottom-0 bg-white/95 backdrop-blur-xl shadow-2xl ring-1 ring-black/5 dark:bg-muted-950/95 dark:ring-white/10 overflow-y-auto"
         >
           <div className="p-6 pt-5 space-y-6">
             <div className="flex items-center justify-between">
@@ -412,7 +412,7 @@ export default function Navbar() {
               {navItems.map((item, index) => (
                 <div key={item.name}>
                   <motion.div
-                    className="flex items-center justify-between px-4 py-3 rounded-lg hover:bg-gradient-to-r hover:from-primary/10 hover:to-secondary/10 text-slate-800 hover:text-primary transition-colors dark:text-slate-200 dark:hover:text-secondary"
+                    className="flex items-center justify-between px-4 py-3 rounded-lg hover:bg-gradient-to-r hover:from-primary/10 hover:to-secondary/10 text-muted-800 hover:text-primary transition-colors dark:text-muted-200 dark:hover:text-secondary"
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: isOpen ? 1 : 0, x: isOpen ? 0 : 20 }}
                     transition={{ delay: index * 0.1 }}
@@ -437,11 +437,11 @@ export default function Navbar() {
                         <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} className="overflow-hidden">
                           <div className="pl-8 pr-2 py-1 space-y-1">
                             {ITINERARY_DROPDOWN.map((sub) => (
-                              <Link key={sub.name} href={sub.href} onClick={toggleMenu} className="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-primary dark:hover:text-secondary transition-colors">
+                              <Link key={sub.name} href={sub.href} onClick={toggleMenu} className="flex items-center gap-3 px-3 py-2 rounded-lg text-muted-600 dark:text-muted-400 hover:bg-muted-100 dark:hover:bg-white/5 hover:text-primary dark:hover:text-secondary transition-colors">
                                 <sub.icon className={`w-4 h-4 ${sub.accent}`} />
                                 <div>
                                   <div className="text-sm font-medium">{sub.name}</div>
-                                  <div className="text-[10px] text-slate-400">{sub.desc}</div>
+                                  <div className="text-[10px] text-muted-400">{sub.desc}</div>
                                 </div>
                               </Link>
                             ))}
@@ -459,23 +459,23 @@ export default function Navbar() {
               <ThemeToggle />
             </div>
 
-            <div className="space-y-3 pt-6 border-t border-gray-200 dark:border-slate-800" suppressHydrationWarning>
+            <div className="space-y-3 pt-6 border-t border-muted-200 dark:border-muted-800" suppressHydrationWarning>
               {user ? (
                 <div className="flex flex-col space-y-4">
                   <div className="flex items-center gap-3 px-2">
                     {user.photoURL ? (
-                      <Image src={user.photoURL!} alt="User" width={40} height={40} className="w-10 h-10 rounded-full border-2 border-white dark:border-slate-800 shadow-sm" />
+                      <Image src={user.photoURL!} alt="User" width={40} height={40} className="w-10 h-10 rounded-full border-2 border-white dark:border-muted-800 shadow-sm" />
                     ) : (
-                      <div className="w-10 h-10 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center">
-                        <User className="w-5 h-5 text-slate-500 dark:text-slate-400" />
+                      <div className="w-10 h-10 rounded-full bg-muted-200 dark:bg-muted-700 flex items-center justify-center">
+                        <User className="w-5 h-5 text-muted-500 dark:text-muted-400" />
                       </div>
                     )}
                     <div className="flex flex-col flex-1 min-w-0">
-                      <span className="text-sm font-bold text-slate-800 dark:text-slate-200 leading-tight truncate" title={user.displayName || 'Traveler'}>{user.displayName || 'Traveler'}</span>
-                      <span className="text-[10px] text-slate-500 font-medium tracking-wide">MEMBER</span>
+                      <span className="text-sm font-bold text-muted-800 dark:text-muted-200 leading-tight truncate" title={user.displayName || 'Traveler'}>{user.displayName || 'Traveler'}</span>
+                      <span className="text-[10px] text-muted-500 font-medium tracking-wide">MEMBER</span>
                     </div>
                   </div>
-                  <motion.button onClick={() => { toggleMenu(); signOut(); }} className="w-full flex items-center justify-center space-x-2 px-4 py-3 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 transition-colors dark:border-red-900/50 dark:text-red-400 dark:hover:bg-red-900/20" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                  <motion.button onClick={() => { toggleMenu(); signOut(); }} className="w-full flex items-center justify-center space-x-2 px-4 py-3 rounded-lg border border-temple-red-200 text-temple-red-600 hover:bg-temple-red-50 transition-colors dark:border-temple-red-900/50 dark:text-temple-red-400 dark:hover:bg-temple-red-900/20" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                     <LogOut className="w-4 h-4" />
                     <span className="font-medium">Sign Out</span>
                   </motion.button>
@@ -486,7 +486,7 @@ export default function Navbar() {
                     <User className="w-4 h-4" />
                     <span className="font-medium">Sign In</span>
                   </motion.button>
-                  <motion.button onClick={() => { toggleMenu(); signInWithGoogle(); }} className="w-full flex items-center justify-center space-x-2 px-4 py-3 rounded-lg border-2 border-black/10 text-slate-800 hover:border-primary hover:text-primary transition-colors dark:border-white/15 dark:text-slate-200 dark:hover:border-secondary dark:hover:text-secondary" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                  <motion.button onClick={() => { toggleMenu(); signInWithGoogle(); }} className="w-full flex items-center justify-center space-x-2 px-4 py-3 rounded-lg border-2 border-black/10 text-muted-800 hover:border-primary hover:text-primary transition-colors dark:border-white/15 dark:text-muted-200 dark:hover:border-secondary dark:hover:text-secondary" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                     <span className="font-medium">Create Account</span>
                   </motion.button>
                 </>

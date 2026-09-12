@@ -189,7 +189,7 @@ function ExplorePageContent() {
                           <span className="bg-background/90 text-foreground text-[10px] px-2.5 py-1 rounded-sm font-bold shadow-sm">{gem.crowdLevel} crowd</span>
                           <button onClick={e => { e.stopPropagation(); toggleLike({ id: gem.name, name: gem.name, state: gem.state, image: gem.image }); }}
                             className="w-7 h-7 bg-black/30 hover:bg-black/50 backdrop-blur-md border border-white/20 rounded-full flex items-center justify-center z-10 transition-colors">
-                            <Heart className={`w-3.5 h-3.5 transition-all ${liked.has(gem.name) ? 'fill-rose-500 text-rose-500' : 'text-white/90'}`} />
+                            <Heart className={`w-3.5 h-3.5 transition-all ${liked.has(gem.name) ? 'fill-temple-red-500 text-temple-red-500' : 'text-white/90'}`} />
                           </button>
                         </div>
                         <div className="absolute bottom-4 left-4 right-4">

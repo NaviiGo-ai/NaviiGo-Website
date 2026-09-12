@@ -19,7 +19,7 @@ const TABS: { id: BookingTabType; label: string; icon: React.ComponentType<{ cla
 
 export const BookingTabs = memo(({ activeTab, onTabChange }: Props) => {
   return (
-    <div className="flex items-center gap-2 p-1.5 bg-zinc-100 dark:bg-zinc-900 rounded-2xl w-fit mx-auto mb-8 border border-zinc-200 dark:border-zinc-800">
+    <div className="flex items-center gap-2 p-1.5 bg-muted-100 dark:bg-muted-900 rounded-2xl w-fit mx-auto mb-8 border border-muted-200 dark:border-muted-800">
       {TABS.map((tab) => {
         const Icon = tab.icon;
         const isActive = activeTab === tab.id;
@@ -29,8 +29,8 @@ export const BookingTabs = memo(({ activeTab, onTabChange }: Props) => {
             onClick={() => onTabChange(tab.id)}
             className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm transition-all ${
               isActive
-                ? 'bg-white dark:bg-zinc-800 text-emerald-500 shadow-sm'
-                : 'text-zinc-500 hover:text-zinc-900 dark:hover:text-white'
+                ? 'bg-white dark:bg-muted-800 text-jungle-green-500 shadow-sm'
+                : 'text-muted-500 hover:text-muted-900 dark:hover:text-white'
             }`}
           >
             <Icon className="w-4 h-4" />

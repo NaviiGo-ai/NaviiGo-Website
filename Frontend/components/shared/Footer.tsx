@@ -29,7 +29,7 @@ export default function Footer() {
   return (
     <footer className="relative bg-card text-card-foreground border-t border-border overflow-hidden">
       {/* Top Accent Line */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-px bg-gradient-to-r from-transparent via-saffron/40 to-transparent" />
+      <div className="absolute top-0 left-1/2 -tranmuted-x-1/2 w-[600px] h-px bg-gradient-to-r from-transparent via-saffron/40 to-transparent" />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-12 sm:pt-20 pb-8 sm:pb-10">
         {/* Main Grid */}

@@ -307,10 +307,10 @@ export default function ItineraryMap({
         <div className={`relative rounded-2xl overflow-hidden ${className}`}>
             <div ref={containerRef} className="w-full h-full min-h-[300px]" />
             {!leafletLoaded && (
-                <div className="absolute inset-0 bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
+                <div className="absolute inset-0 bg-muted-100 dark:bg-muted-800 flex items-center justify-center">
                     <div className="text-center">
-                        <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
-                        <p className="text-xs text-zinc-400">Loading map…</p>
+                        <div className="w-8 h-8 border-2 border-jungle-green-500 border-t-transparent rounded-full animate-spin mx-auto mb-2" />
+                        <p className="text-xs text-muted-400">Loading map…</p>
                     </div>
                 </div>
             )}

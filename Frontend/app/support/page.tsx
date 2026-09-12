@@ -88,11 +88,11 @@ const quickActions = [
 ];
 
 const colorMap: Record<string, string> = {
-  blue:    "bg-blue-100 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 group-hover:bg-blue-200 dark:group-hover:bg-blue-500/20",
-  violet:  "bg-violet-100 dark:bg-violet-500/10 text-violet-600 dark:text-violet-400 group-hover:bg-violet-200 dark:group-hover:bg-violet-500/20",
-  amber:   "bg-amber-100 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 group-hover:bg-amber-200 dark:group-hover:bg-amber-500/20",
-  emerald: "bg-emerald-100 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 group-hover:bg-emerald-200 dark:group-hover:bg-emerald-500/20",
-  rose:    "bg-rose-100 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 group-hover:bg-rose-200 dark:group-hover:bg-rose-500/20",
+  blue:    "bg-deep-sea-100 dark:bg-deep-sea-500/10 text-deep-sea-600 dark:text-deep-sea-400 group-hover:bg-deep-sea-200 dark:group-hover:bg-deep-sea-500/20",
+  violet:  "bg-indigo-100 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 group-hover:bg-indigo-200 dark:group-hover:bg-indigo-500/20",
+  amber:   "bg-saffron-100 dark:bg-saffron-500/10 text-saffron-600 dark:text-saffron-400 group-hover:bg-saffron-200 dark:group-hover:bg-saffron-500/20",
+  emerald: "bg-jungle-green-100 dark:bg-jungle-green-500/10 text-jungle-green-600 dark:text-jungle-green-400 group-hover:bg-jungle-green-200 dark:group-hover:bg-jungle-green-500/20",
+  rose:    "bg-temple-red-100 dark:bg-temple-red-500/10 text-temple-red-600 dark:text-temple-red-400 group-hover:bg-temple-red-200 dark:group-hover:bg-temple-red-500/20",
   sky:     "bg-sky-100 dark:bg-sky-500/10 text-sky-600 dark:text-sky-400 group-hover:bg-sky-200 dark:group-hover:bg-sky-500/20",
 };
 
@@ -110,15 +110,15 @@ export default function SupportPage() {
           transition={{ duration: 0.8, ease: "easeOut" }}
           className="text-center mb-20"
         >
-          <div className="w-20 h-20 bg-zinc-100 dark:bg-white/5 rounded-full flex items-center justify-center mx-auto mb-8">
+          <div className="w-20 h-20 bg-muted-100 dark:bg-white/5 rounded-full flex items-center justify-center mx-auto mb-8">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-10 h-10 text-black dark:text-white">
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 20.25c4.97 0 9-3.694 9-8.25s-4.03-8.25-9-8.25S3 7.444 3 12c0 2.104.859 4.023 2.273 5.48.432.447.74 1.04.586 1.641a4.483 4.483 0 01-.923 1.785A5.969 5.969 0 006 21c1.282 0 2.47-.402 3.445-1.067a1.736 1.736 0 012.008.13c.82.596 1.82 1.187 2.547 1.187z" />
             </svg>
           </div>
           <h1 className="text-3xl sm:text-5xl md:text-7xl font-bold tracking-tighter mb-4">
-            How can we <span className="italic font-serif text-blue-600 dark:text-blue-500">help?</span>
+            How can we <span className="italic font-serif text-deep-sea-600 dark:text-deep-sea-500">help?</span>
           </h1>
-          <p className="text-xl text-zinc-500">Our support team is here to ensure your journey is seamless.</p>
+          <p className="text-xl text-muted-500">Our support team is here to ensure your journey is seamless.</p>
         </motion.div>
 
         {/* Quick Actions */}
@@ -141,14 +141,14 @@ export default function SupportPage() {
                 transition={{ delay: 0.25 + i * 0.07, duration: 0.4 }}
                 whileHover={{ y: -3, scale: 1.02 }}
                 whileTap={{ scale: 0.97 }}
-                className="group flex items-start gap-4 p-5 rounded-2xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-black hover:bg-zinc-50 dark:hover:bg-white/[0.04] transition-all cursor-pointer"
+                className="group flex items-start gap-4 p-5 rounded-2xl border border-muted-200 dark:border-white/10 bg-white dark:bg-black hover:bg-muted-50 dark:hover:bg-white/[0.04] transition-all cursor-pointer"
               >
                 <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 transition-colors ${colorMap[action.color]}`}>
                   {action.icon}
                 </div>
                 <div>
-                  <p className="font-semibold text-sm text-zinc-900 dark:text-white leading-snug">{action.label}</p>
-                  <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5 leading-relaxed">{action.description}</p>
+                  <p className="font-semibold text-sm text-muted-900 dark:text-white leading-snug">{action.label}</p>
+                  <p className="text-xs text-muted-500 dark:text-muted-400 mt-0.5 leading-relaxed">{action.description}</p>
                 </div>
               </motion.a>
             ))}
@@ -165,11 +165,11 @@ export default function SupportPage() {
               transition={{ delay: i * 0.055 }}
               viewport={{ once: true }}
               key={i}
-              className="border border-zinc-200 dark:border-white/10 rounded-2xl overflow-hidden"
+              className="border border-muted-200 dark:border-white/10 rounded-2xl overflow-hidden"
             >
               <button
                 onClick={() => setOpen(open === i ? null : i)}
-                className="w-full px-8 py-6 text-left flex justify-between items-center bg-white dark:bg-black hover:bg-zinc-50 dark:hover:bg-white/5 transition-colors"
+                className="w-full px-8 py-6 text-left flex justify-between items-center bg-white dark:bg-black hover:bg-muted-50 dark:hover:bg-white/5 transition-colors"
               >
                 <span className="font-medium text-base pr-4">{faq.question}</span>
                 <motion.div animate={{ rotate: open === i ? 45 : 0 }} transition={{ duration: 0.2 }} className="shrink-0">
@@ -182,9 +182,9 @@ export default function SupportPage() {
                 initial={false}
                 animate={{ height: open === i ? "auto" : 0, opacity: open === i ? 1 : 0 }}
                 transition={{ duration: 0.25, ease: "easeInOut" }}
-                className="overflow-hidden bg-zinc-50 dark:bg-white/5"
+                className="overflow-hidden bg-muted-50 dark:bg-white/5"
               >
-                <p className="px-8 pb-6 pt-2 text-zinc-600 dark:text-zinc-400 leading-relaxed text-sm">
+                <p className="px-8 pb-6 pt-2 text-muted-600 dark:text-muted-400 leading-relaxed text-sm">
                   {faq.answer}
                 </p>
               </motion.div>
@@ -198,15 +198,15 @@ export default function SupportPage() {
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.7, ease: "easeOut" }}
           viewport={{ once: true }}
-          className="mt-20 rounded-3xl border border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-white/[0.03] p-10 md:p-14 text-center"
+          className="mt-20 rounded-3xl border border-muted-200 dark:border-white/10 bg-muted-50 dark:bg-white/[0.03] p-10 md:p-14 text-center"
         >
-          <div className="w-16 h-16 bg-blue-100 dark:bg-blue-500/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8 text-blue-600 dark:text-blue-400">
+          <div className="w-16 h-16 bg-deep-sea-100 dark:bg-deep-sea-500/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-8 h-8 text-deep-sea-600 dark:text-deep-sea-400">
               <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
             </svg>
           </div>
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-3">Still need help?</h2>
-          <p className="text-zinc-500 dark:text-zinc-400 text-lg mb-8 max-w-md mx-auto">
+          <p className="text-muted-500 dark:text-muted-400 text-lg mb-8 max-w-md mx-auto">
             Can&apos;t find the answer you&apos;re looking for? Our team is just one email away.
           </p>
           <motion.a
@@ -215,7 +215,7 @@ export default function SupportPage() {
             rel="noopener noreferrer"
             whileHover={{ scale: 1.04, y: -2 }}
             whileTap={{ scale: 0.97 }}
-            className="inline-flex items-center gap-3 px-8 py-4 rounded-2xl bg-blue-600 hover:bg-blue-500 text-white font-semibold text-base shadow-lg shadow-blue-600/25 hover:shadow-blue-600/40 transition-all"
+            className="inline-flex items-center gap-3 px-8 py-4 rounded-2xl bg-deep-sea-600 hover:bg-deep-sea-500 text-white font-semibold text-base shadow-lg shadow-deep-sea-600/25 hover:shadow-deep-sea-600/40 transition-all"
           >
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
               <path strokeLinecap="round" strokeLinejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />

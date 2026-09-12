@@ -41,7 +41,7 @@ function ItineraryPageContent() {
     const handleDone = () => { };
 
     if (loading) {
-        return <div className="min-h-screen bg-[#f7f8fc] dark:bg-[#0a0a0f] pt-16 sm:pt-20 flex items-center justify-center"><div className="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" /></div>;
+        return <div className="min-h-screen bg-[#f7f8fc] dark:bg-[#0a0a0f] pt-16 sm:pt-20 flex items-center justify-center"><div className="w-10 h-10 border-4 border-jungle-green-500 border-t-transparent rounded-full animate-spin" /></div>;
     }
 
     if (!user) {
@@ -56,7 +56,7 @@ export default function ItineraryPage() {
         <Suspense
             fallback={
                 <div className="min-h-screen bg-[#f7f8fc] dark:bg-[#0a0a0f] pt-16 sm:pt-20 flex items-center justify-center">
-                    <div className="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+                    <div className="w-10 h-10 border-4 border-jungle-green-500 border-t-transparent rounded-full animate-spin" />
                 </div>
             }
         >

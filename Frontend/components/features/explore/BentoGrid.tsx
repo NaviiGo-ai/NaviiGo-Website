@@ -77,7 +77,7 @@ export const BentoGrid = memo(({
                     onClick={e => { e.stopPropagation(); onToggleLike(d); }}
                     className="absolute top-3 right-3 w-8 h-8 bg-black/30 hover:bg-black/50 backdrop-blur-md border border-white/20 rounded-full flex items-center justify-center z-10 transition-colors"
                   >
-                    <Heart className={`w-4 h-4 transition-all ${liked.has(d.id) || liked.has(String(d.id)) ? 'fill-rose-500 text-rose-500' : 'text-white/90'}`} />
+                    <Heart className={`w-4 h-4 transition-all ${liked.has(d.id) || liked.has(String(d.id)) ? 'fill-temple-red-500 text-temple-red-500' : 'text-white/90'}`} />
                   </button>
 
                   {/* Category badge - top left */}
@@ -117,7 +117,7 @@ export const BentoGrid = memo(({
           >
             <MapPin className="w-4 h-4" />
             Load More ({total - destinations.length} remaining)
-            <ChevronRight className="w-4 h-4 rotate-90 group-hover:translate-y-0.5 transition-transform" />
+            <ChevronRight className="w-4 h-4 rotate-90 group-hover:tranmuted-y-0.5 transition-transform" />
           </button>
         </div>
       )}

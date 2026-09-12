@@ -160,8 +160,8 @@ export default function VibeMatch({ onSelect }: VibeMatchProps) {
             {/* Header */}
             <div className="text-center">
                 <div className="text-4xl mb-2">🎯</div>
-                <h2 className="text-2xl font-bold text-zinc-900 dark:text-white mb-1">Vibe Match</h2>
-                <p className="text-zinc-400 text-sm">Pick <strong>up to 3 vibes</strong> — AI finds your weather-perfect destination right now.</p>
+                <h2 className="text-2xl font-bold text-muted-900 dark:text-white mb-1">Vibe Match</h2>
+                <p className="text-muted-400 text-sm">Pick <strong>up to 3 vibes</strong> — AI finds your weather-perfect destination right now.</p>
             </div>
 
             <AnimatePresence mode="wait">
@@ -178,18 +178,18 @@ export default function VibeMatch({ onSelect }: VibeMatchProps) {
                                         onClick={() => !isDisabled && toggle(v.tag)}
                                         className={`flex flex-col items-center gap-2 p-4 rounded-2xl border-2 transition-all duration-200 ${
                                             isSelected
-                                                ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-500/15 shadow-lg shadow-emerald-500/10'
+                                                ? 'border-jungle-green-500 bg-jungle-green-50 dark:bg-jungle-green-500/15 shadow-lg shadow-jungle-green-500/10'
                                                 : isDisabled
-                                                    ? 'border-zinc-100 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-800/30 opacity-40 cursor-not-allowed'
-                                                    : 'border-zinc-100 dark:border-zinc-700 bg-white dark:bg-zinc-800/50 hover:border-zinc-300 dark:hover:border-zinc-500 cursor-pointer'
+                                                    ? 'border-muted-100 dark:border-muted-800 bg-muted-50 dark:bg-muted-800/30 opacity-40 cursor-not-allowed'
+                                                    : 'border-muted-100 dark:border-muted-700 bg-white dark:bg-muted-800/50 hover:border-muted-300 dark:hover:border-muted-500 cursor-pointer'
                                         }`}>
                                         <span className="text-3xl">{v.emoji}</span>
-                                        <span className={`text-xs font-semibold ${isSelected ? 'text-emerald-700 dark:text-emerald-400' : 'text-zinc-600 dark:text-zinc-400'}`}>
+                                        <span className={`text-xs font-semibold ${isSelected ? 'text-jungle-green-700 dark:text-jungle-green-400' : 'text-muted-600 dark:text-muted-400'}`}>
                                             {v.label}
                                         </span>
                                         {isSelected && (
                                             <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }}
-                                                className="w-4 h-4 bg-emerald-500 rounded-full flex items-center justify-center">
+                                                className="w-4 h-4 bg-jungle-green-500 rounded-full flex items-center justify-center">
                                                 <span className="text-white text-[8px]">✓</span>
                                             </motion.div>
                                         )}
@@ -202,14 +202,14 @@ export default function VibeMatch({ onSelect }: VibeMatchProps) {
                         <div className="flex items-center justify-between mb-4">
                             <div className="flex items-center gap-2">
                                 {[0, 1, 2].map(i => (
-                                    <div key={i} className={`w-8 h-8 rounded-xl border-2 flex items-center justify-center transition-all ${selected[i] ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-500/20' : 'border-dashed border-zinc-300 dark:border-zinc-700'}`}>
+                                    <div key={i} className={`w-8 h-8 rounded-xl border-2 flex items-center justify-center transition-all ${selected[i] ? 'border-jungle-green-500 bg-jungle-green-50 dark:bg-jungle-green-500/20' : 'border-dashed border-muted-300 dark:border-muted-700'}`}>
                                         {selected[i] && <span className="text-lg">{VIBES.find(v => v.tag === selected[i])?.emoji}</span>}
                                     </div>
                                 ))}
-                                <span className="text-xs text-zinc-400 ml-1">{selected.length}/3 vibes picked</span>
+                                <span className="text-xs text-muted-400 ml-1">{selected.length}/3 vibes picked</span>
                             </div>
                             {selected.length > 0 && (
-                                <button onClick={() => setSelected([])} className="text-xs text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300 transition-colors">
+                                <button onClick={() => setSelected([])} className="text-xs text-muted-400 hover:text-muted-600 dark:hover:text-muted-300 transition-colors">
                                     Clear all
                                 </button>
                             )}
@@ -218,8 +218,8 @@ export default function VibeMatch({ onSelect }: VibeMatchProps) {
                         <button onClick={findMatches} disabled={selected.length === 0}
                             className={`w-full py-4 rounded-2xl font-bold text-base transition-all flex items-center justify-center gap-2 ${
                                 selected.length > 0
-                                    ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-xl shadow-emerald-500/20 hover:from-emerald-400 hover:to-teal-400'
-                                    : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-400 cursor-not-allowed'
+                                    ? 'bg-gradient-to-r from-jungle-green-500 to-deep-sea-500 text-white shadow-xl shadow-jungle-green-500/20 hover:from-jungle-green-400 hover:to-deep-sea-400'
+                                    : 'bg-muted-100 dark:bg-muted-800 text-muted-400 cursor-not-allowed'
                             }`}>
                             ✨ Find My Perfect Destination
                         </button>
@@ -229,9 +229,9 @@ export default function VibeMatch({ onSelect }: VibeMatchProps) {
                         className="space-y-3">
                         {/* Selected vibes summary */}
                         <div className="flex items-center gap-2 mb-1">
-                            <span className="text-xs text-zinc-500">Your vibes:</span>
+                            <span className="text-xs text-muted-500">Your vibes:</span>
                             {selected.map(tag => (
-                                <span key={tag} className="flex items-center gap-1 text-xs bg-zinc-100 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-300 rounded-full px-2 py-0.5">
+                                <span key={tag} className="flex items-center gap-1 text-xs bg-muted-100 dark:bg-muted-800 text-muted-700 dark:text-muted-300 rounded-full px-2 py-0.5">
                                     {VIBES.find(v => v.tag === tag)?.emoji} {VIBES.find(v => v.tag === tag)?.label}
                                 </span>
                             ))}
@@ -240,7 +240,7 @@ export default function VibeMatch({ onSelect }: VibeMatchProps) {
                         {/* Hero card — best match */}
                         {topMatch && (
                             <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
-                                className={`rounded-2xl overflow-hidden border-2 shadow-lg ${topMatch.warning ? 'border-red-400/50' : 'border-emerald-500/60 shadow-emerald-500/10'}`}>
+                                className={`rounded-2xl overflow-hidden border-2 shadow-lg ${topMatch.warning ? 'border-temple-red-400/50' : 'border-jungle-green-500/60 shadow-jungle-green-500/10'}`}>
                                 <div className="relative h-40 cursor-pointer group" onClick={() => onSelect(topMatch.id, topMatch.name, vibeToPurpose(topMatch.matchedVibes))}>
                                     <PlaceImage
                                         name={topMatch.name}
@@ -253,18 +253,18 @@ export default function VibeMatch({ onSelect }: VibeMatchProps) {
 
                                     {/* Best match badge */}
                                     {!topMatch.warning && (
-                                        <div className="absolute top-3 left-3 bg-emerald-500 text-white text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-lg">
+                                        <div className="absolute top-3 left-3 bg-jungle-green-500 text-white text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded-lg">
                                             🏆 Best Match
                                         </div>
                                     )}
 
                                     {/* Weather badge */}
                                     {topMatch.warning ? (
-                                        <div className="absolute top-3 left-3 bg-red-500/90 backdrop-blur text-white text-[10px] font-bold px-2 py-1 rounded-lg flex items-center gap-1">
+                                        <div className="absolute top-3 left-3 bg-temple-red-500/90 backdrop-blur text-white text-[10px] font-bold px-2 py-1 rounded-lg flex items-center gap-1">
                                             ⚠️ {topMatch.warning.reason}
                                         </div>
                                     ) : topMatch.ideal ? (
-                                        <div className="absolute top-3 right-3 bg-emerald-500/90 backdrop-blur text-white text-[10px] font-bold px-2 py-1 rounded-lg flex items-center gap-1">
+                                        <div className="absolute top-3 right-3 bg-jungle-green-500/90 backdrop-blur text-white text-[10px] font-bold px-2 py-1 rounded-lg flex items-center gap-1">
                                             🌤️ {topMatch.ideal.reason}
                                         </div>
                                     ) : null}
@@ -284,7 +284,7 @@ export default function VibeMatch({ onSelect }: VibeMatchProps) {
                                     </div>
                                 </div>
                                 <button onClick={() => onSelect(topMatch.id, topMatch.name, vibeToPurpose(topMatch.matchedVibes))}
-                                    className={`w-full text-white font-bold text-sm py-3 flex items-center justify-center gap-2 transition-colors ${topMatch.warning ? 'bg-zinc-700 hover:bg-zinc-600' : 'bg-emerald-600 hover:bg-emerald-500'}`}>
+                                    className={`w-full text-white font-bold text-sm py-3 flex items-center justify-center gap-2 transition-colors ${topMatch.warning ? 'bg-muted-700 hover:bg-muted-600' : 'bg-jungle-green-600 hover:bg-jungle-green-500'}`}>
                                     {topMatch.warning ? '⚠️ ' : ''}Select {topMatch.name} &amp; Continue →
                                 </button>
                             </motion.div>
@@ -296,7 +296,7 @@ export default function VibeMatch({ onSelect }: VibeMatchProps) {
                                 <motion.div key={dest.id}
                                     initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
                                     transition={{ delay: (i + 1) * 0.07 }}
-                                    className={`rounded-2xl overflow-hidden border-2 transition-all ${dest.warning ? 'border-red-400/30' : 'border-transparent hover:border-zinc-500'}`}>
+                                    className={`rounded-2xl overflow-hidden border-2 transition-all ${dest.warning ? 'border-temple-red-400/30' : 'border-transparent hover:border-muted-500'}`}>
                                     <div className="relative h-24 cursor-pointer group" onClick={() => onSelect(dest.id, dest.name, vibeToPurpose(dest.matchedVibes))}>
                                         <PlaceImage
                                             name={dest.name}
@@ -309,11 +309,11 @@ export default function VibeMatch({ onSelect }: VibeMatchProps) {
 
                                         {/* Weather badge */}
                                         {dest.warning ? (
-                                            <div className="absolute top-1.5 left-1.5 bg-red-500/90 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-md flex items-center gap-0.5">
+                                            <div className="absolute top-1.5 left-1.5 bg-temple-red-500/90 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-md flex items-center gap-0.5">
                                                 ⚠️ Avoid
                                             </div>
                                         ) : dest.ideal ? (
-                                            <div className="absolute top-1.5 left-1.5 bg-emerald-500/90 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-md">
+                                            <div className="absolute top-1.5 left-1.5 bg-jungle-green-500/90 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-md">
                                                 🌤️ Ideal
                                             </div>
                                         ) : null}
@@ -335,7 +335,7 @@ export default function VibeMatch({ onSelect }: VibeMatchProps) {
                                         </div>
                                     </div>
                                     <button onClick={() => onSelect(dest.id, dest.name, vibeToPurpose(dest.matchedVibes))}
-                                        className={`w-full text-white text-[10px] font-bold py-2 flex items-center justify-center gap-1 transition-colors ${dest.warning ? 'bg-zinc-800 hover:bg-zinc-700' : 'bg-zinc-900 dark:bg-zinc-800 hover:bg-zinc-700'}`}>
+                                        className={`w-full text-white text-[10px] font-bold py-2 flex items-center justify-center gap-1 transition-colors ${dest.warning ? 'bg-muted-800 hover:bg-muted-700' : 'bg-muted-900 dark:bg-muted-800 hover:bg-muted-700'}`}>
                                         Select →
                                     </button>
                                 </motion.div>
@@ -343,7 +343,7 @@ export default function VibeMatch({ onSelect }: VibeMatchProps) {
                         </div>
 
                         <button onClick={() => { setStep('pick'); setMatches([]); }}
-                            className="w-full py-3 rounded-2xl border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 text-sm font-medium hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors">
+                            className="w-full py-3 rounded-2xl border border-muted-200 dark:border-muted-700 text-muted-600 dark:text-muted-400 text-sm font-medium hover:bg-muted-50 dark:hover:bg-muted-800 transition-colors">
                             ← Try different vibes
                         </button>
                     </motion.div>

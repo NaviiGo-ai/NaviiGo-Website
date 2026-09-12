@@ -93,7 +93,7 @@ export default function WeatherStrip({ lat, lng, label, compact = false }: Props
     return (
         <section
             aria-label={`Live weather${label ? ` in ${label}` : ''}`}
-            className="rounded-2xl border border-zinc-200 dark:border-white/10 bg-white/70 dark:bg-zinc-900/60 backdrop-blur px-4 py-3 shadow-sm"
+            className="rounded-2xl border border-muted-200 dark:border-white/10 bg-white/70 dark:bg-muted-900/60 backdrop-blur px-4 py-3 shadow-sm"
         >
             <div className="flex items-center gap-4 flex-wrap">
                 {/* Current conditions */}
@@ -101,15 +101,15 @@ export default function WeatherStrip({ lat, lng, label, compact = false }: Props
                     <span className="text-3xl" role="img" aria-label={c.condition}>{c.emoji}</span>
                     <div>
                         <div className="flex items-center gap-2">
-                            <span className="text-2xl font-bold text-zinc-900 dark:text-white leading-none">{c.temp}°C</span>
+                            <span className="text-2xl font-bold text-muted-900 dark:text-white leading-none">{c.temp}°C</span>
                             <span className="relative flex h-2 w-2" title="Live from Open-Meteo">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-jungle-green-400 opacity-75" />
+                                <span className="relative inline-flex rounded-full h-2 w-2 bg-jungle-green-500" />
                             </span>
                         </div>
-                        <p className="text-xs font-semibold text-zinc-600 dark:text-zinc-300">{c.condition}{label ? ` · ${label}` : ''}</p>
+                        <p className="text-xs font-semibold text-muted-600 dark:text-muted-300">{c.condition}{label ? ` · ${label}` : ''}</p>
                     </div>
-                    <dl className="hidden sm:flex items-center gap-3 text-xs text-zinc-500 dark:text-zinc-400 ml-2">
+                    <dl className="hidden sm:flex items-center gap-3 text-xs text-muted-500 dark:text-muted-400 ml-2">
                         <div className="flex items-center gap-1" title="Feels like"><ThermIcon />{c.feelsLike}°</div>
                         <div className="flex items-center gap-1" title="Humidity"><Droplets className="w-3.5 h-3.5" />{c.humidity}%</div>
                         <div className="flex items-center gap-1" title="Wind"><Wind className="w-3.5 h-3.5" />{c.windSpeed} km/h</div>
@@ -123,10 +123,10 @@ export default function WeatherStrip({ lat, lng, label, compact = false }: Props
                         <div className="flex gap-2 sm:gap-3 overflow-x-auto no-scrollbar">
                             {days.map((d) => (
                                 <div key={d.date} className="flex flex-col items-center gap-0.5 flex-shrink-0 min-w-[52px] px-1">
-                                    <span className="text-[10px] font-bold uppercase tracking-wide text-zinc-400">{weekday(d.date)}</span>
+                                    <span className="text-[10px] font-bold uppercase tracking-wide text-muted-400">{weekday(d.date)}</span>
                                     <span className="text-base" role="img" aria-label={d.condition}>{d.emoji}</span>
-                                    <span className="text-[11px] font-semibold text-zinc-700 dark:text-zinc-200 whitespace-nowrap">{d.minTemp}°–{d.maxTemp}°</span>
-                                    <span className="text-[10px] text-zinc-400 flex items-center gap-0.5 whitespace-nowrap">{d.rainChance > 0 && <Umbrella className="w-2.5 h-2.5" />}{d.rainChance}%</span>
+                                    <span className="text-[11px] font-semibold text-muted-700 dark:text-muted-200 whitespace-nowrap">{d.minTemp}°–{d.maxTemp}°</span>
+                                    <span className="text-[10px] text-muted-400 flex items-center gap-0.5 whitespace-nowrap">{d.rainChance > 0 && <Umbrella className="w-2.5 h-2.5" />}{d.rainChance}%</span>
                                 </div>
                             ))}
                         </div>

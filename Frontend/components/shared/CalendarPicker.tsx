@@ -79,11 +79,11 @@ export default function CalendarPicker({ startDate, endDate, onSelect }: Calenda
             cells.push(
                 <button key={ds} disabled={isPast} onClick={() => handleClick(ds)}
                     className={`relative h-9 w-full rounded-lg text-sm font-medium transition-all
-            ${isPast ? 'text-zinc-300 dark:text-zinc-600 cursor-not-allowed' : 'hover:bg-emerald-50 dark:hover:bg-emerald-500/10 cursor-pointer'}
-            ${isStart || isEnd ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/30 hover:bg-emerald-600' : ''}
-            ${isInRange ? 'bg-emerald-100 dark:bg-emerald-500/15 text-emerald-800 dark:text-emerald-300' : ''}
-            ${isToday && !isStart && !isEnd ? 'ring-2 ring-emerald-400 ring-inset' : ''}
-            ${!isPast && !isStart && !isEnd && !isInRange ? 'text-zinc-700 dark:text-zinc-300' : ''}
+            ${isPast ? 'text-muted-300 dark:text-muted-600 cursor-not-allowed' : 'hover:bg-jungle-green-50 dark:hover:bg-jungle-green-500/10 cursor-pointer'}
+            ${isStart || isEnd ? 'bg-jungle-green-500 text-white shadow-md shadow-jungle-green-500/30 hover:bg-jungle-green-600' : ''}
+            ${isInRange ? 'bg-jungle-green-100 dark:bg-jungle-green-500/15 text-jungle-green-800 dark:text-jungle-green-300' : ''}
+            ${isToday && !isStart && !isEnd ? 'ring-2 ring-jungle-green-400 ring-inset' : ''}
+            ${!isPast && !isStart && !isEnd && !isInRange ? 'text-muted-700 dark:text-muted-300' : ''}
           `}>
                     {d}
                 </button>
@@ -92,11 +92,11 @@ export default function CalendarPicker({ startDate, endDate, onSelect }: Calenda
 
         return (
             <div>
-                <div className="text-center font-bold text-zinc-800 dark:text-zinc-200 mb-3 text-sm">
+                <div className="text-center font-bold text-muted-800 dark:text-muted-200 mb-3 text-sm">
                     {MONTH_NAMES[month]} {year}
                 </div>
                 <div className="grid grid-cols-7 gap-1 mb-1">
-                    {DAYS_OF_WEEK.map(d => <div key={d} className="text-center text-[11px] font-semibold text-zinc-400 uppercase">{d}</div>)}
+                    {DAYS_OF_WEEK.map(d => <div key={d} className="text-center text-[11px] font-semibold text-muted-400 uppercase">{d}</div>)}
                 </div>
                 <div className="grid grid-cols-7 gap-1">{cells}</div>
             </div>
@@ -105,14 +105,14 @@ export default function CalendarPicker({ startDate, endDate, onSelect }: Calenda
 
     return (
         <div className="max-w-2xl">
-            <div className="bg-white dark:bg-zinc-800/50 rounded-2xl border border-zinc-100 dark:border-zinc-700 p-5">
+            <div className="bg-white dark:bg-muted-800/50 rounded-2xl border border-muted-100 dark:border-muted-700 p-5">
                 {/* Nav */}
                 <div className="flex items-center justify-between mb-4">
-                    <button onClick={prevMonth} aria-label="Previous month" className="w-8 h-8 rounded-full border border-zinc-200 dark:border-zinc-600 flex items-center justify-center text-sm hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors">←</button>
-                    <div className="text-xs text-zinc-500 font-medium">
+                    <button onClick={prevMonth} aria-label="Previous month" className="w-8 h-8 rounded-full border border-muted-200 dark:border-muted-600 flex items-center justify-center text-sm hover:bg-muted-50 dark:hover:bg-muted-700 transition-colors">←</button>
+                    <div className="text-xs text-muted-500 font-medium">
                         {picking === 'start' ? '📅 Select start date' : '📅 Select end date'}
                     </div>
-                    <button onClick={nextMonth} aria-label="Next month" className="w-8 h-8 rounded-full border border-zinc-200 dark:border-zinc-600 flex items-center justify-center text-sm hover:bg-zinc-50 dark:hover:bg-zinc-700 transition-colors">→</button>
+                    <button onClick={nextMonth} aria-label="Next month" className="w-8 h-8 rounded-full border border-muted-200 dark:border-muted-600 flex items-center justify-center text-sm hover:bg-muted-50 dark:hover:bg-muted-700 transition-colors">→</button>
                 </div>
                 {/* 2 months */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -122,21 +122,21 @@ export default function CalendarPicker({ startDate, endDate, onSelect }: Calenda
             </div>
             {/* Summary */}
             {startDate && (
-                <div className="mt-4 bg-emerald-50 dark:bg-emerald-500/10 rounded-xl p-3 flex items-center justify-between">
+                <div className="mt-4 bg-jungle-green-50 dark:bg-jungle-green-500/10 rounded-xl p-3 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <span className="text-emerald-600 text-lg">📅</span>
+                        <span className="text-jungle-green-600 text-lg">📅</span>
                         <div>
-                            <div className="text-sm font-semibold text-zinc-800 dark:text-zinc-200">
+                            <div className="text-sm font-semibold text-muted-800 dark:text-muted-200">
                                 {new Date(startDate + 'T00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                                 {endDate && <> → {new Date(endDate + 'T00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</>}
                             </div>
-                            {!endDate && <div className="text-xs text-zinc-400">Now pick your return date</div>}
+                            {!endDate && <div className="text-xs text-muted-400">Now pick your return date</div>}
                         </div>
                     </div>
                     {dayCount > 0 && (
                         <div className="text-right">
-                            <div className="text-2xl font-bold text-emerald-600">{dayCount}</div>
-                            <div className="text-[10px] text-zinc-400 uppercase font-bold">days</div>
+                            <div className="text-2xl font-bold text-jungle-green-600">{dayCount}</div>
+                            <div className="text-[10px] text-muted-400 uppercase font-bold">days</div>
                         </div>
                     )}
                 </div>

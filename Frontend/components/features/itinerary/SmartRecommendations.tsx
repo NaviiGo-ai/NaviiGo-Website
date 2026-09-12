@@ -108,30 +108,30 @@ export default function SmartRecommendations({
         <div className="mb-6">
             {/* Header */}
             <div className="flex items-center gap-2 mb-3">
-                <div className="flex items-center gap-2 bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-200 dark:border-amber-500/20 rounded-full px-3 py-1.5">
+                <div className="flex items-center gap-2 bg-gradient-to-r from-marigold-500/10 to-saffron-500/10 border border-marigold-200 dark:border-marigold-500/20 rounded-full px-3 py-1.5">
                     <span className="text-sm">🧠</span>
-                    <span className="text-xs font-bold text-amber-700 dark:text-amber-400 uppercase tracking-wider">AI Picks For You</span>
+                    <span className="text-xs font-bold text-marigold-700 dark:text-marigold-400 uppercase tracking-wider">AI Picks For You</span>
                 </div>
-                <span className="text-xs text-zinc-400">Based on your preferences</span>
+                <span className="text-xs text-muted-400">Based on your preferences</span>
             </div>
 
             {/* Skeletons */}
             {loading && (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                     {[1, 2, 3, 4].map(i => (
-                        <div key={i} className="rounded-2xl overflow-hidden border-2 border-transparent bg-zinc-100 dark:bg-zinc-800/50">
+                        <div key={i} className="rounded-2xl overflow-hidden border-2 border-transparent bg-muted-100 dark:bg-muted-800/50">
                             <div className="h-28 relative overflow-hidden">
                                 {/* Shimmer animation base */}
-                                <div className="absolute inset-0 bg-zinc-200 dark:bg-zinc-700/50 animate-pulse" />
+                                <div className="absolute inset-0 bg-muted-200 dark:bg-muted-700/50 animate-pulse" />
                                 {/* Shimmer wave */}
-                                <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent animate-[shimmer_1.5s_infinite]" />
+                                <div className="absolute inset-0 -tranmuted-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent animate-[shimmer_1.5s_infinite]" />
                                 {/* Skeleton content */}
                                 <div className="absolute bottom-3 left-3 space-y-2">
-                                    <div className="h-3 w-20 bg-zinc-300 dark:bg-zinc-600 rounded" />
-                                    <div className="h-2 w-32 bg-zinc-300 dark:bg-zinc-600 rounded" />
+                                    <div className="h-3 w-20 bg-muted-300 dark:bg-muted-600 rounded" />
+                                    <div className="h-2 w-32 bg-muted-300 dark:bg-muted-600 rounded" />
                                 </div>
                             </div>
-                            <div className="h-9 bg-zinc-200/80 dark:bg-zinc-800 animate-pulse" />
+                            <div className="h-9 bg-muted-200/80 dark:bg-muted-800 animate-pulse" />
                         </div>
                     ))}
                 </div>
@@ -144,7 +144,7 @@ export default function SmartRecommendations({
                             <motion.div key={rec.id}
                                 initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: i * 0.07 }}
-                                className={`rounded-2xl overflow-hidden border-2 transition-all ${selected === rec.id ? 'border-emerald-500 shadow-lg shadow-emerald-500/10' : 'border-transparent hover:border-zinc-600'}`}>
+                                className={`rounded-2xl overflow-hidden border-2 transition-all ${selected === rec.id ? 'border-jungle-green-500 shadow-lg shadow-jungle-green-500/10' : 'border-transparent hover:border-muted-600'}`}>
                                 <div className="relative h-28 cursor-pointer group" onClick={() => handleSelect(rec.id, rec.name)}>
                                     <PlaceImage
                                         name={rec.name}
@@ -172,7 +172,7 @@ export default function SmartRecommendations({
                                     </div>
                                 </div>
                                 <button onClick={() => handleGo(rec.id, rec.name)}
-                                    className="w-full bg-zinc-900 dark:bg-zinc-800 hover:bg-zinc-700 active:bg-zinc-600 text-white text-[10px] font-bold py-2.5 flex items-center justify-center gap-1 transition-colors">
+                                    className="w-full bg-muted-900 dark:bg-muted-800 hover:bg-muted-700 active:bg-muted-600 text-white text-[10px] font-bold py-2.5 flex items-center justify-center gap-1 transition-colors">
                                     Select →
                                 </button>
                             </motion.div>
@@ -180,7 +180,7 @@ export default function SmartRecommendations({
                     </div>
 
                     <button onClick={() => setRefreshKey(k => k + 1)}
-                        className="text-xs text-zinc-400 hover:text-zinc-300 flex items-center gap-1 transition-colors">
+                        className="text-xs text-muted-400 hover:text-muted-300 flex items-center gap-1 transition-colors">
                         🔄 Refresh recommendations
                     </button>
                 </div>

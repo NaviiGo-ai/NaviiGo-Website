@@ -278,19 +278,19 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
     return (
         <div className="min-h-screen bg-[#f7f8fc] dark:bg-[#0a0a0f] pt-16 sm:pt-20">
             {/* Top bar */}
-            <div className="sticky top-16 sm:top-20 z-40 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-lg border-b border-zinc-100 dark:border-white/5 px-3 sm:px-4 py-2.5 sm:py-3 flex items-center gap-2 sm:gap-4">
-                <button onClick={onReset} className="w-9 h-9 rounded-full border border-zinc-200 dark:border-zinc-700 flex items-center justify-center hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors text-sm text-zinc-600 dark:text-zinc-300">←</button>
-                    <div className="flex-1 flex items-center gap-4 overflow-x-auto no-scrollbar text-xs text-zinc-500">
-                    <button onClick={() => router.push(destinationExploreHref(destName))} className="text-left group"><div className="text-[10px] font-bold text-zinc-400 uppercase tracking-wide">Where</div><div className="font-semibold text-zinc-900 dark:text-white group-hover:text-emerald-600">{destName} ↗</div></button>
-                    <div className="w-px h-6 bg-zinc-200 dark:bg-zinc-700" />
-                    <div><div className="text-[10px] font-bold text-zinc-400 uppercase tracking-wide">Dates</div><div className="font-semibold text-zinc-900 dark:text-white">{form.startDate ? new Date(form.startDate as string).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : ''} - {form.endDate ? new Date(form.endDate as string).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : ''}</div></div>
-                    <div className="w-px h-6 bg-zinc-200 dark:bg-zinc-700" />
-                    <div><div className="text-[10px] font-bold text-zinc-400 uppercase tracking-wide">Preferences</div><div className="font-semibold text-zinc-900 dark:text-white truncate max-w-[160px]">{groupLabel} · {purposeLabel}</div></div>
+            <div className="sticky top-16 sm:top-20 z-40 bg-white/80 dark:bg-muted-900/80 backdrop-blur-lg border-b border-muted-100 dark:border-white/5 px-3 sm:px-4 py-2.5 sm:py-3 flex items-center gap-2 sm:gap-4">
+                <button onClick={onReset} className="w-9 h-9 rounded-full border border-muted-200 dark:border-muted-700 flex items-center justify-center hover:bg-muted-50 dark:hover:bg-muted-800 transition-colors text-sm text-muted-600 dark:text-muted-300">←</button>
+                    <div className="flex-1 flex items-center gap-4 overflow-x-auto no-scrollbar text-xs text-muted-500">
+                    <button onClick={() => router.push(destinationExploreHref(destName))} className="text-left group"><div className="text-[10px] font-bold text-muted-400 uppercase tracking-wide">Where</div><div className="font-semibold text-muted-900 dark:text-white group-hover:text-jungle-green-600">{destName} ↗</div></button>
+                    <div className="w-px h-6 bg-muted-200 dark:bg-muted-700" />
+                    <div><div className="text-[10px] font-bold text-muted-400 uppercase tracking-wide">Dates</div><div className="font-semibold text-muted-900 dark:text-white">{form.startDate ? new Date(form.startDate as string).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : ''} - {form.endDate ? new Date(form.endDate as string).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }) : ''}</div></div>
+                    <div className="w-px h-6 bg-muted-200 dark:bg-muted-700" />
+                    <div><div className="text-[10px] font-bold text-muted-400 uppercase tracking-wide">Preferences</div><div className="font-semibold text-muted-900 dark:text-white truncate max-w-[160px]">{groupLabel} · {purposeLabel}</div></div>
                 </div>
                 <div className="flex items-center gap-2">
                     {/* Surprise Me button */}
                     <button onClick={handleSurpriseMe}
-                        className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border border-amber-200 dark:border-amber-500/30 text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-colors">
+                        className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border border-marigold-200 dark:border-marigold-500/30 text-marigold-600 dark:text-marigold-400 hover:bg-marigold-50 dark:hover:bg-marigold-500/10 transition-colors">
                         🎲 Surprise Me
                     </button>
                     <ShareDropdown onCopyLink={handleShare} destName={destName} isSharing={isSharing} collaborators={collaborators} planData={data} />
@@ -301,7 +301,7 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                         setIsSaved(true);
                         alert('📍 Itinerary successfully saved to your Passport!');
                     }} disabled={isSaved}
-                        className={`flex px-4 py-1.5 rounded-full text-xs font-semibold items-center gap-1.5 transition-colors ${isSaved ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 cursor-default' : 'bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 hover:bg-zinc-800 dark:hover:bg-zinc-200'}`}>
+                        className={`flex px-4 py-1.5 rounded-full text-xs font-semibold items-center gap-1.5 transition-colors ${isSaved ? 'bg-jungle-green-100 dark:bg-jungle-green-500/20 text-jungle-green-700 dark:text-jungle-green-400 cursor-default' : 'bg-muted-900 dark:bg-white text-white dark:text-muted-900 hover:bg-muted-800 dark:hover:bg-muted-200'}`}>
                         {isSaved ? '✓ Saved' : '💾 Save'}
                     </button>
                 </div>
@@ -309,7 +309,7 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
 
             <div className="max-w-7xl mx-auto px-4 md:px-8 py-6 space-y-6">
                 {/* Hero */}
-                <div className="bg-white dark:bg-zinc-900 rounded-[2rem] border border-zinc-100 dark:border-zinc-800 shadow-sm overflow-hidden mb-8 relative">
+                <div className="bg-white dark:bg-muted-900 rounded-[2rem] border border-muted-100 dark:border-muted-800 shadow-sm overflow-hidden mb-8 relative">
                     <div className="relative h-64 md:h-80 flex flex-col justify-end p-6 md:p-10">
                         <PlaceImage
                             name={destName}
@@ -339,51 +339,51 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                                         await saveItineraryToFirestore(user.uid, { destId, destName, form, generatedData: generatedData || null });
                                         setIsSaved(true);
                                     }} disabled={isSaved}
-                                        className={`px-8 py-4 rounded-2xl font-bold text-sm backdrop-blur-md border flex items-center justify-center gap-2 transition-all ${isSaved ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30 cursor-default' : 'bg-white/10 hover:bg-white/20 text-white border-white/20 active:scale-95'}`}>
+                                        className={`px-8 py-4 rounded-2xl font-bold text-sm backdrop-blur-md border flex items-center justify-center gap-2 transition-all ${isSaved ? 'bg-jungle-green-500/20 text-jungle-green-300 border-jungle-green-500/30 cursor-default' : 'bg-white/10 hover:bg-white/20 text-white border-white/20 active:scale-95'}`}>
                                         <span className="text-lg">{isSaved ? '✓' : '💾'}</span> {isSaved ? 'Saved to Profile' : 'Save to Profile'}
                                     </button>
                                 )}
-                                <button onClick={onDayView} className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white transition-all px-6 sm:px-8 py-3 sm:py-4 rounded-2xl font-bold text-sm shadow-xl shadow-emerald-500/20 flex items-center justify-center gap-2 active:scale-95 w-full sm:w-auto">
+                                <button onClick={onDayView} className="bg-gradient-to-r from-jungle-green-500 to-deep-sea-500 hover:from-jungle-green-400 hover:to-deep-sea-400 text-white transition-all px-6 sm:px-8 py-3 sm:py-4 rounded-2xl font-bold text-sm shadow-xl shadow-jungle-green-500/20 flex items-center justify-center gap-2 active:scale-95 w-full sm:w-auto">
                                     <span className="text-lg">✨</span> <span className="hidden sm:inline">View Full </span>Day-by-Day Itinerary
                                 </button>
                             </div>
                         </div>
                     </div>
 
-                    <div className="p-6 md:p-8 bg-white dark:bg-zinc-900 border-t border-white/10 relative z-10">
+                    <div className="p-6 md:p-8 bg-white dark:bg-muted-900 border-t border-white/10 relative z-10">
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                            <div className="bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl p-5 border border-zinc-100 dark:border-zinc-700/50">
-                                <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400 mb-2"><span>💰</span><span className="text-[10px] font-bold uppercase tracking-wider">Avg. Cost / day</span></div>
-                                <div className="font-bold text-lg text-zinc-900 dark:text-white">{data.avgCost}</div>
+                            <div className="bg-muted-50 dark:bg-muted-800/50 rounded-2xl p-5 border border-muted-100 dark:border-muted-700/50">
+                                <div className="flex items-center gap-2 text-jungle-green-600 dark:text-jungle-green-400 mb-2"><span>💰</span><span className="text-[10px] font-bold uppercase tracking-wider">Avg. Cost / day</span></div>
+                                <div className="font-bold text-lg text-muted-900 dark:text-white">{data.avgCost}</div>
                             </div>
-                            <div className="bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl p-5 border border-zinc-100 dark:border-zinc-700/50">
-                                <div className="flex items-center gap-2 text-amber-500 mb-2"><span>🌤️</span><span className="text-[10px] font-bold uppercase tracking-wider">Weather ({displayMonth})</span></div>
-                                <div className="font-bold text-lg text-zinc-900 dark:text-white">{weatherForMonth}</div>
+                            <div className="bg-muted-50 dark:bg-muted-800/50 rounded-2xl p-5 border border-muted-100 dark:border-muted-700/50">
+                                <div className="flex items-center gap-2 text-marigold-500 mb-2"><span>🌤️</span><span className="text-[10px] font-bold uppercase tracking-wider">Weather ({displayMonth})</span></div>
+                                <div className="font-bold text-lg text-muted-900 dark:text-white">{weatherForMonth}</div>
                             </div>
-                            <div className="bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl p-5 border border-zinc-100 dark:border-zinc-700/50">
-                                <div className="flex items-center gap-2 text-purple-600 dark:text-purple-400 mb-2"><span>👥</span><span className="text-[10px] font-bold uppercase tracking-wider">Crowd Levels</span></div>
+                            <div className="bg-muted-50 dark:bg-muted-800/50 rounded-2xl p-5 border border-muted-100 dark:border-muted-700/50">
+                                <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400 mb-2"><span>👥</span><span className="text-[10px] font-bold uppercase tracking-wider">Crowd Levels</span></div>
                                 <Badge label={data.crowdLevel} colorClass={CROWD_COLOR[data.crowdLevel as CrowdLevel]} />
-                                <div className="text-xs text-zinc-500 mt-2">{data.crowdNote}</div>
+                                <div className="text-xs text-muted-500 mt-2">{data.crowdNote}</div>
                             </div>
                         </div>
 
                         {/* Departure Buffer Info */}
                         {data.departureInfo && (
                             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
-                                className="mt-4 bg-gradient-to-r from-orange-50 to-amber-50 dark:from-orange-500/5 dark:to-amber-500/5 rounded-2xl p-5 border border-orange-200/60 dark:border-orange-500/20 flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                                <div className="w-12 h-12 rounded-2xl bg-orange-100 dark:bg-orange-500/10 flex items-center justify-center text-2xl shrink-0">
+                                className="mt-4 bg-gradient-to-r from-saffron-50 to-marigold-50 dark:from-saffron-500/5 dark:to-marigold-500/5 rounded-2xl p-5 border border-saffron-200/60 dark:border-saffron-500/20 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                                <div className="w-12 h-12 rounded-2xl bg-saffron-100 dark:bg-saffron-500/10 flex items-center justify-center text-2xl shrink-0">
                                     {data.departureInfo.departureMode === 'flight' ? '✈️' : data.departureInfo.departureMode === 'train' ? '🚆' : data.departureInfo.departureMode === 'bus' ? '🚌' : '🚗'}
                                 </div>
                                 <div className="flex-1 min-w-0">
-                                    <div className="text-xs font-bold uppercase tracking-wider text-orange-600 dark:text-orange-400 mb-1">Last Day Buffer</div>
-                                    <div className="text-sm font-semibold text-zinc-900 dark:text-white">
+                                    <div className="text-xs font-bold uppercase tracking-wider text-saffron-600 dark:text-saffron-400 mb-1">Last Day Buffer</div>
+                                    <div className="text-sm font-semibold text-muted-900 dark:text-white">
                                         Checkout by {data.departureInfo.checkoutTime} · Depart at {data.departureInfo.departureTime}
                                     </div>
-                                    <div className="text-xs text-zinc-500 dark:text-zinc-400 mt-1">{data.departureInfo.bufferNote}</div>
+                                    <div className="text-xs text-muted-500 dark:text-muted-400 mt-1">{data.departureInfo.bufferNote}</div>
                                 </div>
-                                <div className="bg-orange-100 dark:bg-orange-500/10 rounded-xl px-3 py-2 text-center shrink-0">
-                                    <div className="text-lg font-black text-orange-600 dark:text-orange-400">{data.departureInfo.availableHoursAfterCheckout}h</div>
-                                    <div className="text-[9px] font-bold text-orange-500/70 uppercase">Free Window</div>
+                                <div className="bg-saffron-100 dark:bg-saffron-500/10 rounded-xl px-3 py-2 text-center shrink-0">
+                                    <div className="text-lg font-black text-saffron-600 dark:text-saffron-400">{data.departureInfo.availableHoursAfterCheckout}h</div>
+                                    <div className="text-[9px] font-bold text-saffron-500/70 uppercase">Free Window</div>
                                 </div>
                             </motion.div>
                         )}
@@ -400,24 +400,24 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                         {/* Budget Tracker */}
                         <div>
                             <div className="flex items-center justify-between mb-2">
-                                <h2 className="text-lg font-bold text-zinc-900 dark:text-white flex items-center gap-2"><span>💰</span> Trip Budget Progress</h2>
-                                <div className="text-xs font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-500/10 px-2 py-1 rounded">Budget: ₹{(form.budget as number).toLocaleString('en-IN')}</div>
+                                <h2 className="text-lg font-bold text-muted-900 dark:text-white flex items-center gap-2"><span>💰</span> Trip Budget Progress</h2>
+                                <div className="text-xs font-bold text-jungle-green-600 bg-jungle-green-50 dark:bg-jungle-green-500/10 px-2 py-1 rounded">Budget: ₹{(form.budget as number).toLocaleString('en-IN')}</div>
                             </div>
-                            <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-100 dark:border-zinc-800 p-5 shadow-sm">
+                            <div className="bg-white dark:bg-muted-900 rounded-2xl border border-muted-100 dark:border-muted-800 p-5 shadow-sm">
                                 <div className="flex justify-between text-sm mb-3">
-                                    <span className="text-zinc-500 font-medium tracking-wide text-xs uppercase">Est. Base Cost</span>
-                                    <span className="font-bold text-zinc-900 dark:text-white">{data.avgCost} / day</span>
+                                    <span className="text-muted-500 font-medium tracking-wide text-xs uppercase">Est. Base Cost</span>
+                                    <span className="font-bold text-muted-900 dark:text-white">{data.avgCost} / day</span>
                                 </div>
-                                <div className="w-full h-3 bg-zinc-100 dark:bg-zinc-800 rounded-full overflow-hidden flex">
-                                    <motion.div initial={{ width: 0 }} animate={{ width: '65%' }} transition={{ duration: 1, ease: 'easeOut' }} className="h-full bg-emerald-500" />
-                                    <motion.div initial={{ width: 0 }} animate={{ width: '20%' }} transition={{ duration: 1, delay: 0.2, ease: 'easeOut' }} className="h-full bg-amber-400" />
+                                <div className="w-full h-3 bg-muted-100 dark:bg-muted-800 rounded-full overflow-hidden flex">
+                                    <motion.div initial={{ width: 0 }} animate={{ width: '65%' }} transition={{ duration: 1, ease: 'easeOut' }} className="h-full bg-jungle-green-500" />
+                                    <motion.div initial={{ width: 0 }} animate={{ width: '20%' }} transition={{ duration: 1, delay: 0.2, ease: 'easeOut' }} className="h-full bg-marigold-400" />
                                 </div>
-                                <div className="flex justify-between items-center text-xs text-zinc-400 mt-3">
+                                <div className="flex justify-between items-center text-xs text-muted-400 mt-3">
                                     <div className="flex items-center gap-3">
-                                        <span className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-emerald-500" /> Travel & Stay</span>
-                                        <span className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-amber-400" /> Food & Leisure</span>
+                                        <span className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-jungle-green-500" /> Travel & Stay</span>
+                                        <span className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-marigold-400" /> Food & Leisure</span>
                                     </div>
-                                    <span className="font-medium text-emerald-600">Well Within Budget</span>
+                                    <span className="font-medium text-jungle-green-600">Well Within Budget</span>
                                 </div>
                             </div>
                         </div>
@@ -430,16 +430,16 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                         {packingList.length > 0 && (
                             <div>
                                 <div className="flex items-center justify-between mb-2">
-                                    <h2 className="text-lg font-bold text-zinc-900 dark:text-white flex items-center gap-2"><span>🎒</span> Smart Packing List</h2>
-                                    <div className="text-xs font-bold text-amber-600 bg-amber-50 dark:bg-amber-500/10 px-2 py-1 rounded">Weather: {weatherForMonth}</div>
+                                    <h2 className="text-lg font-bold text-muted-900 dark:text-white flex items-center gap-2"><span>🎒</span> Smart Packing List</h2>
+                                    <div className="text-xs font-bold text-marigold-600 bg-marigold-50 dark:bg-marigold-500/10 px-2 py-1 rounded">Weather: {weatherForMonth}</div>
                                 </div>
-                                <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-100 dark:border-zinc-800 p-5 shadow-sm">
+                                <div className="bg-white dark:bg-muted-900 rounded-2xl border border-muted-100 dark:border-muted-800 p-5 shadow-sm">
                                     <ul className="space-y-3">
                                         {packingList.map((item, idx) => (
                                             <li key={`pack-item-${idx}`} className="flex items-start gap-3 group cursor-pointer">
-                                                <div className="w-5 h-5 rounded-full border border-zinc-300 dark:border-zinc-700 flex shrink-0 items-center justify-center mt-0.5 group-hover:border-emerald-500 group-hover:bg-emerald-500/10 transition-colors">
+                                                <div className="w-5 h-5 rounded-full border border-muted-300 dark:border-muted-700 flex shrink-0 items-center justify-center mt-0.5 group-hover:border-jungle-green-500 group-hover:bg-jungle-green-500/10 transition-colors">
                                                 </div>
-                                                <span className="text-sm font-medium text-zinc-700 dark:text-zinc-300 group-hover:text-zinc-900 dark:group-hover:text-white transition-colors">{item}</span>
+                                                <span className="text-sm font-medium text-muted-700 dark:text-muted-300 group-hover:text-muted-900 dark:group-hover:text-white transition-colors">{item}</span>
                                             </li>
                                         ))}
                                     </ul>
@@ -450,24 +450,24 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                         {/* Transport Logistics */}
                         {data.logistics && (
                             <div>
-                                <h2 className="text-lg font-bold text-zinc-900 dark:text-white mb-4 flex items-center gap-2"><span>✈️</span> How to Get There</h2>
+                                <h2 className="text-lg font-bold text-muted-900 dark:text-white mb-4 flex items-center gap-2"><span>✈️</span> How to Get There</h2>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-100 dark:border-zinc-800 p-4 shadow-sm flex items-start gap-4 hover:border-emerald-500/30 transition-all group/card">
-                                        <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-500/10 text-blue-500 flex items-center justify-center text-xl shrink-0">🛫</div>
+                                    <div className="bg-white dark:bg-muted-900 rounded-2xl border border-muted-100 dark:border-muted-800 p-4 shadow-sm flex items-start gap-4 hover:border-jungle-green-500/30 transition-all group/card">
+                                        <div className="w-10 h-10 rounded-xl bg-deep-sea-50 dark:bg-deep-sea-500/10 text-deep-sea-500 flex items-center justify-center text-xl shrink-0">🛫</div>
                                         <div className="flex-1 min-w-0">
-                                            <h4 className="font-bold text-sm text-zinc-900 dark:text-white mb-1">Flights</h4>
-                                            <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed mb-3">{data.logistics.flights}</p>
+                                            <h4 className="font-bold text-sm text-muted-900 dark:text-white mb-1">Flights</h4>
+                                            <p className="text-xs text-muted-500 dark:text-muted-400 leading-relaxed mb-3">{data.logistics.flights}</p>
                                             <a href={`/bookings?transport=flight&to=${data.logistics.airportCode || 'BOM'}`}
-                                                className="inline-flex items-center gap-1.5 text-[10px] font-bold bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 px-3 py-1.5 rounded-lg hover:scale-105 transition-transform">
+                                                className="inline-flex items-center gap-1.5 text-[10px] font-bold bg-muted-900 dark:bg-white text-white dark:text-muted-900 px-3 py-1.5 rounded-lg hover:scale-105 transition-transform">
                                                 Book Flights ↗
                                             </a>
                                         </div>
                                     </div>
-                                    <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-100 dark:border-zinc-800 p-4 shadow-sm flex items-start gap-4 hover:border-emerald-500/30 transition-all group/card">
-                                        <div className="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-500/10 text-amber-500 flex items-center justify-center text-xl shrink-0">🚆</div>
+                                    <div className="bg-white dark:bg-muted-900 rounded-2xl border border-muted-100 dark:border-muted-800 p-4 shadow-sm flex items-start gap-4 hover:border-jungle-green-500/30 transition-all group/card">
+                                        <div className="w-10 h-10 rounded-xl bg-marigold-50 dark:bg-marigold-500/10 text-marigold-500 flex items-center justify-center text-xl shrink-0">🚆</div>
                                         <div className="flex-1 min-w-0">
-                                            <h4 className="font-bold text-sm text-zinc-900 dark:text-white mb-1">Trains</h4>
-                                            <p className="text-xs text-zinc-500 dark:text-zinc-400 leading-relaxed mb-3">{data.logistics.trains}</p>
+                                            <h4 className="font-bold text-sm text-muted-900 dark:text-white mb-1">Trains</h4>
+                                            <p className="text-xs text-muted-500 dark:text-muted-400 leading-relaxed mb-3">{data.logistics.trains}</p>
                                             <a href={`/bookings?transport=train&to=${data.logistics.stationCode || 'BSB'}`}
                                                 className="inline-flex items-center gap-1.5 text-[10px] font-bold bg-[#f77728] text-white px-3 py-1.5 rounded-lg hover:scale-105 transition-transform">
                                                 Book Trains ↗
@@ -480,22 +480,22 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
 
                         {/* Highlights */}
                         <div>
-                            <h2 className="text-lg font-bold text-zinc-900 dark:text-white mb-4">🏆 Top Highlights</h2>
+                            <h2 className="text-lg font-bold text-muted-900 dark:text-white mb-4">🏆 Top Highlights</h2>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 {data.highlights.map((a: any, i: number) => (
                                     <motion.div key={`hl-card-${i}-${a.name || 'item'}`} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}
                                         onClick={(e) => { e.stopPropagation(); router.push(itineraryPlaceHref('attraction', destId, a)); }}
-                                        className="bg-white dark:bg-zinc-900 rounded-2xl overflow-hidden border border-zinc-100 dark:border-zinc-800 shadow-sm hover:shadow-md transition-all cursor-pointer hover:-translate-y-1">
+                                        className="bg-white dark:bg-muted-900 rounded-2xl overflow-hidden border border-muted-100 dark:border-muted-800 shadow-sm hover:shadow-md transition-all cursor-pointer hover:-tranmuted-y-1">
                                         <div className="relative h-36">
                                             <PlaceImage name={a.name} city={destName} className="absolute inset-0 w-full h-full" asBackground />
-                                            <div className="absolute top-2 left-2 w-7 h-7 rounded-full bg-emerald-500 text-white text-xs font-bold flex items-center justify-center shadow-md">{i + 1}</div>
+                                            <div className="absolute top-2 left-2 w-7 h-7 rounded-full bg-jungle-green-500 text-white text-xs font-bold flex items-center justify-center shadow-md">{i + 1}</div>
                                             <div className="absolute bottom-2 left-2 flex gap-1">{a.tags?.slice(0, 2).map((t: string, tIdx: number) => <span key={`hl-tag-${i}-${tIdx}`} className="text-[10px] bg-black/50 text-white backdrop-blur px-2 py-0.5 rounded-full font-medium">{t}</span>)}</div>
                                         </div>
                                         <div className="p-3">
-                                            <h3 className="font-bold text-zinc-900 dark:text-white text-sm mb-1">{a.name}</h3>
-                                            <p className="text-xs text-zinc-500 dark:text-zinc-400 line-clamp-2 mb-2">{a.desc}</p>
+                                            <h3 className="font-bold text-muted-900 dark:text-white text-sm mb-1">{a.name}</h3>
+                                            <p className="text-xs text-muted-500 dark:text-muted-400 line-clamp-2 mb-2">{a.desc}</p>
                                             <div className="flex gap-2 text-xs flex-wrap">
-                                                <span className="bg-zinc-50 dark:bg-zinc-800 rounded-lg px-2 py-1">📅 {a.bestMonths}</span>
+                                                <span className="bg-muted-50 dark:bg-muted-800 rounded-lg px-2 py-1">📅 {a.bestMonths}</span>
                                                 <Badge label={a.walking} colorClass={(WALK_COLOR as any)[a.walking]} />
                                             </div>
                                         </div>
@@ -506,30 +506,30 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
 
                         {/* Video Guide */}
                         <div>
-                            <h2 className="text-lg font-bold text-zinc-900 dark:text-white mb-4">🎤 Video Guide</h2>
+                            <h2 className="text-lg font-bold text-muted-900 dark:text-white mb-4">🎤 Video Guide</h2>
                             <VideoCard destId={destId} destName={destName} />
                         </div>
 
                         {/* Restaurants */}
                         {data.restaurants && data.restaurants.length > 0 && (
                             <div>
-                                <h2 className="text-lg font-bold text-zinc-900 dark:text-white mb-4">🍽️ Cuisine & Dining</h2>
+                                <h2 className="text-lg font-bold text-muted-900 dark:text-white mb-4">🍽️ Cuisine & Dining</h2>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     {data.restaurants.map((r: any, i: number) => (
                                         <motion.div key={`rest-card-${i}-${r.id || r.name || 'item'}`} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
                                             onClick={(e) => { e.stopPropagation(); router.push(itineraryPlaceHref('restaurant', destId, r)); }}
-                                            className="bg-white dark:bg-zinc-900 rounded-2xl overflow-hidden border border-zinc-100 dark:border-zinc-800 shadow-sm hover:shadow-md transition-all cursor-pointer hover:-translate-y-1">
+                                            className="bg-white dark:bg-muted-900 rounded-2xl overflow-hidden border border-muted-100 dark:border-muted-800 shadow-sm hover:shadow-md transition-all cursor-pointer hover:-tranmuted-y-1">
                                             <div className="relative h-32">
                                                 <PlaceImage name={r.name} city={destName} className="absolute inset-0 w-full h-full" asBackground />
                                                 <div className="absolute bottom-2 left-2 flex gap-1"><span className="text-[10px] bg-black/60 text-white backdrop-blur px-2 py-0.5 rounded-full font-medium">{r.cuisine}</span></div>
                                             </div>
                                             <div className="p-3">
                                                 <div className="flex items-start justify-between mb-1">
-                                                    <h3 className="font-bold text-zinc-900 dark:text-white text-sm">{r.name}</h3>
-                                                    <span className="text-xs font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-500/10 px-1.5 py-0.5 rounded flex items-center gap-0.5">⭐ {r.rating}</span>
+                                                    <h3 className="font-bold text-muted-900 dark:text-white text-sm">{r.name}</h3>
+                                                    <span className="text-xs font-bold text-jungle-green-600 bg-jungle-green-50 dark:bg-jungle-green-500/10 px-1.5 py-0.5 rounded flex items-center gap-0.5">⭐ {r.rating}</span>
                                                 </div>
-                                                <p className="text-xs text-zinc-500 dark:text-zinc-400 line-clamp-2 mb-2">{r.desc}</p>
-                                                <div className="text-[10px] font-medium text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 inline-block px-1.5 py-0.5 rounded">Must Try: {r.mustTry}</div>
+                                                <p className="text-xs text-muted-500 dark:text-muted-400 line-clamp-2 mb-2">{r.desc}</p>
+                                                <div className="text-[10px] font-medium text-marigold-600 dark:text-marigold-400 bg-marigold-50 dark:bg-marigold-500/10 inline-block px-1.5 py-0.5 rounded">Must Try: {r.mustTry}</div>
                                             </div>
                                         </motion.div>
                                     ))}
@@ -540,12 +540,12 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                         {/* Hotels */}
                         {data.hotels && data.hotels.length > 0 && (
                             <div>
-                                <h2 className="text-lg font-bold text-zinc-900 dark:text-white mb-4">🏨 Stay Options</h2>
+                                <h2 className="text-lg font-bold text-muted-900 dark:text-white mb-4">🏨 Stay Options</h2>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     {data.hotels.map((h: any, i: number) => (
                                         <motion.div key={`hotel-card-${i}-${h.id || h.name || 'item'}`} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
                                             onClick={(e) => { e.stopPropagation(); router.push(itineraryPlaceHref('hotel', destId, h)); }}
-                                            className="bg-white dark:bg-zinc-900 rounded-2xl overflow-hidden border border-zinc-100 dark:border-zinc-800 shadow-sm hover:shadow-md transition-all cursor-pointer hover:-translate-y-1">
+                                            className="bg-white dark:bg-muted-900 rounded-2xl overflow-hidden border border-muted-100 dark:border-muted-800 shadow-sm hover:shadow-md transition-all cursor-pointer hover:-tranmuted-y-1">
                                             <div className="relative h-32">
                                                 <PlaceImage name={h.name} city={destName} className="absolute inset-0 w-full h-full" asBackground />
                                                 <div className="absolute bottom-2 left-2 flex gap-1"><span className="text-[10px] bg-black/60 text-white backdrop-blur px-2 py-0.5 rounded-full font-medium">{h.type}</span></div>
@@ -553,12 +553,12 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                                             </div>
                                             <div className="p-3">
                                                 <div className="flex items-start justify-between mb-1">
-                                                    <h3 className="font-bold text-zinc-900 dark:text-white text-sm">{h.name}</h3>
-                                                    <span className="text-xs font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-500/10 px-1.5 py-0.5 rounded flex items-center gap-0.5">⭐ {h.rating}</span>
+                                                    <h3 className="font-bold text-muted-900 dark:text-white text-sm">{h.name}</h3>
+                                                    <span className="text-xs font-bold text-jungle-green-600 bg-jungle-green-50 dark:bg-jungle-green-500/10 px-1.5 py-0.5 rounded flex items-center gap-0.5">⭐ {h.rating}</span>
                                                 </div>
-                                                <p className="text-xs text-zinc-500 dark:text-zinc-400 line-clamp-2 mb-2">{h.desc}</p>
+                                                <p className="text-xs text-muted-500 dark:text-muted-400 line-clamp-2 mb-2">{h.desc}</p>
                                                 <div className="flex gap-1 flex-wrap">
-                                                    {h.amenities?.slice(0, 3).map((a: string, aIdx: number) => <span key={`amenity-${i}-${aIdx}`} className="text-[9px] text-zinc-500 bg-zinc-100 dark:bg-zinc-800 dark:text-zinc-400 px-1.5 py-0.5 rounded">{a}</span>)}
+                                                    {h.amenities?.slice(0, 3).map((a: string, aIdx: number) => <span key={`amenity-${i}-${aIdx}`} className="text-[9px] text-muted-500 bg-muted-100 dark:bg-muted-800 dark:text-muted-400 px-1.5 py-0.5 rounded">{a}</span>)}
                                                 </div>
                                             </div>
                                         </motion.div>
@@ -570,11 +570,11 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                         {/* Hidden Gems */}
                         {hiddenGems.length > 0 && (
                             <div>
-                                <h2 className="text-lg font-bold text-zinc-900 dark:text-white mb-4">💎 Local Hidden Gems</h2>
+                                <h2 className="text-lg font-bold text-muted-900 dark:text-white mb-4">💎 Local Hidden Gems</h2>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     {hiddenGems.map((g, i) => (
                                         <motion.div key={`gem-card-${i}-${g.placeId || g.name || 'item'}`} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
-                                            className="bg-zinc-50 dark:bg-zinc-800/50 rounded-2xl p-4 border border-zinc-100 dark:border-zinc-800">
+                                            className="bg-muted-50 dark:bg-muted-800/50 rounded-2xl p-4 border border-muted-100 dark:border-muted-800">
                                             <div className="flex gap-3">
                                                 <PlaceImage
                                                     name={g.name}
@@ -585,9 +585,9 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                                                     width={200}
                                                 />
                                                 <div className="flex-1 min-w-0">
-                                                    <h3 className="font-bold text-zinc-900 dark:text-white text-sm line-clamp-1">{g.name}</h3>
-                                                    <div className="text-xs text-emerald-600 font-medium mb-1">{g.type}</div>
-                                                    <div className="text-xs text-zinc-500">{g.vicinity}</div>
+                                                    <h3 className="font-bold text-muted-900 dark:text-white text-sm line-clamp-1">{g.name}</h3>
+                                                    <div className="text-xs text-jungle-green-600 font-medium mb-1">{g.type}</div>
+                                                    <div className="text-xs text-muted-500">{g.vicinity}</div>
                                                 </div>
                                             </div>
                                         </motion.div>
@@ -599,13 +599,13 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                         {/* Local Insider Tips */}
                         {insiderTips.length > 0 && (
                             <div>
-                                <h2 className="text-lg font-bold text-zinc-900 dark:text-white mb-4">🧠 Local Insider Tips</h2>
-                                <div className="bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/10 dark:to-orange-900/10 border border-amber-100 dark:border-amber-500/20 rounded-2xl p-5 space-y-3">
+                                <h2 className="text-lg font-bold text-muted-900 dark:text-white mb-4">🧠 Local Insider Tips</h2>
+                                <div className="bg-gradient-to-br from-marigold-50 to-saffron-50 dark:from-marigold-900/10 dark:to-saffron-900/10 border border-marigold-100 dark:border-marigold-500/20 rounded-2xl p-5 space-y-3">
                                     {insiderTips.map((tip, i) => (
                                         <motion.div key={`insider-tip-${i}`} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.08 }}
                                             className="flex gap-3 items-start">
-                                            <div className="w-6 h-6 rounded-full bg-amber-100 dark:bg-amber-500/20 flex items-center justify-center flex-shrink-0 mt-0.5 text-xs">{i + 1}</div>
-                                            <p className="text-sm text-zinc-700 dark:text-zinc-300 leading-relaxed">{tip}</p>
+                                            <div className="w-6 h-6 rounded-full bg-marigold-100 dark:bg-marigold-500/20 flex items-center justify-center flex-shrink-0 mt-0.5 text-xs">{i + 1}</div>
+                                            <p className="text-sm text-muted-700 dark:text-muted-300 leading-relaxed">{tip}</p>
                                         </motion.div>
                                     ))}
                                 </div>
@@ -615,12 +615,12 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                         {/* Travel Tips from AI */}
                         {data.travelTips && data.travelTips.length > 0 && (
                             <div>
-                                <h2 className="text-lg font-bold text-zinc-900 dark:text-white mb-4">🧭 Travel Tips from Locals</h2>
-                                <div className="bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-100 dark:border-zinc-800 p-5 shadow-sm space-y-3">
+                                <h2 className="text-lg font-bold text-muted-900 dark:text-white mb-4">🧭 Travel Tips from Locals</h2>
+                                <div className="bg-white dark:bg-muted-900 rounded-2xl border border-muted-100 dark:border-muted-800 p-5 shadow-sm space-y-3">
                                     {data.travelTips.map((tip: string, i: number) => (
                                         <div key={`travel-tip-${i}`} className="flex gap-3 items-start">
-                                            <span className="text-emerald-500 font-bold text-sm mt-0.5">💡</span>
-                                            <p className="text-sm text-zinc-600 dark:text-zinc-400 leading-relaxed">{tip}</p>
+                                            <span className="text-jungle-green-500 font-bold text-sm mt-0.5">💡</span>
+                                            <p className="text-sm text-muted-600 dark:text-muted-400 leading-relaxed">{tip}</p>
                                         </div>
                                     ))}
                                 </div>
@@ -629,16 +629,16 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
 
 
                         {generatedData && (
-                            <div className="flex items-center gap-2 text-xs text-zinc-400 bg-zinc-50 dark:bg-zinc-800/50 rounded-xl px-4 py-3 border border-zinc-100 dark:border-zinc-800">
+                            <div className="flex items-center gap-2 text-xs text-muted-400 bg-muted-50 dark:bg-muted-800/50 rounded-xl px-4 py-3 border border-muted-100 dark:border-muted-800">
                                 <span>✨</span>
-                                <span>This itinerary was crafted by the <strong className="text-emerald-500">NaviiGo Personalization Engine</strong> based on your preferences, browsing behavior, and real traveler data.</span>
+                                <span>This itinerary was crafted by the <strong className="text-jungle-green-500">NaviiGo Personalization Engine</strong> based on your preferences, browsing behavior, and real traveler data.</span>
                             </div>
                         )}
                     </div>
 
                     {/* Sticky Map */}
                     <div className="w-full max-w-full lg:w-[400px] lg:sticky lg:top-[140px] lg:self-start">
-                        <div className="h-[350px] max-h-[calc(100vh-200px)] lg:h-[500px] lg:max-h-[calc(100vh-200px)] rounded-2xl overflow-hidden border border-zinc-100 dark:border-zinc-800 shadow-sm">
+                        <div className="h-[350px] max-h-[calc(100vh-200px)] lg:h-[500px] lg:max-h-[calc(100vh-200px)] rounded-2xl overflow-hidden border border-muted-100 dark:border-muted-800 shadow-sm">
                             <ItineraryMap pins={mapPins} center={data.mapCenter} zoom={10} className="w-full h-full" />
                         </div>
                     </div>
@@ -656,22 +656,22 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                         <motion.div
                             initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
                             transition={{ type: 'spring', damping: 28, stiffness: 280 }}
-                            className="fixed right-0 top-0 h-full w-full max-w-md z-50 bg-white dark:bg-zinc-900 shadow-2xl flex flex-col"
+                            className="fixed right-0 top-0 h-full w-full max-w-md z-50 bg-white dark:bg-muted-900 shadow-2xl flex flex-col"
                         >
                             {/* Panel Header */}
-                            <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-100 dark:border-zinc-800 bg-gradient-to-r from-violet-50 to-purple-50 dark:from-violet-900/20 dark:to-purple-900/10">
+                            <div className="flex items-center justify-between px-5 py-4 border-b border-muted-100 dark:border-muted-800 bg-gradient-to-r from-indigo-50 to-indigo-50 dark:from-indigo-900/20 dark:to-indigo-900/10">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-lg shadow-lg shadow-purple-500/20">✨</div>
+                                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-600 flex items-center justify-center text-lg shadow-lg shadow-indigo-500/20">✨</div>
                                     <div>
-                                        <div className="font-bold text-zinc-900 dark:text-white text-sm">Edit with AI</div>
-                                        <div className="text-[10px] text-zinc-400">Tell me how to change {destName}</div>
+                                        <div className="font-bold text-muted-900 dark:text-white text-sm">Edit with AI</div>
+                                        <div className="text-[10px] text-muted-400">Tell me how to change {destName}</div>
                                     </div>
                                 </div>
-                                <button onClick={closeEditPanel} className="w-8 h-8 rounded-full hover:bg-zinc-100 dark:hover:bg-zinc-800 flex items-center justify-center text-zinc-500 text-lg transition-colors">×</button>
+                                <button onClick={closeEditPanel} className="w-8 h-8 rounded-full hover:bg-muted-100 dark:hover:bg-muted-800 flex items-center justify-center text-muted-500 text-lg transition-colors">×</button>
                             </div>
 
                             {/* Quick Prompt Chips */}
-                            <div className="px-4 py-3 border-b border-zinc-100 dark:border-zinc-800">
+                            <div className="px-4 py-3 border-b border-muted-100 dark:border-muted-800">
                                 <div className="flex flex-wrap gap-2">
                                     {[
                                         '🍽️ More food stops',
@@ -681,7 +681,7 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                                         '🌅 More morning time',
                                     ].map(chip => (
                                         <button key={chip} onClick={() => { setEditInput(chip.slice(2).trim()); }}
-                                            className="text-xs bg-zinc-100 dark:bg-zinc-800 hover:bg-violet-100 dark:hover:bg-violet-500/20 hover:text-violet-700 dark:hover:text-violet-300 text-zinc-600 dark:text-zinc-400 rounded-full px-3 py-1.5 font-medium transition-all">
+                                            className="text-xs bg-muted-100 dark:bg-muted-800 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 hover:text-indigo-700 dark:hover:text-indigo-300 text-muted-600 dark:text-muted-400 rounded-full px-3 py-1.5 font-medium transition-all">
                                             {chip}
                                         </button>
                                     ))}
@@ -695,8 +695,8 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                                         className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                                         <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
                                             msg.role === 'user'
-                                                ? 'bg-gradient-to-br from-violet-500 to-purple-600 text-white rounded-br-sm'
-                                                : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-800 dark:text-zinc-200 rounded-bl-sm'
+                                                ? 'bg-gradient-to-br from-indigo-500 to-indigo-600 text-white rounded-br-sm'
+                                                : 'bg-muted-100 dark:bg-muted-800 text-muted-800 dark:text-muted-200 rounded-bl-sm'
                                         }`}>
                                             {msg.text}
                                         </div>
@@ -704,9 +704,9 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                                 ))}
                                 {editLoading && (
                                     <div className="flex justify-start">
-                                        <div className="bg-zinc-100 dark:bg-zinc-800 rounded-2xl rounded-bl-sm px-4 py-3 flex items-center gap-1.5">
+                                        <div className="bg-muted-100 dark:bg-muted-800 rounded-2xl rounded-bl-sm px-4 py-3 flex items-center gap-1.5">
                                             {[0, 1, 2].map(i => (
-                                                <div key={i} className="w-1.5 h-1.5 bg-zinc-400 rounded-full animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
+                                                <div key={i} className="w-1.5 h-1.5 bg-muted-400 rounded-full animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
                                             ))}
                                         </div>
                                     </div>
@@ -717,16 +717,16 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                             <AnimatePresence>
                                 {lastAction && (
                                     <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
-                                        className="mx-4 mb-2 bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-900/20 dark:to-teal-900/10 border border-emerald-100 dark:border-emerald-500/20 rounded-2xl p-3">
-                                        <p className="text-xs text-zinc-600 dark:text-zinc-400 mb-2">🧠 AI wants to make a change:</p>
-                                        <p className="text-xs font-semibold text-zinc-900 dark:text-white mb-3">{lastAction.description}</p>
+                                        className="mx-4 mb-2 bg-gradient-to-r from-jungle-green-50 to-deep-sea-50 dark:from-jungle-green-900/20 dark:to-deep-sea-900/10 border border-jungle-green-100 dark:border-jungle-green-500/20 rounded-2xl p-3">
+                                        <p className="text-xs text-muted-600 dark:text-muted-400 mb-2">🧠 AI wants to make a change:</p>
+                                        <p className="text-xs font-semibold text-muted-900 dark:text-white mb-3">{lastAction.description}</p>
                                         <div className="flex gap-2">
                                             <button onClick={handleAcceptAction}
-                                                className="flex-1 bg-emerald-500 hover:bg-emerald-400 text-white text-xs font-bold rounded-xl py-2 transition-colors">
+                                                className="flex-1 bg-jungle-green-500 hover:bg-jungle-green-400 text-white text-xs font-bold rounded-xl py-2 transition-colors">
                                                 ✓ Apply Change
                                             </button>
                                             <button onClick={clearLastAction}
-                                                className="flex-1 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-700 dark:text-zinc-300 text-xs font-bold rounded-xl py-2 transition-colors">
+                                                className="flex-1 bg-muted-100 dark:bg-muted-800 hover:bg-muted-200 dark:hover:bg-muted-700 text-muted-700 dark:text-muted-300 text-xs font-bold rounded-xl py-2 transition-colors">
                                                 ✕ Skip
                                             </button>
                                         </div>
@@ -735,17 +735,17 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                             </AnimatePresence>
 
                             {/* Input */}
-                            <div className="px-4 py-4 border-t border-zinc-100 dark:border-zinc-800">
+                            <div className="px-4 py-4 border-t border-muted-100 dark:border-muted-800">
                                 <div className="flex gap-2">
                                     <input
                                         value={editInput}
                                         onChange={e => setEditInput(e.target.value)}
                                         onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSendEdit()}
                                         placeholder={`e.g. Remove the temple on day 2...`}
-                                        className="flex-1 bg-zinc-100 dark:bg-zinc-800 rounded-2xl px-4 py-3 text-sm text-zinc-900 dark:text-white placeholder-zinc-400 outline-none focus:ring-2 focus:ring-violet-500/20 transition-all"
+                                        className="flex-1 bg-muted-100 dark:bg-muted-800 rounded-2xl px-4 py-3 text-sm text-muted-900 dark:text-white placeholder-muted-400 outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all"
                                     />
                                     <button onClick={handleSendEdit} disabled={editLoading || !editInput.trim()}
-                                        className="w-11 h-11 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 text-white flex items-center justify-center text-lg disabled:opacity-50 hover:scale-105 transition-all active:scale-95 shadow-lg shadow-purple-500/20">
+                                        className="w-11 h-11 rounded-2xl bg-gradient-to-br from-indigo-500 to-indigo-600 text-white flex items-center justify-center text-lg disabled:opacity-50 hover:scale-105 transition-all active:scale-95 shadow-lg shadow-indigo-500/20">
                                         →
                                     </button>
                                 </div>

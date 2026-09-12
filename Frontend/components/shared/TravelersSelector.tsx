@@ -10,27 +10,27 @@ interface TravelersSelectorProps {
 }
 
 const Counter = ({ label, sub, count, setter, min = 0 }: any) => (
-  <div className="flex items-center justify-between py-3 border-b border-zinc-100 dark:border-zinc-800 last:border-0">
+  <div className="flex items-center justify-between py-3 border-b border-muted-100 dark:border-muted-800 last:border-0">
     <div>
-      <p className="text-sm font-bold text-zinc-900 dark:text-white">{label}</p>
-      <p className="text-[10px] text-zinc-500 font-medium">{sub}</p>
+      <p className="text-sm font-bold text-muted-900 dark:text-white">{label}</p>
+      <p className="text-[10px] text-muted-500 font-medium">{sub}</p>
     </div>
     <div className="flex items-center gap-4">
       <button
         type="button"
         onClick={() => setter(Math.max(min, count - 1))}
         aria-label={`Decrease ${label}`}
-        className="w-8 h-8 rounded-full border border-zinc-200 dark:border-zinc-700 flex items-center justify-center hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors disabled:opacity-30"
+        className="w-8 h-8 rounded-full border border-muted-200 dark:border-muted-700 flex items-center justify-center hover:bg-muted-50 dark:hover:bg-muted-800 transition-colors disabled:opacity-30"
         disabled={count <= min}
       >
         <Minus className="w-3.5 h-3.5" />
       </button>
-      <span className="w-4 text-center text-sm font-bold text-zinc-900 dark:text-white">{count}</span>
+      <span className="w-4 text-center text-sm font-bold text-muted-900 dark:text-white">{count}</span>
       <button
         type="button"
         onClick={() => setter(count + 1)}
         aria-label={`Increase ${label}`}
-        className="w-8 h-8 rounded-full border border-zinc-200 dark:border-zinc-700 flex items-center justify-center hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+        className="w-8 h-8 rounded-full border border-muted-200 dark:border-muted-700 flex items-center justify-center hover:bg-muted-50 dark:hover:bg-muted-800 transition-colors"
       >
         <Plus className="w-3.5 h-3.5" />
       </button>
@@ -75,15 +75,15 @@ export default function TravelersSelector({ value, onSelect }: TravelersSelector
       <input type="hidden" name="infants" value={infants} />
       <input type="hidden" name="class" value={cabinClass} />
       <div className="relative group">
-        <Users className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 group-focus-within:text-orange-500 transition-colors pointer-events-none" />
+        <Users className="absolute left-4 top-1/2 -tranmuted-y-1/2 w-4 h-4 text-muted-400 group-focus-within:text-saffron-500 transition-colors pointer-events-none" />
         <button
           type="button"
           onClick={() => setIsOpen(!isOpen)}
-          className="w-full bg-zinc-50 dark:bg-zinc-900 border-2 border-zinc-100 dark:border-zinc-800 rounded-xl py-3.5 pl-11 pr-10 text-left text-sm font-medium hover:border-zinc-200 dark:hover:border-zinc-700 transition-all focus:border-orange-500 text-zinc-900 dark:text-zinc-100 whitespace-nowrap overflow-hidden text-ellipsis"
+          className="w-full bg-muted-50 dark:bg-muted-900 border-2 border-muted-100 dark:border-muted-800 rounded-xl py-3.5 pl-11 pr-10 text-left text-sm font-medium hover:border-muted-200 dark:hover:border-muted-700 transition-all focus:border-saffron-500 text-muted-900 dark:text-muted-100 whitespace-nowrap overflow-hidden text-ellipsis"
         >
           {displayValue}
         </button>
-        <ChevronDown className={`absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400 pointer-events-none transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        <ChevronDown className={`absolute right-3 top-1/2 -tranmuted-y-1/2 w-4 h-4 text-muted-400 pointer-events-none transition-transform ${isOpen ? 'rotate-180' : ''}`} />
       </div>
 
       <AnimatePresence>
@@ -92,7 +92,7 @@ export default function TravelersSelector({ value, onSelect }: TravelersSelector
             initial={{ opacity: 0, y: 8, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.98 }}
-            className="absolute z-[110] right-0 mt-2 w-[300px] bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded-2xl shadow-2xl p-5"
+            className="absolute z-[110] right-0 mt-2 w-[300px] bg-white dark:bg-muted-900 border border-muted-200 dark:border-muted-800 rounded-2xl shadow-2xl p-5"
           >
             <div className="space-y-1 mb-4">
               <Counter label="Adults" sub="12+ years" count={adults} setter={setAdults} min={1} />
@@ -100,8 +100,8 @@ export default function TravelersSelector({ value, onSelect }: TravelersSelector
               <Counter label="Infants" sub="Under 2 years" count={infants} setter={setInfants} />
             </div>
 
-            <div className="pt-4 border-t border-zinc-100 dark:border-zinc-800">
-              <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400 mb-3">Travel Class</p>
+            <div className="pt-4 border-t border-muted-100 dark:border-muted-800">
+              <p className="text-[10px] font-black uppercase tracking-widest text-muted-400 mb-3">Travel Class</p>
               <div className="grid grid-cols-2 gap-2">
                 {classes.map(c => (
                   <button
@@ -110,8 +110,8 @@ export default function TravelersSelector({ value, onSelect }: TravelersSelector
                     onClick={() => setCabinClass(c)}
                     className={`px-3 py-2 rounded-lg text-xs font-bold transition-all border ${
                       cabinClass === c 
-                        ? 'bg-orange-500 border-orange-500 text-white shadow-md shadow-orange-500/20' 
-                        : 'bg-zinc-50 dark:bg-zinc-800/50 border-zinc-100 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 hover:border-zinc-200'
+                        ? 'bg-saffron-500 border-saffron-500 text-white shadow-md shadow-saffron-500/20' 
+                        : 'bg-muted-50 dark:bg-muted-800/50 border-muted-100 dark:border-muted-700 text-muted-600 dark:text-muted-400 hover:border-muted-200'
                     }`}
                   >
                     {c}
@@ -123,7 +123,7 @@ export default function TravelersSelector({ value, onSelect }: TravelersSelector
             <button
               type="button"
               onClick={() => setIsOpen(false)}
-              className="w-full mt-6 py-2.5 bg-zinc-900 dark:bg-white text-white dark:text-black rounded-xl text-xs font-black uppercase tracking-widest hover:opacity-90 transition-opacity"
+              className="w-full mt-6 py-2.5 bg-muted-900 dark:bg-white text-white dark:text-black rounded-xl text-xs font-black uppercase tracking-widest hover:opacity-90 transition-opacity"
             >
               Done
             </button>
