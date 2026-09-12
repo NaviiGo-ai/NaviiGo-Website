@@ -204,10 +204,10 @@ export default function Navbar() {
                 }}
                 className="flex items-center space-x-2.5"
               >
-                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary ring-2 ring-primary/20 shrink-0" aria-hidden="true">
+                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-saffron to-indigo ring-2 ring-saffron/20 shrink-0" aria-hidden="true">
                   <Compass className="h-5 w-5 text-primary-foreground" strokeWidth={2.5} />
                 </div>
-                <span className="text-lg font-extrabold tracking-tight text-foreground font-sans pr-1">NaviiGo</span>
+                <span className="text-lg font-extrabold tracking-tight text-saffron font-serif pr-1">NaviiGo</span>
               </Link>
             </motion.div>
 
@@ -229,17 +229,17 @@ export default function Navbar() {
                   onClick={() => setMoreMenuOpen(prev => !prev)}
                   className={`relative group flex items-center gap-2 px-4.5 py-3 text-base font-extrabold rounded-full transition-colors duration-200 ${
                     moreMenuOpen
-                      ? 'bg-primary text-primary-foreground shadow-xs'
-                      : 'text-muted-foreground hover:text-foreground'
+                      ? 'bg-saffron text-saffron-foreground shadow-xs'
+                      : 'text-muted-foreground hover:text-saffron'
                   }`}
                   whileTap={{ scale: 0.95 }}
                   aria-label="More navigation links"
                 >
-                  <Menu className={`w-4.5 h-4.5 ${moreMenuOpen ? 'text-primary-foreground' : 'text-primary'}`} />
+                  <Menu className={`w-4.5 h-4.5 ${moreMenuOpen ? 'text-saffron-foreground' : 'text-saffron'}`} />
                   <span>More</span>
-                  <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${moreMenuOpen ? 'rotate-180 text-primary-foreground' : ''}`} />
+                  <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${moreMenuOpen ? 'rotate-180 text-saffron-foreground' : ''}`} />
                   {!moreMenuOpen && (
-                    <span className="absolute bottom-1 left-4 right-4 h-[2.5px] bg-primary rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                    <span className="absolute bottom-1 left-4 right-4 h-[2.5px] bg-saffron rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
                   )}
                 </motion.button>
 
@@ -250,18 +250,18 @@ export default function Navbar() {
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 12, scale: 0.96 }}
                       transition={{ duration: 0.18, ease: 'easeOut' }}
-                      className="absolute right-0 top-full mt-3 w-max min-w-[185px] max-w-[210px] rounded-2xl border-2 border-primary/25 bg-card p-1.5 shadow-2xl z-[100] space-y-0.5"
+                      className="absolute right-0 top-full mt-3 w-max min-w-[185px] max-w-[210px] rounded-2xl border-2 border-saffron/20 bg-card p-1.5 shadow-2xl z-[100] space-y-0.5"
                     >
                       <Link
                         href="/saved"
                         onClick={() => setMoreMenuOpen(false)}
-                        className="flex items-center gap-2.5 px-2.5 py-2 rounded-xl hover:bg-primary/10 text-card-foreground transition-all group"
+                        className="flex items-center gap-2.5 px-2.5 py-2 rounded-xl hover:bg-saffron/10 text-card-foreground transition-all group"
                       >
-                        <div className="w-7.5 h-7.5 rounded-lg bg-primary/15 text-primary flex items-center justify-center font-bold shadow-xs group-hover:bg-primary group-hover:text-primary-foreground transition-all shrink-0">
+                        <div className="w-7.5 h-7.5 rounded-lg bg-saffron/15 text-saffron flex items-center justify-center font-bold shadow-xs group-hover:bg-saffron group-hover:text-saffron-foreground transition-all shrink-0">
                           <Bookmark className="w-3.5 h-3.5" />
                         </div>
                         <div>
-                          <div className="text-sm font-extrabold text-foreground group-hover:text-primary transition-colors leading-tight">Saved Trips</div>
+                          <div className="text-sm font-extrabold text-foreground group-hover:text-saffron transition-colors leading-tight">Saved Trips</div>
                           <div className="text-[11px] text-muted-foreground font-medium leading-tight">Bookmarks</div>
                         </div>
                       </Link>
@@ -269,13 +269,13 @@ export default function Navbar() {
                       <Link
                         href="/about"
                         onClick={() => setMoreMenuOpen(false)}
-                        className="flex items-center gap-2.5 px-2.5 py-2 rounded-xl hover:bg-primary/10 text-card-foreground transition-all group"
+                        className="flex items-center gap-2.5 px-2.5 py-2 rounded-xl hover:bg-saffron/10 text-card-foreground transition-all group"
                       >
-                        <div className="w-7.5 h-7.5 rounded-lg bg-primary/15 text-primary flex items-center justify-center font-bold shadow-xs group-hover:bg-primary group-hover:text-primary-foreground transition-all shrink-0">
+                        <div className="w-7.5 h-7.5 rounded-lg bg-saffron/15 text-saffron flex items-center justify-center font-bold shadow-xs group-hover:bg-saffron group-hover:text-saffron-foreground transition-all shrink-0">
                           <Info className="w-3.5 h-3.5" />
                         </div>
                         <div>
-                          <div className="text-sm font-extrabold text-foreground group-hover:text-primary transition-colors leading-tight">About</div>
+                          <div className="text-sm font-extrabold text-foreground group-hover:text-saffron transition-colors leading-tight">About</div>
                           <div className="text-[11px] text-muted-foreground font-medium leading-tight">Our story</div>
                         </div>
                       </Link>
@@ -283,13 +283,13 @@ export default function Navbar() {
                       <Link
                         href="/support"
                         onClick={() => setMoreMenuOpen(false)}
-                        className="flex items-center gap-2.5 px-2.5 py-2 rounded-xl hover:bg-primary/10 text-card-foreground transition-all group"
+                        className="flex items-center gap-2.5 px-2.5 py-2 rounded-xl hover:bg-saffron/10 text-card-foreground transition-all group"
                       >
-                        <div className="w-7.5 h-7.5 rounded-lg bg-primary/15 text-primary flex items-center justify-center font-bold shadow-xs group-hover:bg-primary group-hover:text-primary-foreground transition-all shrink-0">
+                        <div className="w-7.5 h-7.5 rounded-lg bg-saffron/15 text-saffron flex items-center justify-center font-bold shadow-xs group-hover:bg-saffron group-hover:text-saffron-foreground transition-all shrink-0">
                           <LifeBuoy className="w-3.5 h-3.5" />
                         </div>
                         <div>
-                          <div className="text-sm font-extrabold text-foreground group-hover:text-primary transition-colors leading-tight">Support</div>
+                          <div className="text-sm font-extrabold text-foreground group-hover:text-saffron transition-colors leading-tight">Support</div>
                           <div className="text-[11px] text-muted-foreground font-medium leading-tight">Help center</div>
                         </div>
                       </Link>
@@ -303,7 +303,7 @@ export default function Navbar() {
             <div className="hidden md:flex items-center space-x-2 pr-1 shrink-0">
               <motion.button
                 onClick={() => { setIsSearchOpen(true); setSearchQuery(''); setSelectedIndex(-1); }}
-                className="p-2.5 rounded-full hover:bg-accent hover:text-accent-foreground text-foreground transition-colors"
+                className="p-2.5 rounded-full hover:bg-saffron/20 hover:text-saffron text-foreground transition-colors"
                 whileHover={{ scale: 1.08 }}
                 whileTap={{ scale: 0.95 }}
                 aria-label="Open search"
@@ -323,7 +323,7 @@ export default function Navbar() {
                   {user.photoURL ? (
                     <motion.div whileHover={{ scale: 1.05 }} className="relative">
                       <Image src={user.photoURL!} alt="User" width={34} height={34} className="w-8.5 h-8.5 rounded-full border-2 border-border shadow-xs" />
-                      <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-primary rounded-full border-2 border-background"></div>
+                      <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-saffron rounded-full border-2 border-background"></div>
                     </motion.div>
                   ) : (
                     <div className="w-8.5 h-8.5 rounded-full bg-muted flex items-center justify-center">
@@ -332,7 +332,7 @@ export default function Navbar() {
                   )}
                   <motion.button
                     onClick={() => signOut()}
-                    className="p-2 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                    className="p-2 rounded-full text-saffron hover:text-[var(--color-temple-red)] hover:bg-[var(--color-temple-red)/10] transition-colors"
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9 }}
                     title="Sign Out"
@@ -343,7 +343,7 @@ export default function Navbar() {
               ) : (
                 <motion.button
                   onClick={() => signInWithGoogle()}
-                  className="flex items-center space-x-2.5 px-6 py-3 rounded-full bg-primary text-primary-foreground shadow-md hover:bg-primary/90 transition-all font-extrabold text-base tracking-wide"
+                  className="flex items-center space-x-2.5 px-6 py-3 rounded-full bg-gradient-to-br from-saffron to-indigo text-saffron-foreground shadow-md hover:bg-saffron/20 hover:text-saffron transition-all font-extrabold text-base tracking-wide"
                   whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.97 }}
                 >

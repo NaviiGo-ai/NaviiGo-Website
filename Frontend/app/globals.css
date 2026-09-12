@@ -38,10 +38,6 @@
   --sidebar-border: oklch(0.5856 0.0076 97.4302);
   --sidebar-ring: oklch(0 0 0);
 
-  --font-sans: Amaranth, ui-sans-serif, sans-serif, system-ui;
-  --font-serif: Playfair Display, ui-serif, serif;
-  --font-mono: monospace;
-
   --radius: 0.5rem;
 
   --tracking-normal: 0.08em;

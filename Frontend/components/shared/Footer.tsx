@@ -29,7 +29,7 @@ export default function Footer() {
   return (
     <footer className="relative bg-card text-card-foreground border-t border-border overflow-hidden">
       {/* Top Accent Line */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-px bg-gradient-to-r from-transparent via-saffron/40 to-transparent" />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-12 sm:pt-20 pb-8 sm:pb-10">
         {/* Main Grid */}
@@ -46,10 +46,10 @@ export default function Footer() {
               }}
               className="flex items-center gap-2 mb-4"
             >
-              <div className="h-8 w-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold shadow-xs font-sans">
+              <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-saffron to-indigo ring-2 ring-saffron/20 flex items-center justify-center text-sm font-bold text-white">
                 N
               </div>
-              <span className="text-xl font-bold tracking-tight font-sans">NaviiGo</span>
+              <span className="text-xl font-bold tracking-tight text-saffron font-serif">NaviiGo</span>
             </Link>
             <p className="text-sm text-muted-foreground leading-relaxed mb-6 max-w-xs">
               India&apos;s smartest travel companion. AI-powered itineraries, real-time booking aggregation, and a gamified travel passport.
@@ -65,7 +65,7 @@ export default function Footer() {
                   key={social.label}
                   href={social.href}
                   aria-label={social.label}
-                  className="h-9 w-9 rounded-full bg-muted hover:bg-accent hover:text-accent-foreground flex items-center justify-center text-xs text-muted-foreground transition-colors border border-border/50"
+                  className="h-9 w-9 rounded-full bg-muted hover:bg-saffron/20 hover:text-saffron flex items-center justify-center text-xs text-muted-foreground transition-colors border border-border/50"
                 >
                   {social.icon}
                 </a>
@@ -76,7 +76,7 @@ export default function Footer() {
           {/* Link Columns */}
           {Object.entries(footerLinks).map(([category, links]) => (
             <div key={category}>
-              <h4 className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground mb-5">
+              <h4 className="text-xs font-bold uppercase tracking-[0.2em] text-saffron mb-5">
                 {category}
               </h4>
               <ul className="space-y-3">
@@ -109,7 +109,7 @@ export default function Footer() {
                 aria-label="Email for travel tips newsletter"
                 className="flex-1 md:w-64 px-4 py-2.5 rounded-xl bg-input border border-border text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring transition"
               />
-              <button className="px-6 py-2.5 rounded-xl bg-primary text-sm font-semibold text-primary-foreground hover:bg-primary/90 transition-colors shrink-0 shadow-xs">
+              <button className="px-6 py-2.5 rounded-xl bg-saffron text-sm font-semibold text-primary-foreground hover:bg-saffron/90 transition-colors shrink-0 shadow-xs">
                 Subscribe
               </button>
             </div>
