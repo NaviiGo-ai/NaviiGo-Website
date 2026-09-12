@@ -67,7 +67,7 @@ const config: Config = {
         },
       },
       fontFamily: {
-        sans: ['var(--font-sans)', 'Amaranth', ...defaultTheme.fontFamily.sans],
+        sans: ['var(--font-sans)', 'Lato', ...defaultTheme.fontFamily.sans],
         serif: ['var(--font-serif)', 'Playfair Display', ...defaultTheme.fontFamily.serif],
         mono: ['var(--font-mono)', ...defaultTheme.fontFamily.mono],
       },

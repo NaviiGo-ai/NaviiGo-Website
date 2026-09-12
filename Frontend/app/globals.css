@@ -2,6 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 @import '../src/styles/design-system/colors.css';
+@import '../src/styles/design-system/typography.css';
 
 :root {
   --background: oklch(0.9840 0.0201 118.9236);
