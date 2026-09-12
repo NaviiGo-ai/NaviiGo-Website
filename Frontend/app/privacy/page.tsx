@@ -13,7 +13,7 @@ export default function PrivacyPage() {
           <p className="text-lg text-muted-500">Last updated: June 2026</p>
         </div>
 
-        <div className="prose ptemple-red-zinc dark:ptemple-red-invert max-w-none space-y-12">
+        <div className="prose prose-muted dark:prose-invert max-w-none space-y-12">
           <section className="bg-white dark:bg-muted-900 rounded-3xl p-8 md:p-10 border border-muted-100 dark:border-muted-800 shadow-sm">
             <h2 className="text-2xl font-bold text-muted-900 dark:text-white mb-4 flex items-center gap-3">
               <Shield className="w-6 h-6 text-jungle-green-500" />
