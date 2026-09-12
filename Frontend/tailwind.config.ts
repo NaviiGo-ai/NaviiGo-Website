@@ -71,20 +71,30 @@ const config: Config = {
         serif: ['var(--font-serif)', 'Playfair Display', ...defaultTheme.fontFamily.serif],
         mono: ['var(--font-mono)', ...defaultTheme.fontFamily.mono],
       },
-      borderRadius: {
-        lg: 'var(--radius)',
-        md: 'calc(var(--radius) - 2px)',
-        sm: 'calc(var(--radius) - 4px)',
-      },
-      boxShadow: {
-        '2xs': 'var(--shadow-2xs)',
-        xs: 'var(--shadow-xs)',
+      borderRadius: ({ theme }) => ({
+        sm: 'var(--radius-sm)',
+        md: 'var(--radius-md)',
+        lg: 'var(--radius-lg)',
+        xl: 'var(--radius-xl)',
+        full: 'var(--radius-full)',
+      }),
+      boxShadow: ({ theme }) => ({
         sm: 'var(--shadow-sm)',
-        DEFAULT: 'var(--shadow)',
         md: 'var(--shadow-md)',
         lg: 'var(--shadow-lg)',
         xl: 'var(--shadow-xl)',
         '2xl': 'var(--shadow-2xl)',
+      }),
+      spacing: ({ theme }) => theme('spacing'),
+      container: {
+        padding: {
+          DEFAULT: '1rem',
+          sm: '2rem',
+          lg: '4rem',
+          xl: '5rem',
+          '2xl': '6rem',
+        },
+        center: true,
       },
       animation: {
         aurora: "aurora 60s linear infinite",
