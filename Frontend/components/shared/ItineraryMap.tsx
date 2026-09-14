@@ -18,6 +18,7 @@ interface ItineraryMapProps {
     showRoute?: boolean;
     activePin?: number;
     onRouteCalculated?: (legs: { distance: string; time: string }[]) => void;
+    onPinClick?: (pinIndex: number) => void;
     /** When provided, renders a live pulsing blue dot at the user's location */
     userLocation?: { lat: number; lng: number } | null;
 }
@@ -30,6 +31,7 @@ export default function ItineraryMap({
     showRoute = true,
     activePin,
     onRouteCalculated,
+    onPinClick,
     userLocation,
 }: ItineraryMapProps) {
     const containerRef = useRef<HTMLDivElement>(null);
@@ -39,11 +41,16 @@ export default function ItineraryMap({
     const userMarkerRef = useRef<any>(null);
     const [leafletLoaded, setLeafletLoaded] = useState(false);
     
-    // Store latest onRouteCalculated to prevent stale closures without triggering re-renders
+    // Store latest callbacks to prevent stale closures
     const onRouteCalculatedRef = useRef(onRouteCalculated);
     useEffect(() => {
         onRouteCalculatedRef.current = onRouteCalculated;
     }, [onRouteCalculated]);
+
+    const onPinClickRef = useRef(onPinClick);
+    useEffect(() => {
+        onPinClickRef.current = onPinClick;
+    }, [onPinClick]);
 
     // Load Leaflet CSS + JS from CDN
     useEffect(() => {
@@ -79,7 +86,7 @@ export default function ItineraryMap({
         }
     }, []);
 
-    // Initialize map
+    // Initialize map once
     useEffect(() => {
         if (!leafletLoaded || !containerRef.current) return;
         const L = (window as any).L;
@@ -95,25 +102,26 @@ export default function ItineraryMap({
             attributionControl: true,
         });
 
-        // OpenStreetMap tile provider — ultra-reliable, fast, zero missing-credential watermarks
+        // OpenStreetMap tile provider — ultra-reliable, fast
         const tileUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 
         L.tileLayer(tileUrl, {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
             maxZoom: 19,
-            subdomains: 'abc',
+            attribution: '© OpenStreetMap contributors',
         }).addTo(map);
 
-        L.control.zoom({ position: 'topright' }).addTo(map);
+        L.control.zoom({ position: 'bottomright' }).addTo(map);
         mapRef.current = map;
 
         return () => {
-            if (mapRef.current) { mapRef.current.remove(); mapRef.current = null; }
+            if (mapRef.current) {
+                mapRef.current.remove();
+                mapRef.current = null;
+            }
         };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [leafletLoaded]);
 
-    // Update markers & route when pins change
+    // Build pins and route only when pins or showRoute change
     useEffect(() => {
         if (!mapRef.current || !leafletLoaded) return;
         const L = (window as any).L;
@@ -136,26 +144,25 @@ export default function ItineraryMap({
             const lng = Number(pin.lng);
             if (isNaN(lat) || isNaN(lng) || lat === 0 || lng === 0) return;
 
-            const isActive = activePin !== undefined && activePin === i;
             const icon = L.divIcon({
                 className: 'custom-map-pin',
                 html: `
-                <div style="display:flex; flex-direction:column; align-items:center;">
+                <div id="map-pin-el-${i}" style="display:flex; flex-direction:column; align-items:center; transition: all 0.3s ease;">
                     <div style="
-                        width: ${isActive ? 42 : 36}px; height: ${isActive ? 42 : 36}px;
-                        background: ${isActive ? 'linear-gradient(135deg, #EC6426, #C84E17)' : 'linear-gradient(135deg, #00666A, #004D50)'};
+                        width: 36px; height: 36px;
+                        background: linear-gradient(135deg, #1B1715, #2C2420);
                         border-radius: 50% 50% 50% 0;
                         transform: rotate(-45deg);
                         display: flex; align-items: center; justify-content: center;
-                        box-shadow: 2px 4px 10px rgba(0,0,0,0.3);
+                        box-shadow: 0 4px 12px rgba(0,0,0,0.25);
                         border: 2px solid #FAF6F0;
-                    ">
-                        <span style="transform: rotate(45deg); color: #FAF6F0; font-weight: 800; font-size: ${isActive ? 16 : 14}px; font-family: system-ui, sans-serif;">${pin.number}</span>
+                        transition: all 0.3s ease;
+                    " class="pin-inner">
+                        <span style="transform: rotate(45deg); color: #FAF6F0; font-weight: 800; font-size: 13px; font-family: system-ui, sans-serif;">${pin.number}</span>
                     </div>
-                    ${isActive ? '<div style="position:absolute; bottom:-4px; width:12px; height:4px; background:rgba(0,0,0,0.4); border-radius:50%; filter:blur(2px);"></div>' : ''}
                 </div>`,
-                iconSize: [isActive ? 42 : 36, isActive ? 42 : 36],
-                iconAnchor: [isActive ? 21 : 18, isActive ? 42 : 36],
+                iconSize: [36, 36],
+                iconAnchor: [18, 36],
             });
 
             const marker = L.marker([lat, lng], { icon }).addTo(map);
@@ -164,11 +171,16 @@ export default function ItineraryMap({
             marker.bindPopup(`
         <div style="min-width:180px;font-family:system-ui,sans-serif;">
           ${imgHtml}
-          <div style="font-weight:700;font-size:13px;margin-bottom:2px;">${pin.number}. ${pin.label}</div>
+          <div style="font-weight:700;font-size:13px;margin-bottom:2px;color:#1B1715;">${pin.number}. ${pin.label}</div>
         </div>
       `, { closeButton: false, offset: [0, -10] });
 
-            if (isActive) marker.openPopup();
+            marker.on('click', () => {
+                if (typeof onPinClickRef.current === 'function') {
+                    onPinClickRef.current(i);
+                }
+            });
+
             markersRef.current.push(marker);
             coords.push([lat, lng]);
         });
@@ -177,7 +189,7 @@ export default function ItineraryMap({
             polylineRef.current = L.Routing.control({
                 waypoints: coords.map(([lat, lng]: [number, number]) => L.latLng(lat, lng)),
                 lineOptions: {
-                    styles: [{ color: '#EC6426', weight: 3.5, opacity: 0.85, dashArray: '6, 6' }]
+                    styles: [{ color: '#EC6426', weight: 3, opacity: 0.85, dashArray: '6, 6' }]
                 },
                 createMarker: function () { return null; },
                 show: false,
@@ -201,7 +213,7 @@ export default function ItineraryMap({
                 }
                 const latlngs = coords.map(([lat, lng]: [number, number]) => L.latLng(lat, lng));
                 polylineRef.current = L.polyline(latlngs, {
-                    color: '#EC6426', weight: 3.5, opacity: 0.85, dashArray: '6, 6'
+                    color: '#EC6426', weight: 3, opacity: 0.85, dashArray: '6, 6'
                 }).addTo(map);
                 if (coords.length > 1) {
                     map.fitBounds(polylineRef.current.getBounds(), { padding: [40, 40], animate: true, duration: 0.8 });
@@ -236,7 +248,7 @@ export default function ItineraryMap({
                 }
             });
 
-            polylineRef.current.on('routingerror', function (e: any) {
+            polylineRef.current.on('routingerror', function () {
                 fallbackToStraightLines();
             });
         }
@@ -245,7 +257,48 @@ export default function ItineraryMap({
             const bounds = L.latLngBounds(coords.map(([lat, lng]: [number, number]) => [lat, lng]));
             map.fitBounds(bounds, { padding: [40, 40], maxZoom: 14, animate: true, duration: 0.8 });
         }
-    }, [pins, activePin, leafletLoaded, showRoute]);
+    }, [pins, leafletLoaded, showRoute]);
+
+    // Smooth activePin synchronization: Highlight & subtle pan without reloading map
+    useEffect(() => {
+        if (!mapRef.current || !leafletLoaded) return;
+        const L = (window as any).L;
+        const map = mapRef.current;
+
+        markersRef.current.forEach((marker: any, idx: number) => {
+            const pin = pins[idx];
+            if (!pin) return;
+            const isActive = activePin !== undefined && activePin === idx;
+            const isAnyActive = activePin !== undefined && activePin >= 0;
+            const markerEl = marker.getElement();
+            if (markerEl) {
+                const inner = markerEl.querySelector('.pin-inner');
+                if (inner) {
+                    if (isActive) {
+                        inner.style.background = 'linear-gradient(135deg, #EC6426, #C84E17)';
+                        inner.style.width = '44px';
+                        inner.style.height = '44px';
+                        inner.style.boxShadow = '0 6px 20px rgba(236,100,38,0.5)';
+                        markerEl.style.zIndex = '999';
+                        markerEl.style.opacity = '1';
+                    } else {
+                        inner.style.background = 'linear-gradient(135deg, #1B1715, #2C2420)';
+                        inner.style.width = '36px';
+                        inner.style.height = '36px';
+                        inner.style.boxShadow = '0 4px 12px rgba(0,0,0,0.25)';
+                        markerEl.style.zIndex = '100';
+                        markerEl.style.opacity = isAnyActive ? '0.6' : '1';
+                    }
+                }
+            }
+
+            if (isActive) {
+                marker.openPopup();
+                const latLng = marker.getLatLng();
+                map.panTo(latLng, { animate: true, duration: 0.6 });
+            }
+        });
+    }, [activePin, pins, leafletLoaded]);
 
     // ── User Location Blue Dot ──────────────────────────────────
     useEffect(() => {
