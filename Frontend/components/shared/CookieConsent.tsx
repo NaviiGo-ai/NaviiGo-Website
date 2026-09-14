@@ -19,8 +19,8 @@ export default function CookieConsent() {
   const [showDetails, setShowDetails] = useState(false);
   const [preferences, setPreferences] = useState<CookiePreferences>({
     essential: true, // Always true and cannot be disabled
-    analytics: true,
-    personalization: true,
+    analytics: false, // Strict GDPR: requires explicit opt-in
+    personalization: false,
     timestamp: '',
   });
 
