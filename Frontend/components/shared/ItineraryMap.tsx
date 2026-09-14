@@ -103,19 +103,29 @@ export default function ItineraryMap({
             attributionControl: true,
         });
 
-        // OpenStreetMap Standard Tile Layer (Clean, official OSM, zero watermarks)
-        const primaryTileUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
-        const fallbackTileUrl = 'https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png';
+        const cartoKey = process.env.NEXT_PUBLIC_CARTO_API_KEY || 'eyJhbGciOiJIUzI1NiJ9.eyJhIjoiYWNfZzA3MjE4ZmciLCJqdGkiOiIwMTYyZWI2MiJ9.eqeGujku1mhnCY-KQ6hEOYbExD0EKV2KE8-TkdB13Xw';
+
+        // CARTO Voyager Basemap with verified API key (warm luxury styling, 100% watermark-free)
+        const primaryTileUrl = `https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png${cartoKey ? `?key=${cartoKey}` : ''}`;
+        const fallbackTileUrl = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}';
+        const emergencyTileUrl = 'https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png';
 
         const tileLayer = L.tileLayer(primaryTileUrl, {
-            subdomains: ['a', 'b', 'c'],
-            maxZoom: 19,
-            attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a> contributors',
+            subdomains: ['a', 'b', 'c', 'd'],
+            maxZoom: 20,
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions" target="_blank" rel="noreferrer">CARTO</a>',
         }).addTo(map);
 
+        let errorCount = 0;
         tileLayer.on('tileerror', () => {
-            // Fall back to OSM Humanitarian CDN if standard OSM has any network hiccups
-            tileLayer.setUrl(fallbackTileUrl);
+            errorCount++;
+            if (errorCount === 1) {
+                // Immediate unblocked fallback: ESRI World Topo (zero auth required, global CDN)
+                tileLayer.setUrl(fallbackTileUrl);
+            } else if (errorCount === 3) {
+                // Secondary fallback: OSM Humanitarian
+                tileLayer.setUrl(emergencyTileUrl);
+            }
         });
 
         L.control.zoom({ position: 'bottomright' }).addTo(map);
