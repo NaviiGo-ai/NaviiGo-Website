@@ -198,15 +198,39 @@ export default function SetupWizard({ onDone }: SetupWizardProps) {
     setIsSubmitting(true);
     try {
       const uuid = crypto.randomUUID();
+
+      const groupMap: Record<string, string> = {
+        solo: 'solo',
+        duo: 'couple',
+        family: 'family',
+        friends: 'friends',
+        caravan: 'large',
+      };
+      const purposeMap: Record<string, string> = {
+        heritage: 'cultural',
+        sacred: 'spiritual',
+        mountains: 'adventure',
+        wildlife: 'adventure',
+        culinary: 'cultural',
+        slow: 'leisure',
+        nightlife: 'celebrate',
+      };
+
+      const selectedStyle = selectedStyles[0] || 'heritage';
+      const canonicalGroup = groupMap[travellerGroup] || travellerGroup;
+      const canonicalPurpose = purposeMap[selectedStyle] || selectedStyle || 'cultural';
+
       const payload = {
         destination,
         destName,
         destState,
         startDate,
         endDate,
-        days: duration.days,
-        group: travellerGroup,
-        purpose: selectedStyles[0] || 'heritage',
+        days: Math.min(Math.max(duration.days, 1), 14),
+        group: canonicalGroup,
+        purpose: canonicalPurpose,
+        rawGroup: travellerGroup,
+        rawStyle: selectedStyle,
         budget: budgetPerPerson,
         travelerType: 'comfort',
         mustDo: mustDoPins.map(p => ({ name: p, dayIndex: null })),
@@ -214,6 +238,8 @@ export default function SetupWizard({ onDone }: SetupWizardProps) {
         userId: user.uid,
         createdAt: new Date().toISOString(),
       };
+
+      console.log('[SetupWizard] Dispatching journey to Firestore & loading screen:', payload);
 
       await saveItineraryByUUID(uuid, {
         form: payload,
@@ -224,7 +250,7 @@ export default function SetupWizard({ onDone }: SetupWizardProps) {
       if (onDone) onDone({ ...payload, uuid });
       router.push(`/itinerary/plan/${uuid}`);
     } catch (err) {
-      console.error('Failed to dispatch journey:', err);
+      console.error('[SetupWizard] Failed to dispatch journey:', err);
       setIsSubmitting(false);
     }
   };

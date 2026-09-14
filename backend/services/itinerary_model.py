@@ -18,19 +18,28 @@ from typing import Optional, List, Dict, Any
 
 PURPOSE_TAG_MAP = {
     "spiritual": {"Temple": 5, "Spiritual": 5, "Aarti": 4, "Heritage": 3, "Culture": 3, "Buddhist": 4},
+    "sacred":    {"Temple": 5, "Spiritual": 5, "Aarti": 4, "Heritage": 3, "Culture": 3, "Buddhist": 4},
     "leisure":   {"Beach": 5, "Nature": 4, "Sunset": 4, "Houseboat": 5, "Safari": 3, "Relaxation": 5},
+    "slow":      {"Beach": 5, "Nature": 4, "Sunset": 4, "Houseboat": 5, "Safari": 3, "Relaxation": 5},
     "adventure": {"Trekking": 5, "Mountains": 5, "Snow": 4, "Adventure": 5, "Waterfall": 4, "Safari": 3},
+    "mountains": {"Trekking": 5, "Mountains": 5, "Snow": 4, "Adventure": 5, "Waterfall": 4, "Safari": 3},
+    "wildlife":  {"Trekking": 3, "Nature": 5, "Adventure": 4, "Safari": 5},
     "cultural":  {"History": 5, "Culture": 5, "Museum": 4, "Heritage": 5, "Fort": 4, "Palace": 4, "Shopping": 3, "UNESCO": 4},
+    "heritage":  {"History": 5, "Culture": 5, "Museum": 4, "Heritage": 5, "Fort": 4, "Palace": 4, "Shopping": 3, "UNESCO": 4},
+    "culinary":  {"Food": 5, "Market": 4, "Culture": 4, "Heritage": 3},
     "honeymoon": {"Sunset": 5, "Beach": 4, "Nature": 4, "Romantic": 5, "Lake": 4},
     "celebrate": {"Culture": 3, "Shopping": 4, "Market": 4, "Fun": 5, "Nightlife": 5},
+    "nightlife": {"Culture": 3, "Shopping": 4, "Market": 4, "Fun": 5, "Nightlife": 5},
 }
 
 GROUP_PREFS = {
     "solo":    {"crowdPref": "Low",    "walkPref": "Medium"},
     "couple":  {"crowdPref": "Low",    "walkPref": "Easy"},
+    "duo":     {"crowdPref": "Low",    "walkPref": "Easy"},
     "family":  {"crowdPref": "Low",    "walkPref": "Easy"},
     "friends": {"crowdPref": "Medium", "walkPref": "Medium"},
     "large":   {"crowdPref": "Medium", "walkPref": "Easy"},
+    "caravan": {"crowdPref": "Medium", "walkPref": "Easy"},
 }
 
 # ─── Traveler Pacing Rules (NaviiGo survey data) ────────────────────────────

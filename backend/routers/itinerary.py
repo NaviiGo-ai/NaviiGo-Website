@@ -84,7 +84,19 @@ async def generate(payload: ItineraryRequest, request: Request):
         preferences = payload.preferences
         browsing_signals = payload.browsingSignals
         traveler_type = payload.travelerType or "comfort"
-        group = payload.group or "solo"
+        raw_group = payload.group or "solo"
+        group = "couple" if raw_group in ("duo", "couple") else ("large" if raw_group in ("caravan", "large") else raw_group)
+
+        purpose_alias_map = {
+            "heritage": "cultural",
+            "culinary": "cultural",
+            "sacred": "spiritual",
+            "mountains": "adventure",
+            "wildlife": "adventure",
+            "slow": "leisure",
+            "nightlife": "celebrate",
+        }
+        resolved_purpose = purpose_alias_map.get(payload.purpose, payload.purpose)
 
         if authenticated_user_id:
             user_ctx = await get_full_user_context(authenticated_user_id)
@@ -101,7 +113,7 @@ async def generate(payload: ItineraryRequest, request: Request):
         user_context = {
             "destination": resolved_dest,
             "destName": dest_name,
-            "purpose": payload.purpose,
+            "purpose": resolved_purpose,
             "group": group,
             "days": payload.days or 3,
             "budget": payload.budget or 15000,

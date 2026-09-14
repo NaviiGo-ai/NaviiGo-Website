@@ -46,7 +46,7 @@ interface LoadingScreenProps {
 }
 
 export default function LoadingScreen({ form, uuid, onDone }: LoadingScreenProps) {
-  const { user } = useAuth();
+  const { user, loading: authLoading, signInWithGoogle } = useAuth();
   const destId = (form.destination as string) || '';
   const destName = (form.destName as string) || 'India';
   const daysCount = (form.days as number) || 3;
@@ -57,6 +57,7 @@ export default function LoadingScreen({ form, uuid, onDone }: LoadingScreenProps
   const [revealedPinsCount, setRevealedPinsCount] = useState(0);
   const [apiData, setApiData] = useState<any>(null);
   const [apiDone, setApiDone] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [dynamicCenter, setDynamicCenter] = useState<{ lat: number; lng: number } | null>(null);
   const [dynamicHighlights, setDynamicHighlights] = useState<any[]>([]);
   const fetchedRef = useRef(false);
@@ -106,13 +107,23 @@ export default function LoadingScreen({ form, uuid, onDone }: LoadingScreenProps
 
   // Real API Generation Call
   useEffect(() => {
+    if (authLoading) return; // Wait until Firebase Auth initial session resolves
     if (fetchedRef.current) return;
     fetchedRef.current = true;
 
     const generateTrip = async () => {
       try {
-        if (!user) throw new Error('Sign in is required to generate an itinerary.');
+        if (!user) {
+          console.warn('[LoadingScreen] No user session found. Sign-in required for itinerary creation.');
+          setError('Sign in is required to generate your personalized itinerary.');
+          setApiDone(true);
+          return;
+        }
+
+        console.log(`[LoadingScreen] Initiating generation for "${destName}" (${daysCount} days)...`);
         const idToken = await user.getIdToken();
+        console.log('[LoadingScreen] Acquired Firebase ID token. Calling POST /api/itinerary/generate...');
+
         const res = await fetch('/api/itinerary/generate', {
           method: 'POST',
           headers: {
@@ -137,33 +148,55 @@ export default function LoadingScreen({ form, uuid, onDone }: LoadingScreenProps
             departureMode: form.departureMode || '',
             hotelArea: form.hotelArea || '',
             originCity: form.originCity || '',
+            mustDo: form.mustDo || [],
             routeStops: form.routeStops || [],
           }),
         });
 
         const result = await res.json();
-        if (result.success && result.itinerary) {
-          setApiData(result.itinerary);
-          if (uuid && typeof window !== 'undefined') {
-            import('@/lib/firestore').then(({ saveItineraryByUUID }) => {
-              saveItineraryByUUID(uuid, {
-                form,
-                generatedData: result.itinerary,
-                destName,
-                userId: (form.userId as string) ?? null,
-                isPublic: true,
-              }).catch(() => {});
-            });
-          }
+        console.log('[LoadingScreen] API response:', { status: res.status, ok: res.ok, success: result?.success });
+
+        if (!res.ok || !result.success || !result.itinerary) {
+          const errMsg = result.error || result.detail || 'Itinerary generation engine encountered an error.';
+          console.error('[LoadingScreen] Generation failed:', errMsg);
+          setError(errMsg);
+          setApiDone(true);
+          return;
         }
-      } catch (err) {
-        console.error('Trip construction failed:', err);
+
+        console.log('[LoadingScreen] Generation succeeded! Setting itinerary data.');
+        setApiData(result.itinerary);
+
+        if (uuid && typeof window !== 'undefined') {
+          import('@/lib/firestore').then(({ saveItineraryByUUID }) => {
+            saveItineraryByUUID(uuid, {
+              form,
+              generatedData: result.itinerary,
+              destName,
+              userId: (form.userId as string) ?? user.uid,
+              isPublic: true,
+            }).catch((fsErr) => {
+              console.warn('[LoadingScreen] Firestore save warning:', fsErr);
+            });
+          });
+        }
+      } catch (err: any) {
+        console.error('[LoadingScreen] Generation caught exception:', err);
+        setError(err.message || 'Network error communicating with the generation engine.');
       }
       setApiDone(true);
     };
 
     generateTrip();
-  }, [destId, destName, form, user, uuid]);
+  }, [authLoading, destId, destName, form, user, uuid, daysCount]);
+
+  const handleRetry = () => {
+    fetchedRef.current = false;
+    setError(null);
+    setApiDone(false);
+    setActiveStageIndex(0);
+    setElapsed(0);
+  };
 
   // Progress through the 4 stages while waiting for real API data
   useEffect(() => {
@@ -207,7 +240,7 @@ export default function LoadingScreen({ form, uuid, onDone }: LoadingScreenProps
       <div className="max-w-7xl mx-auto px-6 md:px-12 py-6 border-b border-[#EADFD4] flex flex-col sm:flex-row sm:items-baseline justify-between gap-4">
         <div>
           <div className="flex items-center gap-3 font-mono text-[10px] md:text-xs tracking-[0.25em] uppercase text-naviigo-brown/60 mb-1">
-            <span className="w-2 h-2 rounded-full bg-brand-primary animate-pulse" />
+            <span className={`w-2 h-2 rounded-full ${error ? 'bg-red-500' : 'bg-brand-primary animate-pulse'}`} />
             <span>JOURNEY CONSTRUCTION</span>
             <span className="text-naviigo-brown/30">/</span>
             <span>NV-PLAN-{daysCount}D</span>
@@ -221,8 +254,8 @@ export default function LoadingScreen({ form, uuid, onDone }: LoadingScreenProps
           <span className="text-naviigo-brown/50 uppercase tracking-wider">
             ELAPSED: 00:{elapsed.toString().padStart(2, '0')}
           </span>
-          <span className="text-brand-primary font-bold uppercase tracking-wider">
-            {apiDone ? '✦ ROUTE READY' : 'LIVE CONVERGENCE'}
+          <span className={`font-bold uppercase tracking-wider ${error ? 'text-red-600' : 'text-brand-primary'}`}>
+            {error ? '⚠ GENERATION PAUSED' : apiDone ? '✦ ROUTE READY' : 'LIVE CONVERGENCE'}
           </span>
         </div>
       </div>
@@ -230,8 +263,44 @@ export default function LoadingScreen({ form, uuid, onDone }: LoadingScreenProps
       {/* ── Live Journey Canvas (Two Column Workspace) ─────────── */}
       <div className="max-w-7xl mx-auto px-6 md:px-12 py-8 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start min-h-[calc(100vh-220px)]">
         
-        {/* Left Column: 4 Real System Stages */}
+        {/* Left Column: Stages & Status Feedback */}
         <div className="lg:col-span-5 space-y-6">
+
+          {/* Interactive Error Card */}
+          {error && (
+            <div className="bg-paper-light border border-red-200 rounded-2xl p-6 shadow-sm space-y-4">
+              <div className="flex items-center gap-2 text-red-600 font-mono text-xs font-bold uppercase tracking-wider">
+                <span>⚠ Generation Error</span>
+              </div>
+              <p className="font-sans text-xs sm:text-sm text-naviigo-brown/80 leading-relaxed">
+                {error}
+              </p>
+              <div className="flex flex-wrap gap-3 pt-1">
+                {!user ? (
+                  <button
+                    onClick={() => signInWithGoogle()}
+                    className="px-5 py-2.5 rounded-xl bg-brand-primary hover:bg-brand-primary/90 text-white font-mono text-xs uppercase font-bold transition-colors"
+                  >
+                    Sign In with Google
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleRetry}
+                    className="px-5 py-2.5 rounded-xl bg-brand-primary hover:bg-brand-primary/90 text-white font-mono text-xs uppercase font-bold transition-colors shadow-xs"
+                  >
+                    ↻ Retry Generation
+                  </button>
+                )}
+                <a
+                  href="/itinerary"
+                  className="px-5 py-2.5 rounded-xl bg-paper-warm border border-[#EADFD4] hover:border-naviigo-brown text-naviigo-brown font-mono text-xs uppercase font-bold transition-colors"
+                >
+                  Return to Wizard
+                </a>
+              </div>
+            </div>
+          )}
+
           <div className="bg-paper-light border border-[#EADFD4] rounded-2xl p-6 sm:p-8 shadow-xs">
             <div className="flex items-center justify-between pb-4 mb-6 border-b border-[#EADFD4]">
               <span className="font-mono text-xs uppercase tracking-widest text-brand-primary font-bold">

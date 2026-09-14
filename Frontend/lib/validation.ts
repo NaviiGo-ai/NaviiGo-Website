@@ -18,14 +18,18 @@ export const KNOWN_DEST_IDS = new Set([
     'tirupati', 'ujjain', 'bodhgaya',
 ]);
 
-// ── Known purpose IDs (from app/itinerary/data.ts PURPOSES) ──────────────────
+// ── Known purpose IDs (from app/itinerary/data.ts PURPOSES & SetupWizard) ───
 export const KNOWN_PURPOSES = new Set([
     'spiritual', 'leisure', 'adventure', 'cultural', 'honeymoon', 'celebrate',
+    // SetupWizard UI travel styles
+    'heritage', 'culinary', 'mountains', 'sacred', 'slow', 'wildlife', 'nightlife',
 ]);
 
-// ── Known group IDs (from app/itinerary/data.ts GROUP_SIZES) ─────────────────
+// ── Known group IDs (from app/itinerary/data.ts GROUP_SIZES & SetupWizard) ──
 export const KNOWN_GROUPS = new Set([
     'solo', 'couple', 'family', 'friends', 'large',
+    // SetupWizard UI companion aliases
+    'duo', 'caravan',
 ]);
 
 // ── Known companion options (explore/deep-dive) ───────────────────────────────
