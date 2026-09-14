@@ -31,8 +31,10 @@ export interface DayProgress {
 
 // ─── Hook ────────────────────────────────────────────────────────────────────
 
-import { createTrackingSession, updateActivityStatus, stopTrackingSession, saveActiveTripProgress } from '@/lib/firestore';
+import { createTrackingSession, updateActivityStatus, stopTrackingSession, saveActiveTripProgress, setActiveItinerary } from '@/lib/firestore';
 import { useAuth } from '@/lib/AuthContext';
+import { db } from '@/lib/firebase';
+import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
 
 // ─── Hook ────────────────────────────────────────────────────────────────────
 
@@ -41,7 +43,8 @@ export function useCheckpoints(
     destName: string,
     stateName: string,
     purpose: string,
-    dayPlans: { day: number; activities: { name: string; lat?: number; lng?: number }[] }[]
+    dayPlans: { day: number; activities: { name: string; lat?: number; lng?: number }[] }[],
+    itineraryId?: string
 ) {
     const { user } = useAuth();
     const [checkpoint, setCheckpoint] = useState<CheckpointState | null>(null);
@@ -94,7 +97,8 @@ export function useCheckpoints(
             });
         });
 
-        const tripId = `${destId}_${Date.now()}`;
+        // Reuse stable canonical itinerary ID as tracking session tripId
+        const tripId = itineraryId || `${destId}_${Date.now()}`;
 
         const newState: CheckpointState = {
             tripId,
@@ -114,7 +118,7 @@ export function useCheckpoints(
         if (user?.uid) {
             createTrackingSession(user.uid, {
                 tripId,
-                itineraryId: destId,
+                itineraryId: tripId,
                 destName,
                 activities: allActivities.map((a, idx) => ({
                     index: idx,
@@ -127,19 +131,32 @@ export function useCheckpoints(
                     timeSpentMinutes: null,
                 })),
             }).catch(err => console.warn('Live tracking session create failed:', err));
+
+            // Mark the existing itinerary as active in the user's collection — NO duplicate document created
+            if (itineraryId) {
+                setActiveItinerary(user.uid, itineraryId).catch(err => {
+                    console.warn('[useCheckpoints] Failed to mark itinerary active:', err);
+                });
+            }
         }
-    }, [destId, destName, stateName, purpose, dayPlans, user]);
+    }, [destId, destName, stateName, purpose, dayPlans, user, itineraryId]);
 
     const stopTrip = useCallback(() => {
         if (checkpoint && user?.uid) {
             stopTrackingSession(user.uid, checkpoint.tripId).catch(err => console.warn('Live tracking stop failed:', err));
+            if (itineraryId) {
+                updateDoc(doc(db, 'users', user.uid, 'itineraries', itineraryId), {
+                    isActive: false,
+                    updatedAt: serverTimestamp(),
+                }).catch(() => {});
+            }
         }
         setCheckpoint(null);
         setIsTripActive(false);
         setJustCompleted(null);
         setDayJustCompleted(null);
         setTripJustCompleted(false);
-    }, [checkpoint, user]);
+    }, [checkpoint, user, itineraryId]);
 
     const toggleCheckpoint = useCallback((dayIndex: number, activityName: string) => {
         if (!checkpoint) return;

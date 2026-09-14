@@ -3,6 +3,9 @@ const nextConfig = {
   turbopack: {
     root: __dirname,
   },
+  experimental: {
+    cpus: 4,
+  },
   reactStrictMode: true,
   allowedDevOrigins: ['127.0.0.1'],
   serverExternalPackages: ['@pinecone-database/pinecone'],

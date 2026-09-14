@@ -40,8 +40,13 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
     const { user } = useAuth();
     const { registerItinerary, unregisterItinerary } = useAI();
     const [isSaved, setIsSaved] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+    const [saveError, setSaveError] = useState(false);
+    const saveInFlightRef = useRef(false);
+
     const destId = (form.destination as string) || (form.destId as string) || '';
     const destName = (form.destName as string) || (form.destination as string) || 'India Expedition';
+    const stableItineraryId = (form._uuid || form.uuid || form.id || destId) as string;
     const staticData = destId ? DEST_DATA[destId.toLowerCase()] : undefined;
 
     const data: any = useMemo(() => {
@@ -149,7 +154,7 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
         toggleCheckpoint, isChecked, getProgress,
         dayJustCompleted, clearDayJustCompleted,
         tripJustCompleted, clearTripJustCompleted,
-    } = useCheckpoints(destId, destName, destState, purpose, customPlans);
+    } = useCheckpoints(destId, destName, destState, purpose, customPlans, stableItineraryId);
 
     const { toasts, showToast } = useCheckpointToast();
     const [celebrationResult, setCelebrationResult] = useState<AwardResult | null>(null);
@@ -387,20 +392,57 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                         </motion.button>
                     )}
                     <motion.button 
-                        whileTap={{ scale: 0.98 }} 
+                        whileTap={isSaving || isSaved ? {} : { scale: 0.98 }} 
                         onClick={async () => {
-                            if (user?.uid) {
-                                await saveItineraryToFirestore(user.uid, { destId, destName, form: { ...form, customPlans }, generatedData: generatedData || null });
+                            if (saveInFlightRef.current || isSaving || isSaved) return;
+                            if (!user?.uid) {
+                                alert('Please sign in to archive your journey to your Passport.');
+                                return;
                             }
-                            setIsSaved(true);
-                            alert('📍 Itinerary successfully archived to your Passport!');
+                            saveInFlightRef.current = true;
+                            setIsSaving(true);
+                            setSaveError(false);
+                            try {
+                                await saveItineraryToFirestore(user.uid, {
+                                    id: stableItineraryId,
+                                    uuid: stableItineraryId,
+                                    destId,
+                                    destName,
+                                    form: { ...form, customPlans, _uuid: stableItineraryId, uuid: stableItineraryId },
+                                    generatedData: generatedData || null,
+                                });
+                                setIsSaved(true);
+                            } catch (err) {
+                                console.error('[DayViewPage] Archive failed:', err);
+                                setSaveError(true);
+                            } finally {
+                                setIsSaving(false);
+                                saveInFlightRef.current = false;
+                            }
                         }} 
-                        disabled={isSaved}
-                        className={`px-3.5 py-1.5 rounded-full text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-1.5 transition-colors ${
-                            isSaved ? 'bg-brand-primary/10 text-brand-primary cursor-default' : 'bg-naviigo-brown text-white hover:bg-naviigo-brown/90'
+                        disabled={isSaving || isSaved}
+                        className={`px-3.5 py-1.5 rounded-full text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all ${
+                            isSaved
+                                ? 'bg-brand-primary/10 text-brand-primary cursor-default border border-brand-primary/20'
+                                : isSaving
+                                ? 'bg-naviigo-brown/70 text-white/80 cursor-wait'
+                                : saveError
+                                ? 'bg-red-600 text-white hover:bg-red-700'
+                                : 'bg-naviigo-brown text-white hover:bg-naviigo-brown/90 shadow-sm'
                         }`}
                     >
-                        {isSaved ? '✓ Saved' : 'Archive'}
+                        {isSaving ? (
+                            <>
+                                <span className="w-3 h-3 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                                <span>SAVING…</span>
+                            </>
+                        ) : isSaved ? (
+                            <span>✓ SAVED</span>
+                        ) : saveError ? (
+                            <span>RETRY ARCHIVE</span>
+                        ) : (
+                            <span>ARCHIVE</span>
+                        )}
                     </motion.button>
                 </div>
             </div>

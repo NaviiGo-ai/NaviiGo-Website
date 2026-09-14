@@ -173,7 +173,7 @@ export default function LoadingScreen({ form, uuid, onDone }: LoadingScreenProps
               form,
               generatedData: result.itinerary,
               destName,
-              userId: (form.userId as string) ?? user.uid,
+              userId: (form?.userId as string) ?? user?.uid ?? null,
               isPublic: true,
             }).catch((fsErr) => {
               console.warn('[LoadingScreen] Firestore save warning:', fsErr);

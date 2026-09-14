@@ -237,7 +237,7 @@ function DayViewContent() {
 
     return (
         <DayViewPage
-            form={{ ...form, _uuid: uuid, _initialDay: Math.max(0, dayNumber - 1) }}
+            form={{ ...form, _uuid: uuid, uuid, _initialDay: Math.max(0, dayNumber - 1) }}
             generatedData={generatedData}
             onBack={handleBack}
         />

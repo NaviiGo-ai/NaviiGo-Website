@@ -172,7 +172,7 @@ function ItineraryUUIDContent() {
             {phase === 'result' && (
                 <motion.div key="result" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                     <ResultPage
-                        form={form}
+                        form={{ ...form, uuid, _uuid: uuid }}
                         generatedData={generatedData}
                         shareId={uuid}
                         onDayView={handleDayView}

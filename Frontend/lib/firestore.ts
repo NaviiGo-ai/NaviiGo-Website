@@ -101,55 +101,132 @@ export async function updateUserPreferences(uid: string, prefs: Partial<UserPref
 // SAVED ITINERARIES — users/{uid}/itineraries/{itineraryId}
 // ═══════════════════════════════════════════════════════════════════════════════
 
+// Concurrency guard: prevents race conditions when rapid clicks or parallel components trigger save
+const inFlightSaves = new Map<string, Promise<string>>();
+
 export async function saveItineraryToFirestore(uid: string, data: {
     destId: string;
     destName: string;
     form: Record<string, unknown>;
     generatedData: Record<string, unknown> | null;
+    id?: string;
+    uuid?: string;
 }): Promise<string> {
-    try {
-        const colRef = collection(db, 'users', uid, 'itineraries');
+    if (!db || !uid) return 'temp-local-id';
 
-        // Check Firebase for an existing itinerary with the same destId + purpose + startDate
-        const allSnap = await getDocs(colRef);
-        const startDate = (data.form?.startDate as string) || '';
-        const purpose = (data.form?.purpose as string) || '';
-        
-        let existingDocId: string | null = null;
-        allSnap.forEach((d) => {
-            const existing = d.data();
-            const existingForm = existing.form as Record<string, unknown> | undefined;
-            if (
-                existing.destId === data.destId &&
-                (existingForm?.purpose || '') === purpose &&
-                (existingForm?.startDate || '') === startDate
-            ) {
-                existingDocId = d.id;
+    // 1. Resolve canonical stable ID: prefer explicit id/uuid or form._uuid/uuid
+    let stableId = (
+        data.id ||
+        data.uuid ||
+        (data.form?.uuid as string) ||
+        (data.form?._uuid as string) ||
+        (data.form?.id as string) ||
+        (data.generatedData?.id as string) ||
+        (data.generatedData?.uuid as string)
+    )?.trim();
+
+    const lockKey = `${uid}:${stableId || (data.destId + '_' + (data.form?.startDate || ''))}`;
+    if (inFlightSaves.has(lockKey)) {
+        return inFlightSaves.get(lockKey)!;
+    }
+
+    const savePromise = (async (): Promise<string> => {
+        try {
+            const colRef = collection(db, 'users', uid, 'itineraries');
+
+            // If no stableId was provided, check if a document already exists for this exact destination + startDate + purpose
+            if (!stableId) {
+                const allSnap = await getDocs(colRef);
+                const startDate = (data.form?.startDate as string) || '';
+                const purpose = (data.form?.purpose as string) || '';
+                allSnap.forEach((d) => {
+                    const existing = d.data();
+                    const existingForm = existing.form as Record<string, unknown> | undefined;
+                    if (
+                        existing.destId === data.destId &&
+                        (existingForm?.purpose || '') === purpose &&
+                        (existingForm?.startDate || '') === startDate
+                    ) {
+                        stableId = d.id;
+                    }
+                });
             }
-        });
 
-        if (existingDocId) {
-            // Update existing doc — don't duplicate, don't re-increment totalTrips
-            const ref = doc(db, 'users', uid, 'itineraries', existingDocId);
-            await setDoc(ref, {
-                ...data,
-                updatedAt: serverTimestamp(),
-            }, { merge: true });
-            return existingDocId;
-        } else {
-            // First save — new unique ID via addDoc, increment trip count
-            const newRef = await addDoc(colRef, {
-                ...data,
-                isActive: false,
-                createdAt: serverTimestamp(),
-                updatedAt: serverTimestamp(),
-            });
-            await updateDoc(doc(db, 'users', uid), { totalTrips: increment(1) });
-            return newRef.id;
+            // If still no stableId, generate one stable UUID once and lock it into the form state
+            if (!stableId) {
+                stableId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `trip_${Date.now()}`;
+            }
+
+            const ref = doc(db, 'users', uid, 'itineraries', stableId);
+            const docSnap = await getDoc(ref);
+            const exists = docSnap.exists();
+
+            const now = serverTimestamp();
+            const payload: any = {
+                id: stableId,
+                uuid: stableId,
+                destId: data.destId || (data.form?.destination as string) || 'india',
+                destName: data.destName || (data.form?.destName as string) || 'India Expedition',
+                form: {
+                    ...data.form,
+                    uuid: stableId,
+                    _uuid: stableId,
+                },
+                generatedData: data.generatedData || null,
+                updatedAt: now,
+                isActive: data.form?.isActive ?? (exists ? (docSnap.data()?.isActive ?? false) : false),
+            };
+
+            // Preserve createdAt: set on first creation only, never overwrite on subsequent saves
+            if (!exists) {
+                payload.createdAt = now;
+            }
+
+            // IDEMPOTENT UPSERT: target the single stable doc ID via setDoc merge
+            await setDoc(ref, payload, { merge: true });
+
+            // Increment totalTrips ONCE on initial creation
+            if (!exists) {
+                try {
+                    await updateDoc(doc(db, 'users', uid), {
+                        totalTrips: increment(1),
+                        lastUpdated: now,
+                    });
+                } catch {
+                    // Non-fatal if user doc doesn't have counter
+                }
+            }
+
+            // Mirror to root itineraries collection for public access & share links
+            try {
+                const rootRef = doc(db, 'itineraries', stableId);
+                const rootSnap = await getDoc(rootRef);
+                const rootExists = rootSnap.exists();
+                const rootData: any = {
+                    ...payload,
+                    userId: uid,
+                    isPublic: true,
+                };
+                if (!rootExists) {
+                    rootData.createdAt = now;
+                }
+                await setDoc(rootRef, rootData, { merge: true });
+            } catch (mirrorErr) {
+                console.warn('[Firestore] Mirroring to root itineraries failed (non-fatal):', mirrorErr);
+            }
+
+            return stableId;
+        } catch (err) {
+            console.warn('[Firestore] saveItineraryToFirestore error:', err);
+            return stableId || 'temp-local-id';
         }
-    } catch (err) {
-        console.warn('[Firestore] saveItineraryToFirestore error:', err);
-        return 'temp-local-id';
+    })();
+
+    inFlightSaves.set(lockKey, savePromise);
+    try {
+        return await savePromise;
+    } finally {
+        inFlightSaves.delete(lockKey);
     }
 }
 
@@ -157,14 +234,14 @@ export async function saveItineraryToFirestore(uid: string, data: {
 export async function getUserItineraries(uid: string): Promise<SavedItineraryDoc[]> {
     if (!db || !uid) return [];
     try {
-        const resultsMap = new Map<string, SavedItineraryDoc>();
+        const rawMap = new Map<string, SavedItineraryDoc>();
 
         // 1. Fetch from user's personal itineraries subcollection
         try {
             const userItinSnap = await getDocs(collection(db, 'users', uid, 'itineraries'));
             userItinSnap.forEach(d => {
                 const data = d.data();
-                resultsMap.set(d.id, {
+                rawMap.set(d.id, {
                     id: d.id,
                     destId: data.destId || (data.form?.destination as string) || 'india',
                     destName: data.destName || (data.form?.destName as string) || 'India Expedition',
@@ -179,7 +256,7 @@ export async function getUserItineraries(uid: string): Promise<SavedItineraryDoc
             console.warn('[Firestore] getUserItineraries user subcollection read failed:', e);
         }
 
-        // 2. Also query root itineraries collection where userId == uid (no composite index needed)
+        // 2. Also query root itineraries collection where userId == uid
         try {
             const q = query(
                 collection(db, 'itineraries'),
@@ -188,8 +265,8 @@ export async function getUserItineraries(uid: string): Promise<SavedItineraryDoc
             const rootSnap = await getDocs(q);
             rootSnap.forEach(d => {
                 const data = d.data();
-                if (!resultsMap.has(d.id)) {
-                    resultsMap.set(d.id, {
+                if (!rawMap.has(d.id)) {
+                    rawMap.set(d.id, {
                         id: d.id,
                         destId: data.destId || (data.form?.destination as string) || 'india',
                         destName: data.destName || (data.form?.destName as string) || 'India Expedition',
@@ -205,8 +282,89 @@ export async function getUserItineraries(uid: string): Promise<SavedItineraryDoc
             console.warn('[Firestore] getUserItineraries root collection query failed:', e);
         }
 
-        const items = Array.from(resultsMap.values());
-        // Sort in JavaScript by creation/update timestamp descending
+        const rawList = Array.from(rawMap.values());
+
+        // 3. Detect and reconcile legacy duplicate records for this user:
+        // A logical trip matches if:
+        // - They share the exact same UUID (e.g. form.uuid or form._uuid matches doc.id)
+        // - OR they have the exact same destId, destination name, start date, and days count
+        const canonicalMap = new Map<string, SavedItineraryDoc>();
+        const redundantIdsToDelete: string[] = [];
+
+        for (const item of rawList) {
+            const formUuid = ((item.form?.uuid || item.form?._uuid) as string | undefined)?.trim();
+            const isStandardUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(item.id);
+
+            const destNorm = (item.destId || '').toLowerCase().trim();
+            const startDate = ((item.form?.startDate as string) || '').trim();
+            const days = String(item.form?.days || '');
+            const sig = `${destNorm}__${startDate}__${days}`;
+
+            let matchedKey: string | null = null;
+            for (const [key, existing] of canonicalMap.entries()) {
+                const existingFormUuid = ((existing.form?.uuid || existing.form?._uuid) as string | undefined)?.trim();
+                const existingDestNorm = (existing.destId || '').toLowerCase().trim();
+                const existingStartDate = ((existing.form?.startDate as string) || '').trim();
+                const existingDays = String(existing.form?.days || '');
+                const existingSig = `${existingDestNorm}__${existingStartDate}__${existingDays}`;
+
+                const uuidMatch = (formUuid && formUuid === existingFormUuid) ||
+                                  (formUuid && formUuid === existing.id) ||
+                                  (existingFormUuid && existingFormUuid === item.id);
+
+                const sigMatch = sig === existingSig && destNorm.length > 0;
+
+                if (uuidMatch || sigMatch) {
+                    matchedKey = key;
+                    break;
+                }
+            }
+
+            if (!matchedKey) {
+                canonicalMap.set(item.id, item);
+            } else {
+                const existing = canonicalMap.get(matchedKey)!;
+                const existingIsUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(existing.id);
+
+                const existingPlanCount = (existing.generatedData as any)?.dayPlans?.length || 0;
+                const itemPlanCount = (item.generatedData as any)?.dayPlans?.length || 0;
+
+                let keepExisting = true;
+                if (!existingIsUUID && isStandardUUID) {
+                    keepExisting = false;
+                } else if (existingIsUUID && !isStandardUUID) {
+                    keepExisting = true;
+                } else if (itemPlanCount > existingPlanCount) {
+                    keepExisting = false;
+                } else {
+                    const timeExisting = existing.updatedAt?.toMillis?.() || existing.createdAt?.toMillis?.() || 0;
+                    const timeItem = item.updatedAt?.toMillis?.() || item.createdAt?.toMillis?.() || 0;
+                    if (timeItem > timeExisting) {
+                        keepExisting = false;
+                    }
+                }
+
+                if (keepExisting) {
+                    redundantIdsToDelete.push(item.id);
+                } else {
+                    canonicalMap.delete(matchedKey);
+                    canonicalMap.set(item.id, item);
+                    redundantIdsToDelete.push(existing.id);
+                }
+            }
+        }
+
+        // 4. Safely clean redundant legacy duplicate documents from Firestore
+        if (redundantIdsToDelete.length > 0) {
+            for (const redundantId of redundantIdsToDelete) {
+                deleteDoc(doc(db, 'users', uid, 'itineraries', redundantId)).catch(err => {
+                    console.warn(`[Firestore] Failed to clean legacy duplicate ${redundantId}:`, err);
+                });
+            }
+        }
+
+        const items = Array.from(canonicalMap.values());
+        // Sort deterministically by updated/created timestamp descending
         items.sort((a: any, b: any) => {
             const timeA = a.updatedAt?.toMillis?.() || a.createdAt?.toMillis?.() || (a.createdAt?.seconds ? a.createdAt.seconds * 1000 : 0);
             const timeB = b.updatedAt?.toMillis?.() || b.createdAt?.toMillis?.() || (b.createdAt?.seconds ? b.createdAt.seconds * 1000 : 0);
@@ -221,22 +379,31 @@ export async function getUserItineraries(uid: string): Promise<SavedItineraryDoc
 }
 
 export async function setActiveItinerary(uid: string, itineraryId: string) {
-    // Deactivate all others first (in practice, query + batch)
-    const all = await getUserItineraries(uid);
-    for (const itin of all) {
-        if (itin.isActive) {
-            await updateDoc(doc(db, 'users', uid, 'itineraries', itin.id), { isActive: false });
+    try {
+        const all = await getUserItineraries(uid);
+        for (const itin of all) {
+            if (itin.isActive && itin.id !== itineraryId) {
+                await updateDoc(doc(db, 'users', uid, 'itineraries', itin.id), { isActive: false }).catch(() => {});
+            }
         }
+        await setDoc(doc(db, 'users', uid, 'itineraries', itineraryId), {
+            isActive: true,
+            status: 'active',
+            startedAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+        }, { merge: true });
+    } catch (err) {
+        console.warn('[Firestore] setActiveItinerary error:', err);
     }
-    // Activate this one
-    await updateDoc(doc(db, 'users', uid, 'itineraries', itineraryId), {
-        isActive: true,
-        updatedAt: serverTimestamp(),
-    });
 }
 
 export async function deleteItineraryFromFirestore(uid: string, itineraryId: string) {
-    await deleteDoc(doc(db, 'users', uid, 'itineraries', itineraryId));
+    try {
+        await deleteDoc(doc(db, 'users', uid, 'itineraries', itineraryId));
+        await deleteDoc(doc(db, 'itineraries', itineraryId)).catch(() => {});
+    } catch (err) {
+        console.warn('[Firestore] deleteItineraryFromFirestore error:', err);
+    }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -410,46 +577,46 @@ export async function saveItineraryByUUID(uuid: string, data: {
 }) {
     if (!db || !uuid) return;
     try {
-        const ref = doc(db, 'itineraries', uuid);
-        const now = new Date();
-        const expiresAt = data.userId
-            ? null
-            : new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+        const uid = data.userId || (data.form?.userId as string);
+        if (uid) {
+            // Unified single persistence path for authenticated users
+            await saveItineraryToFirestore(uid, {
+                id: uuid,
+                uuid,
+                destId: (data.form?.destination as string) || (data.form?.destId as string) || 'india',
+                destName: data.destName,
+                form: {
+                    ...data.form,
+                    uuid,
+                    _uuid: uuid,
+                },
+                generatedData: data.generatedData,
+            });
+            return;
+        }
 
-        const docData = {
+        // Unauthenticated guest user: persist only to root itineraries/{uuid}
+        const ref = doc(db, 'itineraries', uuid);
+        const snap = await getDoc(ref);
+        const exists = snap.exists();
+
+        const now = new Date();
+        const expiresAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+        const docData: any = {
             ...data,
             uuid,
+            id: uuid,
             isPublic: data.isPublic ?? true,
-            expiresAt: expiresAt ? Timestamp.fromDate(expiresAt) : null,
+            expiresAt: Timestamp.fromDate(expiresAt),
             updatedAt: serverTimestamp(),
-            createdAt: serverTimestamp(),
         };
 
-        // 1. Save to root itineraries collection
-        await setDoc(ref, docData, { merge: true });
-
-        // 2. If authenticated, mirror to users/{userId}/itineraries/{uuid} for Passport instant indexing
-        if (data.userId) {
-            try {
-                const userRef = doc(db, 'users', data.userId, 'itineraries', uuid);
-                await setDoc(userRef, {
-                    ...docData,
-                    id: uuid,
-                    destId: (data.form?.destination as string) || 'india',
-                    destName: data.destName,
-                    isActive: false,
-                }, { merge: true });
-
-                // Update totalTrips count safely
-                const userProfileRef = doc(db, 'users', data.userId);
-                await updateDoc(userProfileRef, {
-                    lastUpdated: serverTimestamp(),
-                    totalTrips: increment(1),
-                }).catch(() => {});
-            } catch (userSaveErr) {
-                console.warn('[Firestore] Mirroring to users collection failed (non-fatal):', userSaveErr);
-            }
+        if (!exists) {
+            docData.createdAt = serverTimestamp();
         }
+
+        await setDoc(ref, docData, { merge: true });
     } catch (err) {
         console.warn('[Firestore] saveItineraryByUUID error (non-fatal):', err);
     }

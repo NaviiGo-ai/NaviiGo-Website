@@ -245,6 +245,7 @@ export default function SetupWizard({ onDone }: SetupWizardProps) {
         form: payload,
         generatedData: null,
         destName,
+        userId: user?.uid || null,
       });
 
       if (onDone) onDone({ ...payload, uuid });

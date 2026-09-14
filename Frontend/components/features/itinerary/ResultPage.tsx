@@ -50,6 +50,9 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
     const { registerItinerary, unregisterItinerary, applyAction, isEditPanelOpen, openEditPanel, closeEditPanel,
         editMessages, sendEditMessage, lastAction, clearLastAction } = useAI();
     const [isSaved, setIsSaved] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+    const [saveError, setSaveError] = useState(false);
+    const saveInFlightRef = useRef(false);
     const [collaborators, setCollaborators] = useState(1);
     const [isSharing, setIsSharing] = useState(false);
     const [hiddenGems, setHiddenGems] = useState<any[]>([]);
@@ -64,6 +67,7 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
 
     const destId = (form.destination as string) || (form.destId as string) || '';
     const destName = (form.destName as string) || (form.destination as string) || 'India Expedition';
+    const stableTripId = (shareId || form._uuid || form.uuid || form.id || destId) as string;
     const purpose = form.purpose as string, group = form.group as string;
     const displayMonth = form.startDate ? new Date(form.startDate as string).toLocaleString('en-US', { month: 'short' }) : 'Jan';
     const staticData = destId ? DEST_DATA[destId.toLowerCase()] : undefined;
@@ -135,9 +139,11 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
             // Save updated itinerary to Firestore so changes persist
             if (user?.uid) {
                 saveItineraryToFirestore(user.uid, {
+                    id: stableTripId,
+                    uuid: stableTripId,
                     destId: (form.destId as string) || destId || 'unknown',
                     destName: destInfo?.name || destName || 'Unknown',
-                    form,
+                    form: { ...form, _uuid: stableTripId, uuid: stableTripId },
                     generatedData: newData,
                 }).catch(console.error);
             }
@@ -149,7 +155,7 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
         return () => {
             unregisterItinerary();
         };
-    }, [data, registerItinerary, unregisterItinerary, shareId, user, form, destId, destName, destInfo]);
+    }, [data, registerItinerary, unregisterItinerary, shareId, user, form, destId, destName, destInfo, stableTripId]);
 
     // Live Sync Listener
     useEffect(() => {
@@ -179,9 +185,11 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
         if (!user?.uid || autoSaveRef.current) return;
         autoSaveRef.current = true;
         saveItineraryToFirestore(user.uid, {
-            destId,
-            destName,
-            form,
+            id: stableTripId,
+            uuid: stableTripId,
+            destId: (form.destId as string) || destId || 'india',
+            destName: destInfo?.name || destName || 'India Expedition',
+            form: { ...form, _uuid: stableTripId, uuid: stableTripId },
             generatedData: generatedData || null,
         }).then(() => {
             setIsSaved(true);
@@ -190,7 +198,7 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
             console.error('[Itinerary] Auto-save failed:', err);
             autoSaveRef.current = false;
         });
-    }, [user?.uid, destId, destName, form, generatedData]);
+    }, [user?.uid, destId, destName, form, generatedData, stableTripId, destInfo]);
 
 
     useEffect(() => {
@@ -309,6 +317,34 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
         applyAction({ type: 'surpriseActivity', payload: { dayIndex } });
     }, [data, applyAction]);
 
+    const handleSaveItinerary = useCallback(async () => {
+        if (saveInFlightRef.current || isSaving || isSaved) return;
+        if (!user?.uid) {
+            signInWithGoogle();
+            return;
+        }
+        saveInFlightRef.current = true;
+        setIsSaving(true);
+        setSaveError(false);
+        try {
+            await saveItineraryToFirestore(user.uid, {
+                id: stableTripId,
+                uuid: stableTripId,
+                destId: (form.destId as string) || destId || 'india',
+                destName: destInfo?.name || destName || 'India Expedition',
+                form: { ...form, _uuid: stableTripId, uuid: stableTripId },
+                generatedData: localData || generatedData || null,
+            });
+            setIsSaved(true);
+        } catch (err) {
+            console.error('[ResultPage] Save failed:', err);
+            setSaveError(true);
+        } finally {
+            setIsSaving(false);
+            saveInFlightRef.current = false;
+        }
+    }, [user, isSaving, isSaved, stableTripId, form, destId, destInfo, destName, localData, generatedData, signInWithGoogle]);
+
     return (
         <div className="min-h-screen bg-paper-warm text-naviigo-brown pt-16 sm:pt-20 font-sans selection:bg-brand-primary selection:text-white">
             {/* Top bar */}
@@ -328,15 +364,31 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                         🎲 Surprise Me
                     </button>
                     <ShareDropdown onCopyLink={handleShare} destName={destName} isSharing={isSharing} collaborators={collaborators} planData={data} />
-                    <button onClick={async () => {
-                        if (user?.uid) {
-                            await saveItineraryToFirestore(user.uid, { destId, destName, form, generatedData: generatedData || null });
-                        }
-                        setIsSaved(true);
-                        alert('📍 Itinerary successfully saved to your Passport!');
-                    }} disabled={isSaved}
-                        className={`flex px-4 py-1.5 rounded-full text-xs font-semibold items-center gap-1.5 transition-colors ${isSaved ? 'bg-brand-primary/10 text-brand-primary cursor-default' : 'bg-naviigo-brown text-white hover:bg-naviigo-brown/90'}`}>
-                        {isSaved ? '✓ Saved' : '💾 Save'}
+                    <button
+                        onClick={handleSaveItinerary}
+                        disabled={isSaving || isSaved}
+                        className={`flex px-4 py-1.5 rounded-full text-xs font-semibold items-center gap-1.5 transition-all ${
+                            isSaved
+                                ? 'bg-brand-primary/10 text-brand-primary cursor-default border border-brand-primary/20'
+                                : isSaving
+                                ? 'bg-naviigo-brown/70 text-white/80 cursor-wait'
+                                : saveError
+                                ? 'bg-red-600 text-white hover:bg-red-700'
+                                : 'bg-naviigo-brown text-white hover:bg-naviigo-brown/90 shadow-sm'
+                        }`}
+                    >
+                        {isSaving ? (
+                            <>
+                                <span className="w-3 h-3 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                                <span>SAVING…</span>
+                            </>
+                        ) : isSaved ? (
+                            <span>✓ SAVED</span>
+                        ) : saveError ? (
+                            <span>RETRY SAVE</span>
+                        ) : (
+                            <span>💾 SAVE</span>
+                        )}
                     </button>
                 </div>
             </div>
@@ -413,18 +465,30 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                                     </button>
                                 ) : (
                                     <button
-                                        onClick={async () => {
-                                            await saveItineraryToFirestore(user.uid, { destId, destName, form, generatedData: generatedData || null });
-                                            setIsSaved(true);
-                                        }}
-                                        disabled={isSaved}
-                                        className={`px-6 py-4 border-2 font-mono text-xs font-bold uppercase tracking-wider rounded-full transition-colors ${
+                                        onClick={handleSaveItinerary}
+                                        disabled={isSaving || isSaved}
+                                        className={`px-6 py-4 border-2 font-mono text-xs font-bold uppercase tracking-wider rounded-full transition-all flex items-center gap-2 ${
                                             isSaved
-                                                ? 'border-brand-primary text-brand-primary bg-brand-primary/10'
+                                                ? 'border-brand-primary text-brand-primary bg-brand-primary/10 cursor-default'
+                                                : isSaving
+                                                ? 'border-brand-primary/40 text-naviigo-brown/60 cursor-wait'
+                                                : saveError
+                                                ? 'border-red-500 text-red-600 hover:bg-red-50'
                                                 : 'border-naviigo-brown/20 hover:border-brand-primary text-naviigo-brown hover:text-brand-primary'
                                         }`}
                                     >
-                                        {isSaved ? '✓ Saved in Passport' : 'Save to Passport'}
+                                        {isSaving ? (
+                                            <>
+                                                <span className="w-3 h-3 border-2 border-brand-primary border-t-transparent rounded-full animate-spin" />
+                                                <span>SAVING ROADBOOK…</span>
+                                            </>
+                                        ) : isSaved ? (
+                                            <span>✓ SAVED IN PASSPORT</span>
+                                        ) : saveError ? (
+                                            <span>RETRY PASSPORT SAVE</span>
+                                        ) : (
+                                            <span>SAVE TO PASSPORT</span>
+                                        )}
                                     </button>
                                 )}
                             </div>

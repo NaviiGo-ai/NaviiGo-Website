@@ -189,7 +189,7 @@ export async function POST(req: NextRequest) {
                     form: safeBody as any,
                     generatedData: data.itinerary,
                     destName: safeBody.destName,
-                    userId: data.userId ?? null,
+                    userId: (safeBody as any).userId ?? data.userId ?? null,
                     isPublic: true,
                 });
                 console.log(`[Itinerary Proxy] Saved to itineraries/${uuid}`);
