@@ -40,7 +40,7 @@ export default function ItineraryMap({
     const polylineRef = useRef<any>(null);
     const userMarkerRef = useRef<any>(null);
     const [leafletLoaded, setLeafletLoaded] = useState(false);
-    
+
     // Store latest callbacks to prevent stale closures
     const onRouteCalculatedRef = useRef(onRouteCalculated);
     useEffect(() => {
@@ -52,36 +52,34 @@ export default function ItineraryMap({
         onPinClickRef.current = onPinClick;
     }, [onPinClick]);
 
-    // Load Leaflet CSS + JS from CDN
+    // Load Leaflet Core JS from CDN (CSS is preloaded in layout.tsx)
     useEffect(() => {
         if (typeof window === 'undefined') return;
-        if ((window as any).L && (window as any).L.Routing) { setLeafletLoaded(true); return; }
+        if ((window as any).L) {
+            setLeafletLoaded(true);
+            return;
+        }
 
+        // Fallback stylesheet ensure
         if (!document.querySelector('link[href*="leaflet@1.9.4"]')) {
             const link = document.createElement('link');
             link.rel = 'stylesheet';
             link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
             document.head.appendChild(link);
-            const link2 = document.createElement('link');
-            link2.rel = 'stylesheet';
-            link2.href = 'https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css';
-            document.head.appendChild(link2);
         }
 
         if (!document.querySelector('script[src*="leaflet@1.9.4"]')) {
             const script = document.createElement('script');
             script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
-            script.onload = () => {
-                const script2 = document.createElement('script');
-                script2.src = 'https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.js';
-                script2.onload = () => setLeafletLoaded(true);
-                document.head.appendChild(script2);
-            };
+            script.onload = () => setLeafletLoaded(true);
             document.head.appendChild(script);
         } else {
             const check = setInterval(() => {
-                if ((window as any).L && (window as any).L.Routing) { clearInterval(check); setLeafletLoaded(true); }
-            }, 100);
+                if ((window as any).L) {
+                    clearInterval(check);
+                    setLeafletLoaded(true);
+                }
+            }, 50);
             return () => clearInterval(check);
         }
     }, []);
@@ -92,7 +90,10 @@ export default function ItineraryMap({
         const L = (window as any).L;
         if (!L) return;
 
-        if (mapRef.current) { mapRef.current.remove(); mapRef.current = null; }
+        if (mapRef.current) {
+            mapRef.current.remove();
+            mapRef.current = null;
+        }
 
         const defaultCenter = center ?? (pins.length > 0 ? { lat: pins[0].lat, lng: pins[0].lng } : { lat: 20.5937, lng: 78.9629 });
         const map = L.map(containerRef.current, {
@@ -102,18 +103,50 @@ export default function ItineraryMap({
             attributionControl: true,
         });
 
-        // OpenStreetMap tile provider — ultra-reliable, fast
-        const tileUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+        // Primary: CARTO Voyager (Powered by OpenStreetMap data, high CDN availability, warm aesthetic)
+        const primaryTileUrl = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+        const fallbackTileUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
 
-        L.tileLayer(tileUrl, {
+        const tileLayer = L.tileLayer(primaryTileUrl, {
+            subdomains: 'abcd',
             maxZoom: 19,
-            attribution: '© OpenStreetMap contributors',
+            attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a> contributors, © <a href="https://carto.com/attributions" target="_blank" rel="noreferrer">CARTO</a>',
         }).addTo(map);
+
+        tileLayer.on('tileerror', () => {
+            // Fall back to OSM standard tiles if CARTO has any localized network issues
+            tileLayer.setUrl(fallbackTileUrl);
+        });
 
         L.control.zoom({ position: 'bottomright' }).addTo(map);
         mapRef.current = map;
 
+        // Auto invalidate size on mount & container resize to guarantee 0 grey tile rendering
+        const invalidate = () => {
+            if (mapRef.current) {
+                mapRef.current.invalidateSize();
+            }
+        };
+
+        const t1 = setTimeout(invalidate, 100);
+        const t2 = setTimeout(invalidate, 300);
+        const t3 = setTimeout(invalidate, 600);
+        const t4 = setTimeout(invalidate, 1200);
+
+        let resizeObserver: ResizeObserver | null = null;
+        if (typeof ResizeObserver !== 'undefined' && containerRef.current) {
+            resizeObserver = new ResizeObserver(() => {
+                invalidate();
+            });
+            resizeObserver.observe(containerRef.current);
+        }
+
         return () => {
+            clearTimeout(t1);
+            clearTimeout(t2);
+            clearTimeout(t3);
+            clearTimeout(t4);
+            if (resizeObserver) resizeObserver.disconnect();
             if (mapRef.current) {
                 mapRef.current.remove();
                 mapRef.current = null;
@@ -130,8 +163,7 @@ export default function ItineraryMap({
         markersRef.current.forEach((m: any) => map.removeLayer(m));
         markersRef.current = [];
         if (polylineRef.current) {
-            try { map.removeControl(polylineRef.current); } catch(e) {}
-            try { map.removeLayer(polylineRef.current); } catch(e) {}
+            try { map.removeLayer(polylineRef.current); } catch {}
             polylineRef.current = null;
         }
 
@@ -185,84 +217,56 @@ export default function ItineraryMap({
             coords.push([lat, lng]);
         });
 
+        // Server-side route calculation proxy — avoids OSRM demo server rate-limits and CORS warnings
         if (showRoute && coords.length > 1) {
-            polylineRef.current = L.Routing.control({
-                waypoints: coords.map(([lat, lng]: [number, number]) => L.latLng(lat, lng)),
-                lineOptions: {
-                    styles: [{ color: '#EC6426', weight: 3, opacity: 0.85, dashArray: '6, 6' }]
-                },
-                createMarker: function () { return null; },
-                show: false,
-                addWaypoints: false,
-                routeWhileDragging: false,
-                fitSelectedRoutes: true,
-                showAlternatives: false,
-            }).addTo(map);
+            const coordsParam = coords.map(([lat, lng]) => `${lng},${lat}`).join(';');
+            fetch(`/api/transport/route-geometry?coords=${encodeURIComponent(coordsParam)}`)
+                .then((res) => res.json())
+                .then((data) => {
+                    if (!mapRef.current) return;
+                    const pathCoords = data.coordinates || coords;
+                    const polyline = L.polyline(pathCoords, {
+                        color: '#EC6426',
+                        weight: 3.5,
+                        opacity: 0.85,
+                        dashArray: '6, 6',
+                    }).addTo(map);
+                    polylineRef.current = polyline;
 
-            const hideRoutingUi = () => {
-                const routeContainers = document.querySelectorAll('.leaflet-routing-container');
-                routeContainers.forEach(c => (c as any).style.display = 'none');
-            };
-            hideRoutingUi();
-            setTimeout(hideRoutingUi, 500);
-
-            const fallbackToStraightLines = () => {
-                if (polylineRef.current) {
-                    try { map.removeControl(polylineRef.current); } catch(err) {}
-                    try { map.removeLayer(polylineRef.current); } catch(err) {}
-                }
-                const latlngs = coords.map(([lat, lng]: [number, number]) => L.latLng(lat, lng));
-                polylineRef.current = L.polyline(latlngs, {
-                    color: '#EC6426', weight: 3, opacity: 0.85, dashArray: '6, 6'
-                }).addTo(map);
-                if (coords.length > 1) {
-                    map.fitBounds(polylineRef.current.getBounds(), { padding: [40, 40], animate: true, duration: 0.8 });
-                }
-                
-                let totalDist = 0;
-                for(let i = 0; i < latlngs.length - 1; i++) {
-                    totalDist += latlngs[i].distanceTo(latlngs[i+1]);
-                }
-                if (typeof onRouteCalculatedRef.current === 'function') {
-                    onRouteCalculatedRef.current([{
-                        distance: totalDist > 1000 ? (totalDist / 1000).toFixed(1) + ' km (est)' : Math.round(totalDist) + ' m (est)',
-                        time: 'Off-road'
-                    }]);
-                }
-            };
-
-            polylineRef.current.on('routesfound', function (e: any) {
-                const routes = e.routes;
-                if (routes && routes.length > 0) {
-                    if (typeof onRouteCalculatedRef.current === 'function') {
-                        const summary = routes[0].summary;
-                        const t = summary.totalTime;
-                        const d = summary.totalDistance;
+                    if (typeof onRouteCalculatedRef.current === 'function' && data.distance) {
                         onRouteCalculatedRef.current([{
-                            distance: d > 1000 ? (d / 1000).toFixed(1) + ' km' : Math.round(d) + ' m',
-                            time: t > 3600 ? Math.floor(t / 3600) + ' hr ' + Math.round((t % 3600) / 60) + ' min' : Math.round(t / 60) + ' min'
+                            distance: data.distance,
+                            time: data.time || 'Calculated',
                         }]);
                     }
-                } else {
-                    fallbackToStraightLines();
-                }
-            });
 
-            polylineRef.current.on('routingerror', function () {
-                fallbackToStraightLines();
-            });
-        }
-
-        if (coords.length > 0) {
+                    map.fitBounds(polyline.getBounds(), { padding: [45, 45], maxZoom: 14, animate: true, duration: 0.8 });
+                })
+                .catch(() => {
+                    if (!mapRef.current) return;
+                    const polyline = L.polyline(coords, {
+                        color: '#EC6426',
+                        weight: 3.5,
+                        opacity: 0.85,
+                        dashArray: '6, 6',
+                    }).addTo(map);
+                    polylineRef.current = polyline;
+                    map.fitBounds(polyline.getBounds(), { padding: [45, 45], maxZoom: 14, animate: true, duration: 0.8 });
+                });
+        } else if (coords.length > 0) {
             const bounds = L.latLngBounds(coords.map(([lat, lng]: [number, number]) => [lat, lng]));
-            map.fitBounds(bounds, { padding: [40, 40], maxZoom: 14, animate: true, duration: 0.8 });
+            map.fitBounds(bounds, { padding: [45, 45], maxZoom: 14, animate: true, duration: 0.8 });
         }
+
+        // Additional invalidateSize whenever pins change
+        setTimeout(() => {
+            if (mapRef.current) mapRef.current.invalidateSize();
+        }, 200);
     }, [pins, leafletLoaded, showRoute]);
 
     // Smooth activePin synchronization: Highlight & subtle pan without reloading map
     useEffect(() => {
         if (!mapRef.current || !leafletLoaded) return;
-        const L = (window as any).L;
         const map = mapRef.current;
 
         markersRef.current.forEach((marker: any, idx: number) => {

@@ -61,7 +61,7 @@ const nextConfig = {
           "style-src 'self' 'unsafe-inline' fonts.googleapis.com accounts.google.com unpkg.com",
           "font-src 'self' fonts.gstatic.com",
           "connect-src 'self' wss: ws: *.googleapis.com *.google.com apis.google.com *.firebaseio.com *.firebaseapp.com identitytoolkit.googleapis.com securetoken.googleapis.com api.pinecone.io *.open-meteo.com *.sentry.io *.nominatim.openstreetmap.org nominatim.openstreetmap.org router.project-osrm.org *.tile.openstreetmap.org tile.openstreetmap.org www.googletagmanager.com www.google-analytics.com analytics.google.com tpwgts.com *.onrender.com ipapi.co unpkg.com *.basemaps.cartocdn.com *.apistp.com",
-          "img-src 'self' data: blob: https:",
+          "img-src 'self' data: blob: https: *.tile.openstreetmap.org *.basemaps.cartocdn.com",
           "media-src 'self'",
           "frame-src 'self' *.firebaseapp.com accounts.google.com apis.google.com tpwgts.com",
           "frame-ancestors 'self'",

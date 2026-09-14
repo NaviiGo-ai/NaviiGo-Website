@@ -78,6 +78,13 @@ export default function RootLayout({
       className={`${epilogue.variable} ${plusJakarta.variable}`}
       suppressHydrationWarning
     >
+      <head>
+        <link
+          rel="stylesheet"
+          href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+          crossOrigin=""
+        />
+      </head>
       <body className="font-sans antialiased selection:bg-brand-primary selection:text-white bg-paper-warm text-naviigo-text">
         <Providers>
           <CustomCursor />
