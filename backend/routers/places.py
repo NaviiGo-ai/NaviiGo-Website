@@ -227,3 +227,21 @@ async def get_photo(name: str = "", maxwidth: int = 400):
     except Exception as e:
         print(f"[Places] Photo proxy error: {e}")
         raise HTTPException(status_code=500, detail="Failed to fetch photo")
+
+
+@router.get("/osm/verify")
+async def verify_osm():
+    """Verify OpenStreetMap credentials and connectivity."""
+    from services.osm_service import verify_osm_credentials, get_osm_auth_url
+    result = await verify_osm_credentials()
+    auth_url = ""
+    try:
+        auth_url = get_osm_auth_url(redirect_uri="http://localhost:8000/api/osm/callback")
+    except Exception:
+        auth_url = "unavailable"
+    return {
+        "success": result.get("valid", False),
+        "service": "OpenStreetMap (OSM)",
+        "verification": result,
+        "sample_auth_url": auth_url,
+    }
