@@ -21,8 +21,10 @@ export default function ArrivalHero() {
     const ctx = gsap.context(() => {
       const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+      // Initialize white cover at 0.85 opacity (slightly transparent)
+      gsap.set(coverRef.current, { scale: 1, opacity: 0.85, transformOrigin: '50% 50%' });
+
       if (prefersReducedMotion) {
-        gsap.set(coverRef.current, { scale: 1, opacity: 1 });
         return;
       }
 
@@ -50,8 +52,8 @@ export default function ArrivalHero() {
           if (coverRef.current) {
             // Zoom the white cover: from scale 1.0 up to 10.5
             const scale = 1 + Math.pow(progress, 1.2) * 9.5;
-            // Fade out the white cover and ambient tricolor glows as aperture reaches screen bounds (completely gone by progress 0.68)
-            const opacity = Math.max(0, 1 - Math.max(0, (progress - 0.38) * 3.33));
+            // White screen starts slightly transparent (0.85), then smoothly fades out as aperture reaches screen bounds
+            const opacity = Math.max(0, 0.85 - Math.max(0, (progress - 0.32) * 2.8));
 
             gsap.set(coverRef.current, {
               scale: scale,
@@ -166,7 +168,8 @@ export default function ArrivalHero() {
           ───────────────────────────────────────────────────────────── */}
       <div
         ref={coverRef}
-        className="absolute inset-0 w-full h-full flex items-center justify-center pointer-events-none z-20 will-change-transform"
+        className="absolute inset-0 w-full h-full flex items-center justify-center pointer-events-none z-20 will-change-transform opacity-[0.85]"
+        style={{ opacity: 0.85 }}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
