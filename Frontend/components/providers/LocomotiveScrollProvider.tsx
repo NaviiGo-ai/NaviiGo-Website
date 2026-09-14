@@ -1,7 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
-import { usePathname } from 'next/navigation';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
 interface LocomotiveScrollContextType {
   scroll: any | null;
@@ -10,7 +9,7 @@ interface LocomotiveScrollContextType {
 
 const LocomotiveScrollContext = createContext<LocomotiveScrollContextType>({
   scroll: null,
-  isReady: false,
+  isReady: true,
 });
 
 export const useLocomotiveScroll = () => useContext(LocomotiveScrollContext);
@@ -20,88 +19,18 @@ interface LocomotiveScrollProviderProps {
 }
 
 export default function LocomotiveScrollProvider({ children }: LocomotiveScrollProviderProps) {
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const [scrollInstance, setScrollInstance] = useState<any | null>(null);
   const [isReady, setIsReady] = useState(false);
-  const pathname = usePathname();
-  const isHomePage = pathname === '/';
 
   useEffect(() => {
-    if (!isHomePage) return;
-    let locomotiveScroll: any = null;
-
-    const initLocomotiveScroll = async () => {
-      if (typeof window === 'undefined' || !containerRef.current) return;
-
-      try {
-        // LocomotiveScroll is loaded via CDN script in layout.tsx
-        const LocomotiveScroll = (window as any).LocomotiveScroll;
-        if (!LocomotiveScroll) {
-          throw new Error('LocomotiveScroll not found on window object');
-        }
-
-        locomotiveScroll = new LocomotiveScroll({
-          el: containerRef.current,
-          smooth: true,
-          lerp: 0.08,
-          multiplier: 1,
-          firefoxMultiplier: 5,
-          touchMultiplier: 2,
-          scrollFromAnywhere: true,
-          tablet: {
-            smooth: true,
-            breakpoint: 768,
-          },
-          smartphone: {
-            smooth: false,
-          },
-        });
-
-        setScrollInstance(locomotiveScroll);
-        setIsReady(true);
-
-        setTimeout(() => {
-          locomotiveScroll?.update();
-        }, 500);
-      } catch (err) {
-        console.warn('LocomotiveScroll initialized with CDN fallback script:', err);
-        if ((window as any).LocomotiveScroll && containerRef.current) {
-          const LocomotiveScrollCDN = (window as any).LocomotiveScroll;
-          locomotiveScroll = new LocomotiveScrollCDN({
-            el: containerRef.current,
-            smooth: true,
-            lerp: 0.08,
-            smartphone: { smooth: false },
-          });
-          setScrollInstance(locomotiveScroll);
-          setIsReady(true);
-        }
-      }
-    };
-
-    initLocomotiveScroll();
-
-    return () => {
-      if (locomotiveScroll) {
-        try {
-          locomotiveScroll.destroy();
-        } catch (_) {}
-      }
-      setScrollInstance(null);
-      setIsReady(false);
-    };
-  }, [isHomePage]);
-
-  // Only wrap home page with Locomotive Scroll container; all other pages use standard native scroll
-  if (!isHomePage) {
-    return <>{children}</>;
-  }
+    // GSAP ScrollTrigger is the primary, hardware-accelerated scroll animation
+    // engine powering Naviigo. This provider maintains context compatibility cleanly.
+    setIsReady(true);
+  }, []);
 
   return (
-    <LocomotiveScrollContext.Provider value={{ scroll: scrollInstance, isReady }}>
-      <div data-scroll-container ref={containerRef} className="relative w-full">
-        {children}
-      </div>
+    <LocomotiveScrollContext.Provider value={{ scroll: null, isReady }}>
+      {children}
     </LocomotiveScrollContext.Provider>
   );
 }
+

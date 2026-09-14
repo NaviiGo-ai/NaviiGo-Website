@@ -5,6 +5,7 @@ import Navbar from '@/components/shared/MinimalNavbar';
 import Providers from './providers';
 import SocialButton from '@/components/shared/SocialButton';
 import CustomCursor from '@/components/shared/CustomCursor';
+import CookieConsent from '@/components/shared/CookieConsent';
 import Script from 'next/script';
 
 const epilogue = Epilogue({
@@ -85,6 +86,7 @@ export default function RootLayout({
           </div>
           <Navbar />
           <main className="relative z-10 w-full min-h-screen">{children}</main>
+          <CookieConsent />
         </Providers>
 
         {/* TravelPayouts White Label Script */}

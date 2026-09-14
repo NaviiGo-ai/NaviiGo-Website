@@ -118,6 +118,7 @@ export default function NextJourneyFooter() {
                 width={40}
                 height={40}
                 className="object-contain"
+                style={{ width: 'auto', height: 'auto' }}
               />
             </div>
             <div>
@@ -161,13 +162,24 @@ export default function NextJourneyFooter() {
         {/* ── Legal & Copyright ────────────────────────────────── */}
         <div className="mt-8 pt-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4 font-mono text-[10px] text-white/40 tracking-wider">
           <div>© 2026 NAVIIGO TECHNOLOGIES. ALL RIGHTS RESERVED.</div>
-          <div className="flex gap-6">
+          <div className="flex flex-wrap gap-6 items-center">
             <Link href="/privacy" className="hover:text-white/70 transition-colors">
               PRIVACY POLICY
             </Link>
             <Link href="/terms" className="hover:text-white/70 transition-colors">
               TERMS OF SERVICE
             </Link>
+            <button
+              type="button"
+              onClick={() => {
+                if (typeof window !== 'undefined') {
+                  window.dispatchEvent(new CustomEvent('naviigo:open-cookie-preferences'));
+                }
+              }}
+              className="hover:text-white/70 transition-colors uppercase cursor-pointer"
+            >
+              COOKIE PREFERENCES
+            </button>
           </div>
         </div>
       </div>

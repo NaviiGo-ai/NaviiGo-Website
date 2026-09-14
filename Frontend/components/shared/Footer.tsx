@@ -121,8 +121,19 @@ export default function Footer() {
           <p className="text-xs text-muted-foreground">
             © {new Date().getFullYear()} NaviiGo. All rights reserved. Built with ❤️ in India.
           </p>
-          <div className="flex items-center gap-6">
+          <div className="flex flex-wrap items-center gap-4 sm:gap-6">
             <span className="text-xs text-muted-foreground/80">Aggregation only · Affiliate redirections · No direct payments</span>
+            <button
+              type="button"
+              onClick={() => {
+                if (typeof window !== 'undefined') {
+                  window.dispatchEvent(new CustomEvent('naviigo:open-cookie-preferences'));
+                }
+              }}
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors underline underline-offset-4 cursor-pointer"
+            >
+              Cookie Preferences
+            </button>
           </div>
         </div>
       </div>
