@@ -8,7 +8,7 @@ import gsap from 'gsap';
 import { X, MapPin, Calendar, CheckCircle2, Trophy, Flame, Star, Target, ChevronRight, Zap, Globe2, TrendingUp, Award, Heart, Lock, ArrowRight, Activity, Plane } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/AuthContext';
-import { getPassportStats, getPassportStamps, getUserBucketList } from '@/lib/firestore';
+import { getPassportStats, getPassportStamps, getUserBucketList, getUserItineraries } from '@/lib/firestore';
 import { getLeaderboard, type LeaderboardEntry } from '@/lib/leaderboard';
 import {
     xpProgress, getLevelTitle, ACHIEVEMENTS, getDefaultStats,
@@ -39,12 +39,13 @@ export default function PassportPage() {
     const router = useRouter();
     const containerRef = useRef<HTMLDivElement>(null);
     const [selectedStamp, setSelectedStamp] = useState<PassportStamp | null>(null);
-    const [activeTab, setActiveTab] = useState<'stamps' | 'achievements' | 'stats' | 'leaderboard' | 'bucketlist'>('stamps');
+    const [activeTab, setActiveTab] = useState<'journeys' | 'bucketlist' | 'stamps' | 'stats' | 'achievements' | 'leaderboard'>('journeys');
 
     const { user, loading: authLoading, signInWithGoogle } = useAuth();
 
     const [stats, setStats] = useState<PassportStats>(FALLBACK_STATS);
     const [stamps, setStamps] = useState<PassportStamp[]>([]);
+    const [savedJourneys, setSavedJourneys] = useState<any[]>([]);
     const [bucketList, setBucketList] = useState<any[]>([]);
     const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
     const [loadedUid, setLoadedUid] = useState<string | null>(null);
@@ -70,12 +71,14 @@ export default function PassportPage() {
         Promise.all([
             getPassportStats(user.uid),
             getPassportStamps(user.uid),
+            getUserItineraries(user.uid),
             getUserBucketList(user.uid),
             getLeaderboard(20),
-        ]).then(([fsStats, fsStamps, fsBucketList, fsLeaderboard]) => {
+        ]).then(([fsStats, fsStamps, fsJourneys, fsBucketList, fsLeaderboard]) => {
             if (!active) return;
-            setBucketList(fsBucketList);
-            setLeaderboard(fsLeaderboard);
+            setSavedJourneys(fsJourneys || []);
+            setBucketList(fsBucketList || []);
+            setLeaderboard(fsLeaderboard || []);
             if (fsStats) {
                 setStats({ ...fsStats, lastTripDate: fsStats.lastTripDate?.toDate?.()?.toISOString() || null } as any);
             } else {
@@ -88,7 +91,9 @@ export default function PassportPage() {
             }
             setLoadedUid(user.uid);
         }).catch(() => {
-            if (active) setLoadedUid(user.uid);
+            if (!active) return;
+            // Graceful fallback for offline / permission restrictions
+            setLoadedUid(user.uid);
         });
 
         return () => { active = false; };
@@ -240,10 +245,11 @@ export default function PassportPage() {
                 {/* ── TYPOGRAPHIC ARCHIVE INDEX TABS ───────────────────────────────────────── */}
                 <div className="flex items-center gap-6 sm:gap-8 mb-8 border-b border-[#EADFD4] overflow-x-auto no-scrollbar pb-3 font-mono text-xs uppercase tracking-wider">
                     {[
+                        { id: 'journeys', label: 'Saved Journeys', count: savedJourneys.length },
+                        { id: 'bucketlist', label: 'Saved Places', count: bucketList.length },
                         { id: 'stamps', label: 'Milestones', count: stamps.length },
                         { id: 'stats', label: 'Territorial Coverage', count: stats.statesVisited.length },
                         { id: 'achievements', label: 'Citations', count: stats.achievements.length },
-                        { id: 'bucketlist', label: 'Saved Routes', count: bucketList.length },
                         { id: 'leaderboard', label: 'Traveler Registry', count: leaderboard.length },
                     ].map(tab => {
                         const isActive = activeTab === tab.id;
@@ -449,29 +455,155 @@ export default function PassportPage() {
                                 </motion.div>
                             )}
 
-                            {/* ── BUCKET LIST / SAVED ROUTES TAB ─────────────────────────────────────────── */}
+                            {/* ── SAVED JOURNEYS (ITINERARIES) TAB ─────────────────────────────────────────── */}
+                            {activeTab === 'journeys' && (
+                                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+                                    {savedJourneys.length === 0 ? (
+                                        <div className="text-center py-20 px-6 bg-paper-light rounded-2xl border border-[#EADFD4]">
+                                            <div className="w-16 h-16 rounded-xl bg-paper-warm border border-[#EADFD4] flex items-center justify-center mx-auto mb-6 p-3">
+                                                <Image src="/brand/naviigo-mark-primary.png" width={36} height={36} alt="NaviiGo" className="object-contain opacity-60" />
+                                            </div>
+                                            <div className="font-mono text-[10px] font-bold uppercase tracking-[0.25em] text-naviigo-brown/60 mb-2">ARCHIVE REGISTER EMPTY</div>
+                                            <h3 className="text-2xl font-display font-black text-naviigo-brown uppercase mb-3">NO SAVED JOURNEYS YET.</h3>
+                                            <p className="font-sans text-naviigo-brown/70 text-sm font-light max-w-md mx-auto mb-8">
+                                                The next one starts somewhere. Plan a curated expedition with AI-powered routing, waypoints, and day chapters.
+                                            </p>
+                                            <button
+                                                onClick={() => router.push('/itinerary')}
+                                                className="bg-brand-primary text-white font-mono font-bold text-xs uppercase tracking-wider py-3.5 px-8 rounded-xl shadow-sm hover:bg-brand-primary/90 transition-all inline-flex items-center gap-2"
+                                            >
+                                                <span>PLAN A TRIP</span>
+                                                <span>→</span>
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                            {savedJourneys.map((journey) => {
+                                                const destTitle = journey.destName || (journey.form?.destName as string) || (journey.form?.destination as string) || 'India Expedition';
+                                                const totalDays = journey.generatedData?.dayPlans?.length || journey.form?.days || 3;
+                                                const totalStops = (journey.generatedData?.dayPlans || []).reduce((acc: number, dp: any) => acc + (dp.activities?.length || 0), 0);
+                                                const planUrl = `/itinerary/plan/${journey.uuid || journey.id}`;
+                                                const day1Url = `/itinerary/plan/${journey.uuid || journey.id}/day/1`;
+
+                                                return (
+                                                    <div
+                                                        key={journey.id}
+                                                        className="group bg-paper-light rounded-2xl overflow-hidden border border-[#EADFD4] shadow-sm hover:border-brand-primary/40 transition-all duration-300 flex flex-col justify-between"
+                                                    >
+                                                        <div>
+                                                            {/* Cover Image */}
+                                                            <div className="relative h-48 sm:h-56 bg-paper-warm overflow-hidden">
+                                                                <PlaceImage
+                                                                    name={destTitle}
+                                                                    city={destTitle}
+                                                                    asBackground
+                                                                    className="absolute inset-0 w-full h-full group-hover:scale-105 transition-transform duration-700 object-cover"
+                                                                />
+                                                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                                                                
+                                                                <div className="absolute top-3 left-3">
+                                                                    <span className="font-mono text-[10px] font-bold uppercase tracking-wider bg-white/90 text-naviigo-brown px-3 py-1 rounded-full shadow-sm">
+                                                                        {totalDays} {totalDays === 1 ? 'DAY' : 'DAYS'} CHAPTERS
+                                                                    </span>
+                                                                </div>
+
+                                                                <div className="absolute bottom-3 left-4 right-4 text-white">
+                                                                    <h3 className="font-display font-black text-2xl uppercase tracking-tight leading-tight">
+                                                                        {destTitle}
+                                                                    </h3>
+                                                                    <div className="flex items-center gap-3 font-mono text-[11px] text-white/80 uppercase mt-1">
+                                                                        {journey.form?.startDate && (
+                                                                            <span>{new Date(journey.form.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                                                                        )}
+                                                                        {totalStops > 0 && <span>• {totalStops} Waypoints</span>}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+
+                                                            {/* Content */}
+                                                            <div className="p-5">
+                                                                <p className="font-sans text-xs sm:text-sm text-naviigo-brown/70 font-light line-clamp-2 mb-4">
+                                                                    {journey.generatedData?.description || `Curated roadbook through ${destTitle} with verified route geometry.`}
+                                                                </p>
+
+                                                                {/* Day Chapters Quick Peek */}
+                                                                {journey.generatedData?.dayPlans && journey.generatedData.dayPlans.length > 0 && (
+                                                                    <div className="flex flex-wrap gap-1.5 mb-4">
+                                                                        {journey.generatedData.dayPlans.slice(0, 4).map((dp: any, dpIdx: number) => (
+                                                                            <span
+                                                                                key={dpIdx}
+                                                                                className="font-mono text-[10px] bg-paper-warm border border-[#EADFD4] text-naviigo-brown px-2 py-0.5 rounded"
+                                                                            >
+                                                                                Day {dp.day || dpIdx + 1}
+                                                                            </span>
+                                                                        ))}
+                                                                        {journey.generatedData.dayPlans.length > 4 && (
+                                                                            <span className="font-mono text-[10px] text-brand-primary font-bold px-1.5 py-0.5">
+                                                                                +{journey.generatedData.dayPlans.length - 4} more
+                                                                            </span>
+                                                                        )}
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Actions */}
+                                                        <div className="px-5 py-4 bg-paper-warm/60 border-t border-[#EADFD4] flex items-center justify-between gap-3">
+                                                            <button
+                                                                onClick={() => router.push(day1Url)}
+                                                                className="font-mono text-xs text-naviigo-brown/70 hover:text-brand-primary uppercase font-bold transition-colors"
+                                                            >
+                                                                Open Day 01 →
+                                                            </button>
+                                                            <button
+                                                                onClick={() => router.push(planUrl)}
+                                                                className="bg-brand-primary hover:bg-brand-primary/90 text-white font-mono font-bold text-xs uppercase tracking-wider px-5 py-2.5 rounded-lg transition-colors flex items-center gap-1.5 shadow-sm"
+                                                            >
+                                                                <span>VIEW JOURNEY</span>
+                                                                <ArrowRight className="w-3.5 h-3.5" />
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+                                </motion.div>
+                            )}
+
+                            {/* ── BUCKET LIST / SAVED PLACES TAB ─────────────────────────────────────────── */}
                             {activeTab === 'bucketlist' && (
                                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
                                     {bucketList.length === 0 ? (
-                                        <div className="text-center py-16 bg-paper-light rounded-xl border border-[#EADFD4]">
-                                            <h3 className="font-display font-bold text-lg text-naviigo-brown uppercase mb-1">No Routes Saved Yet</h3>
-                                            <p className="font-sans text-xs text-naviigo-brown/60 max-w-sm mx-auto mb-6">Explore the digital atlas to bookmark destinations for future expeditions.</p>
-                                            <button onClick={() => router.push('/explore')} className="font-mono text-xs font-bold uppercase tracking-wider bg-brand-primary text-white px-5 py-2.5 rounded hover:bg-brand-primary/90 transition-colors">
-                                                Explore Atlas →
+                                        <div className="text-center py-20 px-6 bg-paper-light rounded-2xl border border-[#EADFD4]">
+                                            <div className="w-16 h-16 rounded-xl bg-paper-warm border border-[#EADFD4] flex items-center justify-center mx-auto mb-6 p-3">
+                                                <Image src="/brand/naviigo-mark-primary.png" width={36} height={36} alt="NaviiGo" className="object-contain opacity-60" />
+                                            </div>
+                                            <div className="font-mono text-[10px] font-bold uppercase tracking-[0.25em] text-naviigo-brown/60 mb-2">SAVED ATLAS BOOKMARKS</div>
+                                            <h3 className="text-2xl font-display font-black text-naviigo-brown uppercase mb-3">NO SAVED PLACES YET.</h3>
+                                            <p className="font-sans text-naviigo-brown/70 text-sm font-light max-w-sm mx-auto mb-8">
+                                                Explore somewhere worth keeping. Bookmark iconic landmarks, trails, and cultural points across India.
+                                            </p>
+                                            <button
+                                                onClick={() => router.push('/explore')}
+                                                className="bg-brand-primary text-white font-mono text-xs font-bold uppercase tracking-wider py-3.5 px-8 rounded-xl hover:bg-brand-primary/90 transition-colors inline-flex items-center gap-2"
+                                            >
+                                                <span>EXPLORE DIGITAL ATLAS</span>
+                                                <span>→</span>
                                             </button>
                                         </div>
                                     ) : (
                                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                                            {bucketList.map((item, i) => (
+                                            {bucketList.map((item) => (
                                                 <div
                                                     key={item.id}
-                                                    onClick={() => router.push(`/itinerary?load=${item.id}`)}
-                                                    className="group relative rounded-xl overflow-hidden border border-[#EADFD4] bg-paper-light shadow-sm hover:border-brand-primary/50 transition-all cursor-pointer flex flex-col"
+                                                    onClick={() => router.push(`/explore?place=${encodeURIComponent(item.name || item.title || '')}`)}
+                                                    className="group relative rounded-2xl overflow-hidden border border-[#EADFD4] bg-paper-light shadow-sm hover:border-brand-primary/50 transition-all cursor-pointer flex flex-col justify-between"
                                                 >
                                                     <div className="relative h-48 bg-paper-warm overflow-hidden">
                                                         <PlaceImage
-                                                            name={item.name}
-                                                            city={item.location}
+                                                            name={item.name || item.title}
+                                                            city={item.location || item.city}
                                                             fallbackUrl={item.image}
                                                             asBackground
                                                             className="absolute inset-0 w-full h-full group-hover:scale-105 transition-transform duration-700 object-cover"
@@ -479,12 +611,12 @@ export default function PassportPage() {
                                                         />
                                                         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
                                                         <div className="absolute bottom-3 left-4 right-4">
-                                                            <h3 className="font-display font-bold text-white text-lg uppercase leading-tight">{item.name}</h3>
+                                                            <h3 className="font-display font-bold text-white text-lg uppercase leading-tight">{item.name || item.title}</h3>
                                                             {item.location && <p className="font-mono text-[10px] text-white/80 uppercase mt-0.5">{item.location}</p>}
                                                         </div>
                                                     </div>
-                                                    <div className="p-3 bg-paper-light flex items-center justify-between font-mono text-[10px] uppercase font-bold text-brand-primary">
-                                                        <span>Plan Route</span>
+                                                    <div className="p-3.5 bg-paper-light flex items-center justify-between font-mono text-[10px] uppercase font-bold text-brand-primary">
+                                                        <span>View in Digital Atlas</span>
                                                         <ArrowRight className="w-3.5 h-3.5" />
                                                     </div>
                                                 </div>

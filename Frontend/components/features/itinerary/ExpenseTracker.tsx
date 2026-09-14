@@ -200,61 +200,74 @@ export default function ExpenseTracker({ shareId, budget = 0 }: ExpenseTrackerPr
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-2">
-        <h2 className="text-lg font-bold text-muted-900 dark:text-white flex items-center gap-2"><span>🧾</span> Trip Expenses</h2>
-        <div className="text-xs font-bold text-muted-500 dark:text-muted-400 bg-muted-100 dark:bg-muted-800 px-2 py-1 rounded">
-          <Wallet className="inline w-3 h-3 mr-1 -mt-0.5" />
-          {expenses.length} {expenses.length === 1 ? 'entry' : 'entries'}
+      <div className="flex items-center justify-between mb-3 border-b border-[#EADFD4] pb-2">
+        <h3 className="font-mono text-xs font-bold uppercase tracking-widest text-brand-primary flex items-center gap-2">
+          <span>TRIP EXPENSES</span>
+        </h3>
+        <div className="font-mono text-[10px] text-naviigo-brown/60 uppercase">
+          {expenses.length} {expenses.length === 1 ? 'RECORD' : 'RECORDS'} LOGGED
         </div>
       </div>
 
-      <div className="bg-white dark:bg-muted-900 rounded-2xl border border-muted-100 dark:border-muted-800 p-5 shadow-sm space-y-4">
-        {/* Budget + spent summary */}
-        <div className="flex flex-wrap items-end justify-between gap-3">
+      <div className="bg-paper-light rounded-2xl border border-[#EADFD4] p-5 sm:p-6 shadow-sm space-y-5">
+        {/* Budget + spent summary stats */}
+        <div className="grid grid-cols-3 gap-3 pb-4 border-b border-[#EADFD4]">
           <div>
-            <label htmlFor="expense-budget" className="text-[10px] font-black uppercase tracking-widest text-muted-400 mb-1 block">Trip Budget</label>
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-bold text-muted-400">₹</span>
+            <span className="text-[9px] sm:text-[10px] font-mono font-bold uppercase tracking-wider text-naviigo-brown/50 block mb-1">
+              BUDGET
+            </span>
+            <div className="flex items-baseline gap-1">
+              <span className="text-xs font-mono text-naviigo-brown/60">₹</span>
               <input
                 id="expense-budget"
                 type="number"
                 min={0}
                 value={editableBudget || ''}
                 onChange={(e) => setBudget(parseInt(e.target.value, 10) || 0)}
-                placeholder="e.g. 30000"
+                placeholder="0"
                 aria-label="Trip budget in rupees"
-                className="w-32 bg-transparent border-b border-dashed border-muted-300 dark:border-muted-700 text-sm font-bold text-muted-900 dark:text-white outline-none focus:border-jungle-green-500"
+                className="w-24 bg-transparent border-b border-dashed border-naviigo-brown/30 font-mono text-sm sm:text-base font-bold text-naviigo-brown outline-none focus:border-brand-primary"
               />
             </div>
           </div>
+
+          <div>
+            <span className="text-[9px] sm:text-[10px] font-mono font-bold uppercase tracking-wider text-naviigo-brown/50 block mb-1">
+              SPENT
+            </span>
+            <div className={`font-mono text-sm sm:text-base font-bold ${overBudget ? 'text-temple-red-500' : 'text-naviigo-brown'}`}>
+              {inr(total)}
+            </div>
+          </div>
+
           <div className="text-right">
-            <div className="text-[10px] font-black uppercase tracking-widest text-muted-400 mb-1">Spent</div>
-            <div className={`text-xl font-black ${overBudget ? 'text-temple-red-500' : 'text-muted-900 dark:text-white'}`}>{inr(total)}</div>
-            <div className={`text-xs font-semibold mt-0.5 ${overBudget ? 'text-temple-red-500' : remaining >= 0 ? 'text-jungle-green-600 dark:text-jungle-green-400' : 'text-temple-red-500'}`}>
-              {editableBudget > 0 ? `${inr(Math.abs(remaining))} ${remaining >= 0 ? 'left' : 'over budget'}` : 'Set a budget to track'}
+            <span className="text-[9px] sm:text-[10px] font-mono font-bold uppercase tracking-wider text-naviigo-brown/50 block mb-1">
+              {remaining >= 0 ? 'LEFT' : 'DEFICIT'}
+            </span>
+            <div className={`font-mono text-sm sm:text-base font-bold ${remaining >= 0 ? 'text-naviigo-teal' : 'text-temple-red-500'}`}>
+              {inr(Math.abs(remaining))}
             </div>
           </div>
         </div>
 
         {/* Progress bar */}
         {editableBudget > 0 && (
-          <div className="w-full h-3 bg-muted-100 dark:bg-muted-800 rounded-full overflow-hidden">
+          <div className="w-full h-2 bg-paper-warm rounded-full overflow-hidden border border-[#EADFD4]">
             <div
-              className={`h-full ${barColor} transition-all duration-500`}
+              className={`h-full ${overBudget ? 'bg-temple-red-500' : 'bg-brand-primary'} transition-all duration-500`}
               style={{ width: `${pct}%` }}
               role="progressbar"
               aria-valuenow={Math.round(pct)}
               aria-valuemin={0}
               aria-valuemax={100}
-              aria-label={`${pct.toFixed(0)} percent of budget spent`}
             />
           </div>
         )}
 
         {/* Add form */}
-        <form onSubmit={addExpense} className="flex flex-wrap items-center gap-2">
+        <form onSubmit={addExpense} className="flex flex-wrap items-center gap-2 pt-1">
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -tranmuted-y-1/2 text-sm font-bold text-muted-400">₹</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 font-mono text-xs font-bold text-naviigo-brown/40">₹</span>
             <input
               type="number"
               min={1}
@@ -263,17 +276,17 @@ export default function ExpenseTracker({ shareId, budget = 0 }: ExpenseTrackerPr
               onChange={(e) => setAmount(e.target.value)}
               placeholder="Amount"
               aria-label="Expense amount in rupees"
-              className="w-28 bg-muted-50 dark:bg-muted-800 border border-muted-200 dark:border-muted-700 rounded-xl pl-8 pr-3 py-2.5 text-sm font-bold text-muted-900 dark:text-white outline-none focus:border-jungle-green-500 placeholder:text-muted-400 placeholder:font-medium"
+              className="w-24 sm:w-28 bg-paper-warm border border-[#EADFD4] rounded-xl pl-7 pr-3 py-2 text-xs font-mono font-bold text-naviigo-brown outline-none focus:border-brand-primary placeholder:text-naviigo-brown/40"
             />
           </div>
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value)}
             aria-label="Expense category"
-            className="bg-muted-50 dark:bg-muted-800 border border-muted-200 dark:border-muted-700 rounded-xl px-3 py-2.5 text-sm font-semibold text-muted-700 dark:text-muted-200 outline-none focus:border-jungle-green-500"
+            className="bg-paper-warm border border-[#EADFD4] rounded-xl px-3 py-2 text-xs font-mono font-semibold text-naviigo-brown outline-none focus:border-brand-primary"
           >
             {CATEGORIES.map((c) => (
-              <option key={c.id} value={c.id}>{c.emoji} {c.label}</option>
+              <option key={c.id} value={c.id}>{c.label}</option>
             ))}
           </select>
           <input
@@ -282,63 +295,51 @@ export default function ExpenseTracker({ shareId, budget = 0 }: ExpenseTrackerPr
             onChange={(e) => setNote(e.target.value)}
             placeholder="Note (optional)"
             aria-label="Expense note"
-            className="flex-1 min-w-32 bg-muted-50 dark:bg-muted-800 border border-muted-200 dark:border-muted-700 rounded-xl px-3 py-2.5 text-sm font-medium text-muted-900 dark:text-white outline-none focus:border-jungle-green-500 placeholder:text-muted-400"
+            className="flex-1 min-w-28 bg-paper-warm border border-[#EADFD4] rounded-xl px-3 py-2 text-xs font-sans text-naviigo-brown outline-none focus:border-brand-primary placeholder:text-naviigo-brown/40"
           />
           <button
             type="submit"
             disabled={!amount || parseFloat(amount) <= 0}
-            className="bg-jungle-green-600 hover:bg-jungle-green-500 disabled:opacity-40 text-white text-xs font-black uppercase tracking-wider rounded-xl px-4 py-2.5 transition-colors flex items-center gap-1.5"
+            className="bg-brand-primary hover:bg-brand-primary/90 disabled:opacity-40 text-white text-xs font-mono uppercase font-bold tracking-wider rounded-xl px-4 py-2 transition-colors flex items-center gap-1.5 shadow-sm"
           >
-            <Plus className="w-4 h-4" /> Add
+            <Plus className="w-3.5 h-3.5" /> Add
           </button>
         </form>
 
-        {/* Breakdown by category */}
-        {groupByCategory.length > 0 && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-            {groupByCategory.map(([catId, sum]) => (
-              <div key={catId} className="bg-muted-50 dark:bg-muted-800/60 rounded-xl px-3 py-2">
-                <div className="text-[10px] font-bold text-muted-400 uppercase tracking-wide flex items-center gap-1">
-                  {categoryMeta(catId).emoji} {categoryMeta(catId).label}
-                </div>
-                <div className="text-sm font-bold text-muted-900 dark:text-white">{inr(sum)}</div>
-              </div>
-            ))}
-          </div>
-        )}
-
         {/* Expense list */}
-        {expenses.length > 0 && (
-          <ul className="space-y-1.5 max-h-64 overflow-y-auto custom-scrollbar pr-1">
+        {expenses.length > 0 ? (
+          <ul className="space-y-1.5 max-h-60 overflow-y-auto custom-scrollbar pr-1 divide-y divide-[#EADFD4]/60">
             {expenses.map((e) => (
-              <li key={e.id} className="flex items-center gap-3 rounded-xl px-3 py-2 hover:bg-muted-50 dark:hover:bg-muted-800/60 transition-colors group">
-                <span className="text-lg w-7 text-center shrink-0">{categoryMeta(e.category).emoji}</span>
+              <li key={e.id} className="flex items-center gap-3 py-2 group">
                 <div className="flex-1 min-w-0">
-                  <div className="text-sm font-semibold text-muted-800 dark:text-muted-100 truncate">
+                  <div className="text-xs font-semibold text-naviigo-brown truncate">
                     {e.note || categoryMeta(e.category).label}
                   </div>
-                  <div className="text-[10px] text-muted-400 font-medium">
+                  <div className="font-mono text-[10px] text-naviigo-brown/50">
                     {new Date(e.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} · {categoryMeta(e.category).label}
                   </div>
                 </div>
-                <div className="text-sm font-bold text-muted-900 dark:text-white shrink-0">{inr(e.amount)}</div>
+                <div className="font-mono text-xs font-bold text-naviigo-brown shrink-0">{inr(e.amount)}</div>
                 <button
                   type="button"
                   onClick={() => removeExpense(e.id)}
-                  aria-label={`Delete expense ${e.note || categoryMeta(e.category).label} of ${inr(e.amount)}`}
-                  className="w-7 h-7 rounded-lg flex items-center justify-center text-muted-300 dark:text-muted-600 hover:text-temple-red-500 hover:bg-temple-red-50 dark:hover:bg-temple-red-500/10 transition-colors shrink-0 opacity-0 group-hover:opacity-100 focus:opacity-100"
+                  aria-label="Delete expense"
+                  className="w-6 h-6 rounded flex items-center justify-center text-naviigo-brown/40 hover:text-temple-red-500 transition-colors shrink-0 opacity-0 group-hover:opacity-100 focus:opacity-100"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
               </li>
             ))}
           </ul>
-        )}
-
-        {expenses.length === 0 && (
-          <p className="text-xs text-muted-400 dark:text-muted-500 text-center py-2">
-            No expenses logged yet — add your first one above. 🧳
-          </p>
+        ) : (
+          <div className="py-6 text-center border-t border-[#EADFD4]/60">
+            <div className="font-mono text-xs font-bold uppercase tracking-wider text-naviigo-brown/70 mb-1">
+              NO EXPENSES YET
+            </div>
+            <p className="font-sans text-xs text-naviigo-brown/50">
+              Add the first expense when you&apos;re ready. Entries are archived with your journey.
+            </p>
+          </div>
         )}
       </div>
     </div>

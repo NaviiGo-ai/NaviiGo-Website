@@ -51,9 +51,16 @@ function ItineraryUUIDContent() {
                 if (!isMounted) return;
 
                 if (data?.generatedData) {
-                    setForm(data.form ?? {});
+                    const loadedForm = data.form ?? {};
+                    setForm(loadedForm);
                     setGeneratedData(data.generatedData);
                     setPhase('result');
+                    try {
+                        sessionStorage.setItem(`naviigo_plan_${uuid}`, JSON.stringify({
+                            form: loadedForm,
+                            generatedData: data.generatedData,
+                        }));
+                    } catch {}
                     return;
                 }
 
@@ -82,15 +89,20 @@ function ItineraryUUIDContent() {
     /**
      * Called by LoadingScreen when generation completes.
      * The API route already saved to Firestore.
-     * We also set state here directly for instant transition.
+     * We also set state here directly for instant transition and cache for day view.
      */
     const handleGenerationDone = useCallback((data: any) => {
         if (data) {
             setGeneratedData(data);
             setPhase('result');
-            // Removed sessionStorage usage; rely on Firestore
+            try {
+                sessionStorage.setItem(`naviigo_plan_${uuid}`, JSON.stringify({
+                    form,
+                    generatedData: data,
+                }));
+            } catch {}
         }
-    }, []);
+    }, [form, uuid]);
 
 
     const handleReset = useCallback(() => {
@@ -98,8 +110,16 @@ function ItineraryUUIDContent() {
     }, [router]);
 
     const handleDayView = useCallback(() => {
+        if (generatedData) {
+            try {
+                sessionStorage.setItem(`naviigo_plan_${uuid}`, JSON.stringify({
+                    form,
+                    generatedData,
+                }));
+            } catch {}
+        }
         router.push(`/itinerary/plan/${uuid}/day/1`);
-    }, [uuid, router]);
+    }, [uuid, router, form, generatedData]);
 
     if (phase === 'loading-data') {
         return (

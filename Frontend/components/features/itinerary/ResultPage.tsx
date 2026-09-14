@@ -55,37 +55,71 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
     const [hiddenGems, setHiddenGems] = useState<any[]>([]);
     const [insiderTips, setInsiderTips] = useState<string[]>([]);
     const [packingList, setPackingList] = useState<string[]>([]);
+    const [showAllPacking, setShowAllPacking] = useState(false);
+    const [checkedPacking, setCheckedPacking] = useState<Record<number, boolean>>({});
     const [editInput, setEditInput] = useState('');
     const [editLoading, setEditLoading] = useState(false);
     const [localData, setLocalData] = useState<any>(null);
     const editChatRef = useRef<HTMLDivElement>(null);
 
-    const destId = form.destination as string, destName = form.destName as string;
+    const destId = (form.destination as string) || (form.destId as string) || '';
+    const destName = (form.destName as string) || (form.destination as string) || 'India Expedition';
     const purpose = form.purpose as string, group = form.group as string;
     const displayMonth = form.startDate ? new Date(form.startDate as string).toLocaleString('en-US', { month: 'short' }) : 'Jan';
-    const staticData = DEST_DATA[destId];
+    const staticData = destId ? DEST_DATA[destId.toLowerCase()] : undefined;
+
     const data: any = useMemo(() => {
-      if (!staticData) {
-        // Destination data not available - return empty state instead of fallback
-        return {
-          description: 'Destination data not available',
-          avgCost: '',
-          weather: {},
-          crowdLevel: 'Low',
-          crowdNote: 'Data unavailable for this destination',
-          highlights: [],
-          restaurants: [],
-          hotels: [],
-          dayPlans: [],
-          mapCenter: { lat: 0, lng: 0 },
-          estimatedTravelCost: undefined,
-          logistics: { flights: '', trains: '' },
-          departureInfo: undefined
+        const emptyBase = {
+            description: destName ? `Curated roadbook through ${destName}` : '',
+            avgCost: '',
+            weather: {},
+            crowdLevel: 'Medium',
+            crowdNote: '',
+            highlights: [],
+            restaurants: [],
+            hotels: [],
+            dayPlans: [],
+            mapCenter: { lat: 20.5937, lng: 78.9629 },
+            estimatedTravelCost: undefined,
+            logistics: { flights: '', trains: '' },
+            departureInfo: undefined
         };
-      }
-      const base = generatedData ? { ...staticData, ...generatedData } : staticData;
-      return localData ? { ...base, ...localData } : base;
-    }, [staticData, generatedData, localData]);
+        const base = staticData ? { ...emptyBase, ...staticData } : emptyBase;
+        const merged = generatedData ? { ...base, ...generatedData } : base;
+        return localData ? { ...merged, ...localData } : merged;
+    }, [staticData, generatedData, localData, destName]);
+
+    // Curated & Deduplicated Top Highlights (strictly best 5-7 real items)
+    const curatedHighlights = useMemo(() => {
+        const seen = new Set<string>();
+        const list: any[] = [];
+        for (const item of (data.highlights || [])) {
+            if (!item || !item.name) continue;
+            const norm = item.name.toLowerCase().trim();
+            if (!seen.has(norm)) {
+                seen.add(norm);
+                list.push(item);
+            }
+        }
+        list.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+        return list.slice(0, 6);
+    }, [data.highlights]);
+
+    // Curated & Deduplicated Cuisine & Dining (strictly best 5-7 real items)
+    const curatedRestaurants = useMemo(() => {
+        const seen = new Set<string>();
+        const list: any[] = [];
+        for (const item of (data.restaurants || [])) {
+            if (!item || !item.name) continue;
+            const norm = item.name.toLowerCase().trim();
+            if (!seen.has(norm)) {
+                seen.add(norm);
+                list.push(item);
+            }
+        }
+        list.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+        return list.slice(0, 6);
+    }, [data.restaurants]);
     const destInfo = DESTINATIONS.find(d => d.id === destId);
     const purposeLabel = PURPOSES.find(p => p.id === purpose)?.label ?? purpose;
     const groupLabel = GROUP_SIZES.find(g => g.id === group)?.label ?? group;
@@ -532,28 +566,50 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
 
                 <div className="flex flex-col lg:flex-row gap-6">
                     <div className="flex-1 space-y-10">
-                        {/* Budget Tracker */}
-                        <div>
-                            <div className="flex items-center justify-between mb-2">
-                                <h2 className="text-lg font-bold text-muted-900 dark:text-white flex items-center gap-2"><span>💰</span> Trip Budget Progress</h2>
-                                <div className="text-xs font-bold text-jungle-green-600 bg-jungle-green-50 dark:bg-jungle-green-500/10 px-2 py-1 rounded">Budget: ₹{(form.budget as number).toLocaleString('en-IN')}</div>
+                        {/* Budget Progress */}
+                        <div className="bg-paper-light rounded-2xl border border-[#EADFD4] p-5 sm:p-6 shadow-sm">
+                            <div className="flex items-center justify-between mb-4 border-b border-[#EADFD4] pb-2">
+                                <h3 className="font-mono text-xs font-bold uppercase tracking-widest text-brand-primary flex items-center gap-2">
+                                    <span>TRIP BUDGET PROGRESS</span>
+                                </h3>
+                                <span className="font-mono text-xs font-bold text-naviigo-brown">
+                                    Budget: ₹{(form.budget as number).toLocaleString('en-IN')}
+                                </span>
                             </div>
-                            <div className="bg-white dark:bg-muted-900 rounded-2xl border border-muted-100 dark:border-muted-800 p-5 shadow-sm">
-                                <div className="flex justify-between text-sm mb-3">
-                                    <span className="text-muted-500 font-medium tracking-wide text-xs uppercase">Est. Base Cost</span>
-                                    <span className="font-bold text-muted-900 dark:text-white">{data.avgCost} / day</span>
+                            
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-4">
+                                <div>
+                                    <span className="font-mono text-[10px] uppercase tracking-wider text-naviigo-brown/50 block mb-1">
+                                        Allocated Budget
+                                    </span>
+                                    <span className="font-display font-bold text-base sm:text-lg text-naviigo-brown">
+                                        ₹{(form.budget as number).toLocaleString('en-IN')}
+                                    </span>
                                 </div>
-                                <div className="w-full h-3 bg-muted-100 dark:bg-muted-800 rounded-full overflow-hidden flex">
-                                    <motion.div initial={{ width: 0 }} animate={{ width: '65%' }} transition={{ duration: 1, ease: 'easeOut' }} className="h-full bg-jungle-green-500" />
-                                    <motion.div initial={{ width: 0 }} animate={{ width: '20%' }} transition={{ duration: 1, delay: 0.2, ease: 'easeOut' }} className="h-full bg-marigold-400" />
-                                </div>
-                                <div className="flex justify-between items-center text-xs text-muted-400 mt-3">
-                                    <div className="flex items-center gap-3">
-                                        <span className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-jungle-green-500" /> Travel & Stay</span>
-                                        <span className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-marigold-400" /> Food & Leisure</span>
+                                {data.avgCost && (
+                                    <div>
+                                        <span className="font-mono text-[10px] uppercase tracking-wider text-naviigo-brown/50 block mb-1">
+                                            Est. Base Daily Cost
+                                        </span>
+                                        <span className="font-display font-bold text-base sm:text-lg text-naviigo-brown">
+                                            {data.avgCost} / day
+                                        </span>
                                     </div>
-                                    <span className="font-medium text-jungle-green-600">Well Within Budget</span>
-                                </div>
+                                )}
+                                {data.estimatedTravelCost && (
+                                    <div>
+                                        <span className="font-mono text-[10px] uppercase tracking-wider text-naviigo-brown/50 block mb-1">
+                                            Transit Baseline
+                                        </span>
+                                        <span className="font-display font-bold text-base sm:text-lg text-naviigo-brown">
+                                            {data.estimatedTravelCost}
+                                        </span>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="w-full h-2 bg-paper-warm rounded-full overflow-hidden border border-[#EADFD4]">
+                                <div className="h-full bg-brand-primary rounded-full" style={{ width: '60%' }} />
                             </div>
                         </div>
 
@@ -561,112 +617,309 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                         <ExpenseTracker shareId={shareId} budget={form.budget as number} />
 
                         {/* Smart Packing List */}
-
                         {packingList.length > 0 && (
-                            <div>
-                                <div className="flex items-center justify-between mb-2">
-                                    <h2 className="text-lg font-bold text-muted-900 dark:text-white flex items-center gap-2"><span>🎒</span> Smart Packing List</h2>
-                                    <div className="text-xs font-bold text-marigold-600 bg-marigold-50 dark:bg-marigold-500/10 px-2 py-1 rounded">Weather: {weatherForMonth}</div>
+                            <div className="bg-paper-light rounded-2xl border border-[#EADFD4] p-5 sm:p-6 shadow-sm">
+                                <div className="flex items-center justify-between mb-4 border-b border-[#EADFD4] pb-2">
+                                    <h3 className="font-mono text-xs font-bold uppercase tracking-widest text-brand-primary flex items-center gap-2">
+                                        <span>SMART PACKING LIST</span>
+                                    </h3>
+                                    {data.weather && (
+                                        <span className="font-mono text-[10px] text-naviigo-brown/60 uppercase">
+                                            Weather Context: {weatherForMonth}
+                                        </span>
+                                    )}
                                 </div>
-                                <div className="bg-white dark:bg-muted-900 rounded-2xl border border-muted-100 dark:border-muted-800 p-5 shadow-sm">
-                                    <ul className="space-y-3">
-                                        {packingList.map((item, idx) => (
-                                            <li key={`pack-item-${idx}`} className="flex items-start gap-3 group cursor-pointer">
-                                                <div className="w-5 h-5 rounded-full border border-muted-300 dark:border-muted-700 flex shrink-0 items-center justify-center mt-0.5 group-hover:border-jungle-green-500 group-hover:bg-jungle-green-500/10 transition-colors">
+
+                                <ul className="space-y-2.5 mb-4">
+                                    {(showAllPacking ? packingList : packingList.slice(0, 7)).map((item, idx) => {
+                                        const isChecked = !!checkedPacking[idx];
+                                        return (
+                                            <li
+                                                key={`pack-item-${idx}`}
+                                                onClick={() => setCheckedPacking(prev => ({ ...prev, [idx]: !prev[idx] }))}
+                                                className="flex items-start gap-3 group cursor-pointer select-none"
+                                            >
+                                                <div className={`w-4 h-4 rounded mt-0.5 border flex items-center justify-center transition-colors ${
+                                                    isChecked
+                                                        ? 'bg-naviigo-teal border-naviigo-teal text-white'
+                                                        : 'border-[#EADFD4] bg-paper-warm group-hover:border-brand-primary'
+                                                }`}>
+                                                    {isChecked && <span className="text-[10px] font-bold">✓</span>}
                                                 </div>
-                                                <span className="text-sm font-medium text-muted-700 dark:text-muted-300 group-hover:text-muted-900 dark:group-hover:text-white transition-colors">{item}</span>
+                                                <span className={`text-xs sm:text-sm font-sans transition-colors ${
+                                                    isChecked ? 'line-through text-naviigo-brown/40' : 'text-naviigo-brown/85'
+                                                }`}>
+                                                    {item}
+                                                </span>
                                             </li>
-                                        ))}
-                                    </ul>
-                                </div>
+                                        );
+                                    })}
+                                </ul>
+
+                                {packingList.length > 7 && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowAllPacking(!showAllPacking)}
+                                        className="font-mono text-[11px] font-bold uppercase tracking-wider text-brand-primary hover:text-naviigo-brown transition-colors"
+                                    >
+                                        {showAllPacking ? 'Show Less ↑' : `Show All (${packingList.length}) ↓`}
+                                    </button>
+                                )}
                             </div>
                         )}
 
                         {/* Transport Logistics */}
-                        {data.logistics && (
-                            <div>
-                                <h2 className="text-lg font-bold text-muted-900 dark:text-white mb-4 flex items-center gap-2"><span>✈️</span> How to Get There</h2>
+                        {data.logistics && (data.logistics.flights || data.logistics.trains) && (
+                            <div className="bg-paper-light rounded-2xl border border-[#EADFD4] p-5 sm:p-6 shadow-sm">
+                                <div className="flex items-center justify-between mb-4 border-b border-[#EADFD4] pb-2">
+                                    <h3 className="font-mono text-xs font-bold uppercase tracking-widest text-brand-primary flex items-center gap-2">
+                                        <span>GETTING THERE</span>
+                                    </h3>
+                                    <span className="font-mono text-[10px] text-naviigo-brown/50">TRANSIT PROTOCOLS</span>
+                                </div>
+
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    <div className="bg-white dark:bg-muted-900 rounded-2xl border border-muted-100 dark:border-muted-800 p-4 shadow-sm flex items-start gap-4 hover:border-jungle-green-500/30 transition-all group/card">
-                                        <div className="w-10 h-10 rounded-xl bg-deep-sea-50 dark:bg-deep-sea-500/10 text-deep-sea-500 flex items-center justify-center text-xl shrink-0">🛫</div>
-                                        <div className="flex-1 min-w-0">
-                                            <h4 className="font-bold text-sm text-muted-900 dark:text-white mb-1">Flights</h4>
-                                            <p className="text-xs text-muted-500 dark:text-muted-400 leading-relaxed mb-3">{data.logistics.flights}</p>
-                                            <a href={`/bookings?transport=flight&to=${data.logistics.airportCode || 'BOM'}`}
-                                                className="inline-flex items-center gap-1.5 text-[10px] font-bold bg-muted-900 dark:bg-white text-white dark:text-muted-900 px-3 py-1.5 rounded-lg hover:scale-105 transition-transform">
-                                                Book Flights ↗
+                                    {data.logistics.flights && (
+                                        <div className="bg-paper-warm rounded-xl border border-[#EADFD4] p-4 flex flex-col justify-between">
+                                            <div>
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <span className="font-mono text-xs font-bold uppercase text-naviigo-brown">Air Transit</span>
+                                                    <span className="font-mono text-[10px] text-brand-primary font-bold">FLIGHT</span>
+                                                </div>
+                                                <p className="font-sans text-xs text-naviigo-brown/70 leading-relaxed mb-4">
+                                                    {data.logistics.flights}
+                                                </p>
+                                            </div>
+                                            <a
+                                                href={`/bookings?transport=flight&to=${data.logistics.airportCode || 'BOM'}`}
+                                                className="inline-flex items-center justify-between font-mono text-[11px] font-bold uppercase tracking-wider text-brand-primary hover:text-naviigo-brown border-t border-[#EADFD4] pt-3"
+                                            >
+                                                <span>Book Flights</span>
+                                                <span>↗</span>
                                             </a>
                                         </div>
-                                    </div>
-                                    <div className="bg-white dark:bg-muted-900 rounded-2xl border border-muted-100 dark:border-muted-800 p-4 shadow-sm flex items-start gap-4 hover:border-jungle-green-500/30 transition-all group/card">
-                                        <div className="w-10 h-10 rounded-xl bg-marigold-50 dark:bg-marigold-500/10 text-marigold-500 flex items-center justify-center text-xl shrink-0">🚆</div>
-                                        <div className="flex-1 min-w-0">
-                                            <h4 className="font-bold text-sm text-muted-900 dark:text-white mb-1">Trains</h4>
-                                            <p className="text-xs text-muted-500 dark:text-muted-400 leading-relaxed mb-3">{data.logistics.trains}</p>
-                                            <a href={`/bookings?transport=train&to=${data.logistics.stationCode || 'BSB'}`}
-                                                className="inline-flex items-center gap-1.5 text-[10px] font-bold bg-[#f77728] text-white px-3 py-1.5 rounded-lg hover:scale-105 transition-transform">
-                                                Book Trains ↗
+                                    )}
+
+                                    {data.logistics.trains && (
+                                        <div className="bg-paper-warm rounded-xl border border-[#EADFD4] p-4 flex flex-col justify-between">
+                                            <div>
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <span className="font-mono text-xs font-bold uppercase text-naviigo-brown">Rail Corridor</span>
+                                                    <span className="font-mono text-[10px] text-brand-primary font-bold">RAIL</span>
+                                                </div>
+                                                <p className="font-sans text-xs text-naviigo-brown/70 leading-relaxed mb-4">
+                                                    {data.logistics.trains}
+                                                </p>
+                                            </div>
+                                            <a
+                                                href={`/bookings?transport=train&to=${data.logistics.stationCode || 'BSB'}`}
+                                                className="inline-flex items-center justify-between font-mono text-[11px] font-bold uppercase tracking-wider text-brand-primary hover:text-naviigo-brown border-t border-[#EADFD4] pt-3"
+                                            >
+                                                <span>Book Trains</span>
+                                                <span>↗</span>
                                             </a>
                                         </div>
-                                    </div>
+                                    )}
                                 </div>
                             </div>
                         )}
 
-                        {/* Highlights */}
-                        <div>
-                            <h2 className="text-lg font-bold text-muted-900 dark:text-white mb-4">🏆 Top Highlights</h2>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                {data.highlights.map((a: any, i: number) => (
-                                    <motion.div key={`hl-card-${i}-${a.name || 'item'}`} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}
-                                        onClick={(e) => { e.stopPropagation(); router.push(itineraryPlaceHref('attraction', destId, a)); }}
-                                        className="bg-white dark:bg-muted-900 rounded-2xl overflow-hidden border border-muted-100 dark:border-muted-800 shadow-sm hover:shadow-md transition-all cursor-pointer hover:-tranmuted-y-1">
-                                        <div className="relative h-36">
-                                            <PlaceImage name={a.name} city={destName} className="absolute inset-0 w-full h-full" asBackground />
-                                            <div className="absolute top-2 left-2 w-7 h-7 rounded-full bg-jungle-green-500 text-white text-xs font-bold flex items-center justify-center shadow-md">{i + 1}</div>
-                                            <div className="absolute bottom-2 left-2 flex gap-1">{a.tags?.slice(0, 2).map((t: string, tIdx: number) => <span key={`hl-tag-${i}-${tIdx}`} className="text-[10px] bg-black/50 text-white backdrop-blur px-2 py-0.5 rounded-full font-medium">{t}</span>)}</div>
-                                        </div>
-                                        <div className="p-3">
-                                            <h3 className="font-bold text-muted-900 dark:text-white text-sm mb-1">{a.name}</h3>
-                                            <p className="text-xs text-muted-500 dark:text-muted-400 line-clamp-2 mb-2">{a.desc}</p>
-                                            <div className="flex gap-2 text-xs flex-wrap">
-                                                <span className="bg-muted-50 dark:bg-muted-800 rounded-lg px-2 py-1">📅 {a.bestMonths}</span>
-                                                <Badge label={a.walking} colorClass={(WALK_COLOR as any)[a.walking]} />
-                                            </div>
-                                        </div>
-                                    </motion.div>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Video Guide */}
-                        <div>
-                            <h2 className="text-lg font-bold text-muted-900 dark:text-white mb-4">🎤 Video Guide</h2>
-                            <VideoCard destId={destId} destName={destName} />
-                        </div>
-
-                        {/* Restaurants */}
-                        {data.restaurants && data.restaurants.length > 0 && (
+                        {/* Highlights — Only best 5–7 in asymmetric editorial layout */}
+                        {curatedHighlights.length > 0 && (
                             <div>
-                                <h2 className="text-lg font-bold text-muted-900 dark:text-white mb-4">🍽️ Cuisine & Dining</h2>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                    {data.restaurants.map((r: any, i: number) => (
-                                        <motion.div key={`rest-card-${i}-${r.id || r.name || 'item'}`} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
-                                            onClick={(e) => { e.stopPropagation(); router.push(itineraryPlaceHref('restaurant', destId, r)); }}
-                                            className="bg-white dark:bg-muted-900 rounded-2xl overflow-hidden border border-muted-100 dark:border-muted-800 shadow-sm hover:shadow-md transition-all cursor-pointer hover:-tranmuted-y-1">
-                                            <div className="relative h-32">
-                                                <PlaceImage name={r.name} city={destName} className="absolute inset-0 w-full h-full" asBackground />
-                                                <div className="absolute bottom-2 left-2 flex gap-1"><span className="text-[10px] bg-black/60 text-white backdrop-blur px-2 py-0.5 rounded-full font-medium">{r.cuisine}</span></div>
-                                            </div>
-                                            <div className="p-3">
-                                                <div className="flex items-start justify-between mb-1">
-                                                    <h3 className="font-bold text-muted-900 dark:text-white text-sm">{r.name}</h3>
-                                                    <span className="text-xs font-bold text-jungle-green-600 bg-jungle-green-50 dark:bg-jungle-green-500/10 px-1.5 py-0.5 rounded flex items-center gap-0.5">⭐ {r.rating}</span>
+                                <div className="flex items-baseline justify-between mb-4 border-b border-[#EADFD4] pb-2">
+                                    <h3 className="font-mono text-xs font-bold uppercase tracking-widest text-brand-primary flex items-center gap-2">
+                                        <span>TOP HIGHLIGHTS</span>
+                                    </h3>
+                                    <span className="font-mono text-[10px] text-naviigo-brown/50">CURATED REGIONAL ATLAS ({curatedHighlights.length})</span>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                                        {/* Hero Feature Place (~58% width) */}
+                                        {curatedHighlights[0] && (
+                                            <div
+                                                onClick={() => router.push(itineraryPlaceHref('attraction', destId, curatedHighlights[0]))}
+                                                className="lg:col-span-7 group relative bg-paper-light rounded-2xl overflow-hidden border border-[#EADFD4] shadow-sm hover:border-brand-primary/40 transition-all cursor-pointer flex flex-col min-h-[300px] sm:min-h-[360px]"
+                                            >
+                                                <div className="relative flex-1 bg-paper-warm overflow-hidden">
+                                                    <PlaceImage
+                                                        name={curatedHighlights[0].name}
+                                                        city={destName}
+                                                        className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                                                        asBackground
+                                                    />
+                                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                                                    <div className="absolute top-3 left-3 flex items-center gap-2">
+                                                        <span className="font-mono text-[10px] font-bold uppercase bg-brand-primary text-white px-2.5 py-1 rounded-full shadow-sm">
+                                                            01 · Featured
+                                                        </span>
+                                                        {curatedHighlights[0].rating && (
+                                                            <span className="font-mono text-[10px] font-bold bg-white/90 text-naviigo-brown px-2 py-0.5 rounded-full shadow-sm">
+                                                                ★ {curatedHighlights[0].rating}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <div className="absolute bottom-4 left-4 right-4 text-white">
+                                                        <h4 className="font-display font-black text-2xl sm:text-3xl uppercase tracking-tight leading-tight mb-1">
+                                                            {curatedHighlights[0].name}
+                                                        </h4>
+                                                        <p className="font-sans text-xs text-white/80 line-clamp-2">
+                                                            {curatedHighlights[0].desc}
+                                                        </p>
+                                                    </div>
                                                 </div>
-                                                <p className="text-xs text-muted-500 dark:text-muted-400 line-clamp-2 mb-2">{r.desc}</p>
-                                                <div className="text-[10px] font-medium text-marigold-600 dark:text-marigold-400 bg-marigold-50 dark:bg-marigold-500/10 inline-block px-1.5 py-0.5 rounded">Must Try: {r.mustTry}</div>
                                             </div>
-                                        </motion.div>
+                                        )}
+
+                                        {/* 2 Secondary Stacked Places */}
+                                        <div className="lg:col-span-5 flex flex-col gap-4">
+                                            {curatedHighlights.slice(1, 3).map((a: any, idx: number) => (
+                                                <div
+                                                    key={`hl-sec-${idx}-${a.name}`}
+                                                    onClick={() => router.push(itineraryPlaceHref('attraction', destId, a))}
+                                                    className="group flex-1 bg-paper-light rounded-2xl overflow-hidden border border-[#EADFD4] shadow-sm hover:border-brand-primary/40 transition-all cursor-pointer flex flex-col justify-between min-h-[160px]"
+                                                >
+                                                    <div className="relative h-28 bg-paper-warm overflow-hidden">
+                                                        <PlaceImage
+                                                            name={a.name}
+                                                            city={destName}
+                                                            className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                                            asBackground
+                                                        />
+                                                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+                                                        <div className="absolute top-2.5 left-2.5">
+                                                            <span className="font-mono text-[9px] font-bold uppercase bg-paper-warm/90 text-naviigo-brown px-2 py-0.5 rounded-full">
+                                                                0{idx + 2}
+                                                            </span>
+                                                        </div>
+                                                        <div className="absolute bottom-2 left-3 right-3 text-white">
+                                                            <h4 className="font-display font-bold text-base uppercase leading-tight line-clamp-1">
+                                                                {a.name}
+                                                            </h4>
+                                                        </div>
+                                                    </div>
+                                                    <div className="p-3">
+                                                        <p className="font-sans text-xs text-naviigo-brown/70 line-clamp-1 mb-1">
+                                                            {a.desc}
+                                                        </p>
+                                                        <div className="flex items-center justify-between font-mono text-[10px] text-naviigo-brown/50">
+                                                            <span>{a.bestMonths || 'All Season'}</span>
+                                                            <span className="text-brand-primary font-bold">View Place →</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Supporting Places (3 to 6) */}
+                                    {curatedHighlights.length > 3 && (
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                                            {curatedHighlights.slice(3, 6).map((a: any, idx: number) => (
+                                                <div
+                                                    key={`hl-sub-${idx}-${a.name}`}
+                                                    onClick={() => router.push(itineraryPlaceHref('attraction', destId, a))}
+                                                    className="group bg-paper-light rounded-2xl overflow-hidden border border-[#EADFD4] shadow-sm hover:border-brand-primary/40 transition-all cursor-pointer flex flex-col justify-between"
+                                                >
+                                                    <div className="relative h-32 bg-paper-warm overflow-hidden">
+                                                        <PlaceImage
+                                                            name={a.name}
+                                                            city={destName}
+                                                            className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                                            asBackground
+                                                        />
+                                                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+                                                        <div className="absolute top-2.5 left-2.5">
+                                                            <span className="font-mono text-[9px] font-bold uppercase bg-paper-warm/90 text-naviigo-brown px-2 py-0.5 rounded-full">
+                                                                0{idx + 4}
+                                                            </span>
+                                                        </div>
+                                                        <div className="absolute bottom-2 left-3 right-3 text-white">
+                                                            <h4 className="font-display font-bold text-sm uppercase leading-tight line-clamp-1">
+                                                                {a.name}
+                                                            </h4>
+                                                        </div>
+                                                    </div>
+                                                    <div className="p-3">
+                                                        <p className="font-sans text-xs text-naviigo-brown/70 line-clamp-2 mb-2">
+                                                            {a.desc}
+                                                        </p>
+                                                        <div className="flex items-center justify-between font-mono text-[10px]">
+                                                            <span className="text-naviigo-brown/50">{a.bestMonths || 'All Year'}</span>
+                                                            <span className="text-brand-primary font-bold group-hover:underline">View →</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Video Guide — strictly hidden if no valid video exists */}
+                        <VideoCard destId={destId} destName={destName} />
+
+                        {/* Cuisine & Dining — Curated Best 5–7 */}
+                        {curatedRestaurants.length > 0 && (
+                            <div>
+                                <div className="flex items-baseline justify-between mb-4 border-b border-[#EADFD4] pb-2">
+                                    <h3 className="font-mono text-xs font-bold uppercase tracking-widest text-brand-primary flex items-center gap-2">
+                                        <span>CUISINE & DINING</span>
+                                    </h3>
+                                    <span className="font-mono text-[10px] text-naviigo-brown/50">CURATED GASTRONOMY ({curatedRestaurants.length})</span>
+                                </div>
+
+                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                                    {curatedRestaurants.map((r: any, idx: number) => (
+                                        <div
+                                            key={`rest-${idx}-${r.id || r.name}`}
+                                            onClick={() => router.push(itineraryPlaceHref('restaurant', destId, r))}
+                                            className="group bg-paper-light rounded-2xl overflow-hidden border border-[#EADFD4] shadow-sm hover:border-brand-primary/40 transition-all cursor-pointer flex flex-col justify-between"
+                                        >
+                                            <div className="relative h-36 bg-paper-warm overflow-hidden">
+                                                <PlaceImage
+                                                    name={r.name}
+                                                    city={destName}
+                                                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                                    asBackground
+                                                />
+                                                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+                                                <div className="absolute top-2.5 left-2.5">
+                                                    <span className="font-mono text-[10px] font-bold uppercase bg-paper-warm/90 text-naviigo-brown px-2 py-0.5 rounded-full">
+                                                        {r.cuisine || 'Local Specialty'}
+                                                    </span>
+                                                </div>
+                                                {r.rating && (
+                                                    <div className="absolute top-2.5 right-2.5">
+                                                        <span className="font-mono text-[10px] font-bold bg-white/95 text-naviigo-brown px-2 py-0.5 rounded-full shadow-sm">
+                                                            ★ {r.rating}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                                <div className="absolute bottom-2 left-3 right-3 text-white">
+                                                    <h4 className="font-display font-bold text-base uppercase leading-tight line-clamp-1">
+                                                        {r.name}
+                                                    </h4>
+                                                </div>
+                                            </div>
+                                            <div className="p-4 flex-1 flex flex-col justify-between">
+                                                <p className="font-sans text-xs text-naviigo-brown/70 line-clamp-2 mb-3">
+                                                    {r.desc}
+                                                </p>
+                                                {r.mustTry && (
+                                                    <div className="font-mono text-[10px] bg-paper-warm border border-[#EADFD4] text-naviigo-brown px-2.5 py-1 rounded-md line-clamp-1 mb-2">
+                                                        <span className="font-bold text-brand-primary mr-1">Must try:</span>
+                                                        {r.mustTry}
+                                                    </div>
+                                                )}
+                                                <div className="flex items-center justify-between font-mono text-[10px] text-naviigo-brown/50 pt-2 border-t border-[#EADFD4]">
+                                                    <span>{r.priceRange || 'Moderate'}</span>
+                                                    <span className="text-brand-primary font-bold group-hover:underline">Explore →</span>
+                                                </div>
+                                            </div>
+                                        </div>
                                     ))}
                                 </div>
                             </div>

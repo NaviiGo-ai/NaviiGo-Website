@@ -51,41 +51,88 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
     const { user } = useAuth();
     const { registerItinerary, unregisterItinerary } = useAI();
     const [isSaved, setIsSaved] = useState(false);
-    const destId = form.destination as string, destName = form.destName as string;
-    const staticData = DEST_DATA[destId];
+    const destId = (form.destination as string) || (form.destId as string) || '';
+    const destName = (form.destName as string) || (form.destination as string) || 'India Expedition';
+    const staticData = destId ? DEST_DATA[destId.toLowerCase()] : undefined;
+
     const data: any = useMemo(() => {
-      if (!staticData) {
-        // Destination data not available - return empty state instead of fallback
-        return {
-          description: 'Destination data not available',
-          avgCost: '',
-          weather: {},
-          crowdLevel: 'Low',
-          crowdNote: 'Data unavailable for this destination',
-          highlights: [],
-          restaurants: [],
-          hotels: [],
-          dayPlans: [],
-          mapCenter: { lat: 0, lng: 0 },
-          estimatedTravelCost: undefined
+        const emptyBase = {
+            description: destName ? `Curated roadbook through ${destName}` : '',
+            avgCost: '',
+            weather: {},
+            crowdLevel: 'Medium',
+            crowdNote: '',
+            highlights: [],
+            restaurants: [],
+            hotels: [],
+            dayPlans: [],
+            mapCenter: { lat: 20.5937, lng: 78.9629 },
+            estimatedTravelCost: undefined
         };
-      }
-      return generatedData ? { ...staticData, ...generatedData } : staticData;
-    }, [generatedData, staticData]);
+        const base = staticData ? { ...emptyBase, ...staticData } : emptyBase;
+        return generatedData ? { ...base, ...generatedData } : base;
+    }, [generatedData, staticData, destName]);
+
     const center = pickMapCenter(data);
-    const [activeDay, setActiveDay] = useState(() => {
-        const initial = typeof form._initialDay === 'number' ? form._initialDay : 0;
-        const totalDays = (generatedData ?? DEST_DATA[form.destination as string])?.dayPlans?.length ?? 0;
-        return Math.max(0, Math.min(initial, totalDays - 1));
-    });
+    const availablePlans: DayPlan[] = useMemo(() => {
+        if (Array.isArray(generatedData?.dayPlans) && generatedData.dayPlans.length > 0) {
+            return generatedData.dayPlans;
+        }
+        if (Array.isArray(data?.dayPlans) && data.dayPlans.length > 0) {
+            return data.dayPlans;
+        }
+        return [];
+    }, [generatedData?.dayPlans, data?.dayPlans]);
+
+    const totalDays = Math.max(1, availablePlans.length || 1);
+    const initialDay = typeof form._initialDay === 'number' ? form._initialDay : 0;
+    const [activeDay, setActiveDay] = useState(() => Math.max(0, Math.min(initialDay, totalDays - 1)));
     const [activeActivity, setActiveActivity] = useState(-1);
     const [showAddActivity, setShowAddActivity] = useState(false);
     const [dayRouteInfo, setDayRouteInfo] = useState<{ distance: string, time: string } | null>(null);
-    const [customPlans, setCustomPlans] = useState<DayPlan[]>(() => (form.customPlans as DayPlan[]) || JSON.parse(JSON.stringify(data.dayPlans)));
-    const plan: DayPlan | undefined = customPlans[activeDay] ?? customPlans[0];
+
+    const [customPlans, setCustomPlans] = useState<DayPlan[]>(() => {
+        if (Array.isArray(form.customPlans) && form.customPlans.length > 0) return form.customPlans as DayPlan[];
+        if (availablePlans.length > 0) return JSON.parse(JSON.stringify(availablePlans));
+        return [];
+    });
+
+    // Synchronize customPlans whenever availablePlans becomes populated
+    useEffect(() => {
+        if (availablePlans.length > 0) {
+            if (customPlans.length === 0 || customPlans.length !== availablePlans.length) {
+                setCustomPlans(JSON.parse(JSON.stringify(availablePlans)));
+            }
+        }
+    }, [availablePlans, customPlans.length]);
+
+    // Keep activeDay valid if _initialDay prop or plans length changes
+    useEffect(() => {
+        if (typeof form._initialDay === 'number') {
+            const maxIdx = Math.max(0, (customPlans.length || availablePlans.length || 1) - 1);
+            setActiveDay(Math.max(0, Math.min(form._initialDay, maxIdx)));
+        }
+    }, [form._initialDay, customPlans.length, availablePlans.length]);
+
+    const plansToRender = customPlans.length > 0 ? customPlans : availablePlans;
+    const plan: DayPlan | undefined = plansToRender[activeDay] ?? plansToRender[0];
     const activities = useMemo(() => {
         return plan?.activities ?? [];
     }, [plan]);
+
+    const navigateToDay = useCallback((dayIdx: number) => {
+        const count = plansToRender.length || 1;
+        if (dayIdx < 0 || dayIdx >= count) return;
+        setActiveDay(dayIdx);
+        setActiveActivity(-1);
+        const parts = window.location.pathname.split('/');
+        const planIdx = parts.indexOf('plan');
+        const urlUuid = planIdx !== -1 ? parts[planIdx + 1] : null;
+        const uuid = (form.uuid || form._uuid || urlUuid) as string;
+        if (uuid) {
+            window.history.pushState(null, '', `/itinerary/plan/${uuid}/day/${dayIdx + 1}`);
+        }
+    }, [plansToRender.length, form.uuid, form._uuid]);
 
     // Sync activeDay with browser history navigation (back/forward)
     useEffect(() => {
@@ -95,13 +142,14 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
             if (dayIdx !== -1 && parts[dayIdx + 1]) {
                 const dayNum = parseInt(parts[dayIdx + 1], 10);
                 if (!isNaN(dayNum) && dayNum >= 1) {
-                    setActiveDay(dayNum - 1);
+                    const count = plansToRender.length || 1;
+                    setActiveDay(Math.max(0, Math.min(dayNum - 1, count - 1)));
                 }
             }
         };
         window.addEventListener('popstate', handlePopState);
         return () => window.removeEventListener('popstate', handlePopState);
-    }, []);
+    }, [plansToRender.length]);
 
 
     const destState = DESTINATIONS.find(d => d.id === destId)?.state || '';
@@ -311,41 +359,54 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                 </motion.button>
             </div>
 
-            {/* Day tabs (Restrained Editorial Tabs) */}
-            <div className="sticky top-[104px] sm:top-[120px] z-20 bg-paper-light/95 backdrop-blur-md border-b border-[#EADFD4] px-4 sm:px-8 py-3 overflow-x-auto no-scrollbar">
-                <div className="flex items-center gap-6 font-mono text-xs tracking-wider uppercase">
-                    {data.dayPlans.map((dp: DayPlan, i: number) => {
-                        const isActive = activeDay === i;
-                        const formattedDay = `DAY ${String(dp.day).padStart(2, '0')}`;
-                        return (
-                            <button
-                                key={dp.day}
-                                onClick={() => {
-                                    setActiveDay(i);
-                                    setActiveActivity(-1);
-                                    const parts = window.location.pathname.split('/');
-                                    const planIdx = parts.indexOf('plan');
-                                    const urlUuid = planIdx !== -1 ? parts[planIdx + 1] : null;
-                                    const uuid = (form.uuid || form._uuid || urlUuid) as string;
-                                    if (uuid) {
-                                        window.history.pushState(null, '', `/itinerary/plan/${uuid}/day/${i + 1}`);
-                                    }
-                                }}
-                                className={`group relative py-1 flex items-center gap-2 transition-colors ${
-                                    isActive ? 'text-brand-primary font-bold' : 'text-naviigo-brown/60 hover:text-naviigo-brown'
-                                }`}
-                            >
-                                <span>{formattedDay}</span>
-                                {isActive && (
-                                    <motion.div
-                                        layoutId="activeDayTabIndicator"
-                                        className="absolute bottom-0 left-0 right-0 h-[2px] bg-brand-primary"
-                                        transition={{ type: 'spring', stiffness: 350, damping: 28 }}
-                                    />
-                                )}
-                            </button>
-                        );
-                    })}
+            {/* Day tabs (Restrained Editorial Tabs + Day Navigator) */}
+            <div className="sticky top-[104px] sm:top-[120px] z-20 bg-paper-light/95 backdrop-blur-md border-b border-[#EADFD4] px-4 sm:px-8 py-2.5 sm:py-3">
+                <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-4 sm:gap-6 font-mono text-xs tracking-wider uppercase overflow-x-auto no-scrollbar py-1">
+                        {plansToRender.map((dp: DayPlan, i: number) => {
+                            const isActive = activeDay === i;
+                            const formattedDay = `DAY ${String(dp.day || i + 1).padStart(2, '0')}`;
+                            return (
+                                <button
+                                    key={dp.day || i}
+                                    onClick={() => navigateToDay(i)}
+                                    className={`group relative py-1 flex items-center gap-1.5 transition-colors whitespace-nowrap ${
+                                        isActive ? 'text-brand-primary font-bold' : 'text-naviigo-brown/60 hover:text-naviigo-brown'
+                                    }`}
+                                >
+                                    <span>{formattedDay}</span>
+                                    {isActive && (
+                                        <motion.div
+                                            layoutId="activeDayTabIndicator"
+                                            className="absolute bottom-0 left-0 right-0 h-[2px] bg-brand-primary"
+                                            transition={{ type: 'spring', stiffness: 350, damping: 28 }}
+                                        />
+                                    )}
+                                </button>
+                            );
+                        })}
+                    </div>
+
+                    {/* Day Stepper (Previous / Next) */}
+                    <div className="hidden sm:flex items-center gap-2 font-mono text-xs uppercase shrink-0">
+                        <button
+                            onClick={() => navigateToDay(activeDay - 1)}
+                            disabled={activeDay === 0}
+                            className="px-3 py-1.5 rounded-lg border border-[#EADFD4] text-naviigo-brown/80 hover:text-brand-primary hover:border-brand-primary/40 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                        >
+                            ← Prev Day
+                        </button>
+                        <span className="font-bold text-naviigo-brown px-1">
+                            {String(activeDay + 1).padStart(2, '0')} / {String(plansToRender.length || 1).padStart(2, '0')}
+                        </span>
+                        <button
+                            onClick={() => navigateToDay(activeDay + 1)}
+                            disabled={activeDay >= plansToRender.length - 1}
+                            className="px-3 py-1.5 rounded-lg border border-[#EADFD4] text-naviigo-brown/80 hover:text-brand-primary hover:border-brand-primary/40 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+                        >
+                            Next Day →
+                        </button>
+                    </div>
                 </div>
 
                 {isTripActive && (() => {
@@ -375,23 +436,34 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                     <div className="flex-1 min-w-0">
                         <AnimatePresence mode="wait">
                             <motion.div key={activeDay} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}>
+                                {!plan ? (
+                                    <div className="bg-paper-light border border-[#EADFD4] rounded-2xl p-10 text-center">
+                                        <div className="text-4xl mb-3">📅</div>
+                                        <h3 className="font-display font-bold text-lg uppercase text-naviigo-brown mb-2">No activities recorded for Day {activeDay + 1}</h3>
+                                        <p className="font-sans text-xs text-naviigo-brown/60 mb-6">Select another chapter from the day index above.</p>
+                                        <button onClick={() => navigateToDay(0)} className="bg-brand-primary text-white font-mono text-xs uppercase font-bold px-6 py-2.5 rounded-lg hover:bg-brand-primary/90 transition-colors">
+                                            Return to Day 01
+                                        </button>
+                                    </div>
+                                ) : (
+                                <>
                                 <div className="mb-8">
                                     {/* DAY CHAPTER OPENING */}
                                     <div className="border-b border-[#EADFD4] pb-6 mb-8">
                                     <div className="flex items-center justify-between mb-3">
                                         <div className="flex items-center gap-3 font-mono text-xs font-bold uppercase tracking-[0.25em] text-brand-primary">
-                                            <span>DAY {String(plan.day).padStart(2, '0')}</span>
+                                            <span>DAY {String(plan.day || activeDay + 1).padStart(2, '0')}</span>
                                             <span className="text-naviigo-brown/30">|</span>
                                             <span>{destName}</span>
                                             <span className="text-naviigo-brown/30">|</span>
-                                            <span className="text-naviigo-brown/60">{plan.activities.length} STOPS</span>
+                                            <span className="text-naviigo-brown/60">{(plan.activities || []).length} STOPS</span>
                                         </div>
                                         <motion.button whileTap={{ scale: 0.98 }} onClick={() => {
                                             const baseDate = form.startDate ? new Date(form.startDate as string) : new Date();
                                             baseDate.setDate(baseDate.getDate() + activeDay);
                                             let ics = "BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-//NaviiGo//Itinerary//EN\n";
-                                            plan.activities.forEach((a) => {
-                                                const parts = a.time.split('–').map(s => s.trim());
+                                            (plan.activities || []).forEach((a) => {
+                                                const parts = (a.time || '').split('–').map(s => s.trim());
                                                 let sh = 9, sm = 0, eh = 10, em = 0;
                                                 if (parts.length === 2) {
                                                     const parse = (s: string) => { const m = s.match(/(\d+):(\d+)\s*(AM|PM)/i); if (!m) return null; let h = parseInt(m[1]); if (m[3].toUpperCase() === 'PM' && h !== 12) h += 12; if (m[3].toUpperCase() === 'AM' && h === 12) h = 0; return [h, parseInt(m[2])]; };
@@ -406,7 +478,7 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                                             });
                                             ics += "END:VCALENDAR";
                                             const url = URL.createObjectURL(new Blob([ics], { type: 'text/calendar' }));
-                                            const a = document.createElement('a'); a.href = url; a.download = `NaviiGo_Day${plan.day}.ics`; a.click();
+                                            const a = document.createElement('a'); a.href = url; a.download = `NaviiGo_Day${plan.day || activeDay + 1}.ics`; a.click();
                                         }} className="text-xs border border-naviigo-brown/20 text-naviigo-brown hover:border-brand-primary hover:text-brand-primary px-4 py-2 rounded-full font-mono uppercase font-bold tracking-wider transition-colors hidden sm:flex items-center gap-1.5 shrink-0">
                                             <span>📅</span> Export Day .ics
                                         </motion.button>
@@ -419,7 +491,7 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                                     <p className="font-sans text-sm sm:text-base text-naviigo-brown/70 font-light italic max-w-xl">
                                         {activeDay === 0
                                             ? "Arrive, orient, and wander. Leave space for unscripted courtyards and acclimating."
-                                            : activeDay === data.dayPlans.length - 1
+                                            : activeDay === plansToRender.length - 1
                                             ? "Final hours before departure. Pack the roadbook and savor the closing horizon."
                                             : "Start early to catch the morning light. Follow the spine through local paths."}
                                     </p>
@@ -572,11 +644,12 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
 
                         <div className="space-y-6">
                             {/* Action Bar */}
-                                <div className="flex gap-3 flex-wrap bg-white dark:bg-muted-900 border border-muted-100 dark:border-muted-800 rounded-2xl p-2 shadow-sm">
+                                <div className="flex gap-3 flex-wrap bg-paper-light border border-[#EADFD4] rounded-2xl p-2 shadow-sm">
                                     <motion.button whileTap={{ scale: 0.98 }} onClick={(e) => {
                                         e.stopPropagation();
                                         const currentPlans = customPlans.length > 0 ? [...customPlans] : [...data.dayPlans];
-                                        const optimizedActivities = [...plan.activities].sort((a, b) => {
+                                        const currentActs = plan?.activities || [];
+                                        const optimizedActivities = [...currentActs].sort((a, b) => {
                                             const slots = { 'Morning': 1, 'Afternoon': 2, 'Evening': 3 };
                                             const sA = slots[a.slot as keyof typeof slots] || 9;
                                             const sB = slots[b.slot as keyof typeof slots] || 9;
@@ -586,22 +659,23 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                                         currentPlans[activeDay] = { ...plan, activities: optimizedActivities };
                                         setCustomPlans(currentPlans);
                                     }}
-                                        className="flex-1 bg-muted-900 dark:bg-white hover:bg-muted-800 dark:hover:bg-muted-100 text-white dark:text-muted-900 transition-all px-4 py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2">
+                                        className="flex-1 bg-naviigo-brown hover:bg-brand-primary text-white transition-all px-4 py-2.5 rounded-xl font-mono uppercase font-bold text-xs flex items-center justify-center gap-2 shadow-sm">
                                         <span>✨</span> Optimize Order
                                     </motion.button>
                                     <motion.button whileTap={{ scale: 0.98 }} onClick={(e) => {
                                         e.stopPropagation();
-                                        if (plan.activities.length <= 3) { alert("Your schedule is already very relaxed!"); return; }
+                                        const currentActs = plan?.activities || [];
+                                        if (currentActs.length <= 3) { alert("Your schedule is already very relaxed!"); return; }
                                         const currentPlans = customPlans.length > 0 ? [...customPlans] : [...data.dayPlans];
-                                        let toRemoveIdx = plan.activities.length - 1;
-                                        const crowdedIdx = plan.activities.findIndex(a => a.crowd === 'High');
+                                        let toRemoveIdx = currentActs.length - 1;
+                                        const crowdedIdx = currentActs.findIndex(a => a.crowd === 'High');
                                         if (crowdedIdx >= 0) toRemoveIdx = crowdedIdx;
-                                        const newActivities = [...plan.activities];
+                                        const newActivities = [...currentActs];
                                         newActivities.splice(toRemoveIdx, 1);
                                         currentPlans[activeDay] = { ...plan, activities: newActivities };
                                         setCustomPlans(currentPlans);
                                     }}
-                                        className="flex-1 bg-muted-50 dark:bg-muted-800 text-muted-900 dark:text-white hover:bg-muted-100 dark:hover:bg-muted-700 transition-all px-4 py-2.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2">
+                                        className="flex-1 bg-paper-warm border border-[#EADFD4] text-naviigo-brown hover:bg-paper-light transition-all px-4 py-2.5 rounded-xl font-mono uppercase font-bold text-xs flex items-center justify-center gap-2">
                                         <span>😌</span> Make it Relaxed
                                     </motion.button>
                                 </div>
@@ -977,7 +1051,7 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                                     <div className="mt-6 pt-5 border-t border-[#EADFD4]">
                                         <h4 className="font-mono text-[10px] font-bold text-naviigo-brown/60 uppercase tracking-widest mb-3">Signature Regional Highlights</h4>
                                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                            {data.highlights?.filter((a: any) => !plan.activities.find((pa: any) => pa.name === a.name)).slice(0, 4).map((sug: any) => (
+                                            {data.highlights?.filter((a: any) => !(plan?.activities || []).find((pa: any) => pa.name === a.name)).slice(0, 4).map((sug: any) => (
                                                 <div key={sug.name} className="bg-paper-warm border border-[#EADFD4] rounded-lg p-2.5 flex gap-3 group cursor-pointer hover:border-brand-primary/50 transition-all"
                                                     onClick={() => addCustomActivity({ name: sug.name, display_name: sug.desc, lat: sug.lat || data.mapCenter.lat, lon: sug.lng || data.mapCenter.lng })}>
                                                     <PlaceImage name={sug.name} city={destName} className="w-10 h-10 rounded object-cover shrink-0" asBackground />
@@ -991,6 +1065,8 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                                     </div>
                                 </div>
                             </div>
+                            </>
+                            )}
                         </motion.div>
                     </AnimatePresence>
                 </div>

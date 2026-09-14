@@ -13,6 +13,7 @@ import {
     query,
     orderBy,
     limit,
+    where,
     Timestamp,
     addDoc,
     arrayUnion,
@@ -154,13 +155,69 @@ export async function saveItineraryToFirestore(uid: string, data: {
 
 
 export async function getUserItineraries(uid: string): Promise<SavedItineraryDoc[]> {
-    const q = query(
-        collection(db, 'users', uid, 'itineraries'),
-        orderBy('createdAt', 'desc'),
-        limit(20)
-    );
-    const snap = await getDocs(q);
-    return snap.docs.map(d => ({ id: d.id, ...d.data() } as SavedItineraryDoc));
+    if (!db || !uid) return [];
+    try {
+        const resultsMap = new Map<string, SavedItineraryDoc>();
+
+        // 1. Fetch from user's personal itineraries subcollection
+        try {
+            const userItinSnap = await getDocs(collection(db, 'users', uid, 'itineraries'));
+            userItinSnap.forEach(d => {
+                const data = d.data();
+                resultsMap.set(d.id, {
+                    id: d.id,
+                    destId: data.destId || (data.form?.destination as string) || 'india',
+                    destName: data.destName || (data.form?.destName as string) || 'India Expedition',
+                    form: data.form || {},
+                    generatedData: data.generatedData || null,
+                    createdAt: data.createdAt,
+                    updatedAt: data.updatedAt,
+                    isActive: data.isActive ?? false,
+                } as SavedItineraryDoc);
+            });
+        } catch (e) {
+            console.warn('[Firestore] getUserItineraries user subcollection read failed:', e);
+        }
+
+        // 2. Also query root itineraries collection where userId == uid (no composite index needed)
+        try {
+            const q = query(
+                collection(db, 'itineraries'),
+                where('userId', '==', uid)
+            );
+            const rootSnap = await getDocs(q);
+            rootSnap.forEach(d => {
+                const data = d.data();
+                if (!resultsMap.has(d.id)) {
+                    resultsMap.set(d.id, {
+                        id: d.id,
+                        destId: data.destId || (data.form?.destination as string) || 'india',
+                        destName: data.destName || (data.form?.destName as string) || 'India Expedition',
+                        form: data.form || {},
+                        generatedData: data.generatedData || null,
+                        createdAt: data.createdAt,
+                        updatedAt: data.updatedAt,
+                        isActive: data.isActive ?? false,
+                    } as SavedItineraryDoc);
+                }
+            });
+        } catch (e) {
+            console.warn('[Firestore] getUserItineraries root collection query failed:', e);
+        }
+
+        const items = Array.from(resultsMap.values());
+        // Sort in JavaScript by creation/update timestamp descending
+        items.sort((a: any, b: any) => {
+            const timeA = a.updatedAt?.toMillis?.() || a.createdAt?.toMillis?.() || (a.createdAt?.seconds ? a.createdAt.seconds * 1000 : 0);
+            const timeB = b.updatedAt?.toMillis?.() || b.createdAt?.toMillis?.() || (b.createdAt?.seconds ? b.createdAt.seconds * 1000 : 0);
+            return timeB - timeA;
+        });
+
+        return items.slice(0, 30);
+    } catch (err) {
+        console.warn('[Firestore] getUserItineraries error:', err);
+        return [];
+    }
 }
 
 export async function setActiveItinerary(uid: string, itineraryId: string) {
@@ -351,7 +408,7 @@ export async function saveItineraryByUUID(uuid: string, data: {
     userId?: string | null;
     isPublic?: boolean;
 }) {
-    if (!db) return;
+    if (!db || !uuid) return;
     try {
         const ref = doc(db, 'itineraries', uuid);
         const now = new Date();
@@ -359,13 +416,40 @@ export async function saveItineraryByUUID(uuid: string, data: {
             ? null
             : new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
 
-        await setDoc(ref, {
+        const docData = {
             ...data,
+            uuid,
             isPublic: data.isPublic ?? true,
             expiresAt: expiresAt ? Timestamp.fromDate(expiresAt) : null,
             updatedAt: serverTimestamp(),
             createdAt: serverTimestamp(),
-        }, { merge: true });
+        };
+
+        // 1. Save to root itineraries collection
+        await setDoc(ref, docData, { merge: true });
+
+        // 2. If authenticated, mirror to users/{userId}/itineraries/{uuid} for Passport instant indexing
+        if (data.userId) {
+            try {
+                const userRef = doc(db, 'users', data.userId, 'itineraries', uuid);
+                await setDoc(userRef, {
+                    ...docData,
+                    id: uuid,
+                    destId: (data.form?.destination as string) || 'india',
+                    destName: data.destName,
+                    isActive: false,
+                }, { merge: true });
+
+                // Update totalTrips count safely
+                const userProfileRef = doc(db, 'users', data.userId);
+                await updateDoc(userProfileRef, {
+                    lastUpdated: serverTimestamp(),
+                    totalTrips: increment(1),
+                }).catch(() => {});
+            } catch (userSaveErr) {
+                console.warn('[Firestore] Mirroring to users collection failed (non-fatal):', userSaveErr);
+            }
+        }
     } catch (err) {
         console.warn('[Firestore] saveItineraryByUUID error (non-fatal):', err);
     }

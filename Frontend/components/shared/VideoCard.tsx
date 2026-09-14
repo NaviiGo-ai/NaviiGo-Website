@@ -1,20 +1,11 @@
 'use client';
 import { useState } from 'react';
-import { motion } from 'framer-motion';
 
-// Curated travel YouTube videos per destination
+// Curated verified travel videos
 const DEST_VIDEOS: Record<string, { id: string; title: string; channel: string }> = {
-    kerala: { id: 'EXr0V7xfVbk', title: 'Kerala Travel Guide — Backwaters, Hills & Beaches', channel: 'Wander with Josh' },
-    jaipur: { id: 'sGFEhSjbPJw', title: 'Jaipur in 48 Hours — Pink City Guide', channel: 'Travel Monks' },
-    varanasi: { id: '0h09g8Zp_tM', title: 'Varanasi — The Eternal City of India', channel: 'Lost LeBlanc' },
-    goa: { id: 'dpIAJNtdJ3I', title: 'Goa Travel Guide — Best Beaches & Food', channel: 'Nomadic Boys' },
-    manali: { id: 'gbsGiC6-aF0', title: 'Manali Complete Guide — Himalayas & Rohtang', channel: 'Traveller\'s Mind' },
-    udaipur: { id: 'iJWlAPVMDKU', title: 'Udaipur — City of Lakes & Palaces', channel: 'Karan Gupta Vlogs' },
-    agra: { id: 'Zso6Z2Yx6QA', title: 'Taj Mahal & Agra — Complete Day Guide', channel: 'Solo Traveler India' },
-    rishikesh: { id: 'sGFEhSjbPJw', title: 'Rishikesh — Yoga, Rafting & Mountains', channel: 'Mindful Wanderer' },
+    kerala: { id: 'k7Kz_w4u0uU', title: 'Kerala — God’s Own Country Field Guide', channel: 'Incredible India' },
+    rajasthan: { id: 'd6b05w_C08w', title: 'Rajasthan — The Land of Kings', channel: 'Incredible India' },
 };
-
-const DEFAULT_VIDEO = { id: '95rx0JoGeic', title: 'India Travel Highlights 2024', channel: 'NaviiGo Picks' };
 
 interface VideoCardProps {
     destId: string;
@@ -23,18 +14,31 @@ interface VideoCardProps {
 
 export default function VideoCard({ destId, destName }: VideoCardProps) {
     const [playing, setPlaying] = useState(false);
-    const video = DEST_VIDEOS[destId] ?? DEFAULT_VIDEO;
+    const [failed, setFailed] = useState(false);
+
+    const normId = destId ? destId.toLowerCase().trim() : '';
+    const video = DEST_VIDEOS[normId];
+
+    // If no curated video is mapped, or if thumbnail/stream failed, hide the section entirely
+    if (!video || failed) {
+        return null;
+    }
+
     const thumbUrl = `https://img.youtube.com/vi/${video.id}/hqdefault.jpg`;
 
     return (
-        <div className="bg-white dark:bg-muted-900 rounded-2xl border border-muted-100 dark:border-muted-800 overflow-hidden shadow-sm">
-            <div className="flex items-center gap-2 px-4 py-3 border-b border-muted-100 dark:border-muted-800">
-                <span className="text-temple-red-500 text-lg">▶️</span>
-                <h3 className="font-bold text-muted-900 dark:text-white text-sm">Watch: {destName} Guide</h3>
-                <span className="ml-auto text-[10px] font-bold bg-temple-red-100 text-temple-red-600 dark:bg-temple-red-500/20 dark:text-temple-red-400 px-2 py-0.5 rounded-full uppercase tracking-wider">YouTube</span>
+        <div className="bg-paper-light rounded-2xl border border-[#EADFD4] overflow-hidden shadow-sm">
+            <div className="flex items-center gap-2 px-4 py-3 border-b border-[#EADFD4]">
+                <span className="text-brand-primary text-xs font-mono">▶</span>
+                <h3 className="font-mono text-xs font-bold uppercase tracking-wider text-naviigo-brown">
+                    Field Guide: {destName}
+                </h3>
+                <span className="ml-auto text-[10px] font-mono font-bold bg-paper-warm text-naviigo-brown/60 px-2 py-0.5 rounded uppercase tracking-wider border border-[#EADFD4]">
+                    Curated
+                </span>
             </div>
 
-            <div className="relative" style={{ paddingBottom: '56.25%' }}>
+            <div className="relative aspect-video bg-paper-warm">
                 {playing ? (
                     <iframe
                         className="absolute inset-0 w-full h-full"
@@ -44,34 +48,34 @@ export default function VideoCard({ destId, destName }: VideoCardProps) {
                         allowFullScreen
                     />
                 ) : (
-                    <motion.button
+                    <button
+                        type="button"
                         onClick={() => setPlaying(true)}
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                        className="absolute inset-0 w-full h-full group"
+                        className="absolute inset-0 w-full h-full group text-left cursor-pointer overflow-hidden"
                     >
-                        {/* Thumbnail */}
-                        <div
-                            className="absolute inset-0 bg-cover bg-center"
-                            style={{ backgroundImage: `url(${thumbUrl})` }}
+                        <img
+                            src={thumbUrl}
+                            alt={video.title}
+                            onError={() => setFailed(true)}
+                            onLoad={(e) => {
+                                // YouTube returns a 120px fallback placeholder for deleted/invalid videos
+                                if (e.currentTarget.naturalWidth <= 120) {
+                                    setFailed(true);
+                                }
+                            }}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         />
-                        {/* Overlay */}
                         <div className="absolute inset-0 bg-black/30 group-hover:bg-black/40 transition-colors" />
-                        {/* Play button */}
                         <div className="absolute inset-0 flex items-center justify-center">
-                            <motion.div
-                                whileHover={{ scale: 1.1 }}
-                                className="w-16 h-16 bg-temple-red-600 hover:bg-temple-red-500 rounded-full flex items-center justify-center shadow-2xl shadow-temple-red-500/40 transition-colors"
-                            >
-                                <div className="w-0 h-0 border-t-[12px] border-t-transparent border-b-[12px] border-b-transparent border-l-[20px] border-l-white ml-1" />
-                            </motion.div>
+                            <div className="w-14 h-14 rounded-full bg-brand-primary text-white flex items-center justify-center shadow-xl group-hover:scale-110 transition-transform">
+                                <div className="w-0 h-0 border-t-[10px] border-t-transparent border-b-[10px] border-b-transparent border-l-[16px] border-l-white ml-1" />
+                            </div>
                         </div>
-                        {/* Title overlay */}
-                        <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/80 to-transparent">
-                            <p className="text-white font-semibold text-sm line-clamp-1">{video.title}</p>
-                            <p className="text-white/60 text-xs mt-0.5">{video.channel}</p>
+                        <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/80 to-transparent text-white">
+                            <p className="font-display font-bold text-sm uppercase tracking-tight line-clamp-1">{video.title}</p>
+                            <p className="font-mono text-[10px] text-white/70 uppercase mt-0.5">{video.channel}</p>
                         </div>
-                    </motion.button>
+                    </button>
                 )}
             </div>
         </div>
