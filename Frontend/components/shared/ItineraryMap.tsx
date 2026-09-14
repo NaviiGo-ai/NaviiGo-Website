@@ -103,27 +103,24 @@ export default function ItineraryMap({
             attributionControl: true,
         });
 
-        const cartoKey = process.env.NEXT_PUBLIC_CARTO_API_KEY || 'eyJhbGciOiJIUzI1NiJ9.eyJhIjoiYWNfZzA3MjE4ZmciLCJqdGkiOiIwMTYyZWI2MiJ9.eqeGujku1mhnCY-KQ6hEOYbExD0EKV2KE8-TkdB13Xw';
-
-        // CARTO Voyager Basemap with verified API key (warm luxury styling, 100% watermark-free)
-        const primaryTileUrl = `https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png${cartoKey ? `?key=${cartoKey}` : ''}`;
-        const fallbackTileUrl = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}';
-        const emergencyTileUrl = 'https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png';
+        // Primary: ESRI World Topo Basemap (Warm luxury paper/topo palette, 100% watermark-free, zero API key required)
+        const primaryTileUrl = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}';
+        const fallbackTileUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+        const emergencyTileUrl = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}';
 
         const tileLayer = L.tileLayer(primaryTileUrl, {
-            subdomains: ['a', 'b', 'c', 'd'],
-            maxZoom: 20,
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions" target="_blank" rel="noreferrer">CARTO</a>',
+            maxZoom: 19,
+            attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ, TomTom, Intermap, iPC, USGS, FAO, NPS, NRCAN, GeoBase, Kadaster NL, Ordnance Survey, Esri Japan, METI, Esri China (Hong Kong), and the GIS User Community',
         }).addTo(map);
 
         let errorCount = 0;
         tileLayer.on('tileerror', () => {
             errorCount++;
             if (errorCount === 1) {
-                // Immediate unblocked fallback: ESRI World Topo (zero auth required, global CDN)
+                // First fallback: OpenStreetMap Standard
                 tileLayer.setUrl(fallbackTileUrl);
             } else if (errorCount === 3) {
-                // Secondary fallback: OSM Humanitarian
+                // Secondary fallback: ESRI World Street Map
                 tileLayer.setUrl(emergencyTileUrl);
             }
         });
