@@ -1,18 +1,62 @@
+/* ── Naviigo Authentic Brand Colors ────────────────────────────── */
 :root {
-  --color-saffron: #FF9933;
-  --color-indigo: #4B0082;
-  --color-marigold: #FFC107;
-  --color-warm-ivory: #FFF8F0;
-  --color-deep-charcoal: #2D2D2D;
-  --color-temple-red: #B22222;
-  --color-jungle-green: #2E8B57;
-  --color-deep-sea: #006994;
+  --color-naviigo-orange: #EC6426;      /* Primary CTA / Action / Discovery */
+  --color-naviigo-yellow: #F8A91F;      /* Small highlights / Optimism */
+  --color-naviigo-brown: #632713;       /* Editorial depth / Warm anchor */
+  --color-naviigo-cream: #FDE3CF;       /* Canvas / Warmth / Paper */
+  --color-naviigo-teal: #00666A;        /* Travel-state / Live context */
+  --color-naviigo-text: #24323A;        /* Default high-contrast text */
 
-  /* Shades and tints for depth */
-  --color-saffron-light: #FFB84D;
-  --color-saffron-dark: #E68A00;
-  --color-indigo-light: #6B1EA0;
-  --color-indigo-dark: #3A0066;
-  --color-marigold-light: #FFD54D;
-  --color-marigold-dark: #CC9A00;
+  /* ── Tactile Paper & Material Surface System ─────────────────── */
+  --color-paper-light: #FDFBF7;         /* Crisp editorial ivory */
+  --color-paper-warm: #FAF6F0;          /* Warm journal sheet */
+  --color-paper-cream: #FDE3CF;         /* Rich brand cream */
+  --color-paper-bone: #F5EDE4;          /* Soft architectural paper */
+  --color-paper-muted: #EAE3DA;         /* Divider / Card surface */
+  --color-paper-dark: #161412;          /* Deep editorial black */
+  --color-paper-charcoal: #201D1A;      /* Dark surface layer */
+
+  /* ── Semantic Application Tokens ─────────────────────────────── */
+  --color-brand-primary: var(--color-naviigo-orange);
+  --color-brand-secondary: var(--color-naviigo-yellow);
+  --color-brand-tertiary: var(--color-naviigo-brown);
+  --color-brand-canvas: var(--color-naviigo-cream);
+  --color-state-travel: var(--color-naviigo-teal);
+  --color-text-primary: var(--color-naviigo-text);
+  --color-text-muted: #5F6B72;
+  --color-text-subtle: #8C969B;
+
+  /* ── Compatibility Aliases ───────────────────────────────────── */
+  --color-warm-ivory-50: var(--color-paper-light);
+  --color-warm-ivory-100: var(--color-paper-warm);
+  --color-warm-ivory-200: var(--color-paper-bone);
+  --color-warm-ivory-300: #E8DCCC;
+  --color-warm-ivory-400: #D6C7B2;
+  --color-warm-ivory-500: var(--color-paper-warm);
+  --color-warm-ivory-600: var(--color-paper-muted);
+  --color-warm-ivory-700: #C8BFB6;
+  --color-warm-ivory-800: #B7ADA6;
+  --color-warm-ivory-900: #9C928B;
+  --color-warm-ivory-950: #6B6259;
+
+  --color-deep-charcoal-50: #3A3A3A;
+  --color-deep-charcoal-100: #343434;
+  --color-deep-charcoal-500: #24323A;
+  --color-deep-charcoal-800: #181818;
+  --color-deep-charcoal-900: #111111;
+  --color-deep-charcoal-950: #0D0C0B;
+
+  --color-saffron-400: #F8A91F;
+  --color-saffron-500: #EC6426;
+  --color-saffron-600: #D4541C;
+
+  --color-stone-100: #E2E1DD;
+  --color-stone-200: #C9C8C4;
+  --color-stone-500: #8E8D8A;
+  --color-stone-700: #565554;
+  --color-stone-900: #1F1E1C;
+
+  --color-warm-ivory: var(--color-paper-warm);
+  --color-deep-charcoal: var(--color-text-primary);
+  --color-saffron: var(--color-naviigo-orange);
 }

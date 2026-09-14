@@ -1,70 +1,70 @@
 import type { Metadata, Viewport } from 'next';
-import { Amaranth, Playfair_Display } from 'next/font/google';
+import { Epilogue, Plus_Jakarta_Sans } from 'next/font/google';
 import './globals.css';
-import Navbar from '@/components/shared/Navbar';
-import Footer from '@/components/shared/Footer';
+import Navbar from '@/components/shared/MinimalNavbar';
 import Providers from './providers';
-import { LazySocialButton, LazyMorphSurface, LazyWebGLBackground } from '@/components/shared/LazyComponents';
+import { LazySocialButton } from '@/components/shared/LazyComponents';
+import CustomCursor from '@/components/shared/CustomCursor';
 import Script from 'next/script';
 
-const amaranth = Amaranth({
-  weight: ['400', '700'],
+const epilogue = Epilogue({
+  subsets: ['latin'],
+  variable: '--font-epilogue',
+  display: 'swap',
+  weight: ['300', '400', '500', '600', '700', '800', '900'],
+});
+
+const plusJakarta = Plus_Jakarta_Sans({
   subsets: ['latin'],
   variable: '--font-sans',
   display: 'swap',
-});
-
-const playfair = Playfair_Display({
-  subsets: ['latin'],
-  variable: '--font-serif',
-  display: 'swap',
+  weight: ['400', '500', '600', '700', '800'],
 });
 
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
+  maximumScale: 5,
   viewportFit: 'cover',
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#fbfbf9' },
-    { media: '(prefers-color-scheme: dark)', color: '#1a1a1a' },
+    { media: '(prefers-color-scheme: light)', color: '#FAF6F0' },
+    { media: '(prefers-color-scheme: dark)', color: '#161412' },
   ],
 };
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://naviigo.com'),
   title: {
-    default: 'NaviiGo | The Ultimate Indian Travel Tech & AI Aggregator',
+    default: 'NaviiGo — The Connected Travel Companion',
     template: '%s | NaviiGo',
   },
-  description: 'AI-Powered itineraries, digital pilgrim passports, and universal booking hub for cheap travel options across India.',
-  keywords: 'India travel, spiritual journey, digital passport, automatic stamps, AI itinerary generator, darshan timings planner, NaviiGO travel aggregator',
+  description: 'Travel should feel like an experience, not a project to manage. Discover, plan, and experience extraordinary journeys with NaviiGo.',
+  keywords: 'NaviiGo, travel companion, curated itineraries, seamless discovery, travel experience, journey planner, India and beyond',
   openGraph: {
-    title: 'NaviiGo | Indian Travel Planner & AI Aggregator',
-    description: 'Transform your journey with our Digital Pilgrim Passport and AI-powered itineraries.',
+    title: 'NaviiGo — The Connected Travel Companion',
+    description: 'Travel should feel like an experience, not a project to manage.',
     url: 'https://naviigo.com',
     siteName: 'NaviiGo',
     images: [
       {
-        url: 'https://images.unsplash.com/photo-1564507592333-c60657eea523?auto=format&fit=crop&w=1280&q=80',
+        url: '/brand/naviigo-mark-primary.png',
         width: 1200,
         height: 630,
-      }
+        alt: 'NaviiGo Travel Companion',
+      },
     ],
-    locale: 'en_IN',
+    locale: 'en_US',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'NaviiGO Travel Planner',
-    description: 'Start your ultimate Indian journey with an AI agent specifically built for Darshan timings and seamless cabs.',
-    images: ['https://images.unsplash.com/photo-1564507592333-c60657eea523?auto=format&fit=crop&w=1280&q=80'],
+    title: 'NaviiGo — The Connected Travel Companion',
+    description: 'Travel should feel like an experience, not a project to manage.',
+    images: ['/brand/naviigo-mark-primary.png'],
   },
-  appleWebApp: {
-    title: 'NaviiGo',
-    statusBarStyle: 'black-translucent',
-    capable: true,
+  icons: {
+    icon: '/brand/naviigo-mark-primary.png',
+    apple: '/brand/naviigo-mark-primary.png',
   },
 };
 
@@ -74,24 +74,16 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${amaranth.variable} ${playfair.variable}`}
+      className={`${epilogue.variable} ${plusJakarta.variable}`}
       suppressHydrationWarning
     >
-      <body className="font-sans antialiased overflow-x-hidden">
+      <body className="font-sans antialiased selection:bg-brand-primary selection:text-white bg-paper-warm text-naviigo-text">
         <Providers>
+          <CustomCursor />
           <LazySocialButton />
-          <LazyWebGLBackground />
           <Navbar />
-          <main className="overflow-x-hidden">{children}</main>
-          <Footer />
-          <LazyMorphSurface />
+          <main className="relative z-10 w-full min-h-screen">{children}</main>
         </Providers>
-
-        {/* Locomotive Scroll v3.5.4 CDN Fallback Script */}
-        <Script
-          src="https://cdn.jsdelivr.net/npm/locomotive-scroll@3.5.4/dist/locomotive-scroll.js"
-          strategy="beforeInteractive"
-        />
 
         {/* TravelPayouts White Label Script */}
         <Script

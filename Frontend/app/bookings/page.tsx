@@ -6,17 +6,12 @@ import { createPortal } from 'react-dom';
 import gsap from 'gsap';
 import {
   Plane, Train, Car, Building2, MapPin, Calendar, Search,
-  ArrowRightLeft, Star, Users, Clock, Wifi, Coffee, ShieldCheck,
-  CheckCircle2, Tag, ChevronDown, Filter, Zap, TrendingDown,
-  BadgePercent, Wind, Luggage, Bed, UtensilsCrossed, Dumbbell,
-  SlidersHorizontal, ArrowUpDown, ThumbsUp, Bot, Bell, TrendingUp,
-  Flame, Award, Timer, Shield, CircleCheck, ChevronRight, Sparkles,
-  AlertTriangle, Info
+  ArrowRightLeft, Star, Users, Clock, ShieldCheck,
+  CheckCircle2, ChevronRight, AlertTriangle, FileText, ArrowRight
 } from 'lucide-react';
 import PlaceAutocomplete from '@/components/shared/PlaceAutocomplete';
 import TravelersSelector from '@/components/shared/TravelersSelector';
 import BookingPortal from '@/components/features/bookings/BookingPortal';
-import BookingTabs from '@/components/features/bookings/BookingTabs';
 import FlightCard from '@/components/features/bookings/FlightCard';
 import TrainCard from '@/components/features/bookings/TrainCard';
 import CabCard from '@/components/features/bookings/CabCard';
@@ -25,70 +20,64 @@ import FilterChips from '@/components/features/bookings/FilterChips';
 import SortBar from '@/components/features/bookings/SortBar';
 
 type TabType = 'flights' | 'trains' | 'cabs' | 'hotels';
+type WalletView = 'all' | 'upcoming' | 'action' | 'past';
 
-// ─── DATA ────────────────────────────────────────────────────────────────────
+// ─── CONFIRMED TRAVEL DOCUMENTS INTERFACE ────────────────────────────────────
+interface TravelDoc {
+  id: string;
+  type: 'flight' | 'train' | 'hotel' | 'cab';
+  category: 'upcoming' | 'past' | 'action_required';
+  title: string;
+  origin: string;
+  destination: string;
+  date: string;
+  time: string;
+  reference: string;
+  operator: string;
+  statusLabel: string;
+  seatOrRoom?: string;
+  amount: string;
+}
 
+// Documents are loaded from real user bookings only — never seeded with fabricated reservations.
+
+// ─── SEARCH FILTERS ────────────────────────────────────────────────────────────
 const flightFilters = ['Non-stop', 'Morning Dep', 'Evening Dep', 'Under ₹5k', 'With Meal'];
 const trainFilters = ['Sleeper', '3A', '2A', '1A', 'CC', 'Non-stop', 'Daily'];
 const cabFilters = ['Sedan', 'SUV', 'Self-Drive', 'AC', 'Top Rated'];
 const hotelFilters = ['Staycations & Resorts', '5 Star', '4 Star', '3 Star', 'Pool', 'Breakfast', 'Free Cancellation'];
 const SORT_OPTIONS = ['Price: Low to High', 'Price: High to Low', 'Duration', 'Departure Time', 'Rating'];
 
-// ─── MAIN PAGE ────────────────────────────────────────────────────────────────
-
-function CompareBadge({ badge }: { badge: string | null }) {
-  if (!badge) return null;
-  const config = {
-    cheapest: { icon: TrendingDown, label: '🟢 Cheapest', cls: 'bg-jungle-green-50 dark:bg-jungle-green-900/20 text-jungle-green-700 dark:text-jungle-green-400 border-jungle-green-200 dark:border-jungle-green-800/40' },
-    fastest: { icon: Zap, label: '⚡ Fastest', cls: 'bg-saffron-50  dark:bg-saffron-900/20  text-saffron-700  dark:text-saffron-400  border-saffron-200  dark:border-saffron-800/40' },
-    bestvalue: { icon: Award, label: '⭐ Best Value', cls: 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800/40' },
-  }[badge];
-  if (!config) return null;
-  return (
-    <span className={`inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wide px-2 py-0.5 rounded-full border ${config.cls}`}>
-      {config.label}
-    </span>
-  );
-}
-
 function SmartInsights({ tab }: { tab: string }) {
-  const insights: Record<string, { icon: string; text: string; type: 'info' | 'warn' | 'tip' }[]> = {
+  const insights: Record<string, { note: string; sub: string }[]> = {
     flights: [
-      { icon: '📅', text: 'April 2026 is shoulder season: Demand is moderate, offering lower fares than peak months.', type: 'tip' },
-      { icon: '📉', text: 'Booking 6–8 weeks early is optimal for this route to save up to ₹2,500.', type: 'info' },
-      { icon: '💡', text: 'Tuesday & Wednesday departures are consistently 12% cheaper than weekends.', type: 'tip' },
+      { note: 'Spring shoulder season provides 15% lower fares than mid-summer peak.', sub: 'Route telemetry recommends morning departures.' },
+      { note: 'Booking 6–8 weeks in advance preserves verified window seating.', sub: 'Direct flight frequency is optimal on weekdays.' },
     ],
     trains: [
-      { icon: '🚆', text: 'Vande Bharat CC seats are currently in high demand. Recommend booking soon.', type: 'warn' },
-      { icon: '✅', text: 'Tatkal windows open at 10:00 AM daily for AC classes.', type: 'info' },
+      { note: 'Executive CC and 2A inventory opens 120 days prior to departure.', sub: 'Confirmed berth allocations fill rapidly on northern corridors.' },
     ],
     cabs: [
-      { icon: '💰', text: 'Intercity rates are stable. No surge expected for your current window.', type: 'tip' },
-      { icon: '🚕', text: 'Sedans offer the best value-to-speed ratio for this distance.', type: 'info' },
+      { note: 'Fixed intercity tariff applies with zero dynamic surge on confirmed bookings.', sub: 'Verified hill-certified chauffeurs assigned for mountain routes.' },
     ],
     hotels: [
-      { icon: '🏨', text: 'Ghat-side hotels typically reach 90% occupancy during April weekends.', type: 'warn' },
-      { icon: '✨', text: 'Booking 5+ days early unlocks "Early Bird" discounts at many 4-star retreats.', type: 'tip' },
+      { note: 'Heritage estates require advance reservation for panoramic courtyard rooms.', sub: 'Complimentary early baggage hold included in all partner dossiers.' },
     ],
   };
   const list = insights[tab] ?? [];
   return (
-    <div className="mt-6 rounded-2xl border border-muted-100 dark:border-white/5 bg-white dark:bg-[#111] p-5">
-      <div className="flex items-center gap-2 mb-4">
-        <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-saffron-400 to-temple-red-500 flex items-center justify-center">
-          <TrendingUp className="w-4 h-4 text-white" />
-        </div>
-        <p className="font-bold text-sm text-muted-800 dark:text-white">Smart Price Insights</p>
-        <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-saffron-50 dark:bg-saffron-900/20 text-saffron-600 dark:text-saffron-400 border border-saffron-200 dark:border-saffron-800/30">AI Powered</span>
+    <div className="mt-8 rounded-xl border border-[#EADFD4] bg-paper-light p-6 shadow-sm">
+      <div className="flex items-baseline justify-between mb-4 border-b border-[#EADFD4] pb-2">
+        <h4 className="font-mono text-xs font-bold text-naviigo-brown uppercase tracking-widest flex items-center gap-2">
+          <span>✦ ROUTE INTELLIGENCE & DISPATCH</span>
+        </h4>
+        <span className="font-mono text-[10px] text-naviigo-brown/50">OPERATIONAL GUIDANCE</span>
       </div>
-      <div className="space-y-2.5">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {list.map((ins, i) => (
-          <div key={i} className={`flex items-start gap-3 px-3.5 py-2.5 rounded-xl text-sm ${ins.type === 'warn' ? 'bg-saffron-50 dark:bg-saffron-900/10 text-saffron-800 dark:text-saffron-300'
-            : ins.type === 'tip' ? 'bg-jungle-green-50 dark:bg-jungle-green-900/10 text-jungle-green-800 dark:text-jungle-green-300'
-              : 'bg-muted-50 dark:bg-white/5 text-muted-700 dark:text-muted-300'
-            }`}>
-            <span className="text-base shrink-0 mt-0.5">{ins.icon}</span>
-            <p className="leading-snug font-medium">{ins.text}</p>
+          <div key={i} className="bg-paper-warm rounded-lg p-3.5 border border-[#EADFD4]">
+            <p className="font-sans text-xs text-naviigo-brown leading-relaxed font-medium">{ins.note}</p>
+            <p className="font-mono text-[10px] text-naviigo-brown/60 mt-1 uppercase">{ins.sub}</p>
           </div>
         ))}
       </div>
@@ -97,23 +86,18 @@ function SmartInsights({ tab }: { tab: string }) {
 }
 
 // ─── SEARCH FORMS ────────────────────────────────────────────────────────────
-
 function FlightForm({ onTravelersChange }: { onTravelersChange: (val: string) => void }) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr_1fr_1.2fr] gap-4 items-center">
-      <PlaceAutocomplete name="from" placeholder="From City" icon="plane" />
-
-      <button type="button" className="flex items-center justify-center w-10 h-10 rounded-full bg-muted-100 dark:bg-muted-800 hover:bg-saffron-100 dark:hover:bg-saffron-900/30 transition-all shrink-0 mx-auto border border-muted-200 dark:border-muted-700 hover:rotate-180">
-        <ArrowRightLeft className="w-4 h-4 text-muted-500" />
+      <PlaceAutocomplete name="from" placeholder="Origin Airport or City" icon="plane" />
+      <button type="button" className="flex items-center justify-center w-9 h-9 rounded-full bg-paper-warm hover:bg-paper-light transition-all shrink-0 mx-auto border border-[#EADFD4]">
+        <ArrowRightLeft className="w-3.5 h-3.5 text-naviigo-brown/60" />
       </button>
-
-      <PlaceAutocomplete name="to" placeholder="To City" icon="plane" />
-
+      <PlaceAutocomplete name="to" placeholder="Destination Airport or City" icon="plane" />
       <div className="relative group">
-        <Calendar className="absolute left-4 top-1/2 -tranmuted-y-1/2 w-4 h-4 text-muted-400 group-focus-within:text-saffron-500 transition-colors pointer-events-none" />
-        <input name="date" type="date" className="input-field pl-11" />
+        <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-naviigo-brown/40 pointer-events-none" />
+        <input name="date" type="date" className="input-field pl-10 font-mono text-xs uppercase" />
       </div>
-
       <TravelersSelector onSelect={onTravelersChange} />
     </div>
   );
@@ -122,19 +106,15 @@ function FlightForm({ onTravelersChange }: { onTravelersChange: (val: string) =>
 function TrainForm({ onTravelersChange }: { onTravelersChange: (val: string) => void }) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr_1fr_1fr] gap-4 items-center">
-      <PlaceAutocomplete name="from" placeholder="From Station" icon="train" />
-
-      <button type="button" className="flex items-center justify-center w-10 h-10 rounded-full bg-muted-100 dark:bg-muted-800 hover:bg-deep-sea-100 dark:hover:bg-deep-sea-900/30 transition-all shrink-0 mx-auto border border-muted-200 dark:border-muted-700 hover:rotate-180">
-        <ArrowRightLeft className="w-4 h-4 text-muted-500" />
+      <PlaceAutocomplete name="from" placeholder="Origin Station" icon="train" />
+      <button type="button" className="flex items-center justify-center w-9 h-9 rounded-full bg-paper-warm hover:bg-paper-light transition-all shrink-0 mx-auto border border-[#EADFD4]">
+        <ArrowRightLeft className="w-3.5 h-3.5 text-naviigo-brown/60" />
       </button>
-
-      <PlaceAutocomplete name="to" placeholder="To Station" icon="train" />
-
+      <PlaceAutocomplete name="to" placeholder="Destination Station" icon="train" />
       <div className="relative group">
-        <Calendar className="absolute left-4 top-1/2 -tranmuted-y-1/2 w-4 h-4 text-muted-400 group-focus-within:text-deep-sea-500 transition-colors pointer-events-none" />
-        <input name="date" type="date" className="input-field pl-11" />
+        <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-naviigo-brown/40 pointer-events-none" />
+        <input name="date" type="date" className="input-field pl-10 font-mono text-xs uppercase" />
       </div>
-
       <TravelersSelector onSelect={onTravelersChange} />
     </div>
   );
@@ -143,19 +123,15 @@ function TrainForm({ onTravelersChange }: { onTravelersChange: (val: string) => 
 function CabForm({ onTravelersChange }: { onTravelersChange: (val: string) => void }) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr_1fr_1fr] gap-4 items-center">
-      <PlaceAutocomplete name="from" placeholder="Pickup City" icon="map" />
-
-      <button type="button" className="flex items-center justify-center w-10 h-10 rounded-full bg-muted-100 dark:bg-muted-800 hover:bg-jungle-green-100 dark:hover:bg-jungle-green-900/30 transition-all shrink-0 mx-auto border border-muted-200 dark:border-muted-700 hover:rotate-180">
-        <ArrowRightLeft className="w-4 h-4 text-muted-500" />
+      <PlaceAutocomplete name="from" placeholder="Pickup City or Point" icon="map" />
+      <button type="button" className="flex items-center justify-center w-9 h-9 rounded-full bg-paper-warm hover:bg-paper-light transition-all shrink-0 mx-auto border border-[#EADFD4]">
+        <ArrowRightLeft className="w-3.5 h-3.5 text-naviigo-brown/60" />
       </button>
-
-      <PlaceAutocomplete name="to" placeholder="Dropoff City" icon="map" />
-
+      <PlaceAutocomplete name="to" placeholder="Drop-off Destination" icon="map" />
       <div className="relative group">
-        <Calendar className="absolute left-4 top-1/2 -tranmuted-y-1/2 w-4 h-4 text-muted-400 group-focus-within:text-jungle-green-500 transition-colors pointer-events-none" />
-        <input name="date" type="date" className="input-field pl-11" />
+        <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-naviigo-brown/40 pointer-events-none" />
+        <input name="date" type="date" className="input-field pl-10 font-mono text-xs uppercase" />
       </div>
-
       <TravelersSelector onSelect={onTravelersChange} />
     </div>
   );
@@ -164,37 +140,46 @@ function CabForm({ onTravelersChange }: { onTravelersChange: (val: string) => vo
 function HotelForm({ onTravelersChange }: { onTravelersChange: (val: string) => void }) {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.2fr_1.2fr_1fr] gap-4 items-center">
-      <PlaceAutocomplete name="to" placeholder="Where are you going?" icon="map" />
-
-      <div className="grid grid-cols-2 gap-4">
+      <PlaceAutocomplete name="to" placeholder="Destination City or Territory" icon="map" />
+      <div className="grid grid-cols-2 gap-3">
         <div className="relative group">
-          <Calendar className="absolute left-4 top-1/2 -tranmuted-y-1/2 w-4 h-4 text-muted-400 group-focus-within:text-indigo-500 transition-colors pointer-events-none" />
-          <input name="checkin" type="date" className="input-field pl-11" />
+          <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-naviigo-brown/40 pointer-events-none" />
+          <input name="checkin" type="date" className="input-field pl-9 font-mono text-xs uppercase" />
         </div>
         <div className="relative group">
-          <Calendar className="absolute left-4 top-1/2 -tranmuted-y-1/2 w-4 h-4 text-muted-400 group-focus-within:text-indigo-500 transition-colors pointer-events-none" />
-          <input name="checkout" type="date" className="input-field pl-11" />
+          <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-naviigo-brown/40 pointer-events-none" />
+          <input name="checkout" type="date" className="input-field pl-9 font-mono text-xs uppercase" />
         </div>
       </div>
-
       <TravelersSelector onSelect={onTravelersChange} />
     </div>
   );
 }
 
-
-// ─── MAIN PAGE ────────────────────────────────────────────────────────────────
-
 const tabConfig = [
-  { id: 'flights', icon: Plane, label: 'Flights', color: 'text-saffron-500', accent: 'from-saffron-500 to-temple-red-500' },
-  { id: 'trains', icon: Train, label: 'Trains', color: 'text-deep-sea-500', accent: 'from-deep-sea-500 to-indigo-500' },
-  { id: 'cabs', icon: Car, label: 'Cabs', color: 'text-jungle-green-500', accent: 'from-jungle-green-500 to-deep-sea-500' },
-  { id: 'hotels', icon: Building2, label: 'Hotels', color: 'text-indigo-500', accent: 'from-indigo-500 to-indigo-500' },
+  { id: 'flights', icon: Plane, label: 'Flights' },
+  { id: 'trains', icon: Train, label: 'Trains' },
+  { id: 'cabs', icon: Car, label: 'Cabs' },
+  { id: 'hotels', icon: Building2, label: 'Hotels' },
 ] as const;
 
 const filtersByTab = { flights: flightFilters, trains: trainFilters, cabs: cabFilters, hotels: hotelFilters };
 
 export default function BookingsPage() {
+  const [activeMainSection, setActiveMainSection] = useState<'wallet' | 'search'>('wallet');
+  const [walletFilter, setWalletFilter] = useState<WalletView>('all');
+  const [walletDocs, setWalletDocs] = useState<TravelDoc[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const stored = localStorage.getItem('naviigo_wallet_docs');
+        return stored ? JSON.parse(stored) : [];
+      } catch {
+        return [];
+      }
+    }
+    return [];
+  });
+
   const [activeTab, setActiveTab] = useState<TabType>('flights');
   const [isSearching, setIsSearching] = useState(false);
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
@@ -227,7 +212,6 @@ export default function BookingsPage() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [lastQuery, setLastQuery] = useState<any>(null);
   const listRef = useRef<HTMLDivElement>(null);
-
   const [formError, setFormError] = useState<string | null>(null);
 
   const handleSearch = async (e?: React.FormEvent<HTMLFormElement>) => {
@@ -235,19 +219,18 @@ export default function BookingsPage() {
     setFormError(null);
 
     const formData = e?.currentTarget ? Object.fromEntries(new FormData(e.currentTarget)) : {};
-
     const normalizedDate = formData.date || formData.checkin || "";
     const from = (formData.from as string) || '';
     const to = (formData.to as string) || '';
 
     if (activeTab === 'hotels') {
       if (!to || !normalizedDate) {
-        setFormError("Please fill in destination and check-in date.");
+        setFormError("Please provide destination and check-in date.");
         return;
       }
     } else {
       if (!from || !to || !normalizedDate) {
-        setFormError("Please fill in from, destination and dates.");
+        setFormError("Please provide origin, destination, and transit date.");
         return;
       }
     }
@@ -278,12 +261,10 @@ export default function BookingsPage() {
       if (data.success && data.results) {
         setSearchResults(data.results);
       } else {
-        console.error("Search failed:", data.error);
-        setFormError(data.error || "No results found for this route.");
+        setFormError(data.error || "No verified results found for this route.");
       }
     } catch (err) {
-      console.error(err);
-      setFormError("Connection error. Please try again.");
+      setFormError("Connection interrupted. Please reattempt.");
     } finally {
       setIsSearching(false);
     }
@@ -318,8 +299,8 @@ export default function BookingsPage() {
     if (isSearching || searchResults.length === 0) return;
     const ctx = gsap.context(() => {
       gsap.fromTo('.result-card, .naviigo-deal',
-        { opacity: 0, y: 24 },
-        { opacity: 1, y: 0, stagger: 0.08, duration: 0.55, ease: 'power3.out' }
+        { opacity: 0, y: 16 },
+        { opacity: 1, y: 0, stagger: 0.06, duration: 0.45, ease: 'power2.out' }
       );
     }, listRef);
     return () => ctx.revert();
@@ -337,16 +318,14 @@ export default function BookingsPage() {
 
     if (activeTab === 'hotels' && activeFilters.includes('Staycations & Resorts')) {
         list = list.filter((h: any) => h.stars >= 4 || h.tags?.includes('Luxury') || h.name?.toLowerCase().includes('resort'));
-        if (list.length === 0) {
-            list = [{ id: 'staycation-1', name: 'Curated Weekend Resort & Spa', area: lastQuery?.to || 'City Center', stars: 5, price: '₹12,000', priceNum: 12000, perNight: '/night', rating: 4.9, reviews: 120, amenities: ['Spa', 'Pool', 'Breakfast'], tags: ['Staycation', 'Luxury'], image: '🌴', refundable: true, distance: 'Secluded getaway', badge: 'bestvalue', deepLink: `https://www.agoda.com/search?text=${encodeURIComponent('Resorts in ' + (lastQuery?.to || 'India'))}` }];
-        }
     }
 
     if (list.length === 0) return (
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-12">
-        <p className="text-muted-foreground text-sm">No results found. Try a different route or date.</p>
-      </motion.div>
+      <div className="text-center py-12 bg-paper-light rounded-xl border border-[#EADFD4]">
+        <p className="font-mono text-xs text-naviigo-brown/60 uppercase">No scheduled services found for this date. Adjust date or route corridor.</p>
+      </div>
     );
+
     const parsePrice = (p: any) => {
       if (typeof p === 'number') return p;
       if (!p) return 0;
@@ -385,29 +364,37 @@ export default function BookingsPage() {
     const fromStr = lastQuery?.from || '';
     const toStr = lastQuery?.to || '';
     const route = fromStr && toStr ? ` · ${fromStr} → ${toStr}` : '';
-    if (activeTab === 'flights') return `${count} flight${count !== 1 ? 's' : ''} found${route}`;
-    if (activeTab === 'trains') return `${count} train${count !== 1 ? 's' : ''} found${route}`;
-    if (activeTab === 'cabs') return `${count} cab${count !== 1 ? 's' : ''} available${route}`;
-    return `${count} hotel${count !== 1 ? 's' : ''} found${route}`;
+    if (activeTab === 'flights') return `${count} flight option${count !== 1 ? 's' : ''}${route}`;
+    if (activeTab === 'trains') return `${count} train route${count !== 1 ? 's' : ''}${route}`;
+    if (activeTab === 'cabs') return `${count} cab transfer${count !== 1 ? 's' : ''}${route}`;
+    return `${count} verified stay${count !== 1 ? 's' : ''}${route}`;
   };
 
+  const filteredWalletDocs = walletDocs.filter(d => {
+    if (walletFilter === 'all') return true;
+    if (walletFilter === 'upcoming') return d.category === 'upcoming';
+    if (walletFilter === 'action') return d.category === 'action_required';
+    if (walletFilter === 'past') return d.category === 'past';
+    return true;
+  });
+
   return (
-    <div className="min-h-screen bg-background text-foreground pt-20 sm:pt-24 pb-24 px-4 sm:px-6 md:px-10 font-sans">
+    <div className="min-h-screen bg-paper-warm text-naviigo-brown pt-24 sm:pt-32 pb-24 px-4 sm:px-6 md:px-10 font-sans selection:bg-brand-primary selection:text-white">
       <style>{`
         .input-field {
           width: 100%;
-          background: var(--input);
-          border: 1px solid var(--border);
-          border-radius: 0.875rem;
-          padding: 0.875rem 1rem;
+          background: #FAF6F0;
+          border: 1px solid #EADFD4;
+          border-radius: 0.75rem;
+          padding: 0.75rem 1rem;
           outline: none;
-          font-size: 0.9rem;
+          font-size: 0.875rem;
           font-weight: 500;
           transition: all 0.2s;
-          color: var(--foreground);
+          color: #632713;
         }
         input[type="date"] {
-          padding-left: 2.75rem !important;
+          padding-left: 2.5rem !important;
           display: flex;
           align-items: center;
         }
@@ -428,154 +415,315 @@ export default function BookingsPage() {
           display: none;
           -webkit-appearance: none;
         }
-        .input-field:focus { border-color: var(--primary); background: var(--card); }
-        
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+        .input-field:focus { border-color: #EC6426; background: #FDFBF7; }
       `}</style>
 
       <div className="max-w-6xl mx-auto">
 
-        {/* Hero Header */}
-        <motion.div initial={{ opacity: 0, y: -16 }} animate={{ opacity: 1, y: 0 }} className="mb-8 text-center">
-          <h1 className="text-3xl sm:text-4xl font-extrabold text-foreground tracking-tight font-serif">
-            Book Your <span className="text-primary">Travel</span>
-          </h1>
-          <p className="text-muted-foreground mt-2 text-sm">Compare prices across <span className="font-semibold text-foreground">50+ travel platforms</span> · Powered by NaviiGo</p>
-        </motion.div>
-
-        {/* Navigation Tabs */}
-        <div className="flex justify-center mb-8">
-          <div className="inline-flex flex-wrap justify-center items-center p-1.5 bg-card border border-border rounded-2xl shadow-sm gap-1 sm:gap-0">
-            {tabConfig.map(t => {
-              const isActive = activeTab === t.id;
-              const Icon = t.icon;
-              return (
-                <button
-                  key={t.id}
-                  onClick={() => setActiveTab(t.id)}
-                  className={`relative flex items-center gap-2 px-4 sm:px-6 py-2.5 rounded-xl font-bold text-sm transition-all duration-300 ${isActive ? 'bg-primary text-primary-foreground shadow-xs' : 'text-muted-foreground hover:text-foreground hover:bg-accent'}`}
-                >
-                  <Icon className="w-4 h-4" />
-                  {t.label}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Search Modules Container */}
-        <motion.div
-          initial={{ opacity: 0, y: -12 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8 rounded-[1.75rem] overflow-hidden bg-card border border-border shadow-xl p-4 sm:p-6"
-        >
-          {/* TravelPayouts Metasearch Widget */}
-          <div className={activeTab === 'flights' ? 'block' : 'hidden'}>
-            <div id="tpwl-search">
-              <div className="w-full h-[300px] flex flex-col items-center justify-center text-muted-foreground bg-muted/30 rounded-2xl animate-pulse">
-                <Plane className="w-8 h-8 mb-3 opacity-50 text-primary" />
-                <p>Initializing Global Flight Search Engine...</p>
-              </div>
+        {/* ── TRAVEL DOCUMENT MASTHEAD ─────────────────────────────────────────── */}
+        <div className="mb-8 border-b border-[#EADFD4] pb-6">
+          <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2 mb-3">
+            <div className="font-mono text-xs font-bold uppercase tracking-[0.25em] text-brand-primary flex items-center gap-2">
+              <span>05 / TRAVEL DOCUMENT SYSTEM</span>
+              <span className="text-naviigo-brown/30">·</span>
+              <span className="text-naviigo-brown/60">WALLET & DISPATCH</span>
+            </div>
+            <div className="font-mono text-[11px] text-naviigo-brown/50 uppercase">
+              CERTIFIED WAYPOINT REGISTRY
             </div>
           </div>
-
-          {/* Native NaviiGo Forms */}
-          {activeTab !== 'flights' && (
-            <form onSubmit={handleSearch}>
-              {renderForm()}
-              <FilterChips options={filtersByTab[activeTab]} active={activeFilters} onToggle={toggleFilter} />
-
-              {formError && (
-                <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mt-6 p-4 rounded-xl bg-destructive/10 border border-destructive/30 text-destructive text-sm font-semibold flex items-center justify-center gap-2">
-                  <AlertTriangle className="w-4 h-4" />
-                  {formError}
-                </motion.div>
-              )}
-
-              <div className="mt-6 flex justify-center">
-                <button type="submit" disabled={isSearching} className="group relative flex items-center justify-center gap-2 w-full sm:w-auto px-10 py-3.5 rounded-xl bg-primary text-primary-foreground font-bold text-lg hover:bg-primary/90 transition-all duration-300 disabled:opacity-50 shadow-md">
-                  {isSearching ? <div className="w-5 h-5 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" /> : <Search className="w-5 h-5" />}
-                  {isSearching ? 'Searching...' : `Search ${tabConfig.find(t => t.id === activeTab)?.label}`}
-                </button>
-              </div>
-            </form>
-          )}
-        </motion.div>
-
-        {/* TravelPayouts Search Results (Only for Flights) */}
-        <div className={`mb-8 ${activeTab === 'flights' ? 'block' : 'hidden'}`}>
-          <div id="tpwl-tickets"></div>
+          <h1 className="font-display font-black text-3xl sm:text-5xl uppercase tracking-tight text-naviigo-brown">
+            DOCUMENT WALLET.
+          </h1>
+          <p className="font-sans text-xs sm:text-sm text-naviigo-brown/70 mt-2 max-w-xl">
+            Organized transport manifests, hotel confirmations, boarding passes, and direct transit bookings.
+          </p>
         </div>
 
-        {/* Native NaviiGo Results (For Trains, Cabs, Hotels) */}
-        {activeTab !== 'flights' && (
-          <div ref={listRef} className="space-y-4">
-            {isSearching ? (
-              <div className="space-y-4">
-                <div className="bg-white dark:bg-[#111] rounded-2xl p-5 border border-muted-100 dark:border-white/5">
-                  <div className="flex items-center gap-3 mb-3">
-                    <div className="w-10 h-10 rounded-xl bg-muted-100 dark:bg-muted-800 animate-pulse" />
-                    <div className="flex-1 space-y-2">
-                      <div className="h-3 bg-muted-100 dark:bg-muted-800 rounded-full animate-pulse w-32" />
-                      <div className="h-2.5 bg-muted-100 dark:bg-muted-800 rounded-full animate-pulse w-20" />
-                    </div>
-                    <div className="h-8 w-24 bg-muted-100 dark:bg-muted-800 rounded-xl animate-pulse" />
-                  </div>
-                  <div className="flex justify-center gap-8">
-                    <div className="h-8 w-12 bg-muted-100 dark:bg-muted-800 rounded animate-pulse" />
-                    <div className="flex-1 h-px bg-muted-100 dark:bg-muted-800 self-center animate-pulse" />
-                    <div className="h-8 w-12 bg-muted-100 dark:bg-muted-800 rounded animate-pulse" />
-                  </div>
-                </div>
-                {[1, 2, 3].map(i => (
-                  <div key={i} className="bg-white dark:bg-[#111] rounded-2xl p-5 border border-muted-100 dark:border-white/5">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-muted-100 dark:bg-muted-800 animate-pulse" />
-                      <div className="flex-1 space-y-2">
-                        <div className="h-3 bg-muted-100 dark:bg-muted-800 rounded-full animate-pulse" style={{ width: `${50 + i * 10}%` }} />
-                        <div className="h-2.5 bg-muted-100 dark:bg-muted-800 rounded-full animate-pulse w-24" />
-                      </div>
-                      <div className="text-right space-y-2">
-                        <div className="h-5 w-20 bg-muted-100 dark:bg-muted-800 rounded animate-pulse" />
-                        <div className="h-8 w-24 bg-muted-100 dark:bg-muted-800 rounded-xl animate-pulse" />
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                <p className="text-center text-xs text-muted-400 animate-pulse pt-2">🔍 Searching 120+ sites for the best deals…</p>
+        {/* ── MODE SELECTOR: WALLET vs. TRANSIT SEARCH ─────────────────────────── */}
+        <div className="flex items-center gap-6 mb-8 border-b border-[#EADFD4] pb-3 font-mono text-xs uppercase tracking-wider">
+          <button
+            onClick={() => setActiveMainSection('wallet')}
+            className={`relative py-1 flex items-center gap-2 transition-colors ${
+              activeMainSection === 'wallet' ? 'text-brand-primary font-bold' : 'text-naviigo-brown/60 hover:text-naviigo-brown'
+            }`}
+          >
+            <FileText className="w-3.5 h-3.5" />
+            <span>Document Wallet ({walletDocs.length})</span>
+            {activeMainSection === 'wallet' && (
+              <motion.div layoutId="activeMainSection" className="absolute -bottom-3 left-0 right-0 h-[2px] bg-brand-primary" />
+            )}
+          </button>
+          <button
+            onClick={() => setActiveMainSection('search')}
+            className={`relative py-1 flex items-center gap-2 transition-colors ${
+              activeMainSection === 'search' ? 'text-brand-primary font-bold' : 'text-naviigo-brown/60 hover:text-naviigo-brown'
+            }`}
+          >
+            <Search className="w-3.5 h-3.5" />
+            <span>Direct Transit Search</span>
+            {activeMainSection === 'search' && (
+              <motion.div layoutId="activeMainSection" className="absolute -bottom-3 left-0 right-0 h-[2px] bg-brand-primary" />
+            )}
+          </button>
+        </div>
+
+        {/* ── SECTION 1: TRAVEL DOCUMENT WALLET ─────────────────────────────────── */}
+        {activeMainSection === 'wallet' && (
+          <div className="space-y-6">
+            {/* Wallet Category Filter */}
+            <div className="flex flex-wrap items-center justify-between gap-4 bg-paper-light border border-[#EADFD4] rounded-xl p-3.5">
+              <div className="flex items-center gap-2 font-mono text-xs">
+                {(['all', 'upcoming', 'action', 'past'] as const).map(cat => {
+                  const isActive = walletFilter === cat;
+                  const labels = {
+                    all: 'ALL DOCUMENTS',
+                    upcoming: 'UPCOMING',
+                    action: 'ACTION REQUIRED',
+                    past: 'CONCLUDED'
+                  };
+                  return (
+                    <button
+                      key={cat}
+                      onClick={() => setWalletFilter(cat)}
+                      className={`px-3 py-1 rounded text-[11px] font-bold uppercase tracking-wider transition-colors ${
+                        isActive
+                          ? 'bg-brand-primary text-white'
+                          : 'bg-paper-warm text-naviigo-brown/70 hover:text-naviigo-brown border border-[#EADFD4]'
+                      }`}
+                    >
+                      {labels[cat]}
+                    </button>
+                  );
+                })}
               </div>
-            ) : !hasSearched ? (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                className="flex flex-col items-center justify-center py-20 px-4 text-center opacity-70"
-              >
-                <div className="w-20 h-20 bg-muted-100 dark:bg-muted-800/50 rounded-full flex items-center justify-center mb-5">
-                  <Search className="w-8 h-8 text-muted-400" />
+              <div className="font-mono text-[10px] text-naviigo-brown/50 uppercase">
+                {filteredWalletDocs.length} REGISTERED FILES
+              </div>
+            </div>
+
+            {/* Travel Documents Geometry */}
+            {filteredWalletDocs.length === 0 ? (
+              <div className="text-center py-20 px-6 bg-paper-light rounded-2xl border border-[#EADFD4]">
+                <div className="w-14 h-14 rounded-full bg-paper-warm border border-[#EADFD4] flex items-center justify-center mx-auto mb-4 text-naviigo-brown/60">
+                  <FileText className="w-6 h-6 stroke-[1.5]" />
                 </div>
-                <h3 className="text-xl font-bold text-muted-800 dark:text-white mb-2">Ready to explore?</h3>
-                <p className="text-sm text-muted-500 max-w-[300px]">Enter your destination and dates above to unlock live deals and dynamic routes.</p>
-              </motion.div>
+                <div className="font-mono text-[10px] font-bold uppercase tracking-[0.25em] text-brand-primary mb-2">
+                  NO BOOKINGS REGISTERED
+                </div>
+                <h3 className="font-display font-bold text-2xl sm:text-3xl text-naviigo-brown uppercase mb-3">
+                  Nothing here yet.
+                </h3>
+                <p className="font-sans text-sm text-naviigo-brown/70 max-w-md mx-auto mb-6 leading-relaxed font-light">
+                  When you add a booking or reserve transit corridors through Naviigo, your verified tickets, reservations, and boarding passes stay organized here.
+                </p>
+                <button
+                  onClick={() => setActiveMainSection('search')}
+                  className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-naviigo-brown hover:bg-brand-primary text-white font-mono text-xs font-bold uppercase tracking-wider transition-colors shadow-sm"
+                >
+                  <span>Search Transit & Stay Dispatch</span>
+                  <span>→</span>
+                </button>
+              </div>
             ) : (
-              <>
-                <SortBar label={sectionLabel()} sort={sortOption} onSortChange={setSortOption} />
-                {renderResults()}
-                <SmartInsights tab={activeTab} />
-                <div className="pt-4 flex justify-center">
-                  <button
-                    onClick={handleLoadMore}
-                    disabled={loadingMore}
-                    className="flex items-center gap-2 px-6 py-3 rounded-xl border-2 border-dashed border-muted-200 dark:border-muted-700 text-muted-500 dark:text-muted-400 hover:border-saffron-400 hover:text-saffron-500 dark:hover:border-saffron-600 dark:hover:text-saffron-400 font-semibold text-sm transition-all duration-200 disabled:opacity-50"
-                  >
-                    <BadgePercent className="w-4 h-4" />
-                    {loadingMore ? 'Loading...' : 'Load more results'}
-                  </button>
-                </div>
-              </>
+              <div className="space-y-4">
+                {filteredWalletDocs.map(doc => {
+                  const isAction = doc.category === 'action_required';
+                  const isUpcoming = doc.category === 'upcoming';
+                  return (
+                    <div
+                      key={doc.id}
+                      className="bg-paper-light rounded-xl border border-[#EADFD4] p-5 sm:p-6 hover:border-brand-primary/50 transition-all shadow-sm"
+                    >
+                      <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2 border-b border-[#EADFD4] pb-3 mb-4">
+                        <div className="flex items-center gap-3">
+                          <span className="font-mono text-[10px] font-bold text-naviigo-brown/60 uppercase tracking-widest">
+                            REF · {doc.reference}
+                          </span>
+                          <span className="text-naviigo-brown/30">|</span>
+                          <span className="font-mono text-[10px] text-naviigo-brown/60 uppercase">
+                            {doc.operator}
+                          </span>
+                        </div>
+                        <div>
+                          {isUpcoming && (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded font-mono text-[10px] font-bold uppercase tracking-wider bg-naviigo-teal/10 text-naviigo-teal border border-naviigo-teal/20">
+                              <span className="w-1.5 h-1.5 rounded-full bg-naviigo-teal" />
+                              {doc.statusLabel}
+                            </span>
+                          )}
+                          {isAction && (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded font-mono text-[10px] font-bold uppercase tracking-wider bg-brand-primary/10 text-brand-primary border border-brand-primary/20">
+                              <span className="w-1.5 h-1.5 rounded-full bg-brand-primary animate-pulse" />
+                              {doc.statusLabel}
+                            </span>
+                          )}
+                          {!isUpcoming && !isAction && (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded font-mono text-[10px] font-medium uppercase tracking-wider bg-paper-warm text-naviigo-brown/60 border border-[#EADFD4]">
+                              {doc.statusLabel}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-[1.5fr_1fr_1fr_auto] gap-4 items-center">
+                        <div>
+                          <div className="flex items-baseline gap-3 mb-1">
+                            <span className="font-mono text-lg font-bold text-naviigo-brown tracking-tight">{doc.origin}</span>
+                            <span className="font-mono text-xs text-naviigo-brown/40">→</span>
+                            <span className="font-mono text-lg font-bold text-naviigo-brown tracking-tight">{doc.destination}</span>
+                          </div>
+                          <h4 className="font-display font-bold text-sm text-naviigo-brown uppercase truncate">{doc.title}</h4>
+                        </div>
+
+                        <div>
+                          <div className="font-mono text-xs font-bold text-naviigo-brown">{doc.date}</div>
+                          <div className="font-mono text-[11px] text-naviigo-brown/60 mt-0.5">{doc.time}</div>
+                        </div>
+
+                        <div>
+                          <div className="font-mono text-xs text-naviigo-brown font-medium">{doc.seatOrRoom}</div>
+                          <div className="font-mono text-xs font-bold text-brand-primary mt-0.5">{doc.amount} Total</div>
+                        </div>
+
+                        <div className="flex items-center gap-2 pt-2 md:pt-0 border-t md:border-t-0 border-[#EADFD4]">
+                          {isAction ? (
+                            <button
+                              onClick={() => alert(`Verification Dossier for ${doc.reference} opened.`)}
+                              className="px-4 py-2 bg-brand-primary text-white font-mono text-xs font-bold uppercase tracking-wider rounded hover:bg-brand-primary/90 transition-colors shadow-sm"
+                            >
+                              Resolve Action ➔
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => alert(`Travel Document ${doc.reference} rendered for inspection.`)}
+                              className="px-4 py-2 bg-paper-warm text-naviigo-brown border border-[#EADFD4] hover:border-brand-primary/40 font-mono text-xs font-bold uppercase tracking-wider rounded transition-colors"
+                            >
+                              View Document ➔
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             )}
           </div>
         )}
+
+        {/* ── SECTION 2: TRANSIT SEARCH & RESERVATIONS ─────────────────────────── */}
+        {activeMainSection === 'search' && (
+          <div>
+            {/* Transit Category Tabs */}
+            <div className="flex justify-center mb-6">
+              <div className="inline-flex items-center p-1 bg-paper-light border border-[#EADFD4] rounded-lg shadow-sm">
+                {tabConfig.map(t => {
+                  const isActive = activeTab === t.id;
+                  const Icon = t.icon;
+                  return (
+                    <button
+                      key={t.id}
+                      onClick={() => setActiveTab(t.id)}
+                      className={`relative flex items-center gap-2 px-5 py-2 rounded font-mono text-xs uppercase tracking-wider font-bold transition-all ${
+                        isActive ? 'bg-brand-primary text-white shadow-sm' : 'text-naviigo-brown/70 hover:text-naviigo-brown hover:bg-paper-warm'
+                      }`}
+                    >
+                      <Icon className="w-3.5 h-3.5" />
+                      {t.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Search Modules Container */}
+            <div className="mb-8 rounded-xl bg-paper-light border border-[#EADFD4] shadow-sm p-5 sm:p-6">
+              {/* Flights Metasearch */}
+              <div className={activeTab === 'flights' ? 'block' : 'hidden'}>
+                <div id="tpwl-search">
+                  <div className="w-full h-[240px] flex flex-col items-center justify-center text-naviigo-brown/60 bg-paper-warm rounded-lg border border-[#EADFD4]">
+                    <Plane className="w-8 h-8 mb-3 opacity-60 text-brand-primary" />
+                    <p className="font-mono text-xs uppercase tracking-wider">Aviation Routing Engine Ready</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Native NaviiGo Forms */}
+              {activeTab !== 'flights' && (
+                <form onSubmit={handleSearch}>
+                  {renderForm()}
+                  <div className="mt-4 pt-4 border-t border-[#EADFD4]">
+                    <FilterChips options={filtersByTab[activeTab]} active={activeFilters} onToggle={toggleFilter} />
+                  </div>
+
+                  {formError && (
+                    <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="mt-4 p-3 rounded-lg bg-brand-primary/10 border border-brand-primary/30 text-brand-primary text-xs font-mono font-bold flex items-center gap-2">
+                      <AlertTriangle className="w-4 h-4 shrink-0" />
+                      {formError}
+                    </motion.div>
+                  )}
+
+                  <div className="mt-6 flex justify-end">
+                    <button
+                      type="submit"
+                      disabled={isSearching}
+                      className="flex items-center gap-2 px-8 py-3 rounded-lg bg-brand-primary text-white font-mono font-bold text-xs uppercase tracking-wider hover:bg-brand-primary/90 transition-all disabled:opacity-50 shadow-sm"
+                    >
+                      {isSearching ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Search className="w-4 h-4" />}
+                      {isSearching ? 'Dispatching Query...' : `Query ${tabConfig.find(t => t.id === activeTab)?.label} →`}
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
+
+            {/* TravelPayouts Search Results (Flights) */}
+            <div className={`mb-8 ${activeTab === 'flights' ? 'block' : 'hidden'}`}>
+              <div id="tpwl-tickets" />
+            </div>
+
+            {/* Native NaviiGo Results */}
+            {activeTab !== 'flights' && (
+              <div ref={listRef} className="space-y-4">
+                {isSearching ? (
+                  <div className="space-y-3">
+                    {[1, 2, 3].map(i => (
+                      <div key={i} className="bg-paper-light rounded-xl p-5 border border-[#EADFD4] animate-pulse">
+                        <div className="h-4 bg-[#EADFD4] rounded w-48 mb-2" />
+                        <div className="h-3 bg-[#EADFD4] rounded w-32" />
+                      </div>
+                    ))}
+                  </div>
+                ) : !hasSearched ? (
+                  <div className="flex flex-col items-center justify-center py-16 px-4 text-center bg-paper-light rounded-xl border border-[#EADFD4]">
+                    <div className="w-12 h-12 bg-paper-warm rounded-full border border-[#EADFD4] flex items-center justify-center mb-3">
+                      <Search className="w-5 h-5 text-naviigo-brown/50" />
+                    </div>
+                    <h3 className="font-display font-bold text-base text-naviigo-brown uppercase mb-1">Transit Directory Standby</h3>
+                    <p className="font-sans text-xs text-naviigo-brown/60 max-w-sm">Enter route waypoints and scheduled date to access verified fares and availability.</p>
+                  </div>
+                ) : (
+                  <>
+                    <SortBar label={sectionLabel()} sort={sortOption} onSortChange={setSortOption} />
+                    {renderResults()}
+                    <SmartInsights tab={activeTab} />
+                    <div className="pt-4 flex justify-center">
+                      <button
+                        onClick={handleLoadMore}
+                        disabled={loadingMore}
+                        className="px-6 py-2.5 rounded-lg border border-[#EADFD4] bg-paper-light text-naviigo-brown font-mono text-xs uppercase font-bold tracking-wider hover:border-brand-primary/50 transition-colors disabled:opacity-50"
+                      >
+                        {loadingMore ? 'Retrieving Records...' : 'Load Additional Fares ↓'}
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
       </div>
 
       {isPortalOpen && mounted && typeof document !== 'undefined' && createPortal(

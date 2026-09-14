@@ -14,9 +14,6 @@ import {
     xpProgress, getLevelTitle, ACHIEVEMENTS, getDefaultStats,
     type PassportStats, type PassportStamp
 } from '@/lib/gamification';
-import PassportHeader from '@/components/features/passport/PassportHeader';
-import StampGrid from '@/components/features/passport/StampGrid';
-import Leaderboard from '@/components/features/passport/Leaderboard';
 
 // ─── Indian States Map Data ─────────────────────
 const INDIAN_STATES = [
@@ -105,391 +102,403 @@ export default function PassportPage() {
         if (loading || authLoading || !containerRef.current) return;
         const ctx = gsap.context(() => {
             if (activeTab === 'stamps' && stamps.length > 0) {
-                gsap.from('.stamp-card', { scale: 0, opacity: 0, rotation: () => Math.random() * 40 - 20, stagger: 0.1, duration: 0.8, ease: 'back.out(1.5)', delay: 0.2 });
+                gsap.from('.stamp-card', { opacity: 0, y: 16, stagger: 0.05, duration: 0.5, ease: 'power2.out' });
             }
-            if (activeTab === 'leaderboard') {
-                gsap.from('.podium-item', { scaleY: 0, transformOrigin: 'bottom', opacity: 0, stagger: 0.15, duration: 0.6, ease: 'power3.out' });
-            }
-            gsap.from('.stat-card', { y: 40, opacity: 0, stagger: 0.1, duration: 0.5, delay: 0.1 });
+            gsap.from('.stat-plate', { y: 20, opacity: 0, stagger: 0.08, duration: 0.5, delay: 0.1 });
         }, containerRef);
         return () => ctx.revert();
     }, [activeTab, loading, authLoading, stamps.length]);
 
     if (authLoading || loading) {
-        return <div className="min-h-screen flex items-center justify-center text-jungle-green-500"><div className="w-8 h-8 border-4 border-jungle-green-500 border-t-transparent rounded-full animate-spin"></div></div>;
+        return (
+            <div className="min-h-screen bg-paper-warm flex flex-col items-center justify-center gap-3 text-brand-primary">
+                <div className="w-8 h-8 border-2 border-brand-primary border-t-transparent rounded-full animate-spin" />
+                <span className="font-mono text-xs uppercase tracking-widest text-naviigo-brown/60">Opening Archive...</span>
+            </div>
+        );
     }
 
     const renderNotLoggedIn = () => (
         <div className="absolute inset-0 z-50 flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-white/20 dark:bg-black/40 backdrop-blur-xl" />
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="relative bg-white dark:bg-muted-900 rounded-[2.5rem] p-8 md:p-12 shadow-2xl text-center max-w-lg border border-white/20 dark:border-muted-800/50">
-                <div className="w-24 h-24 bg-gradient-to-br from-jungle-green-400 to-deep-sea-500 rounded-full flex items-center justify-center text-4xl shadow-xl shadow-jungle-green-500/20 mx-auto mb-6">
-                    🌎
+            <div className="absolute inset-0 bg-naviigo-brown/30 backdrop-blur-md" />
+            <motion.div initial={{ scale: 0.96, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="relative bg-paper-light rounded-2xl p-8 md:p-12 shadow-2xl text-center max-w-lg border border-[#EADFD4]">
+                <div className="w-16 h-16 bg-paper-warm rounded-xl flex items-center justify-center mx-auto mb-6 p-3 border border-[#EADFD4]">
+                    <Image src="/brand/naviigo-mark-primary.png" width={40} height={40} alt="NaviiGo" className="object-contain" />
                 </div>
-                <h2 className="text-3xl font-black text-muted-900 dark:text-white mb-3">Your Digital Passport</h2>
-                <p className="text-muted-500 dark:text-muted-400 mb-8 leading-relaxed">
-                    Start checking into destinations, collect beautiful stamps, earn XP, and climb the global leaderboards.
+                <div className="font-mono text-[10px] font-bold uppercase tracking-[0.25em] text-brand-primary mb-2">ARCHIVE ACCESS REQUIRED</div>
+                <h2 className="text-2xl sm:text-3xl font-display font-black text-naviigo-brown uppercase mb-3">Personal Travel Archive</h2>
+                <p className="font-sans text-naviigo-brown/75 font-light text-sm mb-8 leading-relaxed">
+                    Authenticate to index verified milestones, track territorial coverage across India, and chronicle your journeys.
                 </p>
-                <button onClick={signInWithGoogle} className="w-full bg-muted-900 dark:bg-white text-white dark:text-muted-900 font-bold py-4 rounded-2xl flex items-center justify-center gap-3 hover:scale-105 active:scale-95 transition-all shadow-xl shadow-muted-900/10 dark:shadow-white/10">
-                    <Image src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width={20} height={20} className="bg-white rounded-full p-0.5" alt="Google" />
-                    Sign in to Start
+                <button onClick={signInWithGoogle} className="w-full bg-naviigo-brown text-white font-mono font-bold text-xs uppercase tracking-wider py-3.5 rounded-lg flex items-center justify-center gap-3 hover:bg-brand-primary transition-all shadow-md">
+                    <Image src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width={18} height={18} className="bg-white rounded-full p-0.5" alt="Google" />
+                    Access Traveler Archive
                 </button>
             </motion.div>
         </div>
     );
 
     const renderEmptyState = () => (
-        <div className="text-center py-20 px-4">
-            <motion.div animate={{ y: [0, -10, 0] }} transition={{ repeat: Infinity, duration: 3 }} className="text-6xl mb-6">✈️</motion.div>
-            <h2 className="text-2xl font-bold text-muted-900 dark:text-white mb-3">Passport is Empty!</h2>
-            <p className="text-muted-500 max-w-md mx-auto mb-8">You haven&apos;t completed any trips yet. Generate an itinerary, pack your bags, and earn your first stamp!</p>
-            <button onClick={() => router.push('/explore')} className="bg-gradient-to-r from-jungle-green-500 to-deep-sea-500 text-white font-bold py-3 px-8 rounded-full shadow-lg shadow-jungle-green-500/30 hover:shadow-jungle-green-500/50 transition-all hover:scale-105">
-                Explore Destinations
+        <div className="text-center py-20 px-4 bg-paper-light rounded-2xl border border-[#EADFD4]">
+            <div className="w-16 h-16 rounded-xl bg-paper-warm border border-[#EADFD4] flex items-center justify-center mx-auto mb-6 p-3">
+                <Image src="/brand/naviigo-mark-primary.png" width={36} height={36} alt="NaviiGo" className="object-contain opacity-60" />
+            </div>
+            <div className="font-mono text-[10px] font-bold uppercase tracking-[0.25em] text-naviigo-brown/60 mb-2">ARCHIVE REGISTER EMPTY</div>
+            <h2 className="text-2xl font-display font-black text-naviigo-brown uppercase mb-3">No Expeditions Indexed Yet</h2>
+            <p className="font-sans text-naviigo-brown/70 text-sm font-light max-w-md mx-auto mb-8">Begin by navigating our curated digital atlas and setting out on your initial verified journey.</p>
+            <button onClick={() => router.push('/explore')} className="bg-brand-primary text-white font-mono font-bold text-xs uppercase tracking-wider py-3 px-8 rounded-lg shadow-sm hover:bg-brand-primary/90 transition-all">
+                Explore Digital Atlas →
             </button>
         </div>
     );
 
     return (
-        <div ref={containerRef} className="min-h-screen relative bg-background text-foreground pt-20 sm:pt-28 pb-24 px-4 md:px-8 overflow-hidden font-sans">
+        <div ref={containerRef} className="min-h-screen relative bg-paper-warm text-naviigo-brown pt-24 sm:pt-32 pb-24 px-4 sm:px-6 md:px-10 font-sans selection:bg-brand-primary selection:text-white">
             {!user && renderNotLoggedIn()}
 
-            {/* Decorative Background Effects */}
-            <div className="absolute top-0 right-0 w-1/2 h-[500px] bg-jungle-green-500/5 dark:bg-jungle-green-500/10 blur-[150px] rounded-full pointer-events-none" />
-            <div className="absolute bottom-0 left-0 w-1/2 h-[500px] bg-deep-sea-500/5 dark:bg-deep-sea-500/10 blur-[150px] rounded-full pointer-events-none" />
-
-            <div className={`max-w-6xl mx-auto relative z-10 transition-all duration-700 ${!user ? 'opacity-30 blur-sm pointer-events-none scale-95' : ''}`}>
+            <div className={`max-w-6xl mx-auto relative z-10 transition-all duration-700 ${!user ? 'opacity-30 blur-sm pointer-events-none scale-98' : ''}`}>
                 
-                {/* ── PROFILE HERO CARD ─────────────────────────────────────────── */}
-                <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="mb-12 relative">
-                    <div className="absolute inset-0 bg-gradient-to-r from-jungle-green-500 to-deep-sea-500 rounded-[2.5rem] transform -rotate-1 scale-[1.02] opacity-20 blur-xl"></div>
-                    <div className="relative bg-white/80 dark:bg-muted-900/80 backdrop-blur-3xl border border-white dark:border-white/5 rounded-[2.5rem] p-6 md:p-10 shadow-2xl">
-                        <div className="flex flex-col md:flex-row items-center md:items-start gap-8">
+                {/* ── ARCHIVE MASTHEAD ─────────────────────────────────────────── */}
+                <div className="mb-8 border-b border-[#EADFD4] pb-6">
+                    <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2 mb-3">
+                        <div className="font-mono text-xs font-bold uppercase tracking-[0.25em] text-brand-primary flex items-center gap-2">
+                            <span>04 / PERSONAL TRAVEL ARCHIVE</span>
+                            <span className="text-naviigo-brown/30">·</span>
+                            <span className="text-naviigo-brown/60">FOLIO NV-2026-IND</span>
+                        </div>
+                        <div className="font-mono text-[11px] text-naviigo-brown/50 uppercase">
+                            AUTHENTICATED EXPEDITION LEDGER
+                        </div>
+                    </div>
+                    <h1 className="font-display font-black text-3xl sm:text-5xl uppercase tracking-tight text-naviigo-brown">
+                        CHRONICLE OF DISCOVERY.
+                    </h1>
+                </div>
+
+                {/* ── TRAVELER DOSSIER CARD ─────────────────────────────────────────── */}
+                <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="mb-10 relative">
+                    <div className="relative bg-paper-light border border-[#EADFD4] rounded-2xl p-6 md:p-8 shadow-sm">
+                        <div className="flex flex-col md:flex-row items-center md:items-start gap-6 md:gap-8">
                             
-                            {/* Avatar & XP Ring */}
-                            <div className="relative shrink-0">
-                                <svg className="w-32 h-32 transform -rotate-90" viewBox="0 0 100 100">
-                                    <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" className="text-muted-100 dark:text-muted-800" strokeWidth="8" />
-                                    <motion.circle 
-                                        initial={{ strokeDasharray: '0 300' }}
-                                        animate={{ strokeDasharray: `${(progress.progress / 100) * 283} 300` }}
-                                        transition={{ duration: 1.5, ease: 'easeOut' }}
-                                        cx="50" cy="50" r="45" fill="none" stroke="url(#gradient)" strokeWidth="8" strokeLinecap="round" 
-                                    />
-                                    <defs>
-                                        <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                                            <stop offset="0%" stopColor="#10b981" />
-                                            <stop offset="100%" stopColor="#14b8a6" />
-                                        </linearGradient>
-                                    </defs>
-                                </svg>
-                                <div className="absolute inset-0 m-auto w-[100px] h-[100px] rounded-full bg-muted-200 dark:bg-muted-800 p-1">
+                            {/* Avatar & Level Plate */}
+                            <div className="relative shrink-0 flex flex-col items-center">
+                                <div className="w-24 h-24 rounded-full bg-paper-warm p-1 overflow-hidden border-2 border-[#EADFD4] shadow-sm">
                                     {user?.photoURL ? (
-                                        <Image src={user.photoURL!} alt="Profile" width={100} height={100} className="w-full h-full rounded-full object-cover" />
+                                        <Image src={user.photoURL!} alt="Profile" width={96} height={96} className="w-full h-full rounded-full object-cover" />
                                     ) : (
-                                        <div className="w-full h-full rounded-full bg-gradient-to-br from-jungle-green-400 to-deep-sea-500 flex items-center justify-center text-4xl">😎</div>
+                                        <div className="w-full h-full rounded-full bg-paper-light flex items-center justify-center text-naviigo-brown font-mono font-bold text-xl">
+                                            {user?.displayName ? user.displayName.charAt(0).toUpperCase() : 'N'}
+                                        </div>
                                     )}
                                 </div>
-                                <div className="absolute -bottom-3 left-1/2 -tranmuted-x-1/2 bg-muted-900 dark:bg-white text-white dark:text-muted-900 text-xs font-black px-4 py-1 rounded-full shadow-xl border-2 border-white dark:border-muted-900 whitespace-nowrap">
-                                    LVL {progress.level}
+                                <div className="mt-2.5 bg-paper-warm border border-[#EADFD4] text-naviigo-brown font-mono text-[10px] font-bold px-3 py-0.5 rounded uppercase tracking-wider">
+                                    TIER {progress.level} · {levelTitle}
                                 </div>
                             </div>
 
-                            {/* Details */}
-                            <div className="flex-1 text-center md:text-left mt-2">
-                                <h1 className="text-3xl md:text-4xl font-black text-muted-900 dark:text-white mb-2 tracking-tight">
-                                    {user?.displayName || 'Adventurer'}
-                                </h1>
-                                <div className="inline-flex items-center gap-2 px-3 py-1 bg-jungle-green-50 dark:bg-jungle-green-500/10 text-jungle-green-600 dark:text-jungle-green-400 rounded-lg text-sm font-bold mb-6">
-                                    <Star className="w-4 h-4 fill-jungle-green-500" /> {levelTitle}
+                            {/* Details & Telemetry Plates */}
+                            <div className="flex-1 text-center md:text-left min-w-0">
+                                <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-2 mb-4">
+                                    <div>
+                                        <h2 className="text-2xl sm:text-3xl font-display font-black text-naviigo-brown tracking-tight uppercase">
+                                            {user?.displayName || 'Unnamed Traveler'}
+                                        </h2>
+                                        <p className="font-mono text-xs text-naviigo-brown/60 uppercase tracking-widest mt-0.5">
+                                            TRAVELER REGISTRY NO · {user?.uid ? user.uid.substring(0, 10).toUpperCase() : 'IND-001'}
+                                        </p>
+                                    </div>
+                                    <div className="text-left sm:text-right">
+                                        <div className="font-mono text-[10px] text-naviigo-brown/50 uppercase tracking-wider">NEXT ADVANCEMENT</div>
+                                        <div className="font-mono text-xs font-bold text-brand-primary">{progress.nextLevelXP} XP REQUIRED</div>
+                                        <div className="w-36 h-1.5 bg-[#EADFD4] rounded-full overflow-hidden mt-1.5">
+                                            <div className="h-full bg-brand-primary rounded-full" style={{ width: `${progress.progress}%` }} />
+                                        </div>
+                                    </div>
                                 </div>
 
-                                <div className="flex flex-wrap justify-center md:justify-start gap-4 md:gap-8">
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4 border-t border-[#EADFD4]">
                                     {[
-                                        { icon: <MapPin />, val: stats.totalStamps, label: 'Stamps' },
-                                        { icon: <Globe2 />, val: stats.statesVisited.length, label: 'States' },
-                                        { icon: <Flame />, val: stats.streak, label: 'Day Streak' },
-                                        { icon: <Zap />, val: stats.totalXP, label: 'Total XP' },
+                                        { val: stats.totalStamps, label: 'Milestones', code: 'MLS' },
+                                        { val: stats.statesVisited.length, label: 'States Visited', code: `${stats.statesVisited.length}/34` },
+                                        { val: stats.streak, label: 'Active Streak', code: 'DAYS' },
+                                        { val: stats.totalXP.toLocaleString(), label: 'Expedition XP', code: 'PTS' },
                                     ].map((s, i) => (
-                                        <div key={i} className="stat-card flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-xl bg-muted-100 dark:bg-muted-800 text-muted-500 dark:text-muted-400 flex items-center justify-center">
-                                                {s.icon}
+                                        <div key={i} className="stat-plate bg-paper-warm rounded-xl border border-[#EADFD4] p-3 text-left">
+                                            <div className="flex justify-between items-baseline mb-1">
+                                                <span className="font-mono text-[9px] uppercase tracking-wider text-naviigo-brown/50">{s.label}</span>
+                                                <span className="font-mono text-[9px] text-brand-primary font-bold">{s.code}</span>
                                             </div>
-                                            <div>
-                                                <div className="text-xl font-black text-muted-900 dark:text-white leading-none">{s.val}</div>
-                                                <div className="text-xs text-muted-500 font-medium mt-1 uppercase tracking-wider">{s.label}</div>
-                                            </div>
+                                            <div className="text-xl font-mono font-bold text-naviigo-brown leading-none">{s.val}</div>
                                         </div>
                                     ))}
-                                </div>
-                            </div>
-
-                            {/* Progress info */}
-                            <div className="hidden lg:flex flex-col justify-center items-end bg-muted-50 dark:bg-muted-800/50 rounded-3xl p-6 border border-muted-100 dark:border-muted-700/50">
-                                <div className="text-sm font-bold text-muted-400 mb-1">NEXT LEVEL</div>
-                                <div className="text-3xl font-black text-jungle-green-500 mb-4">{progress.nextLevelXP} <span className="text-lg text-muted-500">XP needed</span></div>
-                                <div className="w-48 h-2 bg-muted-200 dark:bg-muted-700 rounded-full overflow-hidden">
-                                    <div className="h-full bg-jungle-green-500 rounded-full" style={{ width: `${progress.progress}%` }}></div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </motion.div>
 
-                {/* ── TAB NAVIGATION ───────────────────────────────────────── */}
-                <div className="flex justify-center md:justify-start gap-2 mb-8 overflow-x-auto no-scrollbar pb-2">
-                    {(['stamps', 'achievements', 'stats', 'leaderboard', 'bucketlist'] as const).map(tab => (
-                        <button
-                            key={tab}
-                            onClick={() => setActiveTab(tab)}
-                            className={`px-6 py-3 rounded-2xl text-sm font-bold transition-all whitespace-nowrap flex items-center gap-2 ${
-                                activeTab === tab
-                                    ? 'bg-muted-900 dark:bg-white text-white dark:text-muted-900 shadow-xl shadow-muted-900/20'
-                                    : 'bg-white dark:bg-muted-900 border border-muted-200 dark:border-muted-800 text-muted-500 hover:bg-muted-50 dark:hover:bg-muted-800'
-                            }`}
-                        >
-                            {tab === 'stamps' && <MapPin className="w-4 h-4"/>}
-                            {tab === 'achievements' && <Trophy className="w-4 h-4"/>}
-                            {tab === 'stats' && <Activity className="w-4 h-4"/>}
-                            {tab === 'leaderboard' && <Award className="w-4 h-4"/>}
-                            {tab === 'bucketlist' && <Heart className="w-4 h-4"/>}
-                            {tab.charAt(0).toUpperCase() + tab.slice(1)}
-                        </button>
-                    ))}
+                {/* ── TYPOGRAPHIC ARCHIVE INDEX TABS ───────────────────────────────────────── */}
+                <div className="flex items-center gap-6 sm:gap-8 mb-8 border-b border-[#EADFD4] overflow-x-auto no-scrollbar pb-3 font-mono text-xs uppercase tracking-wider">
+                    {[
+                        { id: 'stamps', label: 'Milestones', count: stamps.length },
+                        { id: 'stats', label: 'Territorial Coverage', count: stats.statesVisited.length },
+                        { id: 'achievements', label: 'Citations', count: stats.achievements.length },
+                        { id: 'bucketlist', label: 'Saved Routes', count: bucketList.length },
+                        { id: 'leaderboard', label: 'Traveler Registry', count: leaderboard.length },
+                    ].map(tab => {
+                        const isActive = activeTab === tab.id;
+                        return (
+                            <button
+                                key={tab.id}
+                                onClick={() => setActiveTab(tab.id as any)}
+                                className={`relative py-1 flex items-center gap-1.5 transition-colors whitespace-nowrap ${
+                                    isActive ? 'text-brand-primary font-bold' : 'text-naviigo-brown/60 hover:text-naviigo-brown'
+                                }`}
+                            >
+                                <span>{tab.label}</span>
+                                <span className="font-mono text-[10px] text-naviigo-brown/40">/{String(tab.count).padStart(2, '0')}</span>
+                                {isActive && (
+                                    <motion.div
+                                        layoutId="activePassportTab"
+                                        className="absolute -bottom-3 left-0 right-0 h-[2px] bg-brand-primary"
+                                        transition={{ type: 'spring', stiffness: 350, damping: 28 }}
+                                    />
+                                )}
+                            </button>
+                        );
+                    })}
                 </div>
 
                 {(() => {
-                    const showEmptyState = user && stamps.length === 0 && activeTab !== 'bucketlist' && activeTab !== 'leaderboard';
+                    const showEmptyState = user && stamps.length === 0 && activeTab === 'stamps';
                     if (showEmptyState) {
                         return renderEmptyState();
                     }
                     return (
                         <>
-                            {/* ── STAMPS TAB ──────────────────────────────────────────── */}
-                {activeTab === 'stamps' && stamps.length > 0 && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-saffron-50/50 dark:bg-saffron-900/10 rounded-[3rem] p-8 md:p-12 border border-saffron-100 dark:border-saffron-900/30 relative overflow-hidden shadow-inner">
-                        <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(#d4d4d8 1px, transparent 1px)', backgroundSize: '30px 30px' }}></div>
-                        
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-10 relative z-10">
-                            {stamps.map((stamp, i) => (
-                                <motion.div
-                                    key={i}
-                                    onClick={() => setSelectedStamp(stamp)}
-                                    whileHover={{ scale: 1.05, zIndex: 10 }}
-                                    className="stamp-card cursor-pointer group"
-                                >
-                                    <div className="bg-white/90 dark:bg-muted-900/90 backdrop-blur-md rounded-full w-full aspect-square border-[6px] border-dashed border-jungle-green-500/30 flex flex-col items-center justify-center p-4 shadow-xl transition-all group-hover:border-jungle-green-500 group-hover:shadow-jungle-green-500/20">
-                                        <div className="text-4xl mb-2">{stamp.icon}</div>
-                                        <h3 className="font-bold text-[11px] md:text-sm text-center text-muted-900 dark:text-white leading-tight line-clamp-2">{stamp.name}</h3>
-                                        <div className="text-[9px] md:text-[10px] text-muted-500 mt-1 uppercase tracking-widest">{new Date(stamp.visitedDate).toLocaleDateString(undefined, {month:'short', year:'numeric'})}</div>
+                            {/* ── MILESTONES TAB ──────────────────────────────────────────── */}
+                            {activeTab === 'stamps' && stamps.length > 0 && (
+                                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                                        {stamps.map((stamp, i) => (
+                                            <motion.div
+                                                key={i}
+                                                onClick={() => setSelectedStamp(stamp)}
+                                                whileHover={{ y: -3 }}
+                                                className="stamp-card cursor-pointer group bg-paper-light rounded-xl border border-[#EADFD4] p-5 hover:border-brand-primary/50 transition-all shadow-sm flex flex-col justify-between"
+                                            >
+                                                <div>
+                                                    <div className="flex justify-between items-baseline mb-3">
+                                                        <span className="font-mono text-[9px] uppercase tracking-wider text-naviigo-brown/50">ENTRY Nº {String(i + 1).padStart(3, '0')}</span>
+                                                        <span className="font-mono text-[10px] font-bold text-brand-primary">+{stamp.xpEarned} XP</span>
+                                                    </div>
+                                                    <div className="text-3xl mb-3">{stamp.icon}</div>
+                                                    <h3 className="font-display font-bold text-base text-naviigo-brown uppercase leading-tight group-hover:text-brand-primary transition-colors">
+                                                        {stamp.name}
+                                                    </h3>
+                                                    <div className="font-mono text-[10px] text-naviigo-brown/60 mt-1 uppercase">
+                                                        {stamp.location}, {stamp.state}
+                                                    </div>
+                                                </div>
+                                                <div className="mt-4 pt-3 border-t border-[#EADFD4] flex justify-between items-center font-mono text-[9px] text-naviigo-brown/50 uppercase">
+                                                    <span>{new Date(stamp.visitedDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                                                    <span className="group-hover:text-brand-primary font-bold transition-colors">Dossier →</span>
+                                                </div>
+                                            </motion.div>
+                                        ))}
                                     </div>
                                 </motion.div>
-                            ))}
-                        </div>
-                    </motion.div>
-                )}
+                            )}
 
-                {/* ── ACHIEVEMENTS TAB ────────────────────────────────────── */}
+                            {/* ── ACHIEVEMENTS / CITATIONS TAB ────────────────────────────────────── */}
                             {activeTab === 'achievements' && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {ACHIEVEMENTS.map((achievement, i) => {
-                            const unlocked = stats.achievements.includes(achievement.id);
-                            return (
-                                <motion.div
-                                    key={achievement.id}
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: i * 0.05 }}
-                                    className={`relative overflow-hidden flex items-center gap-4 p-5 rounded-[2rem] border transition-all ${
-                                        unlocked
-                                            ? 'bg-white dark:bg-muted-900 border-muted-200 dark:border-muted-800 shadow-lg'
-                                            : 'bg-muted-50/50 dark:bg-muted-900/30 border-dashed border-muted-200 dark:border-muted-800 opacity-60'
-                                    }`}
-                                >
-                                    {unlocked && <div className="absolute top-0 right-0 w-32 h-32 bg-jungle-green-500/10 blur-[40px] rounded-full pointer-events-none" />}
-                                    <div className={`w-16 h-16 rounded-[1.5rem] flex items-center justify-center text-3xl shrink-0 shadow-inner ${
-                                        unlocked ? 'bg-gradient-to-br from-jungle-green-100 to-deep-sea-100 dark:from-jungle-green-900/40 dark:to-deep-sea-900/40' : 'bg-muted-200 dark:bg-muted-800 grayscale'
-                                    }`}>
-                                        {unlocked ? achievement.emoji : <Lock className="w-6 h-6 text-muted-400" />}
+                                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {ACHIEVEMENTS.map((achievement, i) => {
+                                        const unlocked = stats.achievements.includes(achievement.id);
+                                        return (
+                                            <div
+                                                key={achievement.id}
+                                                className={`relative flex items-start gap-4 p-5 rounded-xl border transition-all ${
+                                                    unlocked
+                                                        ? 'bg-paper-light border-[#EADFD4] shadow-sm'
+                                                        : 'bg-paper-warm border-dashed border-[#EADFD4] opacity-55'
+                                                }`}
+                                            >
+                                                <div className={`w-12 h-12 rounded-lg flex items-center justify-center text-2xl shrink-0 border border-[#EADFD4] ${
+                                                    unlocked ? 'bg-paper-warm' : 'bg-paper-light grayscale'
+                                                }`}>
+                                                    {unlocked ? achievement.emoji : <Lock className="w-4 h-4 text-naviigo-brown/40" />}
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex items-baseline justify-between gap-2 mb-1">
+                                                        <h3 className={`font-display font-bold text-sm uppercase leading-tight ${unlocked ? 'text-naviigo-brown' : 'text-naviigo-brown/50'}`}>
+                                                            {achievement.name}
+                                                        </h3>
+                                                        {unlocked && (
+                                                            <span className="font-mono text-[9px] font-bold text-brand-primary uppercase">
+                                                                VERIFIED
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <p className="font-sans text-xs text-naviigo-brown/70 leading-relaxed font-light">{achievement.description}</p>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </motion.div>
+                            )}
+
+                            {/* ── STATS / TERRITORIAL COVERAGE TAB ──────────────────────────────────── */}
+                            {activeTab === 'stats' && (
+                                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                        {/* Territorial Ledger */}
+                                        <div className="bg-paper-light rounded-xl p-6 border border-[#EADFD4] shadow-sm">
+                                            <div className="flex items-baseline justify-between mb-4 border-b border-[#EADFD4] pb-2">
+                                                <h3 className="font-mono text-xs font-bold text-naviigo-brown uppercase tracking-widest">
+                                                    Territorial Coverage
+                                                </h3>
+                                                <span className="font-mono text-[10px] text-naviigo-brown/60">
+                                                    {stats.statesVisited.length} OF {INDIAN_STATES.length} STATES & TERRITORIES
+                                                </span>
+                                            </div>
+                                            <div className="w-full bg-[#EADFD4] rounded-full h-2 mb-6 overflow-hidden">
+                                                <div className="h-full bg-brand-primary rounded-full" style={{ width: `${(stats.statesVisited.length / INDIAN_STATES.length) * 100}%` }} />
+                                            </div>
+                                            <div className="flex flex-wrap gap-1.5 max-h-[360px] overflow-y-auto pr-1">
+                                                {INDIAN_STATES.map(state => {
+                                                    const visited = stats.statesVisited.includes(state);
+                                                    return (
+                                                        <span
+                                                            key={state}
+                                                            className={`px-2.5 py-1 rounded text-[11px] font-mono border transition-all ${
+                                                                visited
+                                                                    ? 'bg-paper-warm text-naviigo-brown border-brand-primary/40 font-bold'
+                                                                    : 'bg-paper-warm/50 text-naviigo-brown/40 border-[#EADFD4]'
+                                                            }`}
+                                                        >
+                                                            {visited ? '✓ ' : ''}{state}
+                                                        </span>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+
+                                        {/* Travel DNA Ledger */}
+                                        <div className="bg-paper-light rounded-xl p-6 border border-[#EADFD4] shadow-sm">
+                                            <div className="flex items-baseline justify-between mb-4 border-b border-[#EADFD4] pb-2">
+                                                <h3 className="font-mono text-xs font-bold text-naviigo-brown uppercase tracking-widest">
+                                                    Exploration DNA
+                                                </h3>
+                                                <span className="font-mono text-[10px] text-naviigo-brown/60">GEOGRAPHIC BIAS</span>
+                                            </div>
+                                            <div className="space-y-4">
+                                                {['Spiritual', 'Heritage', 'Adventure', 'Nature', 'Beach', 'City'].map(cat => {
+                                                    const count = stats.categoryCounts[cat] || 0;
+                                                    const max = Math.max(...Object.values(stats.categoryCounts), 1);
+                                                    const pct = (count / max) * 100;
+                                                    const icons: Record<string, string> = { Spiritual: '🕉️', Heritage: '🏛️', Adventure: '🏔️', Nature: '🌿', Beach: '🏖️', City: '🏙️' };
+                                                    return (
+                                                        <div key={cat} className="flex items-center gap-3 font-mono text-xs">
+                                                            <div className="w-6 text-center text-sm">{icons[cat]}</div>
+                                                            <div className="w-24 text-naviigo-brown uppercase font-semibold">{cat}</div>
+                                                            <div className="flex-1 h-2 bg-[#EADFD4] rounded-full overflow-hidden">
+                                                                <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.8 }} className="h-full bg-naviigo-brown rounded-full" />
+                                                            </div>
+                                                            <div className="w-8 text-right font-bold text-brand-primary">{count}</div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div className="flex-1 min-w-0">
-                                        <h3 className={`font-bold text-lg leading-tight mb-1 ${unlocked ? 'text-muted-900 dark:text-white' : 'text-muted-500'}`}>
-                                            {achievement.name}
-                                        </h3>
-                                        <p className="text-sm text-muted-500 line-clamp-2 leading-snug">{achievement.description}</p>
+                                </motion.div>
+                            )}
+
+                            {/* ── TRAVELER REGISTRY / LEADERBOARD TAB ──────────────────────────────────────── */}
+                            {activeTab === 'leaderboard' && (
+                                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+                                    <div className="bg-paper-light rounded-xl border border-[#EADFD4] shadow-sm overflow-hidden">
+                                        <div className="flex items-baseline justify-between p-4 sm:p-6 border-b border-[#EADFD4]">
+                                            <h3 className="font-mono text-xs font-bold text-naviigo-brown uppercase tracking-widest">
+                                                Global Explorer Registry
+                                            </h3>
+                                            <span className="font-mono text-[10px] text-naviigo-brown/50">VERIFIED VOYAGERS</span>
+                                        </div>
+                                        <div className="divide-y divide-[#EADFD4]">
+                                            {leaderboard.map((entry, i) => (
+                                                <div key={entry.uid} className="flex items-center gap-4 p-4 sm:px-6 hover:bg-paper-warm transition-colors">
+                                                    <div className="w-8 font-mono font-bold text-sm text-naviigo-brown/60">
+                                                        #{String(i + 1).padStart(2, '0')}
+                                                    </div>
+                                                    <div className="w-10 h-10 rounded-full bg-paper-warm border border-[#EADFD4] overflow-hidden shrink-0">
+                                                        <Image src={entry.photoURL || 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='} alt="" width={40} height={40} className="w-full h-full object-cover" />
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="font-display font-bold text-sm text-naviigo-brown truncate uppercase">{entry.displayName}</div>
+                                                        <div className="font-mono text-[10px] text-naviigo-brown/60">Level {entry.level}</div>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <div className="font-mono font-bold text-xs text-brand-primary">{entry.totalXP.toLocaleString()} XP</div>
+                                                        <div className="font-mono text-[9px] text-naviigo-brown/50 uppercase">{entry.totalStamps} Milestones</div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
                                     </div>
-                                    {unlocked && (
-                                        <div className="absolute top-4 right-4 text-jungle-green-500 bg-jungle-green-50 dark:bg-jungle-green-500/10 px-2 py-1 rounded-lg text-[10px] font-black tracking-widest uppercase">
-                                            UNLOCKED
+                                </motion.div>
+                            )}
+
+                            {/* ── BUCKET LIST / SAVED ROUTES TAB ─────────────────────────────────────────── */}
+                            {activeTab === 'bucketlist' && (
+                                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+                                    {bucketList.length === 0 ? (
+                                        <div className="text-center py-16 bg-paper-light rounded-xl border border-[#EADFD4]">
+                                            <h3 className="font-display font-bold text-lg text-naviigo-brown uppercase mb-1">No Routes Saved Yet</h3>
+                                            <p className="font-sans text-xs text-naviigo-brown/60 max-w-sm mx-auto mb-6">Explore the digital atlas to bookmark destinations for future expeditions.</p>
+                                            <button onClick={() => router.push('/explore')} className="font-mono text-xs font-bold uppercase tracking-wider bg-brand-primary text-white px-5 py-2.5 rounded hover:bg-brand-primary/90 transition-colors">
+                                                Explore Atlas →
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                            {bucketList.map((item, i) => (
+                                                <div
+                                                    key={item.id}
+                                                    onClick={() => router.push(`/itinerary?load=${item.id}`)}
+                                                    className="group relative rounded-xl overflow-hidden border border-[#EADFD4] bg-paper-light shadow-sm hover:border-brand-primary/50 transition-all cursor-pointer flex flex-col"
+                                                >
+                                                    <div className="relative h-48 bg-paper-warm overflow-hidden">
+                                                        <PlaceImage
+                                                            name={item.name}
+                                                            city={item.location}
+                                                            fallbackUrl={item.image}
+                                                            asBackground
+                                                            className="absolute inset-0 w-full h-full group-hover:scale-105 transition-transform duration-700 object-cover"
+                                                            width={600}
+                                                        />
+                                                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+                                                        <div className="absolute bottom-3 left-4 right-4">
+                                                            <h3 className="font-display font-bold text-white text-lg uppercase leading-tight">{item.name}</h3>
+                                                            {item.location && <p className="font-mono text-[10px] text-white/80 uppercase mt-0.5">{item.location}</p>}
+                                                        </div>
+                                                    </div>
+                                                    <div className="p-3 bg-paper-light flex items-center justify-between font-mono text-[10px] uppercase font-bold text-brand-primary">
+                                                        <span>Plan Route</span>
+                                                        <ArrowRight className="w-3.5 h-3.5" />
+                                                    </div>
+                                                </div>
+                                            ))}
                                         </div>
                                     )}
                                 </motion.div>
-                            );
-                        })}
-                    </motion.div>
-                )}
-
-                {/* ── STATS TAB ──────────────────────────────────────────── */}
-                            {activeTab === 'stats' && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            {/* Map Card */}
-                            <div className="bg-white dark:bg-muted-900 rounded-[2.5rem] p-8 border border-muted-200 dark:border-muted-800 shadow-lg">
-                                <h3 className="font-black text-xl text-muted-900 dark:text-white mb-6 flex items-center gap-3">
-                                    <span className="w-10 h-10 rounded-xl bg-jungle-green-100 dark:bg-jungle-green-500/20 text-jungle-green-500 flex items-center justify-center"><Globe2 /></span>
-                                    India Coverage
-                                </h3>
-                                <div className="flex flex-wrap gap-2 mb-6">
-                                    <div className="w-full bg-muted-100 dark:bg-muted-800 rounded-full h-4 mb-2 overflow-hidden relative">
-                                        <div className="absolute inset-y-0 left-0 bg-jungle-green-500 rounded-full" style={{ width: `${(stats.statesVisited.length / INDIAN_STATES.length) * 100}%` }}></div>
-                                    </div>
-                                    <div className="w-full flex justify-between text-xs font-bold text-muted-400 mb-4">
-                                        <span>{stats.statesVisited.length} Visited</span>
-                                        <span>{INDIAN_STATES.length} Total</span>
-                                    </div>
-                                    {INDIAN_STATES.map(state => {
-                                        const visited = stats.statesVisited.includes(state);
-                                        return visited && (
-                                            <span key={state} className="px-3 py-1.5 rounded-xl text-xs font-bold bg-jungle-green-500 text-white shadow-sm flex items-center gap-1">
-                                                <CheckCircle2 className="w-3 h-3" /> {state}
-                                            </span>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-
-                            {/* Category Radar/Bars */}
-                            <div className="bg-white dark:bg-muted-900 rounded-[2.5rem] p-8 border border-muted-200 dark:border-muted-800 shadow-lg">
-                                <h3 className="font-black text-xl text-muted-900 dark:text-white mb-6 flex items-center gap-3">
-                                    <span className="w-10 h-10 rounded-xl bg-indigo-100 dark:bg-indigo-500/20 text-indigo-500 flex items-center justify-center"><TrendingUp /></span>
-                                    Travel DNA
-                                </h3>
-                                <div className="space-y-4">
-                                    {['Spiritual', 'Heritage', 'Adventure', 'Nature', 'Beach', 'City'].map(cat => {
-                                        const count = stats.categoryCounts[cat] || 0;
-                                        const max = Math.max(...Object.values(stats.categoryCounts), 1);
-                                        const pct = (count / max) * 100;
-                                        const icons: Record<string, string> = { Spiritual: '🕉️', Heritage: '🏛️', Adventure: '🏔️', Nature: '🌿', Beach: '🏖️', City: '🏙️' };
-                                        return (
-                                            <div key={cat} className="flex items-center gap-4">
-                                                <div className="w-8 text-xl text-center">{icons[cat]}</div>
-                                                <div className="w-20 text-sm font-bold text-muted-600 dark:text-muted-400">{cat}</div>
-                                                <div className="flex-1 h-3 bg-muted-100 dark:bg-muted-800 rounded-full overflow-hidden">
-                                                    <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 1 }} className="h-full bg-indigo-500 rounded-full" />
-                                                </div>
-                                                <div className="w-8 text-right text-sm font-bold text-muted-900 dark:text-white">{count}</div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-                        </div>
-                    </motion.div>
-                )}
-
-                {/* ── LEADERBOARD TAB ──────────────────────────────────────── */}
-                            {activeTab === 'leaderboard' && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-8">
-                        {/* Podium */}
-                        <div className="flex items-end justify-center gap-2 md:gap-6 pt-10 pb-6">
-                            {[1, 0, 2].map((idx) => {
-                                const entry = leaderboard[idx];
-                                if (!entry) return null;
-                                const height = idx === 0 ? 'h-48' : idx === 1 ? 'h-36' : 'h-28';
-                                const color = idx === 0 ? 'from-saffron-300 to-saffron-500' : idx === 1 ? 'from-muted-300 to-muted-400' : 'from-saffron-300 to-saffron-500';
-                                const rank = idx + 1;
-                                return (
-                                    <div key={rank} className="flex flex-col items-center group cursor-pointer">
-                                        <div className="relative mb-4 z-10 group-hover:-tranmuted-y-2 transition-transform">
-                                            <Image src={entry.photoURL || 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='} alt="" width={80} height={80} className={`rounded-full border-4 border-white dark:border-muted-900 object-cover shadow-xl ${idx === 0 ? 'w-20 h-20 md:w-24 md:h-24 ring-4 ring-saffron-400' : 'w-16 h-16 md:w-20 md:h-20'}`} />
-                                            <div className={`absolute -bottom-3 left-1/2 -tranmuted-x-1/2 w-8 h-8 rounded-full bg-gradient-to-br ${color} flex items-center justify-center text-white font-black shadow-lg border-2 border-white dark:border-muted-900`}>{rank}</div>
-                                        </div>
-                                        <div className="text-center mb-4">
-                                            <div className="font-bold text-muted-900 dark:text-white text-sm md:text-base max-w-[100px] truncate">{entry.displayName}</div>
-                                            <div className="text-xs font-black text-jungle-green-500">{entry.totalXP} XP</div>
-                                        </div>
-                                        <div className={`podium-item w-20 md:w-28 ${height} bg-gradient-to-t ${color} rounded-t-2xl shadow-inner opacity-90`} />
-                                    </div>
-                                );
-                            })}
-                        </div>
-
-                        {/* List */}
-                        <div className="bg-white dark:bg-muted-900 rounded-[2.5rem] border border-muted-200 dark:border-muted-800 shadow-xl overflow-hidden">
-                            <div className="divide-y divide-muted-100 dark:divide-muted-800">
-                                {leaderboard.slice(3).map((entry, i) => (
-                                    <div key={entry.uid} className="flex items-center gap-4 p-5 hover:bg-muted-50 dark:hover:bg-muted-800/50 transition-colors">
-                                        <div className="w-8 text-center font-black text-muted-400 text-lg">{i + 4}</div>
-                                        <Image src={entry.photoURL || ''} alt="" width={48} height={48} className="w-12 h-12 rounded-full object-cover bg-muted-200" />
-                                        <div className="flex-1 min-w-0">
-                                            <div className="font-bold text-muted-900 dark:text-white truncate">{entry.displayName}</div>
-                                            <div className="text-xs text-muted-500">Level {entry.level}</div>
-                                        </div>
-                                        <div className="text-right">
-                                            <div className="font-black text-jungle-green-500">{entry.totalXP.toLocaleString()} XP</div>
-                                            <div className="text-[10px] text-muted-400 font-bold tracking-widest uppercase">{entry.totalStamps} Stamps</div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </motion.div>
-                )}
-
-                {/* ── BUCKET LIST TAB ─────────────────────────────────────────── */}
-                            {activeTab === 'bucketlist' && (
-                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
-                        {bucketList.length === 0 ? (
-                            <div className="text-center py-20 bg-white/50 dark:bg-muted-900/50 rounded-[2.5rem] border border-dashed border-muted-300 dark:border-muted-700">
-                                <Heart className="w-16 h-16 text-temple-red-300 dark:text-temple-red-900/50 mx-auto mb-4" />
-                                <h3 className="text-2xl font-black text-muted-900 dark:text-white mb-2">Your bucket list is empty</h3>
-                                <p className="text-muted-500 max-w-md mx-auto">Explore destinations and tap the heart icon to save places you want to visit.</p>
-                                <button onClick={() => router.push('/explore')} className="mt-6 font-bold text-jungle-green-500 bg-jungle-green-50 dark:bg-jungle-green-500/10 px-6 py-2 rounded-full">Go Explore</button>
-                            </div>
-                        ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                                {bucketList.map((item, i) => (
-                                    <motion.div
-                                        key={item.id}
-                                        initial={{ opacity: 0, y: 20 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: i * 0.05 }}
-                                        className="group relative rounded-[2rem] overflow-hidden border border-muted-200 dark:border-muted-800 shadow-md hover:shadow-xl transition-all cursor-pointer"
-                                        onClick={() => router.push(`/itinerary?load=${item.id}`)}
-                                    >
-                                        <div className="relative h-56 bg-muted-100 dark:bg-muted-800">
-                                            <PlaceImage
-                                                name={item.name}
-                                                city={item.location}
-                                                fallbackUrl={item.image}
-                                                asBackground
-                                                className="absolute inset-0 w-full h-full transform group-hover:scale-110 transition-transform duration-700"
-                                                width={800}
-                                            />
-                                            <div className="absolute inset-0 bg-gradient-to-t from-muted-900 via-muted-900/20 to-transparent opacity-80" />
-                                            <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-sm p-2 rounded-full shadow-lg">
-                                                <Heart className="w-5 h-5 fill-temple-red-500 text-temple-red-500" />
-                                            </div>
-                                            <div className="absolute bottom-6 left-6 right-6">
-                                                <h3 className="font-black text-white text-2xl mb-1 leading-tight">{item.name}</h3>
-                                                {item.location && <p className="text-white/80 text-sm font-medium flex items-center gap-1"><MapPin className="w-3 h-3"/>{item.location}</p>}
-                                                <div className="mt-4 flex items-center justify-between opacity-0 tranmuted-y-4 group-hover:opacity-100 group-hover:tranmuted-y-0 transition-all duration-300">
-                                                    <span className="text-xs font-bold text-jungle-green-400">Plan Trip</span>
-                                                    <ArrowRight className="w-4 h-4 text-jungle-green-400" />
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </motion.div>
-                                ))}
-                            </div>
-                        )}
-                    </motion.div>
                             )}
                         </>
                     );
                 })()}
             </div>
 
-            {/* ── STAMP DETAIL MODAL ──────────────────────────────────────── */}
+            {/* ── STAMP DETAIL ARCHIVAL DOSSIER MODAL ──────────────────────────────────────── */}
             <AnimatePresence>
                 {selectedStamp && (
                     <motion.div
@@ -498,41 +507,42 @@ export default function PassportPage() {
                         exit={{ opacity: 0 }}
                         className="fixed inset-0 z-50 flex items-center justify-center p-4"
                     >
-                        <div className="absolute inset-0 bg-muted-900/60 backdrop-blur-md" onClick={() => setSelectedStamp(null)} />
+                        <div className="absolute inset-0 bg-naviigo-brown/40 backdrop-blur-sm" onClick={() => setSelectedStamp(null)} />
                         <motion.div
-                            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                            initial={{ opacity: 0, scale: 0.95, y: 16 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                            className="relative w-full max-w-sm bg-white dark:bg-muted-900 rounded-[2.5rem] shadow-2xl overflow-hidden border border-muted-200 dark:border-muted-800"
+                            exit={{ opacity: 0, scale: 0.95, y: 16 }}
+                            className="relative w-full max-w-md bg-paper-light rounded-2xl shadow-2xl overflow-hidden border border-[#EADFD4]"
                         >
-                            <div className="relative h-40 bg-gradient-to-br from-jungle-green-400 to-deep-sea-500 flex items-center justify-center">
-                                <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '20px 20px' }}></div>
-                                <button onClick={() => setSelectedStamp(null)} className="absolute top-4 right-4 p-2 rounded-full bg-black/10 hover:bg-black/20 text-white transition-colors z-10">
-                                    <X className="w-5 h-5" />
-                                </button>
-                                <div className="absolute -bottom-12 w-28 h-28 rounded-full border-8 border-white dark:border-muted-900 bg-white dark:bg-muted-800 flex items-center justify-center text-6xl shadow-xl shadow-jungle-green-500/20">
-                                    {selectedStamp.icon}
+                            <div className="p-6 border-b border-[#EADFD4] flex items-baseline justify-between bg-paper-warm">
+                                <div className="font-mono text-[10px] font-bold uppercase tracking-widest text-brand-primary">
+                                    VERIFIED EXPEDITION DOSSIER
                                 </div>
+                                <button onClick={() => setSelectedStamp(null)} className="text-naviigo-brown/60 hover:text-naviigo-brown text-sm font-mono">
+                                    ✕
+                                </button>
                             </div>
 
-                            <div className="pt-16 pb-8 px-8 text-center">
-                                <h2 className="text-2xl font-black text-muted-900 dark:text-white mb-2">{selectedStamp.name}</h2>
-                                <div className="flex flex-col items-center justify-center gap-1 text-sm font-medium text-muted-500 mb-6">
-                                    <span className="flex items-center gap-1"><MapPin className="w-4 h-4 text-jungle-green-500" /> {selectedStamp.location}, {selectedStamp.state}</span>
-                                    <span className="flex items-center gap-1"><Calendar className="w-4 h-4 text-jungle-green-500" /> {new Date(selectedStamp.visitedDate).toLocaleDateString()}</span>
+                            <div className="p-6 text-center">
+                                <div className="text-5xl mb-4">{selectedStamp.icon}</div>
+                                <h2 className="text-2xl font-display font-black text-naviigo-brown uppercase mb-1">{selectedStamp.name}</h2>
+                                <div className="font-mono text-xs text-naviigo-brown/60 uppercase mb-4">
+                                    {selectedStamp.location}, {selectedStamp.state} · {new Date(selectedStamp.visitedDate).toLocaleDateString()}
                                 </div>
-                                <div className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-jungle-green-50 dark:bg-jungle-green-500/10 text-jungle-green-600 dark:text-jungle-green-400 font-bold text-sm">
-                                    <Zap className="w-4 h-4" /> +{selectedStamp.xpEarned} XP
+                                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded bg-paper-warm border border-[#EADFD4] font-mono font-bold text-xs text-brand-primary mb-6">
+                                    <Zap className="w-3.5 h-3.5" /> +{selectedStamp.xpEarned} EXPEDITION XP RECORDED
                                 </div>
 
                                 {selectedStamp.activities && selectedStamp.activities.length > 0 && (
-                                    <div className="mt-8 text-left">
-                                        <h3 className="text-[10px] font-black uppercase tracking-widest text-muted-400 mb-3">Activities Completed</h3>
+                                    <div className="text-left pt-4 border-t border-[#EADFD4]">
+                                        <div className="font-mono text-[10px] font-bold uppercase tracking-widest text-naviigo-brown/60 mb-3">
+                                            Completed Waypoints
+                                        </div>
                                         <ul className="space-y-2">
                                             {selectedStamp.activities.map((activity, idx) => (
-                                                <li key={idx} className="flex items-start gap-3 bg-muted-50 dark:bg-muted-800/50 p-3 rounded-xl">
-                                                    <CheckCircle2 className="w-4 h-4 text-jungle-green-500 shrink-0 mt-0.5" />
-                                                    <span className="text-sm font-medium text-muted-700 dark:text-muted-300">{activity}</span>
+                                                <li key={idx} className="flex items-start gap-2.5 font-sans text-xs text-naviigo-brown/85 bg-paper-warm p-2.5 rounded border border-[#EADFD4]">
+                                                    <CheckCircle2 className="w-3.5 h-3.5 text-naviigo-teal shrink-0 mt-0.5" />
+                                                    <span>{activity}</span>
                                                 </li>
                                             ))}
                                         </ul>

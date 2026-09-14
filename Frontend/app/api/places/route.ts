@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
         if (data && data.length > 0) {
             const places = data.map((p: any) => ({
                 name: p.display_name?.split(',')[0] || 'Unknown Place',
-                rating: (Math.random() * 1.5 + 3.5).toFixed(1),
+                rating: null,
                 vicinity: p.display_name?.split(',').slice(1, 3).join(',').trim() || 'Nearby',
                 type: type.replace(/_/g, ' '),
                 priceLevel: 1,

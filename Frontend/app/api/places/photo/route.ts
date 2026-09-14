@@ -91,9 +91,16 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({ error: 'Missing "name" or "photoName" parameter' }, { status: 400 });
     }
 
+    const accept = req.headers.get('accept') || '';
+    const wantsRedirect = searchParams.get('redirect') === 'true' || 
+        (accept.includes('image/') && !accept.includes('application/json') && !accept.includes('text/html'));
+
     const cacheKey = `${name}|${city}|${maxWidth}`.toLowerCase();
     const cached = photoCache.get(cacheKey);
     if (!isDebug && cached && Date.now() - cached.ts < CACHE_TTL) {
+        if (wantsRedirect && cached.url) {
+            return NextResponse.redirect(cached.url, 307);
+        }
         return NextResponse.json({ url: cached.url });
     }
 
@@ -131,10 +138,7 @@ export async function GET(req: NextRequest) {
                 return NextResponse.json({
                     error: errMsg,
                     status: res.status,
-                    keyLength: GOOGLE_PLACES_API_KEY.length,
-                    keyPrefix: GOOGLE_PLACES_API_KEY.slice(0, 8),
-                    keySuffix: GOOGLE_PLACES_API_KEY.slice(-4),
-                    rawHadQuotes: rawKey.startsWith('"') || rawKey.startsWith("'"),
+                    hasApiKey: !!GOOGLE_PLACES_API_KEY,
                     googleResponse: data,
                 }, { status: res.status });
             }
@@ -159,6 +163,14 @@ export async function GET(req: NextRequest) {
 
         if (finalUrl) {
             photoCache.set(cacheKey, { url: finalUrl, ts: Date.now() });
+        }
+
+        // If requested directly as an image or redirect requested (e.g. from <img> src tag or ?redirect=true)
+        const accept = req.headers.get('accept') || '';
+        const wantsRedirect = searchParams.get('redirect') === 'true' || 
+            (accept.includes('image/') && !accept.includes('application/json') && !accept.includes('text/html'));
+        if (wantsRedirect && finalUrl) {
+            return NextResponse.redirect(finalUrl, 307);
         }
 
         if (isDebug) {

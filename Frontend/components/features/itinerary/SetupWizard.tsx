@@ -1,771 +1,1010 @@
 'use client';
+
 import { motion, AnimatePresence } from 'framer-motion';
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { Loader2 } from 'lucide-react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { Loader2, ArrowRight, Compass, Calendar, Users, Sparkles, MapPin, X, Plus } from 'lucide-react';
 import { useSearchParams, useRouter } from 'next/navigation';
+import Image from 'next/image';
 import CalendarPicker from '@/components/shared/CalendarPicker';
-import { PURPOSES, DESTINATIONS, GROUP_SIZES, TRAVELER_TYPES, ARRIVAL_TIMES, DEPARTURE_MODES, DEPARTURE_TIMES, HOTEL_AREAS } from '@/app/itinerary/data';
-import { resolveImgSrc } from '@/lib/imageService';
-import PlaceImage from '@/components/shared/PlaceImage';
-import { StepBar } from './helpers';
-import BuildFromLink from './BuildFromLink';
-import SmartRecommendations from './SmartRecommendations';
-import VibeMatch from './VibeMatch';
+import { DESTINATIONS } from '@/app/itinerary/data';
 import { useAuth } from '@/lib/AuthContext';
 import AuthRequiredModal from '@/components/shared/AuthRequiredModal';
-import { getPersonalizationTaste, savePersonalizationTaste, saveItineraryByUUID } from '@/lib/firestore';
+import { saveItineraryByUUID } from '@/lib/firestore';
 
-/** Resolve a city name to its DEST_DATA key (e.g. 'Jaipur' → 'jaipur') */
-function resolveDestKey(name: string): { id: string; name: string } | null {
-    const lower = name.toLowerCase().trim();
-    const match = DESTINATIONS.find(d => d.name.toLowerCase() === lower || d.id === lower);
-    if (match) return { id: match.id, name: match.name };
-    return null;
+/** Resolve a city name to its catalog destination */
+function resolveDestKey(name: string): { id: string; name: string; state?: string; img?: string } | null {
+  const lower = name.toLowerCase().trim();
+  const match = DESTINATIONS.find(d => d.name.toLowerCase() === lower || d.id === lower);
+  if (match) return { id: match.id, name: match.name, state: match.state, img: match.img };
+  return null;
 }
 
-const STEP_VISUALS = ['🌍', '📍', '🗓️', '👥', '🛫'];
-const STEP_TITLES = [
-    "What's the purpose of your trip?",
-    "Where in India do you want to go?",
-    "When & how long is your trip?",
-    "Who's travelling & what's your style?",
-    "Travel logistics & preferences",
+const STAGES = [
+  { id: 1, key: 'destination', label: '01 / PLACE', title: 'Where are we going?' },
+  { id: 2, key: 'dates', label: '02 / DATES', title: 'When does the journey begin?' },
+  { id: 3, key: 'travellers', label: '03 / COMPANIONS', title: 'Who is sharing this road?' },
+  { id: 4, key: 'style', label: '04 / STYLE & PACE', title: 'What is the cadence?' },
+  { id: 5, key: 'dispatch', label: '05 / DISPATCH', title: 'Review your expedition dossier' },
 ];
-const STEP_SUBS = [
-    "This helps us find the right vibe for your journey.",
-    "Search any Indian city or pick from popular destinations.",
-    "Select your travel month and number of days.",
-    "Group size, budget, and your travel pace.",
-    "Help us optimize your first and last day.",
+
+const TRAVEL_STYLES = [
+  { id: 'culinary', label: 'FOOD & CULINARY', desc: 'Regional kitchens, street masters, and harvest tastings.' },
+  { id: 'mountains', label: 'MOUNTAINS & TRAILS', desc: 'High passes, pine ridges, and quiet elevations.' },
+  { id: 'heritage', label: 'HERITAGE & ART', desc: 'Ancient stone architecture, textiles, and royal courtyards.' },
+  { id: 'sacred', label: 'SACRED SITES & HISTORY', desc: 'Dawn riverside ghats, ancient temples, and historic quarters.' },
+  { id: 'slow', label: 'SLOW DAYS & REPOSE', desc: 'Unhurried mornings, verandah reading, and no checklist pressure.' },
+  { id: 'wildlife', label: 'WILDLIFE & FORESTS', desc: 'National sanctuaries, birding corridors, and jungle dawn tracks.' },
+  { id: 'nightlife', label: 'NIGHTLIFE & SOUND', desc: 'Late evening acoustic music, jazz lounges, and seaside gatherings.' },
+];
+
+const COMPANIONS = [
+  { id: 'solo', label: 'SOLO TRAVELER', desc: '1 independent explorer', count: '1 PERSON' },
+  { id: 'duo', label: 'DUO / COUPLE', desc: '2 traveling companions', count: '2 PERSONS' },
+  { id: 'family', label: 'FAMILY VOYAGE', desc: 'Multi-generational with children or elders', count: '3–5 PERSONS' },
+  { id: 'friends', label: 'EXPEDITION CREW', desc: 'Close friends or shared cohort', count: '4–8 PERSONS' },
+  { id: 'caravan', label: 'LARGE CARAVAN', desc: 'Group expedition or shared delegation', count: '8+ PERSONS' },
 ];
 
 interface SetupWizardProps {
-    onDone: (f: Record<string, unknown>) => void;
-}
-
-function CitySearch({ value, destName, onSelect }: { value: string; destName: string; onSelect: (id: string, name: string) => void }) {
-    const [query, setQuery] = useState('');
-    const [results, setResults] = useState<any[]>([]);
-    const [isOpen, setIsOpen] = useState(false);
-    const [loading, setLoading] = useState(false);
-    const debounceRef = useRef<NodeJS.Timeout | null>(null);
-    const wrapperRef = useRef<HTMLDivElement>(null);
-
-    const search = useCallback(async (input: string) => {
-        if (input.length < 2) { setResults([]); return; }
-        setLoading(true);
-        try {
-            const baseUrl = '';
-            const res = await fetch(`${baseUrl}/api/places/autocomplete?input=${encodeURIComponent(input)}`);
-            const data = await res.json();
-            setResults(data.predictions || []);
-            setIsOpen(true);
-        } catch { setResults([]); }
-        setLoading(false);
-    }, []);
-
-    useEffect(() => {
-        if (debounceRef.current) clearTimeout(debounceRef.current);
-        debounceRef.current = setTimeout(() => search(query), 250);
-        return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
-    }, [query, search]);
-
-    useEffect(() => {
-        const handleClickOutside = (e: MouseEvent) => {
-            if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) setIsOpen(false);
-        };
-        document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
-    }, []);
-
-    return (
-        <div className="space-y-8 max-w-4xl">
-            {/* Search Input Section */}
-            <div ref={wrapperRef} className="relative group">
-                <label className="block text-xs font-bold uppercase tracking-[0.2em] text-muted-500 mb-2 ml-1">Search Your Destination</label>
-                <div className="relative">
-                    <input
-                        type="text"
-                        value={query}
-                        onChange={e => { setQuery(e.target.value); setIsOpen(true); }}
-                        onFocus={() => { if (query.length >= 2) setIsOpen(true); }}
-                        placeholder="Type any city in India (e.g. Manali, Kochi, Munnar...)"
-                        className="w-full bg-warm-ivory dark:bg-muted-800 border-2 border-muted-200 dark:border-muted-700/50 rounded-[1.25rem] px-6 py-5 text-lg font-semibold text-muted-900 dark:text-white placeholder-muted-400 focus:border-jungle-green-500 focus:ring-4 focus:ring-jungle-green-500/10 outline-none transition-all shadow-sm group-hover:border-muted-300 dark:group-hover:border-muted-600"
-                    />
-                    <div className="absolute right-5 top-1/2 -tranmuted-y-1/2 flex items-center gap-3">
-                        {loading ? (
-                            <div className="w-5 h-5 border-3 border-jungle-green-500 border-t-transparent rounded-full animate-spin" />
-                        ) : (
-                            <div className="p-2.5 bg-muted-100 dark:bg-muted-700/50 rounded-xl">
-                                <svg className="w-5 h-5 text-muted-500 dark:text-muted-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                </svg>
-                            </div>
-                        )}
-                    </div>
-                </div>
-
-                {/* Dropdown results */}
-                <AnimatePresence>
-                    {isOpen && results.length > 0 && (
-                        <motion.div
-                            initial={{ opacity: 0, y: 10, scale: 0.98 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            exit={{ opacity: 0, y: 10, scale: 0.98 }}
-                            className="absolute z-[100] left-0 right-0 mt-3 bg-warm-ivory dark:bg-muted-800 border border-muted-200 dark:border-muted-700 rounded-3xl shadow-2xl overflow-hidden backdrop-blur-xl dark:bg-muted-800/95"
-                        >
-                            <div className="p-2">
-                                {results.map((r, i) => (
-                                    <button
-                                        key={r.place_id || i}
-                                        onClick={() => {
-                                            const cityName = r.description.split(',')[0].trim();
-                                            // Resolve to DEST_DATA key if it's a known destination
-                                            const resolved = resolveDestKey(cityName);
-                                            const cityId = resolved ? resolved.id : cityName.toLowerCase().replace(/\s+/g, '-');
-                                            const displayName = resolved ? resolved.name : cityName;
-                                            onSelect(cityId, displayName);
-                                            setQuery(displayName);
-                                            setIsOpen(false);
-                                        }}
-                                        className="w-full flex items-center gap-4 px-5 py-4 text-left hover:bg-jungle-green-50 dark:hover:bg-jungle-green-500/10 rounded-2xl transition-all group/item"
-                                    >
-                                        <div className="w-10 h-10 bg-muted-100 dark:bg-muted-700/50 rounded-xl flex items-center justify-center text-lg group-hover/item:bg-jungle-green-100 dark:group-hover/item:bg-jungle-green-500/20 transition-colors">📍</div>
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-base font-bold text-muted-900 dark:text-white truncate">{r.description}</p>
-                                            <p className="text-xs text-muted-500 dark:text-muted-400 truncate font-medium">{r.sub || 'India'}</p>
-                                        </div>
-                                        {value === (r.place_id || r.description.split(',')[0].trim().toLowerCase()) ? (
-                                            <div className="w-6 h-6 bg-jungle-green-500 rounded-full flex items-center justify-center shadow-lg shadow-jungle-green-500/20">
-                                                <span className="text-white text-[10px] font-black">✓</span>
-                                            </div>
-                                        ) : (
-                                            <span className="text-muted-300 dark:text-muted-600 opacity-0 group-hover/item:opacity-100 transition-opacity">→</span>
-                                        )}
-                                    </button>
-                                ))}
-                            </div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-            </div>
-
-            {/* Selected Status */}
-            {value && (
-                <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-                    className="flex items-center gap-3 bg-jungle-green-50 dark:bg-jungle-green-500/10 border border-jungle-green-100 dark:border-jungle-green-500/20 rounded-2xl px-5 py-4"
-                >
-                    <div className="w-8 h-8 bg-jungle-green-500 rounded-full flex items-center justify-center text-white text-sm">✨</div>
-                    <div className="flex-1">
-                        <span className="text-xs font-bold text-jungle-green-600/60 uppercase tracking-widest block mb-0.5">Current Selection</span>
-                        <span className="text-lg font-black text-jungle-green-800 dark:text-jungle-green-300">{destName}</span>
-                    </div>
-                </motion.div>
-            )}
-
-            {/* Quick Picks */}
-            <div>
-                <div className="flex items-center justify-between mb-4 px-1">
-                    <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted-500">Popular Quick Picks</p>
-                    <span className="text-[10px] font-bold text-muted-400 bg-muted-100 dark:bg-muted-800 px-2 py-1 rounded-md">8 DESTINATIONS</span>
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                    {DESTINATIONS.slice(0, 8).map(d => (
-                        <button key={d.id} onClick={() => { onSelect(d.id, d.name); setQuery(d.name); }}
-                            className={`group relative h-32 sm:h-40 rounded-3xl overflow-hidden border-2 transition-all duration-300 text-left ${value === d.id ? 'border-jungle-green-500 shadow-xl shadow-jungle-green-500/20 scale-[1.02]' : 'border-transparent hover:border-muted-300 dark:hover:border-muted-700'}`}>
-                            <PlaceImage
-                                name={d.name}
-                                city={d.state}
-                                fallbackUrl={d.img}
-                                asBackground
-                                className="absolute inset-0 w-full h-full transition-transform duration-700 group-hover:scale-110"
-                                width={400}
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                            {value === d.id && (
-                                <div className="absolute top-3 right-3 w-7 h-7 bg-jungle-green-500 rounded-full flex items-center justify-center shadow-lg">
-                                    <span className="text-white text-[10px] font-black">✓</span>
-                                </div>
-                            )}
-                            <div className="absolute bottom-0 left-0 p-3 sm:p-4 w-full">
-                                <div className="font-bold text-white text-sm sm:text-base leading-tight group-hover:tranmuted-x-1 transition-transform">{d.name}</div>
-                                <div className="text-white/70 text-[10px] uppercase tracking-wider font-bold mt-1">{d.sub}</div>
-                            </div>
-                        </button>
-                    ))}
-                </div>
-            </div>
-        </div>
-    );
+  onDone?: (f: Record<string, unknown>) => void;
 }
 
 export default function SetupWizard({ onDone }: SetupWizardProps) {
-    const searchParams = useSearchParams();
-    const router = useRouter();
-    const { user } = useAuth();
-    const [step, setStep] = useState(1);
-    const [dir, setDir] = useState(1);
-    const [buildFromReel, setBuildFromReel] = useState(false);
-    const [vibeMatchMode, setVibeMatchMode] = useState(false);
-    const [mustDoInput, setMustDoInput] = useState('');
-    const [mustDoPins, setMustDoPins] = useState<string[]>([]);
-    const [form, setForm] = useState({
-        purpose: '', destination: '', destName: '', startDate: '', endDate: '', days: 0,
-        group: '', budget: 15000, originCity: '', travelerType: 'comfort',
-        arrivalTime: 'afternoon', arrivalMode: '', departureTime: '', departureMode: '', hotelArea: '',
-        mustDo: [] as { name: string; dayIndex: number | null }[],
-        routeStops: [] as { name: string; stayDays: number; travelMode: string; travelTime: string }[],
-    });
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [isTransitioning, setIsTransitioning] = useState(false);
-    const [showAuthRequired, setShowAuthRequired] = useState(false);
-    const set = (k: string, v: string | number) => setForm(p => ({ ...p, [k]: v }));
-    const selectRouteCity = useCallback((id: string, name: string) => {
-        setForm(previous => {
-            if (!previous.destination) return { ...previous, destination: id, destName: name };
-            if (previous.destination === id || previous.routeStops.some(stop => stop.name.toLowerCase() === name.toLowerCase())) return previous;
-            return { ...previous, routeStops: [...previous.routeStops, { name, stayDays: 1, travelMode: 'train', travelTime: 'morning' }] };
-        });
-    }, []);
-    const removeRouteCity = useCallback((index: number) => {
-        setForm(previous => {
-            if (index > 0) return { ...previous, routeStops: previous.routeStops.filter((_, stopIndex) => stopIndex !== index - 1) };
-            const [nextCity, ...remainingStops] = previous.routeStops;
-            if (!nextCity) return { ...previous, destination: '', destName: '', routeStops: [] };
-            return { ...previous, destination: nextCity.name.toLowerCase().replace(/\s+/g, '-'), destName: nextCity.name, routeStops: remainingStops };
-        });
-    }, []);
-    const next = () => { setDir(1); setStep(s => s + 1); };
-    const back = () => { setDir(-1); setStep(s => s - 1); };
-    const canNext = [
-        form.purpose !== '',
-        form.destination !== '',
-        form.startDate !== '' && form.endDate !== '',
-        form.group !== '',
-        true, // Step 5 is always completable (all fields optional)
-    ][step - 1] ?? false;
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const { user } = useAuth();
 
-    const TOTAL_STEPS = 5;
+  const [currentStage, setCurrentStage] = useState(1);
+  const [showAuthRequired, setShowAuthRequired] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-    /**
-     * Generate a UUID, save the form to Firestore keyed by that UUID,
-     * then navigate to /itinerary/[uuid]. The [uuid] page handles generation.
-     */
-    const handleSubmit = useCallback(async () => {
-        if (!user) {
-            setShowAuthRequired(true);
-            return;
-        }
-        setIsSubmitting(true);
-        const uuid = crypto.randomUUID();
-        const formWithMeta = { ...form, userId: user.uid };
-        // Save itinerary to Firestore for persistence
-        await saveItineraryByUUID(uuid, { form: formWithMeta, generatedData: null, destName: form.destName });
-        // Also call the legacy onDone so parent can still hook in if needed
-        onDone({ ...formWithMeta, uuid });
-        router.push(`/itinerary/plan/${uuid}`);
-    }, [form, user, onDone, router]);
+  // Form State
+  const [destination, setDestination] = useState('');
+  const [destName, setDestName] = useState('');
+  const [destImage, setDestImage] = useState('');
+  const [destState, setDestState] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [travellerGroup, setTravellerGroup] = useState('duo');
+  const [selectedStyles, setSelectedStyles] = useState<string[]>(['heritage', 'culinary']);
+  const [budgetPerPerson, setBudgetPerPerson] = useState(25000);
+  const [mustDoPins, setMustDoPins] = useState<string[]>([]);
+  const [mustDoInput, setMustDoInput] = useState('');
+  const [routeStops, setRouteStops] = useState<{ name: string; stayDays: number }[]>([]);
 
-    // Pre-fill destination from URL query params (e.g. from Explore deep-dive CTA)
-    useEffect(() => {
-        const destParam = searchParams.get('destination') || searchParams.get('destName');
-        if (destParam && !form.destination) {
-            const resolved = resolveDestKey(destParam);
-            if (resolved) {
-                setForm(p => ({ ...p, destination: resolved.id, destName: resolved.name }));
-            } else {
-                const name = decodeURIComponent(destParam);
-                setForm(p => ({ ...p, destination: name.toLowerCase().replace(/\s+/g, '-'), destName: name }));
-            }
-        }
-    }, [searchParams]); // eslint-disable-line react-hooks/exhaustive-deps
+  // Destination Autocomplete State
+  const [query, setQuery] = useState('');
+  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(-1);
+  const searchWrapperRef = useRef<HTMLDivElement>(null);
+  const debounceTimer = useRef<NodeJS.Timeout | null>(null);
 
-    // Fetch user origin city for travel cost estimation
-    useEffect(() => {
-        fetch('https://ipapi.co/json/')
-            .then(res => res.json())
-            .then(data => {
-                if (data.city) {
-                    setForm(p => ({ ...p, originCity: data.city }));
-                }
-            })
-            .catch(() => console.warn('Could not fetch origin city'));
-    }, []);
+  // Derive duration in nights and days
+  const duration = useMemo(() => {
+    if (!startDate || !endDate) return { nights: 0, days: 0 };
+    const a = new Date(startDate);
+    const b = new Date(endDate);
+    const diffDays = Math.round((b.getTime() - a.getTime()) / (1000 * 60 * 60 * 24));
+    return {
+      nights: Math.max(0, diffDays),
+      days: Math.max(1, diffDays + 1),
+    };
+  }, [startDate, endDate]);
 
-    const variants = { enter: (d: number) => ({ opacity: 0, x: d * 40 }), center: { opacity: 1, x: 0 }, exit: (d: number) => ({ opacity: 0, x: -d * 40 }) };
+  // Pre-fill from query params if coming from Explore or external link
+  useEffect(() => {
+    const destParam = searchParams.get('destination') || searchParams.get('destName');
+    if (destParam && !destination) {
+      const resolved = resolveDestKey(destParam);
+      if (resolved) {
+        setDestination(resolved.id);
+        setDestName(resolved.name);
+        setDestState(resolved.state || 'India');
+        setDestImage(resolved.img || '');
+        setQuery(resolved.name);
+      } else {
+        const decoded = decodeURIComponent(destParam);
+        setDestination(decoded.toLowerCase().replace(/\s+/g, '-'));
+        setDestName(decoded);
+        setDestState('India');
+        setQuery(decoded);
+      }
+    }
+  }, [searchParams, destination]);
 
-    return (
-        <div className="min-h-screen bg-[#f7f8fc] dark:bg-[#0a0a0f] pt-16 sm:pt-20">
-            <AuthRequiredModal open={showAuthRequired} onClose={() => setShowAuthRequired(false)} />
-            <div className="bg-warm-ivory/80 dark:bg-muted-900/80 backdrop-blur-md border-b border-muted-200 dark:border-white/5 sticky top-16 sm:top-20 z-40 py-2.5 sm:py-3 flex items-center px-3 sm:px-6 md:px-12 lg:px-16 justify-between gap-2">
-                {step > 1 && !buildFromReel && !vibeMatchMode && <button onClick={back} className="w-9 h-9 rounded-full border border-muted-200 dark:border-muted-700 flex items-center justify-center hover:bg-muted-50 dark:hover:bg-muted-800 transition-colors text-muted-600 dark:text-muted-300 text-sm">←</button>}
-                <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1"><span className="text-lg">🗺️</span><span className="text-xs font-bold tracking-widest text-muted-500 uppercase">Setting Up Your Trip</span></div>
-                    {!buildFromReel && !vibeMatchMode && <StepBar step={step} total={TOTAL_STEPS} />}
-                </div>
-                {/* Mode toggles */}
-                <div className="flex items-center gap-2">
-                    <button
-                        onClick={() => { setVibeMatchMode(v => !v); setBuildFromReel(false); }}
-                        className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold transition-all border ${vibeMatchMode
-                                ? 'bg-gradient-to-r from-jungle-green-500 to-deep-sea-500 text-white border-transparent shadow-lg shadow-jungle-green-500/20'
-                                : 'border-muted-200 dark:border-muted-700 text-muted-600 dark:text-muted-300 hover:border-jungle-green-400 hover:text-jungle-green-600'
-                            }`}
-                    >
-                        <span>🎯</span>
-                        <span className="hidden sm:block">{vibeMatchMode ? 'Back to Wizard' : 'Vibe Match'}</span>
-                    </button>
-                    <button
-                        onClick={() => { setBuildFromReel(r => !r); setVibeMatchMode(false); }}
-                        className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold transition-all border ${buildFromReel
-                                ? 'bg-gradient-to-r from-indigo-600 to-temple-red-600 text-white border-transparent shadow-lg shadow-indigo-500/20'
-                                : 'border-muted-200 dark:border-muted-700 text-muted-600 dark:text-muted-300 hover:border-indigo-400 hover:text-indigo-600'
-                            }`}
-                    >
-                        <span>📸</span>
-                        <span className="hidden sm:block">{buildFromReel ? 'Back to Wizard' : 'Build from Reel'}</span>
-                    </button>
-                </div>
-            </div>
-            <div className="flex flex-col lg:flex-row min-h-[calc(100vh-120px)] sm:min-h-[calc(100vh-140px)] relative pb-20 sm:pb-24 lg:pb-0">
-                <div className="flex-1 px-3 sm:px-6 md:px-12 lg:px-16 py-4 sm:py-6 lg:py-12 flex flex-col overflow-y-auto">
-                    {/* Mode-specific panels */}
-                    {vibeMatchMode ? (
-                        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="max-w-xl">
-                            <VibeMatch
-                                onSelect={(destId, destName, purpose) => {
-                                    setForm(p => ({ ...p, destination: destId, destName, purpose: purpose || p.purpose || 'leisure' }));
+  // Destination search logic
+  const searchPlaces = useCallback(async (text: string) => {
+    if (text.length < 2) {
+      setSuggestions([]);
+      return;
+    }
+    setIsSearching(true);
+    try {
+      const res = await fetch(`/api/places/autocomplete?input=${encodeURIComponent(text)}`);
+      const data = await res.json();
+      setSuggestions(data.predictions || []);
+      setIsDropdownOpen(true);
+    } catch {
+      setSuggestions([]);
+    } finally {
+      setIsSearching(false);
+    }
+  }, []);
 
-                                    // Update taste vector in background
-                                    const updateTaste = async () => {
-                                        try {
-                                            const { getPersonalizationTaste, savePersonalizationTaste } = await import('@/lib/firestore');
-                                            const currentTaste = user?.uid ? await getPersonalizationTaste(user.uid) : null;
-                                            const currentVector = currentTaste?.vector || [];
+  useEffect(() => {
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    debounceTimer.current = setTimeout(() => searchPlaces(query), 200);
+    return () => {
+      if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    };
+  }, [query, searchPlaces]);
 
-                                            const baseUrl = '';
-                                            const r = await fetch(`${baseUrl}/api/taste/update`, {
-                                                method: 'POST',
-                                                headers: { 'Content-Type': 'application/json' },
-                                                body: JSON.stringify({
-                                                    currentVector,
-                                                    selectedDestId: destId,
-                                                    purpose: purpose || 'leisure'
-                                                })
-                                            });
-                                            const d = await r.json();
-                                            if (d.success && user?.uid) {
-                                                await savePersonalizationTaste(user.uid, d.newVector);
-                                            }
-                                        } catch (err) {
-                                            console.error(err);
-                                        }
-                                    };
-                                    updateTaste();
+  // Handle outside click for autocomplete
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (searchWrapperRef.current && !searchWrapperRef.current.contains(e.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, []);
 
-                                    setVibeMatchMode(false);
-                                    setStep(3);
-                                }}
-                            />
-                        </motion.div>
-                    ) : buildFromReel ? (
-                        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
-                            <h1 className="text-3xl md:text-4xl font-bold text-muted-900 dark:text-white mb-2 leading-tight">Build from a Reel 📸</h1>
-                            <p className="text-muted-400 mb-8 text-sm">Paste an Instagram, YouTube or travel post — AI extracts the destination and vibe.</p>
-                            <BuildFromLink
-                                onExtracted={(destId, destName, purpose, days) => {
-                                    setForm(p => ({
-                                        ...p,
-                                        destination: destId,
-                                        destName,
-                                        purpose: purpose || p.purpose || 'leisure',
-                                        days: days || p.days,
-                                    }));
-                                    setBuildFromReel(false);
-                                    setStep(3);
-                                }}
-                            />
-                        </motion.div>
-                    ) : (
-                        <div className="flex flex-col h-full">
-                            {/* Scrollable step content */}
-                            <div className="flex-1">
-                                <AnimatePresence mode="wait" custom={dir}>
-                                    <motion.div key={step} custom={dir} variants={variants} initial="enter" animate="center" exit="exit" transition={{ duration: 0.22, ease: 'easeInOut' }}>
-                                        <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-muted-900 dark:text-white mb-2 leading-tight">{STEP_TITLES[step - 1]}</h1>
-                                        <p className="text-muted-400 mb-6 sm:mb-8 text-sm md:text-base">{STEP_SUBS[step - 1]}</p>
+  const handleSelectDestination = (id: string, name: string, state?: string, img?: string) => {
+    setDestination(id);
+    setDestName(name);
+    setDestState(state || 'India');
+    if (img) setDestImage(img);
+    setQuery(name);
+    setIsDropdownOpen(false);
+    setActiveSuggestionIndex(-1);
+  };
 
-                                        {step === 1 && (
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 max-w-2xl w-full">
-                                                {PURPOSES.map(p => (
-                                                    <button key={p.id} onClick={() => set('purpose', p.id)}
-                                                        className={`flex items-center gap-3 sm:gap-4 bg-warm-ivory dark:bg-muted-800/50 rounded-2xl p-3 sm:p-4 border-2 text-left transition-all duration-200 w-full ${form.purpose === p.id ? 'border-jungle-green-500 shadow-lg shadow-jungle-green-500/10 scale-[1.01]' : 'border-muted-100 dark:border-muted-700 hover:border-muted-200 dark:hover:border-muted-600 hover:shadow-sm'}`}>
-                                                        <span className="text-2xl sm:text-3xl shrink-0">{p.emoji}</span>
-                                                        <div className="flex-1 min-w-0">
-                                                            <div className="font-semibold text-muted-900 dark:text-white text-sm">{p.label}</div>
-                                                            <div className="text-[11px] sm:text-xs text-muted-400 mt-0.5 leading-snug whitespace-normal break-words">{p.desc}</div>
-                                                        </div>
-                                                        {form.purpose === p.id && <div className="w-5 h-5 bg-jungle-green-500 rounded-full flex items-center justify-center flex-shrink-0"><span className="text-white text-[10px]">✓</span></div>}
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        )}
+  const handleAddMustDo = () => {
+    const trimmed = mustDoInput.trim();
+    if (trimmed && !mustDoPins.includes(trimmed)) {
+      setMustDoPins(prev => [...prev, trimmed]);
+      setMustDoInput('');
+    }
+  };
 
-                                        {step === 2 && (
-                                            <div>
-                                                {/* Smart AI Recommendations */}
-                                                {form.purpose && (
-                                                    <SmartRecommendations
-                                                        purpose={form.purpose}
-                                                        group={form.group || 'solo'}
-                                                        budget={form.budget}
-                                                        userId={user?.uid}
-                                                        onSelect={selectRouteCity}
-                                                        onSelectAndNext={selectRouteCity}
-                                                    />
-                                                )}
-                                                <CitySearch
-                                                    value={form.destination}
-                                                    destName={form.destName}
-                                                    onSelect={selectRouteCity}
-                                                />
+  const handleRemoveMustDo = (pinToRemove: string) => {
+    setMustDoPins(prev => prev.filter(p => p !== pinToRemove));
+  };
 
-                                                {form.destination && (
-                                                    <div className="mt-6 max-w-4xl rounded-2xl border border-indigo-200 bg-indigo-50/70 p-4 dark:border-indigo-500/20 dark:bg-indigo-500/5">
-                                                        <div className="flex items-center justify-between gap-3 mb-3">
-                                                            <div><h3 className="text-sm font-bold text-muted-900 dark:text-white">Your route</h3><p className="text-xs text-muted-500 dark:text-muted-400">Select every city here. NaviiGo reserves one transit day between consecutive cities.</p></div>
-                                                            <span className="rounded-full bg-indigo-600 px-2.5 py-1 text-xs font-bold text-white">{form.routeStops.length + 1} cities</span>
-                                                        </div>
-                                                        <div className="space-y-2">
-                                                            {[{ name: form.destName, primary: true }, ...form.routeStops.map(stop => ({ name: stop.name, primary: false }))].map((city, index) => (
-                                                                <div key={`${city.name}-${index}`} className="flex flex-wrap items-center gap-2 rounded-xl bg-warm-ivory px-3 py-2.5 shadow-sm dark:bg-muted-800">
-                                                                    <span className="w-6 text-center text-xs font-black text-indigo-600">{index + 1}</span>
-                                                                    <span className="min-w-[130px] flex-1 text-sm font-bold text-muted-900 dark:text-white">{city.name}</span>
-                                                                    <button type="button" onClick={() => removeRouteCity(index)} className="text-xs font-bold text-temple-red-600 hover:text-temple-red-500">Remove</button>
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                        {form.routeStops.length > 0 && <p className="mt-3 text-xs font-medium text-indigo-700 dark:text-indigo-300">Next, choose dates and then add the travel details for every city-to-city leg.</p>}
-                                                    </div>
-                                                )}
-
-                                                {/* Must-Do Pinning */}
-                                                {form.destination && (
-                                                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="mt-6 p-4 rounded-2xl bg-warm-ivory dark:bg-muted-800/80 border border-muted-200 dark:border-muted-700 max-w-2xl">
-                                                        <div className="flex items-center gap-2 mb-1">
-                                                            <span className="text-base">📌</span>
-                                                            <span className="text-xs font-bold text-muted-800 dark:text-muted-200">Must-Do Experiences (Optional)</span>
-                                                        </div>
-                                                        <p className="text-[11px] text-muted-400 mb-3">Pin places or experiences you definitely don&apos;t want to miss in {form.destName}.</p>
-                                                        
-                                                        <div className="flex gap-2 mb-3">
-                                                            <input
-                                                                type="text"
-                                                                value={mustDoInput}
-                                                                onChange={e => setMustDoInput(e.target.value)}
-                                                                onKeyDown={e => {
-                                                                    if (e.key === 'Enter' && mustDoInput.trim()) {
-                                                                        e.preventDefault();
-                                                                        const val = mustDoInput.trim();
-                                                                        if (!mustDoPins.includes(val)) {
-                                                                            const updated = [...mustDoPins, val];
-                                                                            setMustDoPins(updated);
-                                                                            setForm(p => ({ ...p, mustDo: updated.map(n => ({ name: n, dayIndex: null })) }));
-                                                                        }
-                                                                        setMustDoInput('');
-                                                                    }
-                                                                }}
-                                                                placeholder="e.g. Ganga Aarti, Taj Mahal, Scuba Diving..."
-                                                                className="flex-1 bg-muted-50 dark:bg-muted-900 border border-muted-200 dark:border-muted-700 rounded-xl px-3 py-2 text-xs font-medium text-muted-900 dark:text-white outline-none focus:border-jungle-green-500"
-                                                            />
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => {
-                                                                    const val = mustDoInput.trim();
-                                                                    if (val && !mustDoPins.includes(val)) {
-                                                                        const updated = [...mustDoPins, val];
-                                                                        setMustDoPins(updated);
-                                                                        setForm(p => ({ ...p, mustDo: updated.map(n => ({ name: n, dayIndex: null })) }));
-                                                                        setMustDoInput('');
-                                                                    }
-                                                                }}
-                                                                className="px-4 py-2 rounded-xl bg-jungle-green-600 hover:bg-jungle-green-500 text-white font-bold text-xs transition-colors shrink-0"
-                                                            >
-                                                                + Pin
-                                                            </button>
-                                                        </div>
-
-                                                        {mustDoPins.length > 0 && (
-                                                            <div className="flex flex-wrap gap-2">
-                                                                {mustDoPins.map(pin => (
-                                                                    <span key={pin} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-jungle-green-50 dark:bg-jungle-green-500/10 border border-jungle-green-500/30 text-jungle-green-700 dark:text-jungle-green-300 text-xs font-semibold">
-                                                                        📌 {pin}
-                                                                        <button
-                                                                            type="button"
-                                                                            onClick={() => {
-                                                                                const updated = mustDoPins.filter(p => p !== pin);
-                                                                                setMustDoPins(updated);
-                                                                                setForm(p => ({ ...p, mustDo: updated.map(n => ({ name: n, dayIndex: null })) }));
-                                                                            }}
-                                                                            className="hover:text-temple-red-500 ml-1 text-xs"
-                                                                        >
-                                                                            ×
-                                                                        </button>
-                                                                    </span>
-                                                                ))}
-                                                            </div>
-                                                        )}
-                                                    </motion.div>
-                                                )}
-                                            </div>
-                                        )}
-
-                                        {step === 3 && (
-                                            <CalendarPicker
-                                                startDate={form.startDate as string}
-                                                endDate={form.endDate as string}
-                                                onSelect={(start, end) => {
-                                                    set('startDate', start);
-                                                    set('endDate', end);
-                                                    if (start && end) {
-                                                        const a = new Date(start), b = new Date(end);
-                                                        set('days', Math.round((b.getTime() - a.getTime()) / 86400000) + 1);
-                                                    } else {
-                                                        set('days', 0);
-                                                    }
-                                                }}
-                                            />
-                                        )}
-
-                                        {step === 4 && (
-                                            <div className="space-y-8 max-w-2xl">
-                                                {/* Group Size */}
-                                                <div>
-                                                    <div className="text-sm font-semibold text-muted-700 dark:text-muted-300 mb-3">Group Size</div>
-                                                    <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
-                                                        {GROUP_SIZES.map(g => (
-                                                            <button key={g.id} onClick={() => set('group', g.id)} className={`flex flex-col items-center gap-1 p-3 rounded-2xl border-2 transition-all ${form.group === g.id ? 'border-jungle-green-500 bg-jungle-green-50 dark:bg-jungle-green-500/10 shadow-md' : 'border-muted-100 dark:border-muted-700 bg-warm-ivory dark:bg-muted-800 hover:border-muted-200'}`}>
-                                                                <span className="text-2xl">{g.emoji}</span><span className="text-xs font-semibold text-muted-800 dark:text-muted-200">{g.label}</span>
-                                                            </button>
-                                                        ))}
-                                                    </div>
-                                                </div>
-
-                                                {/* Budget */}
-                                                <div>
-                                                    <div className="flex items-center justify-between mb-3"><span className="text-sm font-semibold text-muted-700 dark:text-muted-300">Budget (per person)</span><span className="text-2xl font-bold text-jungle-green-500">₹{form.budget.toLocaleString('en-IN')}</span></div>
-                                                    <input type="range" min={3000} max={200000} step={1000} value={form.budget} onChange={e => set('budget', Number(e.target.value))} className="w-full accent-jungle-green-500 h-2 cursor-pointer" />
-                                                    <div className="flex justify-between text-xs text-muted-400 mt-1"><span>₹3,000</span><span>₹2,00,000</span></div>
-                                                </div>
-
-                                                {/* Traveler Type */}
-                                                <div>
-                                                    <div className="text-sm font-semibold text-muted-700 dark:text-muted-300 mb-3">Your Travel Pace</div>
-                                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                                                        {TRAVELER_TYPES.map(t => (
-                                                            <button key={t.id} onClick={() => set('travelerType', t.id)}
-                                                                className={`flex items-center gap-3 p-3 rounded-2xl border-2 text-left transition-all ${form.travelerType === t.id ? 'border-jungle-green-500 bg-jungle-green-50 dark:bg-jungle-green-500/10 shadow-md' : 'border-muted-100 dark:border-muted-700 bg-warm-ivory dark:bg-muted-800 hover:border-muted-200'}`}>
-                                                                <span className="text-xl">{t.emoji}</span>
-                                                                <div className="flex-1 min-w-0">
-                                                                    <div className="text-xs font-bold text-muted-900 dark:text-white">{t.label}</div>
-                                                                    <div className="text-[10px] text-muted-400 truncate">{t.desc}</div>
-                                                                </div>
-                                                                {form.travelerType === t.id && <div className="w-4 h-4 bg-jungle-green-500 rounded-full flex items-center justify-center flex-shrink-0"><span className="text-white text-[8px]">✓</span></div>}
-                                                            </button>
-                                                        ))}
-                                                    </div>
-                                                </div>
-
-                                                {/* Origin City */}
-                                                <div>
-                                                    <div className="text-sm font-semibold text-muted-700 dark:text-muted-300 mb-2">Your Origin City</div>
-                                                    <p className="text-xs text-muted-400 mb-2">Auto-detected. Override if needed.</p>
-                                                    <input
-                                                        type="text"
-                                                        value={form.originCity}
-                                                        onChange={e => set('originCity', e.target.value)}
-                                                        placeholder="e.g. Mumbai, Delhi, Bangalore..."
-                                                        className="w-full bg-warm-ivory dark:bg-muted-800 border-2 border-muted-200 dark:border-muted-700/50 rounded-xl px-4 py-3 text-sm font-semibold text-muted-900 dark:text-white placeholder-muted-400 focus:border-jungle-green-500 focus:ring-2 focus:ring-jungle-green-500/10 outline-none transition-all"
-                                                    />
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        {step === 5 && (
-                                            <div className="space-y-8 max-w-2xl">
-                                                {form.routeStops.length > 0 && (
-                                                    <div className="rounded-2xl border border-indigo-200 bg-gradient-to-br from-indigo-50 to-indigo-50 p-5 dark:border-indigo-500/20 dark:from-indigo-900/10 dark:to-indigo-900/10">
-                                                        <div className="mb-1 flex items-center gap-2"><span className="text-lg">Route</span><span className="text-sm font-bold text-muted-900 dark:text-white">Inter-city travel</span></div>
-                                                        <p className="mb-5 text-xs text-muted-500 dark:text-muted-400">Set how and when you will travel between each pair of cities. NaviiGo will make these dedicated transit days.</p>
-                                                        <div className="space-y-5">
-                                                            {form.routeStops.map((stop, index) => {
-                                                                const fromCity = index === 0 ? form.destName : form.routeStops[index - 1].name;
-                                                                return <div key={`${fromCity}-${stop.name}`} className="rounded-xl border border-indigo-100 bg-warm-ivory p-4 dark:border-indigo-500/15 dark:bg-muted-800/80">
-                                                                    <div className="mb-4 flex items-center justify-between gap-3"><div><p className="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-300">Leg {index + 1}</p><h3 className="text-base font-bold text-muted-900 dark:text-white">{fromCity} to {stop.name}</h3></div><span className="rounded-full bg-indigo-100 px-2.5 py-1 text-[10px] font-bold text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300">Transit day</span></div>
-                                                                    <div className="mb-4"><p className="mb-2 text-xs font-semibold text-muted-600 dark:text-muted-400">How will you travel?</p><div className="flex flex-wrap gap-2">{DEPARTURE_MODES.map(mode => <button type="button" key={mode.id} onClick={() => setForm(previous => ({ ...previous, routeStops: previous.routeStops.map((routeStop, stopIndex) => stopIndex === index ? { ...routeStop, travelMode: mode.id } : routeStop) }))} className={`rounded-xl border-2 px-3 py-2 text-xs font-bold transition-all ${stop.travelMode === mode.id ? 'border-indigo-500 bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300' : 'border-muted-200 bg-warm-ivory text-muted-600 dark:border-muted-700 dark:bg-muted-900 dark:text-muted-300'}`}><span className="mr-1">{mode.emoji}</span>{mode.label}</button>)}</div></div>
-                                                                    <div className="mb-4"><p className="mb-2 text-xs font-semibold text-muted-600 dark:text-muted-400">When will you leave {fromCity}?</p><div className="grid grid-cols-2 gap-2 sm:grid-cols-4">{ARRIVAL_TIMES.map(time => <button type="button" key={time.id} onClick={() => setForm(previous => ({ ...previous, routeStops: previous.routeStops.map((routeStop, stopIndex) => stopIndex === index ? { ...routeStop, travelTime: time.id } : routeStop) }))} className={`rounded-xl border-2 p-2 text-center transition-all ${stop.travelTime === time.id ? 'border-indigo-500 bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300' : 'border-muted-200 bg-warm-ivory text-muted-600 dark:border-muted-700 dark:bg-muted-900 dark:text-muted-300'}`}><span className="block text-base">{time.emoji}</span><span className="text-[10px] font-bold">{time.label}</span></button>)}</div></div>
-                                                                    <label className="flex items-center justify-between gap-3 text-xs font-semibold text-muted-600 dark:text-muted-400">How many days will you stay in {stop.name}?<input aria-label={`Days in ${stop.name}`} type="number" min="1" max="14" value={stop.stayDays} onChange={event => setForm(previous => ({ ...previous, routeStops: previous.routeStops.map((routeStop, stopIndex) => stopIndex === index ? { ...routeStop, stayDays: Math.max(1, Number(event.target.value) || 1) } : routeStop) }))} className="w-16 rounded-lg border border-muted-200 bg-warm-ivory px-2 py-1.5 text-center text-sm font-bold text-muted-900 outline-none focus:border-indigo-500 dark:border-muted-700 dark:bg-muted-900 dark:text-white" /></label>
-                                                                </div>;
-                                                            })}
-                                                        </div>
-                                                    </div>
-                                                )}
-                                                {/* Arrival Info */}
-                                                <div className="bg-gradient-to-br from-deep-sea-50 to-indigo-50 dark:from-deep-sea-900/10 dark:to-indigo-900/10 rounded-2xl p-5 border border-deep-sea-100 dark:border-deep-sea-500/20">
-                                                    <div className="flex items-center gap-2 mb-4">
-                                                        <span className="text-lg">🛬</span>
-                                                        <span className="text-sm font-bold text-muted-900 dark:text-white">Arrival Info</span>
-                                                        <span className="text-[10px] text-muted-400 ml-auto">Optional — helps optimize Day 1</span>
-                                                    </div>
-
-                                                    <div className="space-y-4">
-                                                        <div>
-                                                            <div className="text-xs font-semibold text-muted-600 dark:text-muted-400 mb-2">When do you expect to reach {form.destName || 'your destination'}?</div>
-                                                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                                                                {ARRIVAL_TIMES.map(t => (
-                                                                    <button key={t.id} onClick={() => set('arrivalTime', t.id)}
-                                                                        className={`flex flex-col items-center gap-1 p-3 rounded-xl border-2 transition-all ${form.arrivalTime === t.id ? 'border-deep-sea-500 bg-deep-sea-50 dark:bg-deep-sea-500/10 shadow-sm' : 'border-muted-200 dark:border-muted-700 bg-warm-ivory dark:bg-muted-800 hover:border-muted-300'}`}>
-                                                                        <span className="text-lg">{t.emoji}</span>
-                                                                        <span className="text-xs font-bold text-muted-800 dark:text-muted-200">{t.label}</span>
-                                                                        <span className="text-[10px] text-muted-400">{t.desc}</span>
-                                                                    </button>
-                                                                ))}
-                                                            </div>
-                                                        </div>
-
-                                                        <div>
-                                                            <div className="text-xs font-semibold text-muted-600 dark:text-muted-400 mb-2">Arriving by</div>
-                                                            <div className="flex flex-wrap gap-2">
-                                                                {DEPARTURE_MODES.map(m => (
-                                                                    <button key={m.id} onClick={() => set('arrivalMode', m.id)}
-                                                                        className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 transition-all text-sm font-medium ${form.arrivalMode === m.id ? 'border-deep-sea-500 bg-deep-sea-50 dark:bg-deep-sea-500/10 text-deep-sea-700 dark:text-deep-sea-300' : 'border-muted-200 dark:border-muted-700 bg-warm-ivory dark:bg-muted-800 text-muted-700 dark:text-muted-300 hover:border-muted-300'}`}>
-                                                                        <span>{m.emoji}</span> {m.label}
-                                                                    </button>
-                                                                ))}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                {/* Departure Info */}
-                                                <div className="bg-gradient-to-br from-marigold-50 to-saffron-50 dark:from-marigold-900/10 dark:to-saffron-900/10 rounded-2xl p-5 border border-marigold-100 dark:border-marigold-500/20">
-                                                    <div className="flex items-center gap-2 mb-4">
-                                                        <span className="text-lg">🛫</span>
-                                                        <span className="text-sm font-bold text-muted-900 dark:text-white">Departure Info</span>
-                                                        <span className="text-[10px] text-muted-400 ml-auto">Optional — helps optimize last day</span>
-                                                    </div>
-
-                                                    <div className="space-y-4">
-                                                        <div>
-                                                            <div className="text-xs font-semibold text-muted-600 dark:text-muted-400 mb-2">Departure time</div>
-                                                            <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
-                                                                {DEPARTURE_TIMES.map(t => (
-                                                                    <button key={t.id} onClick={() => set('departureTime', t.id)}
-                                                                        className={`px-3 py-2.5 rounded-xl border-2 text-sm font-bold text-center transition-all ${form.departureTime === t.id ? 'border-marigold-500 bg-marigold-50 dark:bg-marigold-500/10 text-marigold-700 dark:text-marigold-300 shadow-sm' : 'border-muted-200 dark:border-muted-700 bg-warm-ivory dark:bg-muted-800 text-muted-700 dark:text-muted-300 hover:border-muted-300'}`}>
-                                                                        {t.label}
-                                                                    </button>
-                                                                ))}
-                                                            </div>
-                                                        </div>
-
-                                                        <div>
-                                                            <div className="text-xs font-semibold text-muted-600 dark:text-muted-400 mb-2">Leaving by</div>
-                                                            <div className="flex flex-wrap gap-2">
-                                                                {DEPARTURE_MODES.map(m => (
-                                                                    <button key={m.id} onClick={() => set('departureMode', m.id)}
-                                                                        className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 transition-all text-sm font-medium ${form.departureMode === m.id ? 'border-marigold-500 bg-marigold-50 dark:bg-marigold-500/10 text-marigold-700 dark:text-marigold-300' : 'border-muted-200 dark:border-muted-700 bg-warm-ivory dark:bg-muted-800 text-muted-700 dark:text-muted-300 hover:border-muted-300'}`}>
-                                                                        <span>{m.emoji}</span> {m.label}
-                                                                    </button>
-                                                                ))}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                {/* Hotel Area */}
-                                                <div>
-                                                    <div className="flex items-center gap-2 mb-3">
-                                                        <span className="text-lg">🏨</span>
-                                                        <span className="text-sm font-bold text-muted-900 dark:text-white">Preferred Hotel Area</span>
-                                                        <span className="text-[10px] text-muted-400 ml-auto">Optional</span>
-                                                    </div>
-                                                    <div className="flex flex-wrap gap-2">
-                                                        {HOTEL_AREAS.map(a => (
-                                                            <button key={a.id} onClick={() => set('hotelArea', form.hotelArea === a.id ? '' : a.id)}
-                                                                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border-2 transition-all text-sm font-medium ${form.hotelArea === a.id ? 'border-jungle-green-500 bg-jungle-green-50 dark:bg-jungle-green-500/10 text-jungle-green-700 dark:text-jungle-green-300' : 'border-muted-200 dark:border-muted-700 bg-warm-ivory dark:bg-muted-800 text-muted-700 dark:text-muted-300 hover:border-muted-300'}`}>
-                                                                <span>{a.emoji}</span> {a.label}
-                                                            </button>
-                                                        ))}
-                                                    </div>
-                                                </div>
-
-                                                {/* Buffer Time Preview */}
-                                                {form.departureTime && form.departureMode && (
-                                                    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-                                                        className="bg-gradient-to-r from-jungle-green-50 to-deep-sea-50 dark:from-jungle-green-900/10 dark:to-deep-sea-900/10 border border-jungle-green-100 dark:border-jungle-green-500/20 rounded-2xl p-4">
-                                                        <div className="flex items-center gap-2 mb-2">
-                                                            <span className="text-sm">⏱️</span>
-                                                            <span className="text-xs font-bold text-jungle-green-700 dark:text-jungle-green-400">Last Day Buffer Preview</span>
-                                                        </div>
-                                                        <p className="text-xs text-muted-600 dark:text-muted-400 leading-relaxed">
-                                                            With a <strong>{form.departureTime.replace(':', ' ')} departure by {form.departureMode}</strong>,
-                                                            you&apos;ll have until approximately <strong>
-                                                                {(() => {
-                                                                    const parts = form.departureTime.split(':');
-                                                                    const depHour = parseInt(parts[0]) + parseInt(parts[1] || '0') / 60;
-                                                                    const buffer = { flight: 2, train: 1, bus: 0.5, car: 0.25 }[form.departureMode] || 1;
-                                                                    const transit = 0.75;
-                                                                    const lastActivity = depHour - buffer - transit;
-                                                                    const h = Math.floor(lastActivity);
-                                                                    const m = Math.round((lastActivity - h) * 60);
-                                                                    return `${h > 12 ? h - 12 : h}:${m.toString().padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`;
-                                                                })()}
-                                                            </strong> for your last activity after checkout at 11:00 AM.
-                                                        </p>
-                                                    </motion.div>
-                                                )}
-                                            </div>
-                                        )}
-
-                                        <div className="h-20 lg:h-0" />{/* bottom spacer for floating button */}
-                                    </motion.div>
-                                </AnimatePresence>
-                            </div>{/* end scrollable */}
-
-                            {/* Sticky Next/Back buttons — always visible */}
-                            <div className="sticky bottom-0 left-0 right-0 p-4 bg-warm-ivory/90 dark:bg-muted-900/90 backdrop-blur-md border-t border-muted-200 dark:border-muted-800 lg:relative lg:bg-transparent lg:dark:bg-transparent lg:border-t-0 lg:p-0 z-[100] lg:z-auto">
-                                <div className="flex gap-3 max-w-2xl mx-auto lg:mx-0 lg:pt-4 lg:border-t lg:border-muted-100 lg:dark:border-muted-800 lg:mt-4">
-                                    {step > 1 && <motion.button whileTap={{ scale: 0.98 }} onClick={back} className="flex-1 py-3.5 rounded-2xl border border-muted-200 dark:border-muted-700 text-muted-700 dark:text-muted-300 font-medium hover:bg-muted-50 dark:hover:bg-warm-ivory/5 transition-colors">← Back</motion.button>}
-                                    <motion.button whileTap={canNext && !isSubmitting && !isTransitioning ? { scale: 0.98 } : {}} onClick={step < TOTAL_STEPS ? () => { setIsTransitioning(true); setTimeout(() => { setIsTransitioning(false); next(); }, 300); } : handleSubmit} disabled={!canNext || isSubmitting || isTransitioning}
-                                        className={`flex-[2] py-3.5 rounded-2xl font-bold text-base transition-all flex items-center justify-center gap-2 ${canNext && !isSubmitting && !isTransitioning ? 'bg-jungle-green-600 text-white hover:bg-jungle-green-500 shadow-lg shadow-jungle-green-500/25' : 'bg-muted-200 dark:bg-muted-700 text-muted-400 cursor-not-allowed'}`}>
-                                        {isSubmitting || isTransitioning ? (
-                                            <>
-                                                <Loader2 className="w-5 h-5 animate-spin" />
-                                                {isSubmitting ? 'Preparing...' : 'Loading...'}
-                                            </>
-                                        ) : (
-                                            step < TOTAL_STEPS ? 'Next →' : 'Build My Itinerary ✨'
-                                        )}
-                                    </motion.button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-                </div>
-                <div className="hidden lg:flex w-[420px] bg-gradient-to-br from-jungle-green-50 to-deep-sea-50 dark:from-jungle-green-900/20 dark:to-deep-sea-900/10 items-center justify-center border-l border-muted-100 dark:border-white/5">
-                    <motion.div key={`${step}-${vibeMatchMode}-${buildFromReel}`} initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.4 }} className="text-center">
-                        <div className="text-8xl mb-6">
-                            {vibeMatchMode ? '🎯' : buildFromReel ? '📸' : STEP_VISUALS[step - 1]}
-                        </div>
-                        <h3 className="text-lg font-bold text-muted-700 dark:text-muted-200">
-                            {vibeMatchMode ? 'Vibe Match' : buildFromReel ? 'Build from Content' : `Step ${step} of ${TOTAL_STEPS}`}
-                        </h3>
-                        <p className="text-sm text-muted-400 mt-1">
-                            {vibeMatchMode ? 'Pick vibes → AI finds your destination' : buildFromReel ? 'AI extracts your trip from social media' : STEP_TITLES[step - 1]}
-                        </p>
-                    </motion.div>
-                </div>
-            </div>
-        </div>
+  const toggleStyle = (styleId: string) => {
+    setSelectedStyles(prev =>
+      prev.includes(styleId) ? prev.filter(s => s !== styleId) : [...prev, styleId]
     );
+  };
+
+  const canProceed = useMemo(() => {
+    if (currentStage === 1) return destination.trim().length > 0;
+    if (currentStage === 2) return startDate !== '' && endDate !== '';
+    if (currentStage === 3) return travellerGroup !== '';
+    if (currentStage === 4) return selectedStyles.length > 0;
+    return true;
+  }, [currentStage, destination, startDate, endDate, travellerGroup, selectedStyles]);
+
+  // Submit and launch living itinerary
+  const handleBuildJourney = async () => {
+    if (!user) {
+      setShowAuthRequired(true);
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const uuid = crypto.randomUUID();
+      const payload = {
+        destination,
+        destName,
+        destState,
+        startDate,
+        endDate,
+        days: duration.days,
+        group: travellerGroup,
+        purpose: selectedStyles[0] || 'heritage',
+        budget: budgetPerPerson,
+        travelerType: 'comfort',
+        mustDo: mustDoPins.map(p => ({ name: p, dayIndex: null })),
+        routeStops,
+        userId: user.uid,
+        createdAt: new Date().toISOString(),
+      };
+
+      await saveItineraryByUUID(uuid, {
+        form: payload,
+        generatedData: null,
+        destName,
+      });
+
+      if (onDone) onDone({ ...payload, uuid });
+      router.push(`/itinerary/plan/${uuid}`);
+    } catch (err) {
+      console.error('Failed to dispatch journey:', err);
+      setIsSubmitting(false);
+    }
+  };
+
+  // Keyboard navigation for destination suggestions
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!isDropdownOpen || suggestions.length === 0) return;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setActiveSuggestionIndex(prev => (prev < suggestions.length - 1 ? prev + 1 : 0));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setActiveSuggestionIndex(prev => (prev > 0 ? prev - 1 : suggestions.length - 1));
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (activeSuggestionIndex >= 0 && activeSuggestionIndex < suggestions.length) {
+        const item = suggestions[activeSuggestionIndex];
+        const cityName = item.description.split(',')[0].trim();
+        const resolved = resolveDestKey(cityName);
+        handleSelectDestination(
+          resolved ? resolved.id : cityName.toLowerCase().replace(/\s+/g, '-'),
+          resolved ? resolved.name : cityName,
+          resolved ? resolved.state : 'India',
+          resolved ? resolved.img : undefined
+        );
+      }
+    } else if (e.key === 'Escape') {
+      setIsDropdownOpen(false);
+    }
+  };
+
+  // ── RENDER EMPTY INTENTIONAL STATE ────────────────────────────────
+  const renderEmptyPlacePrompt = () => (
+    <div className="pt-8 pb-16">
+      <div className="max-w-2xl">
+        <div className="w-10 h-10 rounded-full border border-[#EADFD4] flex items-center justify-center text-brand-primary mb-6">
+          <Compass className="w-5 h-5" />
+        </div>
+        <div className="font-mono text-xs uppercase tracking-[0.25em] text-brand-primary font-bold mb-3">
+          NOTHING PLANNED YET.
+        </div>
+        <h2 className="font-display font-black text-3xl sm:text-5xl uppercase tracking-tight text-naviigo-brown mb-4 leading-tight">
+          Good. <br />
+          That means the journey <br />
+          <span className="text-brand-primary">can go anywhere.</span>
+        </h2>
+        <p className="text-naviigo-brown/75 font-sans text-base font-light leading-relaxed mb-10 max-w-lg">
+          Type any destination in India into the compass field above, or select an authentic route corridor from the curated regional ledger below.
+        </p>
+
+        {/* Curated Catalog Picks */}
+        <div className="space-y-4">
+          <div className="font-mono text-[10px] uppercase tracking-[0.2em] text-naviigo-brown/50 font-bold">
+            PROVEN EXPEDITION CORRIDORS
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {DESTINATIONS.slice(0, 8).map(d => (
+              <button
+                key={d.id}
+                onClick={() => handleSelectDestination(d.id, d.name, d.state, d.img)}
+                className="p-3 text-left bg-paper-light border border-[#EADFD4] rounded-xl hover:border-brand-primary/60 transition-all group"
+              >
+                <div className="font-display font-bold text-sm text-naviigo-brown group-hover:text-brand-primary transition-colors">
+                  {d.name}
+                </div>
+                <div className="font-mono text-[10px] text-naviigo-brown/50 uppercase mt-0.5">
+                  {d.state || 'India'}
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen bg-paper-warm text-naviigo-brown font-sans selection:bg-brand-primary selection:text-white pt-24 md:pt-28 pb-32">
+      <AuthRequiredModal open={showAuthRequired} onClose={() => setShowAuthRequired(false)} />
+
+      {/* ── TOP EDITORIAL MASTHEAD ───────────────────────────────── */}
+      <div className="max-w-7xl mx-auto px-6 md:px-12 mb-8 border-b border-[#EADFD4] pb-6">
+        <div className="flex flex-col sm:flex-row sm:items-baseline justify-between gap-3">
+          <div className="flex items-center gap-3 font-mono text-[10px] md:text-xs tracking-[0.25em] uppercase text-naviigo-brown/60">
+            <span className="w-2 h-2 rounded-full bg-brand-primary animate-pulse" />
+            <span>EDITORIAL TRAVEL WORKSPACE</span>
+            <span className="text-naviigo-brown/30">/</span>
+            <span>NEW JOURNEY</span>
+          </div>
+          <div className="font-mono text-[10px] md:text-xs uppercase tracking-widest text-naviigo-brown/50">
+            {destination ? `CURRENT FOCUS: ${destName.toUpperCase()}` : 'OPEN COMPASS'}
+          </div>
+        </div>
+      </div>
+
+      {/* ── THE PLANNING WORKSPACE ───────────────────────────────── */}
+      <div className="max-w-7xl mx-auto px-6 md:px-12">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+          
+          {/* ── LEFT COLUMN (62%): JOURNEY WORKSPACE & INPUTS ───────── */}
+          <div className="lg:col-span-7 xl:col-span-8 space-y-12">
+            
+            {/* SPATIAL PROGRESSIVE JOURNEY LINE (Not a boring stepper) */}
+            <div className="border-b border-[#EADFD4] pb-6">
+              <div className="flex items-center gap-4 overflow-x-auto no-scrollbar py-2">
+                {STAGES.map((s, idx) => {
+                  const isActive = currentStage === s.id;
+                  const isCompleted = currentStage > s.id;
+                  return (
+                    <div key={s.id} className="flex items-center gap-4 shrink-0">
+                      <button
+                        onClick={() => {
+                          if (destination || s.id === 1) setCurrentStage(s.id);
+                        }}
+                        disabled={!destination && s.id > 1}
+                        className={`text-left transition-all ${
+                          isActive
+                            ? 'text-brand-primary'
+                            : isCompleted
+                            ? 'text-naviigo-brown hover:text-brand-primary'
+                            : 'text-naviigo-brown/30 cursor-not-allowed'
+                        }`}
+                      >
+                        <div className="font-mono text-[10px] uppercase tracking-wider font-bold">
+                          {s.label}
+                        </div>
+                        <div className="font-display font-bold text-xs uppercase tracking-tight">
+                          {s.key}
+                        </div>
+                      </button>
+                      {idx < STAGES.length - 1 && (
+                        <div
+                          className={`w-8 h-[1px] ${
+                            isCompleted ? 'bg-brand-primary' : 'bg-[#EADFD4]'
+                          }`}
+                        />
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* STAGE 1: DESTINATION SELECTION */}
+            {currentStage === 1 && (
+              <div className="space-y-8">
+                <div>
+                  <div className="font-mono text-xs uppercase tracking-[0.2em] text-brand-primary font-bold mb-2">
+                    STAGE 01 / DESTINATION
+                  </div>
+                  <h1 className="font-display font-black text-4xl sm:text-6xl md:text-7xl uppercase leading-[0.9] tracking-tightest text-naviigo-brown">
+                    WHERE ARE WE <br />
+                    <span className="text-brand-primary">GOING?</span>
+                  </h1>
+                </div>
+
+                {/* Signature Expansive Destination Input */}
+                <div ref={searchWrapperRef} className="relative pt-4">
+                  <label className="block font-mono text-xs font-bold uppercase tracking-[0.2em] text-naviigo-brown/60 mb-2">
+                    DESTINATION / SEARCH OR REGION
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={query}
+                      onChange={e => {
+                        setQuery(e.target.value);
+                        setIsDropdownOpen(true);
+                      }}
+                      onFocus={() => {
+                        if (query.length >= 2) setIsDropdownOpen(true);
+                      }}
+                      onKeyDown={handleKeyDown}
+                      placeholder="Where are you thinking? (e.g. Kyoto, Ladakh, Goa, Jaipur...)"
+                      className="w-full bg-transparent border-b-2 border-naviigo-brown/20 focus:border-brand-primary py-4 text-2xl sm:text-3xl font-display font-bold text-naviigo-brown placeholder:text-naviigo-brown/30 outline-none transition-colors"
+                    />
+                    <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                      {isSearching && <Loader2 className="w-5 h-5 text-brand-primary animate-spin" />}
+                      {destination && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setDestination('');
+                            setDestName('');
+                            setQuery('');
+                          }}
+                          className="p-1 rounded-full text-naviigo-brown/40 hover:text-brand-primary"
+                        >
+                          <X className="w-5 h-5" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Editorial Autocomplete Dropdown */}
+                  <AnimatePresence>
+                    {isDropdownOpen && suggestions.length > 0 && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 8 }}
+                        className="absolute z-50 left-0 right-0 mt-3 bg-paper-light border border-[#EADFD4] rounded-2xl shadow-xl overflow-hidden divide-y divide-[#EADFD4]"
+                      >
+                        {suggestions.map((item, idx) => {
+                          const cityName = item.description.split(',')[0].trim();
+                          const sub = item.description.split(',').slice(1).join(',').trim() || 'India';
+                          const resolved = resolveDestKey(cityName);
+                          const isSelected = activeSuggestionIndex === idx;
+
+                          return (
+                            <button
+                              key={item.place_id || idx}
+                              type="button"
+                              onClick={() => {
+                                handleSelectDestination(
+                                  resolved ? resolved.id : cityName.toLowerCase().replace(/\s+/g, '-'),
+                                  resolved ? resolved.name : cityName,
+                                  resolved ? resolved.state : sub,
+                                  resolved ? resolved.img : undefined
+                                );
+                              }}
+                              className={`w-full px-6 py-4 text-left flex items-center justify-between transition-colors ${
+                                isSelected ? 'bg-brand-primary/10' : 'hover:bg-paper-warm'
+                              }`}
+                            >
+                              <div className="flex items-center gap-4">
+                                <span className="font-mono text-xs text-brand-primary font-bold">
+                                  0{idx + 1}
+                                </span>
+                                <div>
+                                  <div className="font-display font-bold text-lg text-naviigo-brown uppercase">
+                                    {cityName}
+                                  </div>
+                                  <div className="font-mono text-xs text-naviigo-brown/50">
+                                    {sub}
+                                  </div>
+                                </div>
+                              </div>
+                              <span className="font-mono text-xs text-brand-primary font-semibold">
+                                SELECT →
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* Selected Confirmation Banner */}
+                {destination ? (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="p-6 rounded-2xl bg-paper-light border border-[#EADFD4] flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs"
+                  >
+                    <div>
+                      <div className="font-mono text-[10px] text-brand-primary uppercase tracking-widest font-bold mb-1">
+                        CONFIRMED SEED DESTINATION
+                      </div>
+                      <h3 className="font-display font-bold text-2xl sm:text-3xl text-naviigo-brown uppercase">
+                        {destName}
+                      </h3>
+                      <p className="font-mono text-xs text-naviigo-brown/60 uppercase">
+                        {destState} · INDIA
+                      </p>
+                    </div>
+
+                    <button
+                      onClick={() => setCurrentStage(2)}
+                      className="px-6 py-3 rounded-xl bg-naviigo-brown hover:bg-brand-primary text-white font-mono text-xs uppercase tracking-widest font-bold transition-colors shrink-0 flex items-center gap-2 shadow-sm"
+                    >
+                      <span>SET DATES</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                  </motion.div>
+                ) : (
+                  renderEmptyPlacePrompt()
+                )}
+
+                {/* Optional Must-Do Experiences Pinning */}
+                {destination && (
+                  <div className="pt-6 border-t border-[#EADFD4]">
+                    <div className="flex items-baseline justify-between mb-3">
+                      <div>
+                        <div className="font-mono text-xs uppercase tracking-wider text-brand-primary font-bold">
+                          MUST-DO EXPERIENCES (OPTIONAL)
+                        </div>
+                        <p className="font-sans text-xs text-naviigo-brown/70 mt-0.5">
+                          Pin specific places or activities you definitely want integrated into the schedule.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2 mb-4">
+                      <input
+                        type="text"
+                        value={mustDoInput}
+                        onChange={e => setMustDoInput(e.target.value)}
+                        onKeyDown={e => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleAddMustDo();
+                          }
+                        }}
+                        placeholder="e.g. Ganga Aarti at Dashashwamedh, Hemis Monastery, Scuba Diving..."
+                        className="flex-1 bg-paper-light border border-[#EADFD4] rounded-xl px-4 py-2.5 text-xs font-mono text-naviigo-brown placeholder:text-naviigo-brown/40 outline-none focus:border-brand-primary"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleAddMustDo}
+                        className="px-5 py-2.5 rounded-xl bg-naviigo-brown hover:bg-brand-primary text-white font-mono text-xs uppercase font-bold transition-colors"
+                      >
+                        + PIN
+                      </button>
+                    </div>
+
+                    {mustDoPins.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {mustDoPins.map(pin => (
+                          <span
+                            key={pin}
+                            className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-paper-light border border-[#EADFD4] text-xs font-mono text-naviigo-brown"
+                          >
+                            <span>✦ {pin}</span>
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveMustDo(pin)}
+                              className="text-naviigo-brown/40 hover:text-brand-primary text-xs"
+                            >
+                              ✕
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* STAGE 2: CALENDAR & DURATION */}
+            {currentStage === 2 && (
+              <div className="space-y-8">
+                <div>
+                  <div className="font-mono text-xs uppercase tracking-[0.2em] text-brand-primary font-bold mb-2">
+                    STAGE 02 / TEMPORAL CORRIDOR
+                  </div>
+                  <h2 className="font-display font-black text-4xl sm:text-6xl uppercase leading-[0.9] tracking-tightest text-naviigo-brown">
+                    WHEN DOES THE <br />
+                    <span className="text-brand-primary">EXPEDITION RUN?</span>
+                  </h2>
+                </div>
+
+                <CalendarPicker
+                  startDate={startDate}
+                  endDate={endDate}
+                  onSelect={(start, end) => {
+                    setStartDate(start);
+                    setEndDate(end);
+                  }}
+                />
+
+                <div className="flex items-center justify-between pt-6 border-t border-[#EADFD4]">
+                  <button
+                    onClick={() => setCurrentStage(1)}
+                    className="font-mono text-xs uppercase tracking-wider text-naviigo-brown/60 hover:text-naviigo-brown font-bold"
+                  >
+                    ← BACK TO DESTINATION
+                  </button>
+                  <button
+                    onClick={() => setCurrentStage(3)}
+                    disabled={!startDate || !endDate}
+                    className={`px-8 py-3.5 rounded-xl font-mono text-xs uppercase tracking-widest font-bold transition-colors flex items-center gap-2 shadow-sm ${
+                      startDate && endDate
+                        ? 'bg-naviigo-brown hover:bg-brand-primary text-white'
+                        : 'bg-[#EADFD4] text-naviigo-brown/30 cursor-not-allowed'
+                    }`}
+                  >
+                    <span>WHO&apos;S TRAVELLING</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* STAGE 3: TRAVELLERS */}
+            {currentStage === 3 && (
+              <div className="space-y-8">
+                <div>
+                  <div className="font-mono text-xs uppercase tracking-[0.2em] text-brand-primary font-bold mb-2">
+                    STAGE 03 / TRAVEL COMPANIONS
+                  </div>
+                  <h2 className="font-display font-black text-4xl sm:text-6xl uppercase leading-[0.9] tracking-tightest text-naviigo-brown">
+                    WHO IS SHARING <br />
+                    <span className="text-brand-primary">THIS ROAD?</span>
+                  </h2>
+                </div>
+
+                <div className="space-y-3">
+                  {COMPANIONS.map(c => {
+                    const isSelected = travellerGroup === c.id;
+                    return (
+                      <button
+                        key={c.id}
+                        type="button"
+                        onClick={() => setTravellerGroup(c.id)}
+                        className={`w-full p-5 rounded-2xl border text-left flex items-center justify-between transition-all ${
+                          isSelected
+                            ? 'bg-paper-light border-brand-primary shadow-xs'
+                            : 'bg-paper-warm border-[#EADFD4] hover:border-brand-primary/40'
+                        }`}
+                      >
+                        <div className="flex items-center gap-4">
+                          <div
+                            className={`w-4 h-4 rounded-full border-2 transition-all flex items-center justify-center ${
+                              isSelected
+                                ? 'border-brand-primary bg-brand-primary'
+                                : 'border-naviigo-brown/30'
+                            }`}
+                          >
+                            {isSelected && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
+                          </div>
+                          <div>
+                            <div className="font-display font-bold text-lg text-naviigo-brown uppercase">
+                              {c.label}
+                            </div>
+                            <div className="font-sans text-xs text-naviigo-brown/70 mt-0.5">
+                              {c.desc}
+                            </div>
+                          </div>
+                        </div>
+                        <span className="font-mono text-[10px] uppercase tracking-wider text-brand-primary font-bold">
+                          {c.count}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <div className="flex items-center justify-between pt-6 border-t border-[#EADFD4]">
+                  <button
+                    onClick={() => setCurrentStage(2)}
+                    className="font-mono text-xs uppercase tracking-wider text-naviigo-brown/60 hover:text-naviigo-brown font-bold"
+                  >
+                    ← BACK TO DATES
+                  </button>
+                  <button
+                    onClick={() => setCurrentStage(4)}
+                    className="px-8 py-3.5 rounded-xl bg-naviigo-brown hover:bg-brand-primary text-white font-mono text-xs uppercase tracking-widest font-bold transition-colors flex items-center gap-2 shadow-sm"
+                  >
+                    <span>SELECT STYLE & PACE</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* STAGE 4: STYLE & PACE */}
+            {currentStage === 4 && (
+              <div className="space-y-10">
+                <div>
+                  <div className="font-mono text-xs uppercase tracking-[0.2em] text-brand-primary font-bold mb-2">
+                    STAGE 04 / TRAVEL CADENCE
+                  </div>
+                  <h2 className="font-display font-black text-4xl sm:text-6xl uppercase leading-[0.9] tracking-tightest text-naviigo-brown">
+                    WHAT IS THE <br />
+                    <span className="text-brand-primary">ATMOSPHERE?</span>
+                  </h2>
+                </div>
+
+                {/* Typographic Selection with Small Active Markers */}
+                <div>
+                  <div className="font-mono text-xs uppercase tracking-wider text-naviigo-brown/60 font-bold mb-4">
+                    CHOOSE YOUR EXPERIENTIAL FOCUS (SELECT ALL THAT APPLY)
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {TRAVEL_STYLES.map(style => {
+                      const isSelected = selectedStyles.includes(style.id);
+                      return (
+                        <button
+                          key={style.id}
+                          type="button"
+                          onClick={() => toggleStyle(style.id)}
+                          className={`p-5 rounded-2xl border text-left transition-all ${
+                            isSelected
+                              ? 'bg-paper-light border-brand-primary shadow-xs'
+                              : 'bg-paper-warm border-[#EADFD4] hover:border-brand-primary/40'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="font-display font-bold text-base text-naviigo-brown uppercase">
+                              {style.label}
+                            </span>
+                            <span
+                              className={`w-2.5 h-2.5 rounded-full ${
+                                isSelected ? 'bg-brand-primary' : 'bg-[#EADFD4]'
+                              }`}
+                            />
+                          </div>
+                          <p className="font-sans text-xs text-naviigo-brown/70 leading-relaxed">
+                            {style.desc}
+                          </p>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Per Person Budget Estimation */}
+                <div className="p-6 rounded-2xl bg-paper-light border border-[#EADFD4]">
+                  <div className="flex items-baseline justify-between mb-4">
+                    <div>
+                      <div className="font-mono text-xs uppercase tracking-wider text-brand-primary font-bold">
+                        ESTIMATED EXPEDITION BUDGET
+                      </div>
+                      <p className="font-sans text-xs text-naviigo-brown/60">
+                        Per traveler allocation (accommodations, dining, verified guides & entry)
+                      </p>
+                    </div>
+                    <div className="font-mono text-2xl font-bold text-naviigo-brown">
+                      ₹{budgetPerPerson.toLocaleString('en-IN')}
+                    </div>
+                  </div>
+
+                  <input
+                    type="range"
+                    min={5000}
+                    max={150000}
+                    step={2500}
+                    value={budgetPerPerson}
+                    onChange={e => setBudgetPerPerson(Number(e.target.value))}
+                    className="w-full accent-brand-primary cursor-pointer h-2 bg-[#EADFD4] rounded-lg"
+                  />
+                  <div className="flex justify-between font-mono text-[10px] text-naviigo-brown/50 uppercase mt-2">
+                    <span>₹5,000 (MINIMALIST)</span>
+                    <span>₹75,000 (BALANCED)</span>
+                    <span>₹1,50,000+ (HERITAGE LUXURY)</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-6 border-t border-[#EADFD4]">
+                  <button
+                    onClick={() => setCurrentStage(3)}
+                    className="font-mono text-xs uppercase tracking-wider text-naviigo-brown/60 hover:text-naviigo-brown font-bold"
+                  >
+                    ← BACK TO COMPANIONS
+                  </button>
+                  <button
+                    onClick={() => setCurrentStage(5)}
+                    className="px-8 py-3.5 rounded-xl bg-naviigo-brown hover:bg-brand-primary text-white font-mono text-xs uppercase tracking-widest font-bold transition-colors flex items-center gap-2 shadow-sm"
+                  >
+                    <span>REVIEW EXPEDITION</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* STAGE 5: REVIEW & DISPATCH */}
+            {currentStage === 5 && (
+              <div className="space-y-10">
+                <div>
+                  <div className="font-mono text-xs uppercase tracking-[0.2em] text-brand-primary font-bold mb-2">
+                    STAGE 05 / EXPEDITION REVIEW
+                  </div>
+                  <h2 className="font-display font-black text-4xl sm:text-6xl uppercase leading-[0.9] tracking-tightest text-naviigo-brown">
+                    READY FOR <br />
+                    <span className="text-brand-primary">DISPATCH.</span>
+                  </h2>
+                </div>
+
+                {/* Clean Editorial Summary Ledger */}
+                <div className="border border-[#EADFD4] rounded-2xl bg-paper-light overflow-hidden divide-y divide-[#EADFD4]">
+                  
+                  <div className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                      <div className="font-mono text-[10px] uppercase tracking-wider text-brand-primary font-bold">
+                        DESTINATION SEED
+                      </div>
+                      <div className="font-display font-black text-2xl uppercase text-naviigo-brown">
+                        {destName}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setCurrentStage(1)}
+                      className="font-mono text-xs text-naviigo-brown/50 hover:text-brand-primary uppercase underline"
+                    >
+                      EDIT
+                    </button>
+                  </div>
+
+                  <div className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                      <div className="font-mono text-[10px] uppercase tracking-wider text-brand-primary font-bold">
+                        EXPEDITION WINDOW
+                      </div>
+                      <div className="font-display font-bold text-xl uppercase text-naviigo-brown">
+                        {new Date(startDate + 'T00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} — {new Date(endDate + 'T00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                      </div>
+                      <div className="font-mono text-xs text-naviigo-brown/60 uppercase mt-0.5">
+                        {duration.nights} NIGHTS · {duration.days} DAYS
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setCurrentStage(2)}
+                      className="font-mono text-xs text-naviigo-brown/50 hover:text-brand-primary uppercase underline"
+                    >
+                      EDIT
+                    </button>
+                  </div>
+
+                  <div className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                      <div className="font-mono text-[10px] uppercase tracking-wider text-brand-primary font-bold">
+                        COMPANIONS & ALLOCATION
+                      </div>
+                      <div className="font-display font-bold text-xl uppercase text-naviigo-brown">
+                        {COMPANIONS.find(c => c.id === travellerGroup)?.label}
+                      </div>
+                      <div className="font-mono text-xs text-naviigo-brown/60 uppercase mt-0.5">
+                        BUDGET: ₹{budgetPerPerson.toLocaleString('en-IN')} PER PERSON
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setCurrentStage(3)}
+                      className="font-mono text-xs text-naviigo-brown/50 hover:text-brand-primary uppercase underline"
+                    >
+                      EDIT
+                    </button>
+                  </div>
+
+                  <div className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div>
+                      <div className="font-mono text-[10px] uppercase tracking-wider text-brand-primary font-bold">
+                        CURATED CADENCE
+                      </div>
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        {selectedStyles.map(s => (
+                          <span
+                            key={s}
+                            className="font-mono text-xs uppercase px-2.5 py-1 rounded bg-paper-warm border border-[#EADFD4] text-naviigo-brown"
+                          >
+                            {s}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => setCurrentStage(4)}
+                      className="font-mono text-xs text-naviigo-brown/50 hover:text-brand-primary uppercase underline"
+                    >
+                      EDIT
+                    </button>
+                  </div>
+
+                </div>
+
+                {/* Primary CTA With Submitting State */}
+                <div className="flex items-center justify-between pt-6 border-t border-[#EADFD4]">
+                  <button
+                    onClick={() => setCurrentStage(4)}
+                    className="font-mono text-xs uppercase tracking-wider text-naviigo-brown/60 hover:text-naviigo-brown font-bold"
+                  >
+                    ← BACK TO STYLE
+                  </button>
+                  <button
+                    onClick={handleBuildJourney}
+                    disabled={isSubmitting}
+                    className="px-10 py-5 rounded-xl bg-brand-primary hover:bg-brand-primary/90 text-white font-mono text-xs uppercase tracking-widest font-bold transition-all flex items-center gap-3 shadow-lg shadow-brand-primary/20"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>ORCHESTRATING JOURNEY SPINE...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>BUILD MY JOURNEY</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            )}
+
+          </div>
+
+          {/* ── RIGHT COLUMN (38%): STICKY EDITORIAL CONTEXT PANEL ──── */}
+          <div className="hidden lg:block lg:col-span-5 xl:col-span-4 sticky top-28 space-y-6">
+            
+            <div className="bg-paper-light border border-[#EADFD4] rounded-3xl overflow-hidden shadow-sm">
+              
+              {/* Destination Photographic Dossier */}
+              <div className="relative aspect-[4/3] w-full bg-paper-warm">
+                {destImage ? (
+                  <Image
+                    src={destImage}
+                    alt={destName || 'Destination'}
+                    fill
+                    className="object-cover"
+                    sizes="35vw"
+                  />
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center text-naviigo-brown/30 p-6 text-center">
+                    <Compass className="w-12 h-12 stroke-[1] mb-2 text-brand-primary/50" />
+                    <span className="font-mono text-[10px] uppercase tracking-widest">
+                      AWAITING SEED DESTINATION
+                    </span>
+                  </div>
+                )}
+                
+                {destName && (
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent flex flex-col justify-end p-6 text-white">
+                    <div className="font-mono text-[9px] uppercase tracking-widest text-white/70">
+                      SEED CORRIDOR
+                    </div>
+                    <div className="font-display font-black text-2xl uppercase">
+                      {destName}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Dossier Metadata Strip */}
+              <div className="p-6 space-y-5">
+                <div>
+                  <div className="font-mono text-[9px] uppercase tracking-wider text-naviigo-brown/50 font-bold mb-1">
+                    JOURNEY DOSSIER STATUS
+                  </div>
+                  <div className="font-display font-bold text-lg text-naviigo-brown uppercase">
+                    {destination ? `${destName} Expedition` : 'Unchartered'}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 pt-4 border-t border-[#EADFD4]">
+                  <div>
+                    <div className="font-mono text-[9px] uppercase text-naviigo-brown/50">WINDOW</div>
+                    <div className="font-mono text-xs font-bold text-naviigo-brown mt-0.5">
+                      {startDate && endDate ? `${duration.nights}N / ${duration.days}D` : 'TBD'}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="font-mono text-[9px] uppercase text-naviigo-brown/50">PARTY</div>
+                    <div className="font-mono text-xs font-bold text-naviigo-brown mt-0.5">
+                      {COMPANIONS.find(c => c.id === travellerGroup)?.label.split(' ')[0] || 'DUO'}
+                    </div>
+                  </div>
+                </div>
+
+                {mustDoPins.length > 0 && (
+                  <div className="pt-4 border-t border-[#EADFD4]">
+                    <div className="font-mono text-[9px] uppercase text-naviigo-brown/50 mb-2">
+                      PINNED HIGHLIGHTS ({mustDoPins.length})
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {mustDoPins.map(pin => (
+                        <span
+                          key={pin}
+                          className="font-mono text-[10px] px-2 py-0.5 rounded bg-paper-warm border border-[#EADFD4] text-naviigo-brown"
+                        >
+                          ✦ {pin}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="pt-4 border-t border-[#EADFD4] font-mono text-[10px] text-naviigo-brown/60 leading-relaxed">
+                  Naviigo automatically calculates transit pacing, arrival buffers, and contextual rest windows.
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+  );
 }

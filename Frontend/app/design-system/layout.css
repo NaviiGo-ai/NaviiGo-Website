@@ -7,4 +7,18 @@
   --radius-lg: 16px;
   --radius-xl: 20px;
   --radius-full: 9999px;
+
+  /* Container max-widths — consumed by Tailwind container config via theme.container.padding */
+  --container-sm: 640px;
+  --container-md: 768px;
+  --container-lg: 1024px;
+  --container-xl: 1280px;
+  --container-2xl: 1536px;
+
+  /* Z-index layers for layout stacking */
+  --z-index-base: 0;
+  --z-index-overlay: 10;
+  --z-index-fixed: 100;
+  --z-index-sticky: 101;
+  --z-index-modal: 1000;
 }
