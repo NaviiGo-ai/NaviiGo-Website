@@ -3,7 +3,7 @@ import { Epilogue, Plus_Jakarta_Sans } from 'next/font/google';
 import './globals.css';
 import Navbar from '@/components/shared/MinimalNavbar';
 import Providers from './providers';
-import { LazySocialButton } from '@/components/shared/LazyComponents';
+import SocialButton from '@/components/shared/SocialButton';
 import CustomCursor from '@/components/shared/CustomCursor';
 import Script from 'next/script';
 
@@ -80,7 +80,9 @@ export default function RootLayout({
       <body className="font-sans antialiased selection:bg-brand-primary selection:text-white bg-paper-warm text-naviigo-text">
         <Providers>
           <CustomCursor />
-          <LazySocialButton />
+          <div className="fixed right-0 top-1/3 z-50 rounded-l-lg overflow-hidden pointer-events-auto">
+            <SocialButton />
+          </div>
           <Navbar />
           <main className="relative z-10 w-full min-h-screen">{children}</main>
         </Providers>

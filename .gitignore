@@ -65,3 +65,9 @@ patch_*.js
 dev.log
 dev.pid
 dev2.pid
+
+# AI / IDE cache
+.claude/
+.playwright-mcp/
+package-lock.json
+package.json

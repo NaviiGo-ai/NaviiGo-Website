@@ -57,7 +57,7 @@ export async function GET(req: NextRequest) {
     const rawWidth = parseInt(searchParams.get('w') || '800', 10);
     const maxWidth = Math.min(1600, Math.max(100, Number.isFinite(rawWidth) ? rawWidth : 800));
 
-    const isDebug = searchParams.get('debug') === '1' || searchParams.get('debug') === 'true';
+    const isDebug = process.env.NODE_ENV !== 'production' && (searchParams.get('debug') === '1' || searchParams.get('debug') === 'true');
 
     // Check if directly resolving a photo resource name
     const directPhotoName = isValidPhotoName(photoNameParam)

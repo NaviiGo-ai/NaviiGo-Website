@@ -1,19 +1,11 @@
-// Frontend/lib/constants.ts
 export const SECTION_ORDER = [
-  '01-hero',
-  '02-brand-philosophy',
-  '03-destination-discovery',
-  '04-travel-designed',
-  '05-private-corporate',
-  '06-immersive-story',
-  '07-concierge-support',
-  '08-featured-journey',
-  '09-numbers-trust',
-  '10-testimonials',
-  '11-travel-styles',
-  '12-fullscreen-cta',
-  '13-contact',
-  '14-oversized-footer'
+  '01-arrival-hero',
+  '02-discover',
+  '03-torn-banner',
+  '04-plan-experience',
+  '05-manage-chapter',
+  '06-remember-memory-field',
+  '07-next-journey-footer',
 ] as const;
 
 export type SectionName = typeof SECTION_ORDER[number];
