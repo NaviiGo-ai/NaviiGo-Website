@@ -243,7 +243,7 @@ export default function PassportPage() {
                 </motion.div>
 
                 {/* ── TYPOGRAPHIC ARCHIVE INDEX TABS ───────────────────────────────────────── */}
-                <div className="flex items-center gap-6 sm:gap-8 mb-8 border-b border-[#EADFD4] overflow-x-auto no-scrollbar pb-3 font-mono text-xs uppercase tracking-wider">
+                <div className="flex items-center gap-6 sm:gap-8 mb-8 border-b border-[#EADFD4] overflow-x-auto no-scrollbar pb-3 font-mono text-xs uppercase tracking-wider touch-pan-x -mx-4 px-4 sm:mx-0 sm:px-0">
                     {[
                         { id: 'journeys', label: 'Saved Journeys', count: savedJourneys.length },
                         { id: 'bucketlist', label: 'Saved Places', count: bucketList.length },
@@ -257,7 +257,7 @@ export default function PassportPage() {
                             <button
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id as any)}
-                                className={`relative py-1 flex items-center gap-1.5 transition-colors whitespace-nowrap ${
+                                className={`relative py-2 flex items-center gap-1.5 transition-colors whitespace-nowrap min-h-[44px] touch-manipulation shrink-0 ${
                                     isActive ? 'text-brand-primary font-bold' : 'text-naviigo-brown/60 hover:text-naviigo-brown'
                                 }`}
                             >

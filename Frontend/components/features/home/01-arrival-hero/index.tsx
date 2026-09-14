@@ -24,8 +24,9 @@ export default function ArrivalHero() {
 
       const isMobile = window.innerWidth < 768;
       // At rest (scroll 0), the headline starts small inside the torso of India:
-      // ~0.34 on desktop, ~0.38 on mobile.
-      const initialScale = isMobile ? 0.38 : 0.34;
+      // ~0.34 on desktop, ~0.30 on mobile.
+      const initialScale = isMobile ? 0.28 : 0.34;
+      const origin = isMobile ? '50% 39%' : '47% 46%';
 
       // Color updater for outer UI controls adapting from soft paper to dark sunset photo
       const updateColors = (reveal: number) => {
@@ -48,8 +49,8 @@ export default function ArrivalHero() {
       };
 
       // Set initial states
-      gsap.set(coverRef.current, { scale: 1, opacity: 1, transformOrigin: '47% 46%' });
-      gsap.set(headlineRef.current, { scale: initialScale, transformOrigin: '47% 46%' });
+      gsap.set(coverRef.current, { scale: 1, opacity: 1, transformOrigin: origin });
+      gsap.set(headlineRef.current, { scale: initialScale, transformOrigin: origin });
       updateColors(0);
 
       if (prefersReducedMotion) {
@@ -60,16 +61,13 @@ export default function ArrivalHero() {
       }
 
       // ── Pinned Scroll Sequence ───────────────────────────────────────
-      // 1. Map zooms in smoothly from scale 1.0 to 9.5+.
-      // 2. Soft background dissolves between progress 0.22 and 0.65.
-      // 3. Headline text grows in tandem from small inside India (~0.34)
-      //    up to monumental full-screen (1.0).
-      // 4. Once it reaches 1.0 at progress 0.65, it fixes itself on the
-      //    screen for the remainder of the hero experience!
+      // Responsive pin distance: Snappy on mobile (+85%), immersive on desktop (+130%)
+      const pinDistance = isMobile ? '+=85%' : '+=130%';
+
       ScrollTrigger.create({
         trigger: containerRef.current,
         start: 'top top',
-        end: '+=130%',
+        end: pinDistance,
         pin: true,
         scrub: 0.8,
         refreshPriority: 10,
@@ -90,7 +88,7 @@ export default function ArrivalHero() {
             gsap.set(coverRef.current, {
               scale: scale,
               opacity: opacity,
-              transformOrigin: '47% 46%',
+              transformOrigin: origin,
             });
           }
 
@@ -103,7 +101,7 @@ export default function ArrivalHero() {
 
             gsap.set(headlineRef.current, {
               scale: textScale,
-              transformOrigin: '47% 46%',
+              transformOrigin: origin,
             });
           }
 
@@ -122,7 +120,7 @@ export default function ArrivalHero() {
   return (
     <div
       ref={containerRef}
-      className="relative w-full h-[100svh] min-h-[720px] overflow-hidden select-none bg-[#FAF6F0]"
+      className="relative w-full h-[100svh] min-h-[620px] sm:min-h-[720px] overflow-hidden select-none bg-[#FAF6F0]"
     >
       {/* ─────────────────────────────────────────────────────────────
           LAYER 0: FULL-BLEED SUNSET HERO PHOTOGRAPHY
@@ -146,17 +144,17 @@ export default function ArrivalHero() {
       {/* ─────────────────────────────────────────────────────────────
           LAYER 1: CENTER MONUMENTAL HEADLINE (GROWS ON SCROLL)
           Sits directly over the sunset photo.
-          At rest: Scaled down (~0.34) inside the transparent torso of India.
+          At rest: Scaled down inside the transparent torso of India.
           On scroll: Scales up smoothly in sync with the map, then fixes
           itself at scale 1.0 on the screen!
           ───────────────────────────────────────────────────────────── */}
       <div
         ref={headlineRef}
         className="absolute inset-0 w-full h-full pointer-events-none z-10 flex items-center justify-center will-change-transform"
-        style={{ transformOrigin: '47% 46%' }}
+        style={{ transformOrigin: '50% 47%' }}
       >
         <div className="w-full text-center px-4 max-w-6xl mx-auto">
-          <h1 className="font-display font-black text-4xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-[5.75rem] tracking-tightest uppercase leading-[0.92] text-white drop-shadow-[0_4px_28px_rgba(0,0,0,0.85)]">
+          <h1 className="font-display font-black text-3xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-[5.75rem] tracking-tightest uppercase leading-[0.92] text-white drop-shadow-[0_4px_28px_rgba(0,0,0,0.85)]">
             <span className="block">TRAVEL SHOULD FEEL</span>
             <span className="block mt-1 sm:mt-2">LIKE A JOURNEY.</span>
             <span className="block text-[#EC6426] mt-1 sm:mt-2 drop-shadow-[0_4px_20px_rgba(236,100,38,0.5)]">
@@ -172,19 +170,24 @@ export default function ArrivalHero() {
           Inside India: Transparent hole peeks through at the sunset & headline.
           On scroll: Scales up from 1.0 to 9.5+, smoothly dissolving between
           progress 0.22 and 0.65 to reveal full-bleed sunset photo.
+          Responsive: Mobile portrait uses tailored 9:19.5 cutout cover
+          preventing Kashmir and Kanyakumari text overlap.
           ───────────────────────────────────────────────────────────── */}
       <div
         ref={coverRef}
         className="absolute inset-0 w-full h-full flex items-center justify-center pointer-events-none z-20 will-change-transform"
-        style={{ transformOrigin: '47% 46%' }}
+        style={{ transformOrigin: '50% 47%' }}
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/brand/india-cover-full.png"
-          alt=""
-          className="w-full h-full object-cover min-w-full min-h-full"
-          aria-hidden="true"
-        />
+        <picture className="w-full h-full">
+          <source media="(max-width: 767px)" srcSet="/brand/india-cover-mobile.png" />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/brand/india-cover-full.png"
+            alt=""
+            className="w-full h-full object-cover min-w-full min-h-full"
+            aria-hidden="true"
+          />
+        </picture>
       </div>
 
       {/* ─────────────────────────────────────────────────────────────
@@ -193,40 +196,40 @@ export default function ArrivalHero() {
           Text colors smoothly adapt from warm charcoal (#FAF6F0 background)
           to crisp white (dark sunset photo).
           ───────────────────────────────────────────────────────────── */}
-      <div className="absolute inset-0 w-full h-full z-30 flex flex-col justify-between px-6 sm:px-12 pt-24 sm:pt-28 pb-8 sm:pb-12 pointer-events-none">
+      <div className="absolute inset-0 w-full h-full z-30 flex flex-col justify-between px-5 sm:px-12 pt-20 sm:pt-28 pb-6 sm:pb-12 pointer-events-none">
         {/* Top Telemetry & Folio */}
         <div className="flex items-center justify-between w-full pointer-events-auto">
           <div
-            className="flex items-center gap-3 font-mono text-[10px] sm:text-xs tracking-[0.25em] uppercase transition-colors duration-150"
+            className="flex items-center gap-2 sm:gap-3 font-mono text-[10px] sm:text-xs tracking-[0.2em] sm:tracking-[0.25em] uppercase transition-colors duration-150 shrink-0"
             style={{ color: 'var(--hero-text-primary, #2C2623)', textShadow: 'var(--hero-text-shadow, none)' }}
           >
-            <span className="w-2 h-2 rounded-full bg-[#EC6426] shadow-[0_0_8px_#EC6426]" />
+            <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-[#EC6426] shadow-[0_0_8px_#EC6426] shrink-0" />
             <span>28°36′N · 77°12′E</span>
-            <span style={{ color: 'var(--hero-text-dim, rgba(44,38,35,0.45))' }}>/</span>
-            <span>AGRA · SUNSET EXPEDITION</span>
+            <span className="hidden sm:inline" style={{ color: 'var(--hero-text-dim, rgba(44,38,35,0.45))' }}>/</span>
+            <span className="hidden sm:inline">AGRA · SUNSET EXPEDITION</span>
           </div>
 
           <div
-            className="font-mono text-[10px] sm:text-xs uppercase tracking-widest transition-colors duration-150"
+            className="font-mono text-[10px] sm:text-xs uppercase tracking-widest transition-colors duration-150 shrink-0 text-right"
             style={{ color: 'var(--hero-text-secondary, rgba(44,38,35,0.75))', textShadow: 'var(--hero-text-shadow, none)' }}
           >
-            JOURNEY 01 · IMMERSION
+            <span className="hidden xs:inline">JOURNEY 01 · </span>IMMERSION
           </div>
         </div>
 
         {/* Bottom Bar: Human Support Copy & Primary CTA */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-6 w-full pointer-events-auto">
+        <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-4 sm:gap-6 w-full pointer-events-auto">
           {/* Lower-Left Narrative */}
-          <div className="max-w-xs sm:max-w-sm space-y-1.5">
+          <div className="max-w-xs sm:max-w-sm space-y-1 sm:space-y-1.5">
             <p
-              className="font-display font-bold text-base sm:text-lg uppercase tracking-tight transition-colors duration-150"
+              className="font-display font-bold text-sm sm:text-lg uppercase tracking-tight transition-colors duration-150 leading-snug sm:leading-tight"
               style={{ color: 'var(--hero-text-primary, #2C2623)', textShadow: 'var(--hero-text-shadow, none)' }}
             >
-              From wanting to go <br />
+              From wanting to go <br className="hidden sm:inline" />
               <span className="text-[#EC6426] drop-shadow-[0_2px_12px_rgba(236,100,38,0.3)]">to being on your way.</span>
             </p>
             <p
-              className="font-sans text-xs sm:text-sm font-normal leading-relaxed transition-colors duration-150"
+              className="font-sans text-[11px] sm:text-sm font-normal leading-relaxed transition-colors duration-150 line-clamp-2 sm:line-clamp-none"
               style={{ color: 'var(--hero-text-secondary, rgba(44,38,35,0.75))', textShadow: 'var(--hero-text-shadow, none)' }}
             >
               Intelligent routes, authentic distances, and genuine discovery across India.
@@ -234,10 +237,10 @@ export default function ArrivalHero() {
           </div>
 
           {/* Lower-Right Action */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+          <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto">
             <Link
               href="/plan"
-              className="inline-flex items-center gap-3 px-6 sm:px-7 py-3 rounded-lg bg-[#EC6426] text-white font-mono text-xs uppercase tracking-widest font-bold hover:bg-[#1B1715] transition-all duration-300 shadow-xl hover:translate-y-[-1px]"
+              className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 sm:gap-3 px-5 sm:px-7 py-2.5 sm:py-3 rounded-lg bg-[#EC6426] text-white font-mono text-[11px] sm:text-xs uppercase tracking-widest font-bold hover:bg-[#1B1715] transition-all duration-300 shadow-xl hover:translate-y-[-1px] touch-manipulation min-h-[44px]"
             >
               <span>EXPLORE JOURNEYS</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -245,7 +248,7 @@ export default function ArrivalHero() {
 
             <Link
               href="/explore"
-              className="font-mono text-xs uppercase tracking-widest hover:text-[#EC6426] transition-colors py-2"
+              className="inline-flex items-center justify-center font-mono text-[11px] sm:text-xs uppercase tracking-widest hover:text-[#EC6426] transition-colors py-2 px-2 touch-manipulation min-h-[44px]"
               style={{ color: 'var(--hero-text-secondary, rgba(44,38,35,0.75))', textShadow: 'var(--hero-text-shadow, none)' }}
             >
               Destinations →

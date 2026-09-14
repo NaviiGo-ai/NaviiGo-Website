@@ -204,15 +204,15 @@ export default function EditorialSensationsCarousel() {
         </div>
 
         {/* ── REFINED TYPOGRAPHY-BASED CATEGORY NAVIGATION ───────────── */}
-        {/* No chunky pills: pure editorial typography with subtle orange active indicator */}
-        <div className="flex items-center gap-6 sm:gap-10 overflow-x-auto pt-6 scrollbar-none">
+        {/* Editorial typography with subtle orange active indicator and smooth touch rail */}
+        <div className="flex items-center gap-6 sm:gap-10 overflow-x-auto pt-6 pb-2 scrollbar-none touch-pan-x -mx-6 px-6 sm:mx-0 sm:px-0">
           {CATEGORIES.map((cat) => {
             const isActive = activeCategory === cat.id;
             return (
               <button
                 key={cat.id}
                 onClick={() => setActiveCategory(cat.id)}
-                className={`relative pb-3 flex items-center gap-2 font-mono text-xs uppercase tracking-widest transition-colors whitespace-nowrap ${
+                className={`relative pb-3 flex items-center gap-2 font-mono text-xs uppercase tracking-widest transition-colors whitespace-nowrap shrink-0 min-h-[44px] touch-manipulation ${
                   isActive ? 'text-[#EC6426] font-bold' : 'text-naviigo-brown/60 hover:text-naviigo-brown'
                 }`}
               >
@@ -234,9 +234,9 @@ export default function EditorialSensationsCarousel() {
         onMouseUp={handleMouseUp}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
-        className="relative w-full overflow-hidden cursor-grab active:cursor-grabbing px-4 sm:px-8 py-4"
+        className="relative w-full overflow-hidden cursor-grab active:cursor-grabbing px-3 sm:px-8 py-4"
       >
-        <div className="flex items-center justify-center min-h-[520px] sm:min-h-[580px] relative">
+        <div className="flex items-center justify-center min-h-[480px] sm:min-h-[580px] relative">
           {filteredItems.map((item, index) => {
             const diff = index - activeIndex;
             const isActive = diff === 0;
@@ -255,13 +255,13 @@ export default function EditorialSensationsCarousel() {
                 }}
                 className={`transition-all duration-700 ease-out absolute ${
                   isActive
-                    ? 'z-20 w-[88vw] sm:w-[74vw] max-w-[880px] h-[500px] sm:h-[580px] scale-100 opacity-100'
+                    ? 'z-20 w-[90vw] sm:w-[74vw] max-w-[880px] h-[460px] sm:h-[580px] scale-100 opacity-100'
                     : isPrev
-                    ? 'z-10 w-[78vw] sm:w-[62vw] max-w-[760px] h-[440px] sm:h-[500px] scale-[0.88] opacity-40 -translate-x-[55%] sm:-translate-x-[62%]'
-                    : 'z-10 w-[78vw] sm:w-[62vw] max-w-[760px] h-[440px] sm:h-[500px] scale-[0.88] opacity-40 translate-x-[55%] sm:translate-x-[62%]'
+                    ? 'z-10 w-[80vw] sm:w-[62vw] max-w-[760px] h-[400px] sm:h-[500px] scale-[0.88] opacity-40 -translate-x-[55%] sm:-translate-x-[62%]'
+                    : 'z-10 w-[80vw] sm:w-[62vw] max-w-[760px] h-[400px] sm:h-[500px] scale-[0.88] opacity-40 translate-x-[55%] sm:translate-x-[62%]'
                 }`}
               >
-                <div className="relative w-full h-full rounded-3xl overflow-hidden shadow-2xl bg-[#1B1715] group">
+                <div className="relative w-full h-full rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl bg-[#1B1715] group">
                   {/* Destination Photography */}
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
@@ -275,32 +275,32 @@ export default function EditorialSensationsCarousel() {
                   <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent pointer-events-none" />
 
                   {/* Top Metadata Badges */}
-                  <div className="absolute top-6 sm:top-8 left-6 sm:left-8 right-6 sm:right-8 flex items-center justify-between pointer-events-none z-10">
-                    <span className="font-mono text-[10px] sm:text-xs uppercase tracking-[0.25em] text-white/80 bg-black/40 backdrop-blur-md px-3 py-1 rounded-full border border-white/15">
+                  <div className="absolute top-4 sm:top-8 left-4 sm:left-8 right-4 sm:right-8 flex items-center justify-between pointer-events-none z-10 gap-2">
+                    <span className="font-mono text-[9px] sm:text-xs uppercase tracking-[0.18em] sm:tracking-[0.25em] text-white/80 bg-black/40 backdrop-blur-md px-2.5 sm:px-3 py-1 rounded-full border border-white/15 truncate max-w-[210px] sm:max-w-none">
                       {item.tag}
                     </span>
-                    <span className="font-mono text-[10px] sm:text-xs text-white/70">
+                    <span className="font-mono text-[10px] sm:text-xs text-white/70 hidden xs:inline shrink-0">
                       {item.coordinates}
                     </span>
                   </div>
 
                   {/* Active Card Bottom Editorial Content */}
-                  <div className="absolute bottom-6 sm:bottom-10 left-6 sm:left-10 right-6 sm:right-10 z-10">
-                    <p className="font-mono text-[10px] sm:text-xs uppercase tracking-[0.3em] text-[#EC6426] mb-1.5 font-bold">
+                  <div className="absolute bottom-5 sm:bottom-10 left-5 sm:left-10 right-5 sm:right-10 z-10">
+                    <p className="font-mono text-[10px] sm:text-xs uppercase tracking-[0.25em] sm:tracking-[0.3em] text-[#EC6426] mb-1 font-bold">
                       {item.destination} · {item.categoryTag}
                     </p>
 
-                    <h3 className="font-display font-black text-2xl sm:text-4xl md:text-5xl text-white uppercase tracking-tight leading-[0.98] mb-3">
+                    <h3 className="font-display font-black text-xl sm:text-4xl md:text-5xl text-white uppercase tracking-tight leading-[0.98] mb-2 sm:mb-3">
                       {item.journeyTitle}
                     </h3>
 
-                    <p className="font-sans text-xs sm:text-sm text-white/75 font-light max-w-xl line-clamp-2 leading-relaxed mb-6">
+                    <p className="font-sans text-[11px] sm:text-sm text-white/75 font-light max-w-xl line-clamp-2 leading-relaxed mb-4 sm:mb-6">
                       {item.subtitle}
                     </p>
 
                     <Link
                       href={`/plan?destination=${encodeURIComponent(item.destination)}`}
-                      className="inline-flex items-center gap-3 px-5 sm:px-6 py-2.5 rounded-lg bg-[#EC6426] text-white font-mono text-xs uppercase tracking-widest font-bold hover:bg-white hover:text-naviigo-brown transition-all duration-300 shadow-md"
+                      className="inline-flex items-center gap-2.5 sm:gap-3 px-4 sm:px-6 py-2.5 rounded-lg bg-[#EC6426] text-white font-mono text-[11px] sm:text-xs uppercase tracking-widest font-bold hover:bg-white hover:text-naviigo-brown transition-all duration-300 shadow-md touch-manipulation min-h-[44px]"
                     >
                       <span>BUILD THIS ROUTE</span>
                       <ArrowUpRight className="w-3.5 h-3.5" />

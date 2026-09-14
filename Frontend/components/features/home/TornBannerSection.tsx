@@ -186,17 +186,21 @@ export default function TornBannerSection() {
             className="relative z-20 max-w-5xl mx-auto text-center py-4 sm:py-8 flex flex-col items-center pointer-events-auto"
           >
             <h2
-              className="font-display uppercase tracking-[0.04em] leading-[0.96] select-none text-transparent"
+              className="font-display uppercase tracking-[0.04em] leading-[0.96] select-none text-transparent px-4 max-w-full"
               style={{
                 fontFamily: 'var(--font-epilogue), Georgia, serif',
-                fontSize: 'clamp(2.3rem, 6.2vw, 6.4rem)',
+                fontSize: 'clamp(1.5rem, 5.2vw, 6.4rem)',
                 fontWeight: 300,
                 WebkitTextStroke: '1.5px rgba(255, 255, 255, 0.9)',
                 letterSpacing: '0.04em',
                 textShadow: '0 4px 30px rgba(0,0,0,0.5)',
               }}
             >
-              <span className="block whitespace-nowrap">EVERY JOURNEY DESERVES</span>
+              <span className="hidden sm:block whitespace-nowrap">EVERY JOURNEY DESERVES</span>
+              <span className="block sm:hidden">
+                <span className="block">EVERY JOURNEY</span>
+                <span className="block mt-1">DESERVES</span>
+              </span>
               <span className="block whitespace-nowrap mt-1 sm:mt-2">AN AUTHOR.</span>
             </h2>
 

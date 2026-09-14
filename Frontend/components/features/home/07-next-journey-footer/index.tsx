@@ -38,10 +38,10 @@ export default function NextJourneyFooter() {
         </div>
 
         {/* ── Oversized Editorial Statement ────────────────────── */}
-        <div className="my-12 md:my-16 max-w-5xl">
-          <h2 className="font-display font-black text-4xl sm:text-6xl md:text-7xl lg:text-[6.8rem] leading-[0.92] tracking-tightest uppercase text-white flex flex-col">
+        <div className="my-10 md:my-16 max-w-5xl">
+          <h2 className="font-display font-black text-3xl sm:text-6xl md:text-7xl lg:text-[6.8rem] leading-[0.94] sm:leading-[0.92] tracking-tightest uppercase text-white flex flex-col break-words">
             <span>FROM &lsquo;I WANT TO GO&rsquo;</span>
-            <span className="ml-[4%] sm:ml-[8%] md:ml-[14%] text-naviigo-orange mt-2">
+            <span className="ml-0 sm:ml-[8%] md:ml-[14%] text-naviigo-orange mt-2">
               TO &lsquo;I&apos;M ON MY WAY.&rsquo;
             </span>
           </h2>
@@ -61,7 +61,7 @@ export default function NextJourneyFooter() {
         </div>
 
         {/* ── Editorial Action Form (Clean, Visible Labels) ─────── */}
-        <div className="w-full max-w-3xl bg-paper-charcoal/90 border border-white/15 p-6 sm:p-8 rounded-3xl backdrop-blur-md shadow-2xl mb-16">
+        <div className="w-full max-w-3xl bg-paper-charcoal/90 border border-white/15 p-5 sm:p-8 rounded-2xl sm:rounded-3xl backdrop-blur-md shadow-2xl mb-16">
           <form onSubmit={handleStartTrip} className="flex flex-col gap-4">
             <label
               htmlFor="next-destination-input"
@@ -77,13 +77,13 @@ export default function NextJourneyFooter() {
                 value={destinationInput}
                 onChange={(e) => setDestinationInput(e.target.value)}
                 placeholder="e.g. Spiti Valley, Kyoto, Kashmir, Varanasi..."
-                className="flex-1 bg-white/5 border border-white/20 rounded-full px-6 py-3.5 text-white placeholder-white/40 text-sm md:text-base font-sans focus:outline-none focus:border-naviigo-orange focus:ring-1 focus:ring-naviigo-orange transition-all"
+                className="flex-1 bg-white/5 border border-white/20 rounded-full px-5 sm:px-6 py-3.5 text-white placeholder-white/40 text-sm md:text-base font-sans focus:outline-none focus:border-naviigo-orange focus:ring-1 focus:ring-naviigo-orange transition-all min-h-[44px]"
               />
 
               <button
                 type="submit"
                 data-cursor="GO"
-                className="group px-7 py-3.5 rounded-full bg-naviigo-orange text-white font-sans text-xs md:text-sm font-semibold tracking-wider uppercase hover:bg-naviigo-orange/90 transition-all duration-300 flex items-center justify-center gap-2 shrink-0 shadow-lg shadow-naviigo-orange/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+                className="group px-7 py-3.5 rounded-full bg-naviigo-orange text-white font-sans text-xs md:text-sm font-semibold tracking-wider uppercase hover:bg-naviigo-orange/90 transition-all duration-300 flex items-center justify-center gap-2 shrink-0 shadow-lg shadow-naviigo-orange/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white min-h-[44px] touch-manipulation"
               >
                 <span>Begin Next Trip</span>
                 <ArrowUpRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
@@ -98,7 +98,7 @@ export default function NextJourneyFooter() {
                   key={item}
                   type="button"
                   onClick={() => setDestinationInput(item)}
-                  className="px-2.5 py-1 rounded-full border border-white/10 text-white/70 hover:text-naviigo-yellow hover:border-naviigo-yellow/40 transition-colors"
+                  className="px-3 py-1.5 rounded-full border border-white/10 text-white/70 hover:text-naviigo-yellow hover:border-naviigo-yellow/40 transition-colors touch-manipulation text-xs"
                 >
                   {item}
                 </button>

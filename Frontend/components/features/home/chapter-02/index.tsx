@@ -99,19 +99,19 @@ export default function Chapter02Discover() {
         className="absolute top-0 left-0 w-full z-20 pointer-events-none"
       />
 
-      {/* ── Background Editorial Grid Lines ────────────────────────── */}
-      <div className="absolute inset-0 pointer-events-none z-0 opacity-40">
-        <div className="w-full h-full max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 border-l border-r border-[#2D1810]/10">
+      {/* ── Background Editorial Grid Lines (Desktop architectural guides only) ─ */}
+      <div className="hidden md:block absolute inset-0 pointer-events-none z-0 opacity-30">
+        <div className="w-full h-full max-w-7xl mx-auto grid grid-cols-4 border-l border-r border-[#2D1810]/10">
           <div className="border-r border-[#2D1810]/10 h-full" />
           <div className="border-r border-[#2D1810]/10 h-full" />
-          <div className="border-r border-[#2D1810]/10 h-full hidden md:block" />
-          <div className="h-full hidden md:block" />
+          <div className="border-r border-[#2D1810]/10 h-full" />
+          <div className="h-full" />
         </div>
       </div>
 
-      {/* ── Topographic Contour Map Lines ─────────────────────────── */}
+      {/* ── Topographic Contour Map Lines (Desktop only; avoids card visual interference on mobile) ─ */}
       <svg
-        className="absolute inset-0 w-full h-full pointer-events-none z-0 opacity-25"
+        className="hidden md:block absolute inset-0 w-full h-full pointer-events-none z-0 opacity-20"
         viewBox="0 0 1000 1200"
         preserveAspectRatio="none"
         aria-hidden="true"
@@ -133,11 +133,13 @@ export default function Chapter02Discover() {
         />
       </svg>
 
-      {/* ── ONE DYNAMIC CHAPTER-LEVEL SVG OVERLAY JOURNEY LINE ─────── */}
-      <JourneyPathChapter02
-        sectionRef={chapterRef}
-        badgeRefs={badgeRefs}
-      />
+      {/* ── ONE DYNAMIC CHAPTER-LEVEL SVG OVERLAY JOURNEY LINE (Desktop / Tablet view where alternating cards leave open 2D negative space) ─────── */}
+      <div className="hidden md:block">
+        <JourneyPathChapter02
+          sectionRef={chapterRef}
+          badgeRefs={badgeRefs}
+        />
+      </div>
 
       {/* ── SECTION HEADER (Matches Reference Screenshot 1 & 2) ───── */}
       <div className="text-center max-w-4xl mx-auto mb-20 sm:mb-28 md:mb-36 px-6 relative z-20">

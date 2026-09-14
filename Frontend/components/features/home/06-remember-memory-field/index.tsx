@@ -90,19 +90,22 @@ export default function RememberMemoryField() {
       const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       if (prefersReducedMotion) return;
 
-      // Restrained Parallax Depth
-      const cards = cardsRef.current?.querySelectorAll('.memory-card-wrapper') || [];
-      cards.forEach((card, i) => {
-        const speed = MEMORIES[i]?.speed || 1;
-        gsap.to(card, {
-          yPercent: (speed - 1) * 30,
-          ease: 'none',
-          scrollTrigger: {
-            trigger: containerRef.current,
-            start: 'top bottom',
-            end: 'bottom top',
-            scrub: 1.2,
-          },
+      // Restrained Parallax Depth - enabled only on desktop multi-column layouts
+      const mm = gsap.matchMedia();
+      mm.add('(min-width: 768px)', () => {
+        const cards = cardsRef.current?.querySelectorAll('.memory-card-wrapper') || [];
+        cards.forEach((card, i) => {
+          const speed = MEMORIES[i]?.speed || 1;
+          gsap.to(card, {
+            yPercent: (speed - 1) * 30,
+            ease: 'none',
+            scrollTrigger: {
+              trigger: containerRef.current,
+              start: 'top bottom',
+              end: 'bottom top',
+              scrub: 1.2,
+            },
+          });
         });
       });
     }, containerRef);

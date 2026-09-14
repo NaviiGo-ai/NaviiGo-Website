@@ -121,11 +121,7 @@ export default function MinimalNavbar() {
             {/* Mobile Hamburger Button */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className={`md:hidden p-2 rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-naviigo-orange ${
-                isLightNav
-                  ? 'text-white hover:bg-white/10'
-                  : 'text-naviigo-text hover:bg-naviigo-brown/5'
-              }`}
+              className="md:hidden p-2 rounded-lg text-naviigo-brown hover:bg-naviigo-brown/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-naviigo-orange touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center"
               aria-label={mobileMenuOpen ? 'Close Navigation Menu' : 'Open Navigation Menu'}
               aria-expanded={mobileMenuOpen}
             >
@@ -138,10 +134,14 @@ export default function MinimalNavbar() {
       {/* ── Mobile Full-Screen Branded Menu ──────────────────────── */}
       {mobileMenuOpen && (
         <div
-          className="fixed inset-0 z-40 bg-paper-warm text-naviigo-text flex flex-col justify-between p-8 pt-28 md:hidden animate-fade-up overflow-y-auto"
+          className="fixed inset-0 z-40 bg-paper-warm text-naviigo-text flex flex-col justify-between p-6 sm:p-8 md:hidden animate-fade-up overflow-y-auto"
           role="dialog"
           aria-modal="true"
           aria-label="Mobile Navigation"
+          style={{
+            paddingTop: 'calc(env(safe-area-inset-top, 0px) + 6rem)',
+            paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 2rem)',
+          }}
         >
           {/* Subtle Journey Line background watermark */}
           <div className="absolute top-24 right-6 w-48 h-48 opacity-10 pointer-events-none">
@@ -158,13 +158,13 @@ export default function MinimalNavbar() {
             <div className="font-mono text-xs tracking-widest uppercase text-naviigo-text/50 pb-2 border-b border-naviigo-brown/10">
               00 / Orientation & Navigation
             </div>
-            <nav className="flex flex-col space-y-4">
+            <nav className="flex flex-col space-y-2">
               {NAV_LINKS.map((link) => (
                 <Link
                   key={link.name}
                   href={link.href}
                   onClick={() => setMobileMenuOpen(false)}
-                  className="group flex items-baseline justify-between py-2 border-b border-naviigo-brown/5 text-2xl font-display font-medium text-naviigo-brown hover:text-naviigo-orange transition-colors"
+                  className="group flex items-center justify-between py-3 border-b border-naviigo-brown/5 text-2xl font-display font-medium text-naviigo-brown hover:text-naviigo-orange transition-colors min-h-[48px] touch-manipulation"
                 >
                   <span className="flex items-baseline gap-3">
                     <span className="font-mono text-xs text-naviigo-text/40">{link.chapter}</span>
@@ -177,10 +177,11 @@ export default function MinimalNavbar() {
           </div>
 
           {/* Bottom Actions */}
-          <div className="pt-8 space-y-4 border-t border-naviigo-brown/10">
+          <div className="pt-6 space-y-4 border-t border-naviigo-brown/10">
             <Link
               href="/itinerary?new=true"
-              className="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-full bg-naviigo-orange text-white font-sans text-sm font-semibold tracking-wide uppercase hover:bg-naviigo-orange/90 transition-all shadow-md"
+              onClick={() => setMobileMenuOpen(false)}
+              className="w-full flex items-center justify-center gap-2 py-3.5 px-6 rounded-full bg-naviigo-orange text-white font-sans text-sm font-semibold tracking-wide uppercase hover:bg-naviigo-orange/90 transition-all shadow-md min-h-[48px] touch-manipulation"
             >
               <span>Begin a Journey</span>
               <ArrowUpRight className="w-4 h-4" />

@@ -353,162 +353,165 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
     return (
         <div className="min-h-screen bg-paper-warm text-naviigo-brown pt-16 sm:pt-20 font-sans selection:bg-brand-primary selection:text-white">
             
-            {/* ── STICKY UTILITY BAR ── */}
-            <div className="sticky top-16 sm:top-20 z-40 bg-paper-light/95 backdrop-blur-md border-b border-[#EADFD4] px-4 sm:px-8 py-2.5 sm:py-3 flex items-center justify-between gap-4">
-                <div className="flex items-center gap-3 min-w-0">
-                    <button 
-                        onClick={onBack} 
-                        className="w-8 h-8 rounded-full border border-[#EADFD4] flex items-center justify-center hover:bg-paper-warm transition-colors text-sm text-naviigo-brown shrink-0"
-                        title="Back to Itinerary Overview"
-                    >
-                        ←
-                    </button>
-                    <div className="min-w-0">
-                        <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest text-naviigo-brown/60">
-                            <span>{destName}</span>
-                            <span>·</span>
-                            <span>Day {String(activeDay + 1).padStart(2, '0')} of {String(plansToRender.length).padStart(2, '0')}</span>
+            {/* ── STICKY EXPEDITION CONTROLS (Utility Bar + Chapter Tabs in one cohesive layer) ── */}
+            <div className="sticky top-14 sm:top-20 z-30 bg-paper-light/95 backdrop-blur-md border-b border-[#EADFD4] shadow-2xs">
+                {/* Utility Bar */}
+                <div className="px-4 sm:px-8 py-2.5 sm:py-3 flex items-center justify-between gap-3 border-b border-[#EADFD4]/60">
+                    <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                        <button 
+                            onClick={onBack} 
+                            className="w-8 h-8 rounded-full border border-[#EADFD4] flex items-center justify-center hover:bg-paper-warm transition-colors text-sm text-naviigo-brown shrink-0 min-h-[36px] min-w-[36px] touch-manipulation"
+                            title="Back to Itinerary Overview"
+                        >
+                            ←
+                        </button>
+                        <div className="min-w-0">
+                            <div className="flex items-center gap-1.5 sm:gap-2 font-mono text-[9px] sm:text-[10px] uppercase tracking-widest text-naviigo-brown/60 truncate">
+                                <span>{destName}</span>
+                                <span>·</span>
+                                <span>Day {String(activeDay + 1).padStart(2, '0')} of {String(plansToRender.length).padStart(2, '0')}</span>
+                            </div>
+                            <h1 className="font-display font-bold text-xs sm:text-base text-naviigo-brown truncate leading-tight">
+                                {plan?.title || `${destName} Chapter`}
+                            </h1>
                         </div>
-                        <h1 className="font-display font-bold text-sm sm:text-base text-naviigo-brown truncate leading-tight">
-                            {plan?.title || `${destName} Chapter`}
-                        </h1>
                     </div>
-                </div>
 
-                <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-                    <ShareDropdown onCopyLink={handleShare} destName={destName} isSharing={isSharing} collaborators={collaborators} planData={{ ...data, dayPlans: customPlans }} />
-                    {user && (
-                        <motion.button
-                            whileTap={{ scale: 0.98 }}
-                            onClick={() => isTripActive ? stopTrip() : startTrip()}
-                            className={`px-3.5 py-1.5 rounded-full text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all ${
-                                isTripActive
-                                    ? 'bg-naviigo-teal text-white shadow-md shadow-naviigo-teal/20'
-                                    : 'bg-brand-primary hover:bg-brand-primary/90 text-white shadow-md shadow-brand-primary/20'
+                    <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+                        <ShareDropdown onCopyLink={handleShare} destName={destName} isSharing={isSharing} collaborators={collaborators} planData={{ ...data, dayPlans: customPlans }} />
+                        {user && (
+                            <motion.button
+                                whileTap={{ scale: 0.98 }}
+                                onClick={() => isTripActive ? stopTrip() : startTrip()}
+                                className={`px-3 sm:px-3.5 py-1.5 rounded-full text-[11px] sm:text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all min-h-[36px] touch-manipulation ${
+                                    isTripActive
+                                        ? 'bg-naviigo-teal text-white shadow-md shadow-naviigo-teal/20'
+                                        : 'bg-brand-primary hover:bg-brand-primary/90 text-white shadow-md shadow-brand-primary/20'
+                                }`}
+                            >
+                                <Rocket className="w-3.5 h-3.5" />
+                                <span className="hidden sm:inline">{isTripActive ? 'Live Trip Active' : 'Start Trip'}</span>
+                            </motion.button>
+                        )}
+                        <motion.button 
+                            whileTap={isSaving || isSaved ? {} : { scale: 0.98 }} 
+                            onClick={async () => {
+                                if (saveInFlightRef.current || isSaving || isSaved) return;
+                                if (!user?.uid) {
+                                    alert('Please sign in to archive your journey to your Passport.');
+                                    return;
+                                }
+                                saveInFlightRef.current = true;
+                                setIsSaving(true);
+                                setSaveError(false);
+                                try {
+                                    await saveItineraryToFirestore(user.uid, {
+                                        id: stableItineraryId,
+                                        uuid: stableItineraryId,
+                                        destId,
+                                        destName,
+                                        form: { ...form, customPlans, _uuid: stableItineraryId, uuid: stableItineraryId },
+                                        generatedData: generatedData || null,
+                                    });
+                                    setIsSaved(true);
+                                } catch (err) {
+                                    console.error('[DayViewPage] Archive failed:', err);
+                                    setSaveError(true);
+                                } finally {
+                                    setIsSaving(false);
+                                    saveInFlightRef.current = false;
+                                }
+                            }} 
+                            disabled={isSaving || isSaved}
+                            className={`px-3 sm:px-3.5 py-1.5 rounded-full text-[11px] sm:text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all min-h-[36px] touch-manipulation ${
+                                isSaved
+                                    ? 'bg-brand-primary/10 text-brand-primary cursor-default border border-brand-primary/20'
+                                    : isSaving
+                                    ? 'bg-naviigo-brown/70 text-white/80 cursor-wait'
+                                    : saveError
+                                    ? 'bg-red-600 text-white hover:bg-red-700'
+                                    : 'bg-naviigo-brown text-white hover:bg-naviigo-brown/90 shadow-sm'
                             }`}
                         >
-                            <Rocket className="w-3.5 h-3.5" />
-                            <span className="hidden sm:inline">{isTripActive ? 'Live Trip Active' : 'Start Trip'}</span>
+                            {isSaving ? (
+                                <>
+                                    <span className="w-3 h-3 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                                    <span>SAVING…</span>
+                                </>
+                            ) : isSaved ? (
+                                <span>✓ SAVED</span>
+                            ) : saveError ? (
+                                <span>RETRY ARCHIVE</span>
+                            ) : (
+                                <span>ARCHIVE</span>
+                            )}
                         </motion.button>
-                    )}
-                    <motion.button 
-                        whileTap={isSaving || isSaved ? {} : { scale: 0.98 }} 
-                        onClick={async () => {
-                            if (saveInFlightRef.current || isSaving || isSaved) return;
-                            if (!user?.uid) {
-                                alert('Please sign in to archive your journey to your Passport.');
-                                return;
-                            }
-                            saveInFlightRef.current = true;
-                            setIsSaving(true);
-                            setSaveError(false);
-                            try {
-                                await saveItineraryToFirestore(user.uid, {
-                                    id: stableItineraryId,
-                                    uuid: stableItineraryId,
-                                    destId,
-                                    destName,
-                                    form: { ...form, customPlans, _uuid: stableItineraryId, uuid: stableItineraryId },
-                                    generatedData: generatedData || null,
-                                });
-                                setIsSaved(true);
-                            } catch (err) {
-                                console.error('[DayViewPage] Archive failed:', err);
-                                setSaveError(true);
-                            } finally {
-                                setIsSaving(false);
-                                saveInFlightRef.current = false;
-                            }
-                        }} 
-                        disabled={isSaving || isSaved}
-                        className={`px-3.5 py-1.5 rounded-full text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all ${
-                            isSaved
-                                ? 'bg-brand-primary/10 text-brand-primary cursor-default border border-brand-primary/20'
-                                : isSaving
-                                ? 'bg-naviigo-brown/70 text-white/80 cursor-wait'
-                                : saveError
-                                ? 'bg-red-600 text-white hover:bg-red-700'
-                                : 'bg-naviigo-brown text-white hover:bg-naviigo-brown/90 shadow-sm'
-                        }`}
-                    >
-                        {isSaving ? (
-                            <>
-                                <span className="w-3 h-3 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-                                <span>SAVING…</span>
-                            </>
-                        ) : isSaved ? (
-                            <span>✓ SAVED</span>
-                        ) : saveError ? (
-                            <span>RETRY ARCHIVE</span>
-                        ) : (
-                            <span>ARCHIVE</span>
-                        )}
-                    </motion.button>
-                </div>
-            </div>
-
-            {/* ── DAY CHAPTER INDEX TABS ── */}
-            <div className="sticky top-[108px] sm:top-[128px] z-30 bg-paper-light/95 backdrop-blur-md border-b border-[#EADFD4] px-4 sm:px-8 py-2">
-                <div className="max-w-[1440px] mx-auto flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-4 sm:gap-6 font-mono text-xs tracking-wider uppercase overflow-x-auto no-scrollbar py-1">
-                        {plansToRender.map((dp: DayPlan, i: number) => {
-                            const isActive = activeDay === i;
-                            const titleSnippet = dp.title ? dp.title.split(' ')[0] : `DAY 0${i + 1}`;
-                            return (
-                                <button
-                                    key={dp.day || i}
-                                    onClick={() => navigateToDay(i)}
-                                    className={`group relative py-1 flex items-center gap-2 transition-colors whitespace-nowrap ${
-                                        isActive ? 'text-brand-primary font-bold' : 'text-naviigo-brown/60 hover:text-naviigo-brown'
-                                    }`}
-                                >
-                                    <span>{String(i + 1).padStart(2, '0')}</span>
-                                    <span className="hidden md:inline text-[11px] font-sans font-medium uppercase tracking-tight opacity-80">{titleSnippet}</span>
-                                    {isActive && (
-                                        <motion.div
-                                            layoutId="activeDayTabIndicator"
-                                            className="absolute bottom-0 left-0 right-0 h-[2px] bg-brand-primary"
-                                            transition={{ type: 'spring', stiffness: 350, damping: 28 }}
-                                        />
-                                    )}
-                                </button>
-                            );
-                        })}
-                    </div>
-
-                    <div className="flex items-center gap-2 font-mono text-xs uppercase shrink-0">
-                        <button
-                            onClick={() => navigateToDay(activeDay - 1)}
-                            disabled={activeDay === 0}
-                            className="px-2.5 py-1 rounded border border-[#EADFD4] text-naviigo-brown/80 hover:text-brand-primary hover:border-brand-primary/40 disabled:opacity-30 disabled:pointer-events-none transition-colors"
-                        >
-                            ← Prev
-                        </button>
-                        <span className="font-bold text-naviigo-brown px-1">
-                            {String(activeDay + 1).padStart(2, '0')} / {String(plansToRender.length || 1).padStart(2, '0')}
-                        </span>
-                        <button
-                            onClick={() => navigateToDay(activeDay + 1)}
-                            disabled={activeDay >= plansToRender.length - 1}
-                            className="px-2.5 py-1 rounded border border-[#EADFD4] text-naviigo-brown/80 hover:text-brand-primary hover:border-brand-primary/40 disabled:opacity-30 disabled:pointer-events-none transition-colors"
-                        >
-                            Next →
-                        </button>
                     </div>
                 </div>
 
-                {isTripActive && (() => {
-                    const progress = getProgress();
-                    return (
-                        <div className="max-w-[1440px] mx-auto mt-2 pt-2 border-t border-[#EADFD4] flex items-center justify-between font-mono text-[10px] text-naviigo-teal font-bold uppercase tracking-wider">
-                            <span className="flex items-center gap-2">
-                                <span className="w-2 h-2 rounded-full bg-naviigo-teal animate-pulse" />
-                                LIVE EXPEDITION PROGRESS: {progress.completed}/{progress.total} CHECKPOINTS VISITED
-                            </span>
-                            <span>{progress.percent}% ACCOMPLISHED</span>
+                {/* Day Chapter Index Tabs */}
+                <div className="px-4 sm:px-8 py-2">
+                    <div className="max-w-[1440px] mx-auto flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-3 sm:gap-6 font-mono text-xs tracking-wider uppercase overflow-x-auto no-scrollbar py-1 touch-pan-x">
+                            {plansToRender.map((dp: DayPlan, i: number) => {
+                                const isActive = activeDay === i;
+                                const titleSnippet = dp.title ? dp.title.split(' ')[0] : `DAY 0${i + 1}`;
+                                return (
+                                    <button
+                                        key={dp.day || i}
+                                        onClick={() => navigateToDay(i)}
+                                        className={`group relative py-1 flex items-center gap-1.5 sm:gap-2 transition-colors whitespace-nowrap min-h-[36px] touch-manipulation ${
+                                            isActive ? 'text-brand-primary font-bold' : 'text-naviigo-brown/60 hover:text-naviigo-brown'
+                                        }`}
+                                    >
+                                        <span>{String(i + 1).padStart(2, '0')}</span>
+                                        <span className="hidden md:inline text-[11px] font-sans font-medium uppercase tracking-tight opacity-80">{titleSnippet}</span>
+                                        {isActive && (
+                                            <motion.div
+                                                layoutId="activeDayTabIndicator"
+                                                className="absolute bottom-0 left-0 right-0 h-[2px] bg-brand-primary"
+                                                transition={{ type: 'spring', stiffness: 350, damping: 28 }}
+                                            />
+                                        )}
+                                    </button>
+                                );
+                            })}
                         </div>
-                    );
-                })()}
+
+                        <div className="flex items-center gap-1.5 sm:gap-2 font-mono text-xs uppercase shrink-0">
+                            <button
+                                onClick={() => navigateToDay(activeDay - 1)}
+                                disabled={activeDay === 0}
+                                className="px-2 sm:px-2.5 py-1 rounded border border-[#EADFD4] text-naviigo-brown/80 hover:text-brand-primary hover:border-brand-primary/40 disabled:opacity-30 disabled:pointer-events-none transition-colors min-h-[32px] touch-manipulation text-[11px] sm:text-xs"
+                            >
+                                ← Prev
+                            </button>
+                            <span className="font-bold text-naviigo-brown px-0.5 sm:px-1 text-[11px] sm:text-xs">
+                                {String(activeDay + 1).padStart(2, '0')} / {String(plansToRender.length || 1).padStart(2, '0')}
+                            </span>
+                            <button
+                                onClick={() => navigateToDay(activeDay + 1)}
+                                disabled={activeDay >= plansToRender.length - 1}
+                                className="px-2 sm:px-2.5 py-1 rounded border border-[#EADFD4] text-naviigo-brown/80 hover:text-brand-primary hover:border-brand-primary/40 disabled:opacity-30 disabled:pointer-events-none transition-colors min-h-[32px] touch-manipulation text-[11px] sm:text-xs"
+                            >
+                                Next →
+                            </button>
+                        </div>
+                    </div>
+
+                    {isTripActive && (() => {
+                        const progress = getProgress();
+                        return (
+                            <div className="max-w-[1440px] mx-auto mt-1.5 pt-1.5 border-t border-[#EADFD4] flex items-center justify-between font-mono text-[9px] sm:text-[10px] text-naviigo-teal font-bold uppercase tracking-wider">
+                                <span className="flex items-center gap-1.5 sm:gap-2 truncate">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-naviigo-teal animate-pulse shrink-0" />
+                                    <span>PROGRESS: {progress.completed}/{progress.total} CHECKPOINTS</span>
+                                </span>
+                                <span className="shrink-0">{progress.percent}% DONE</span>
+                            </div>
+                        );
+                    })()}
+                </div>
             </div>
 
             {/* ─────────────────────────────────────────────────────────────
@@ -532,7 +535,7 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
                                 {/* Left 7 cols: Editorial Storyline */}
                                 <div className="lg:col-span-7">
-                                    <div className="flex items-center gap-2.5 font-mono text-xs uppercase tracking-widest text-brand-primary mb-3">
+                                    <div className="flex items-center gap-2 font-mono text-[11px] sm:text-xs uppercase tracking-widest text-brand-primary mb-3 flex-wrap">
                                         <span className="font-bold">DAY {String(activeDay + 1).padStart(2, '0')} / {String(plansToRender.length).padStart(2, '0')}</span>
                                         <span className="text-naviigo-brown/30">·</span>
                                         <span className="text-naviigo-brown font-bold">{destName.toUpperCase()}</span>
@@ -540,7 +543,7 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                                         <span className="text-naviigo-brown/60">{formattedDate}</span>
                                     </div>
 
-                                    <h2 className="font-display font-black text-4xl sm:text-6xl text-naviigo-brown tracking-tightest leading-[1.02] mb-4">
+                                    <h2 className="font-display font-black text-3xl sm:text-5xl md:text-6xl text-naviigo-brown tracking-tightest leading-[1.02] mb-4">
                                         {plan?.title || `${destName} Chapter`}
                                     </h2>
 

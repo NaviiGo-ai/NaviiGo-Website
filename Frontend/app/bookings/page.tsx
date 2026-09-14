@@ -270,6 +270,10 @@ export default function BookingsPage() {
     }
   };
 
+  const handleViewDoc = (doc: TravelDoc) => {
+    alert(`Travel Document ${doc.reference} (${doc.title}) opened for inspection.`);
+  };
+
   const handleLoadMore = async () => {
     if (!lastQuery || loadingMore) return;
     setLoadingMore(true);
@@ -441,10 +445,10 @@ export default function BookingsPage() {
         </div>
 
         {/* ── MODE SELECTOR: WALLET vs. TRANSIT SEARCH ─────────────────────────── */}
-        <div className="flex items-center gap-6 mb-8 border-b border-[#EADFD4] pb-3 font-mono text-xs uppercase tracking-wider">
+        <div className="flex items-center gap-4 sm:gap-6 mb-8 border-b border-[#EADFD4] pb-3 font-mono text-xs uppercase tracking-wider overflow-x-auto no-scrollbar touch-pan-x">
           <button
             onClick={() => setActiveMainSection('wallet')}
-            className={`relative py-1 flex items-center gap-2 transition-colors ${
+            className={`relative py-1 flex items-center gap-2 transition-colors whitespace-nowrap min-h-[44px] touch-manipulation shrink-0 ${
               activeMainSection === 'wallet' ? 'text-brand-primary font-bold' : 'text-naviigo-brown/60 hover:text-naviigo-brown'
             }`}
           >
@@ -456,12 +460,12 @@ export default function BookingsPage() {
           </button>
           <button
             onClick={() => setActiveMainSection('search')}
-            className={`relative py-1 flex items-center gap-2 transition-colors ${
+            className={`relative py-1 flex items-center gap-2 transition-colors whitespace-nowrap min-h-[44px] touch-manipulation shrink-0 ${
               activeMainSection === 'search' ? 'text-brand-primary font-bold' : 'text-naviigo-brown/60 hover:text-naviigo-brown'
             }`}
           >
             <Search className="w-3.5 h-3.5" />
-            <span>Direct Transit Search</span>
+            <span>Transit Search &amp; Booking</span>
             {activeMainSection === 'search' && (
               <motion.div layoutId="activeMainSection" className="absolute -bottom-3 left-0 right-0 h-[2px] bg-brand-primary" />
             )}
@@ -472,8 +476,8 @@ export default function BookingsPage() {
         {activeMainSection === 'wallet' && (
           <div className="space-y-6">
             {/* Wallet Category Filter */}
-            <div className="flex flex-wrap items-center justify-between gap-4 bg-paper-light border border-[#EADFD4] rounded-xl p-3.5">
-              <div className="flex items-center gap-2 font-mono text-xs">
+            <div className="flex flex-wrap items-center justify-between gap-4 bg-paper-light border border-[#EADFD4] rounded-xl p-3 sm:p-3.5">
+              <div className="flex items-center gap-2 font-mono text-xs overflow-x-auto no-scrollbar touch-pan-x w-full sm:w-auto">
                 {(['all', 'upcoming', 'action', 'past'] as const).map(cat => {
                   const isActive = walletFilter === cat;
                   const labels = {
@@ -486,7 +490,7 @@ export default function BookingsPage() {
                     <button
                       key={cat}
                       onClick={() => setWalletFilter(cat)}
-                      className={`px-3 py-1 rounded text-[11px] font-bold uppercase tracking-wider transition-colors ${
+                      className={`px-3 py-1.5 rounded text-[10px] sm:text-[11px] font-bold uppercase tracking-wider transition-colors whitespace-nowrap shrink-0 min-h-[36px] touch-manipulation ${
                         isActive
                           ? 'bg-brand-primary text-white'
                           : 'bg-paper-warm text-naviigo-brown/70 hover:text-naviigo-brown border border-[#EADFD4]'
@@ -519,17 +523,16 @@ export default function BookingsPage() {
                 </p>
                 <button
                   onClick={() => setActiveMainSection('search')}
-                  className="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-naviigo-brown hover:bg-brand-primary text-white font-mono text-xs font-bold uppercase tracking-wider transition-colors shadow-sm"
+                  className="px-6 py-3 rounded-lg bg-brand-primary text-white font-mono text-xs uppercase font-bold tracking-wider hover:bg-brand-primary/90 transition-colors shadow-sm"
                 >
-                  <span>Search Transit & Stay Dispatch</span>
-                  <span>→</span>
+                  Explore Transit Corridors ➔
                 </button>
               </div>
             ) : (
               <div className="space-y-4">
                 {filteredWalletDocs.map(doc => {
-                  const isAction = doc.category === 'action_required';
                   const isUpcoming = doc.category === 'upcoming';
+                  const isAction = doc.category === 'action_required';
                   return (
                     <div
                       key={doc.id}
@@ -578,25 +581,27 @@ export default function BookingsPage() {
 
                         <div>
                           <div className="font-mono text-xs font-bold text-naviigo-brown">{doc.date}</div>
-                          <div className="font-mono text-[11px] text-naviigo-brown/60 mt-0.5">{doc.time}</div>
+                          <div className="font-mono text-[10px] text-naviigo-brown/60">{doc.time}</div>
                         </div>
 
                         <div>
-                          <div className="font-mono text-xs text-naviigo-brown font-medium">{doc.seatOrRoom}</div>
-                          <div className="font-mono text-xs font-bold text-brand-primary mt-0.5">{doc.amount} Total</div>
+                          <div className="font-mono text-xs font-bold text-brand-primary">{doc.amount}</div>
+                          {doc.seatOrRoom && (
+                            <div className="font-mono text-[10px] text-naviigo-brown/60 uppercase">{doc.seatOrRoom}</div>
+                          )}
                         </div>
 
-                        <div className="flex items-center gap-2 pt-2 md:pt-0 border-t md:border-t-0 border-[#EADFD4]">
+                        <div className="flex justify-end">
                           {isAction ? (
                             <button
-                              onClick={() => alert(`Verification Dossier for ${doc.reference} opened.`)}
+                              onClick={() => handleViewDoc(doc)}
                               className="px-4 py-2 bg-brand-primary text-white font-mono text-xs font-bold uppercase tracking-wider rounded hover:bg-brand-primary/90 transition-colors shadow-sm"
                             >
                               Resolve Action ➔
                             </button>
                           ) : (
                             <button
-                              onClick={() => alert(`Travel Document ${doc.reference} rendered for inspection.`)}
+                              onClick={() => handleViewDoc(doc)}
                               className="px-4 py-2 bg-paper-warm text-naviigo-brown border border-[#EADFD4] hover:border-brand-primary/40 font-mono text-xs font-bold uppercase tracking-wider rounded transition-colors"
                             >
                               View Document ➔
@@ -616,8 +621,8 @@ export default function BookingsPage() {
         {activeMainSection === 'search' && (
           <div>
             {/* Transit Category Tabs */}
-            <div className="flex justify-center mb-6">
-              <div className="inline-flex items-center p-1 bg-paper-light border border-[#EADFD4] rounded-lg shadow-sm">
+            <div className="flex justify-center mb-6 overflow-x-auto no-scrollbar touch-pan-x -mx-4 px-4 sm:mx-0 sm:px-0">
+              <div className="inline-flex items-center p-1 bg-paper-light border border-[#EADFD4] rounded-lg shadow-sm shrink-0">
                 {tabConfig.map(t => {
                   const isActive = activeTab === t.id;
                   const Icon = t.icon;
@@ -625,7 +630,7 @@ export default function BookingsPage() {
                     <button
                       key={t.id}
                       onClick={() => setActiveTab(t.id)}
-                      className={`relative flex items-center gap-2 px-5 py-2 rounded font-mono text-xs uppercase tracking-wider font-bold transition-all ${
+                      className={`relative flex items-center gap-1.5 sm:gap-2 px-3 sm:px-5 py-2 rounded font-mono text-[11px] sm:text-xs uppercase tracking-wider font-bold transition-all min-h-[40px] touch-manipulation whitespace-nowrap ${
                         isActive ? 'bg-brand-primary text-white shadow-sm' : 'text-naviigo-brown/70 hover:text-naviigo-brown hover:bg-paper-warm'
                       }`}
                     >

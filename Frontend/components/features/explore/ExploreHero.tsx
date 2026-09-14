@@ -42,7 +42,7 @@ export const ExploreHero = memo(({
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center mb-16 sm:mb-20">
           {/* Left Column: Monumental Headline crossing near the image edge */}
           <div className="lg:col-span-6 z-10">
-            <h1 className="font-display font-black text-4xl sm:text-6xl md:text-7xl lg:text-8xl leading-[0.92] tracking-tightest uppercase text-naviigo-brown mb-6">
+            <h1 className="font-display font-black text-3xl sm:text-6xl md:text-7xl lg:text-8xl leading-[0.94] sm:leading-[0.92] tracking-tightest uppercase text-naviigo-brown mb-6">
               WHERE DO
               <span className="block text-brand-primary">YOU WANT</span>
               <span className="block">TO DISAPPEAR</span>
@@ -68,12 +68,12 @@ export const ExploreHero = memo(({
                   placeholder="Start typing a place, region, or landscape..."
                   value={searchQuery}
                   onChange={(e) => onSearchChange(e.target.value)}
-                  className="w-full bg-transparent border-none outline-none font-display font-bold text-base sm:text-xl md:text-2xl text-naviigo-brown placeholder:text-naviigo-brown/30 placeholder:font-sans placeholder:font-light"
+                  className="w-full bg-transparent border-none outline-none font-display font-bold text-base sm:text-xl md:text-2xl text-naviigo-brown placeholder:text-naviigo-brown/30 placeholder:font-sans placeholder:font-light min-h-[44px]"
                 />
                 {searchQuery ? (
                   <button
                     onClick={() => onSearchChange('')}
-                    className="ml-2 text-xs font-mono text-naviigo-brown/50 hover:text-brand-primary uppercase shrink-0 px-2 py-1"
+                    className="ml-2 text-xs font-mono text-naviigo-brown/50 hover:text-brand-primary uppercase shrink-0 px-2 py-2 min-h-[44px] flex items-center justify-center touch-manipulation"
                     title="Clear search"
                   >
                     <X className="w-4 h-4" />
@@ -87,7 +87,7 @@ export const ExploreHero = memo(({
 
           {/* Right Column: 60% Visual Anchor (Asymmetric Destination Imagery) */}
           <div className="lg:col-span-6 relative">
-            <div className="relative aspect-[4/3] sm:aspect-[16/11] rounded-3xl overflow-hidden shadow-2xl shadow-naviigo-brown/15 border border-[#EADFD4] group">
+            <div className="relative aspect-[4/3] sm:aspect-[16/11] rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl shadow-naviigo-brown/15 border border-[#EADFD4] group">
               <Image
                 src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1600&q=85"
                 alt="Nubra Valley High Pass"
@@ -99,12 +99,12 @@ export const ExploreHero = memo(({
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
 
               {/* Geographic Plate Overlay */}
-              <div className="absolute bottom-6 left-6 right-6 text-white flex items-end justify-between">
+              <div className="absolute bottom-5 sm:bottom-6 left-5 sm:left-6 right-5 sm:right-6 text-white flex items-end justify-between">
                 <div>
                   <span className="font-mono text-[10px] tracking-widest uppercase text-brand-secondary font-bold block mb-1">
                     FEATURED HORIZON · 3,500M ALTITUDE
                   </span>
-                  <div className="font-display font-black text-xl sm:text-3xl uppercase tracking-tight">
+                  <div className="font-display font-black text-lg sm:text-3xl uppercase tracking-tight">
                     Nubra &amp; Pangong Tso
                   </div>
                   <div className="font-mono text-xs text-white/80 mt-0.5">
@@ -132,7 +132,7 @@ export const ExploreHero = memo(({
             </span>
           </div>
 
-          <div className="flex flex-wrap items-center gap-x-6 gap-y-3 font-mono text-xs sm:text-sm tracking-wider uppercase">
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 font-mono text-xs sm:text-sm tracking-wider uppercase">
             {categories.map((c) => {
               const isActive = activeCategory === c;
               const count = categoryCounts[c] ?? 0;
@@ -142,7 +142,7 @@ export const ExploreHero = memo(({
                 <button
                   key={c}
                   onClick={() => onSelectCategory(c)}
-                  className={`group relative py-1 transition-all duration-200 flex items-center gap-2 ${
+                  className={`group relative py-2.5 transition-all duration-200 flex items-center gap-2 min-h-[44px] touch-manipulation ${
                     isActive
                       ? 'text-brand-primary font-bold'
                       : 'text-naviigo-brown/70 hover:text-naviigo-brown'
