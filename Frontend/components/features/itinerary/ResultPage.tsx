@@ -989,28 +989,75 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                             </div>
                         )}
 
-                        {/* Hotels */}
+                        {/* Hotels & Stays */}
                         {data.hotels && data.hotels.length > 0 && (
                             <div>
-                                <h2 className="text-lg font-bold text-muted-900 dark:text-white mb-4">🏨 Stay Options</h2>
+                                <div className="flex items-baseline justify-between mb-4 border-b border-[#EADFD4] pb-2">
+                                    <h3 className="font-mono text-xs font-bold uppercase tracking-widest text-brand-primary flex items-center gap-2">
+                                        <span>CURATED HOSPITALITY</span>
+                                    </h3>
+                                    <span className="font-mono text-[10px] text-naviigo-brown/50">STAY OPTIONS ({data.hotels.length})</span>
+                                </div>
+                                <h2 className="font-display font-black text-2xl uppercase tracking-tight text-naviigo-brown mb-4">
+                                    🏨 Stay Options
+                                </h2>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     {data.hotels.map((h: any, i: number) => (
-                                        <motion.div key={`hotel-card-${i}-${h.id || h.name || 'item'}`} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
+                                        <motion.div
+                                            key={`hotel-card-${i}-${h.id || h.name || 'item'}`}
+                                            initial={{ opacity: 0, y: 16 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ delay: i * 0.05 }}
                                             onClick={(e) => { e.stopPropagation(); router.push(itineraryPlaceHref('hotel', destId, h)); }}
-                                            className="bg-white dark:bg-muted-900 rounded-2xl overflow-hidden border border-muted-100 dark:border-muted-800 shadow-sm hover:shadow-md transition-all cursor-pointer hover:-tranmuted-y-1">
-                                            <div className="relative h-32">
-                                                <PlaceImage name={h.name} city={destName} className="absolute inset-0 w-full h-full" asBackground />
-                                                <div className="absolute bottom-2 left-2 flex gap-1"><span className="text-[10px] bg-black/60 text-white backdrop-blur px-2 py-0.5 rounded-full font-medium">{h.type}</span></div>
-                                                <div className="absolute top-2 right-2 text-[10px] font-bold text-white bg-black/50 backdrop-blur px-1.5 py-0.5 rounded">{h.priceRange}</div>
-                                            </div>
-                                            <div className="p-3">
-                                                <div className="flex items-start justify-between mb-1">
-                                                    <h3 className="font-bold text-muted-900 dark:text-white text-sm">{h.name}</h3>
-                                                    <span className="text-xs font-bold text-jungle-green-600 bg-jungle-green-50 dark:bg-jungle-green-500/10 px-1.5 py-0.5 rounded flex items-center gap-0.5">⭐ {h.rating}</span>
+                                            className="group bg-paper-light rounded-2xl overflow-hidden border border-[#EADFD4] shadow-sm hover:border-brand-primary/40 hover:shadow-md transition-all cursor-pointer flex flex-col justify-between"
+                                        >
+                                            <div className="relative h-40 bg-paper-warm overflow-hidden">
+                                                <PlaceImage name={h.name} city={destName} className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" asBackground />
+                                                <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent pointer-events-none" />
+                                                <div className="absolute top-2.5 left-2.5">
+                                                    <span className="font-mono text-[10px] font-bold uppercase bg-paper-warm/95 text-naviigo-brown px-2 py-0.5 rounded-full shadow-xs">
+                                                        {h.type || 'Hotel'}
+                                                    </span>
                                                 </div>
-                                                <p className="text-xs text-muted-500 dark:text-muted-400 line-clamp-2 mb-2">{h.desc}</p>
-                                                <div className="flex gap-1 flex-wrap">
-                                                    {h.amenities?.slice(0, 3).map((a: string, aIdx: number) => <span key={`amenity-${i}-${aIdx}`} className="text-[9px] text-muted-500 bg-muted-100 dark:bg-muted-800 dark:text-muted-400 px-1.5 py-0.5 rounded">{a}</span>)}
+                                                {h.priceRange && (
+                                                    <div className="absolute top-2.5 right-2.5">
+                                                        <span className="font-mono text-[11px] font-bold text-white bg-black/60 backdrop-blur-md px-2 py-0.5 rounded-md shadow-xs">
+                                                            {h.priceRange}
+                                                        </span>
+                                                    </div>
+                                                )}
+                                                <div className="absolute bottom-2.5 left-3 right-3 text-white">
+                                                    <h3 className="font-display font-bold text-base uppercase leading-tight line-clamp-1">
+                                                        {h.name}
+                                                    </h3>
+                                                </div>
+                                            </div>
+                                            <div className="p-4 flex-1 flex flex-col justify-between">
+                                                <div>
+                                                    <div className="flex items-center justify-between gap-2 mb-2">
+                                                        <span className="font-mono text-[11px] font-bold bg-amber-500/15 text-amber-800 border border-amber-500/25 px-2 py-0.5 rounded-full flex items-center gap-1 shadow-xs">
+                                                            ★ {h.rating || '4.5'}
+                                                        </span>
+                                                        <span className="font-mono text-[10px] text-naviigo-brown/50">Verified Stay</span>
+                                                    </div>
+                                                    <p className="font-sans text-xs text-naviigo-brown/75 line-clamp-2 leading-relaxed mb-3">
+                                                        {h.desc}
+                                                    </p>
+                                                    {h.amenities && h.amenities.length > 0 && (
+                                                        <div className="flex gap-1.5 flex-wrap mb-3">
+                                                            {h.amenities.slice(0, 3).map((a: string, aIdx: number) => (
+                                                                <span key={`amenity-${i}-${aIdx}`} className="font-mono text-[10px] text-naviigo-brown/70 bg-paper-warm border border-[#EADFD4] px-2 py-0.5 rounded-md">
+                                                                    {a}
+                                                                </span>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <div className="flex items-center justify-between font-mono text-[10px] text-naviigo-brown/50 pt-2.5 border-t border-[#EADFD4]">
+                                                    <span>{h.priceRange || 'Standard Rate'}</span>
+                                                    <span className="text-brand-primary font-bold group-hover:underline flex items-center gap-1">
+                                                        Book Stay →
+                                                    </span>
                                                 </div>
                                             </div>
                                         </motion.div>
@@ -1022,24 +1069,39 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                         {/* Hidden Gems */}
                         {hiddenGems.length > 0 && (
                             <div>
-                                <h2 className="text-lg font-bold text-muted-900 dark:text-white mb-4">💎 Local Hidden Gems</h2>
+                                <div className="flex items-baseline justify-between mb-4 border-b border-[#EADFD4] pb-2">
+                                    <h3 className="font-mono text-xs font-bold uppercase tracking-widest text-brand-primary flex items-center gap-2">
+                                        <span>SECRET SPOTS</span>
+                                    </h3>
+                                    <span className="font-mono text-[10px] text-naviigo-brown/50">UNMAPPED ({hiddenGems.length})</span>
+                                </div>
+                                <h2 className="font-display font-black text-2xl uppercase tracking-tight text-naviigo-brown mb-4">
+                                    💎 Local Hidden Gems
+                                </h2>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     {hiddenGems.map((g, i) => (
-                                        <motion.div key={`gem-card-${i}-${g.placeId || g.name || 'item'}`} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
-                                            className="bg-muted-50 dark:bg-muted-800/50 rounded-2xl p-4 border border-muted-100 dark:border-muted-800">
-                                            <div className="flex gap-3">
+                                        <motion.div
+                                            key={`gem-card-${i}-${g.placeId || g.name || 'item'}`}
+                                            initial={{ opacity: 0, y: 16 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ delay: i * 0.05 }}
+                                            className="group bg-paper-light border border-[#EADFD4] rounded-2xl p-4 shadow-sm hover:border-brand-primary/40 hover:shadow-md transition-all"
+                                        >
+                                            <div className="flex gap-3.5">
                                                 <PlaceImage
                                                     name={g.name}
                                                     city={destName}
                                                     fallbackUrl={g.photo}
-                                                    className="w-16 h-16 rounded-xl shrink-0"
+                                                    className="w-16 h-16 rounded-xl shrink-0 object-cover border border-[#EADFD4]"
                                                     asBackground
                                                     width={200}
                                                 />
                                                 <div className="flex-1 min-w-0">
-                                                    <h3 className="font-bold text-muted-900 dark:text-white text-sm line-clamp-1">{g.name}</h3>
-                                                    <div className="text-xs text-jungle-green-600 font-medium mb-1">{g.type}</div>
-                                                    <div className="text-xs text-muted-500">{g.vicinity}</div>
+                                                    <h3 className="font-display font-bold text-base uppercase text-naviigo-brown line-clamp-1 group-hover:text-brand-primary transition-colors">
+                                                        {g.name}
+                                                    </h3>
+                                                    <div className="font-mono text-[11px] text-brand-primary font-bold uppercase mb-1">{g.type}</div>
+                                                    <div className="font-sans text-xs text-naviigo-brown/70 line-clamp-1">{g.vicinity}</div>
                                                 </div>
                                             </div>
                                         </motion.div>
@@ -1051,13 +1113,30 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                         {/* Local Insider Tips */}
                         {insiderTips.length > 0 && (
                             <div>
-                                <h2 className="text-lg font-bold text-muted-900 dark:text-white mb-4">🧠 Local Insider Tips</h2>
-                                <div className="bg-gradient-to-br from-marigold-50 to-saffron-50 dark:from-marigold-900/10 dark:to-saffron-900/10 border border-marigold-100 dark:border-marigold-500/20 rounded-2xl p-5 space-y-3">
+                                <div className="flex items-baseline justify-between mb-4 border-b border-[#EADFD4] pb-2">
+                                    <h3 className="font-mono text-xs font-bold uppercase tracking-widest text-brand-primary flex items-center gap-2">
+                                        <span>LOCAL INSIDER KNOWLEDGE</span>
+                                    </h3>
+                                    <span className="font-mono text-[10px] text-naviigo-brown/50">FIELD INTEL</span>
+                                </div>
+                                <h2 className="font-display font-black text-2xl uppercase tracking-tight text-naviigo-brown mb-4">
+                                    🧠 Local Insider Tips
+                                </h2>
+                                <div className="bg-paper-light border border-[#EADFD4] rounded-3xl p-6 sm:p-8 shadow-sm space-y-4">
                                     {insiderTips.map((tip, i) => (
-                                        <motion.div key={`insider-tip-${i}`} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.08 }}
-                                            className="flex gap-3 items-start">
-                                            <div className="w-6 h-6 rounded-full bg-marigold-100 dark:bg-marigold-500/20 flex items-center justify-center flex-shrink-0 mt-0.5 text-xs">{i + 1}</div>
-                                            <p className="text-sm text-muted-700 dark:text-muted-300 leading-relaxed">{tip}</p>
+                                        <motion.div
+                                            key={`insider-tip-${i}`}
+                                            initial={{ opacity: 0, x: -8 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            transition={{ delay: i * 0.08 }}
+                                            className="flex gap-3.5 items-start p-4 rounded-2xl bg-paper-warm/70 border border-[#EADFD4]/80 hover:border-brand-primary/30 transition-colors"
+                                        >
+                                            <div className="w-7 h-7 rounded-full bg-brand-primary/10 border border-brand-primary/30 text-brand-primary font-mono font-bold text-xs flex items-center justify-center shrink-0 mt-0.5 shadow-xs">
+                                                {i + 1}
+                                            </div>
+                                            <p className="font-sans text-sm text-naviigo-brown font-medium leading-relaxed">
+                                                {tip}
+                                            </p>
                                         </motion.div>
                                     ))}
                                 </div>
@@ -1067,30 +1146,39 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                         {/* Travel Tips from AI */}
                         {data.travelTips && data.travelTips.length > 0 && (
                             <div>
-                                <h2 className="text-lg font-bold text-muted-900 dark:text-white mb-4">🧭 Travel Tips from Locals</h2>
-                                <div className="bg-white dark:bg-muted-900 rounded-2xl border border-muted-100 dark:border-muted-800 p-5 shadow-sm space-y-3">
+                                <div className="flex items-baseline justify-between mb-4 border-b border-[#EADFD4] pb-2">
+                                    <h3 className="font-mono text-xs font-bold uppercase tracking-widest text-brand-primary flex items-center gap-2">
+                                        <span>TRAVEL PROTOCOLS</span>
+                                    </h3>
+                                    <span className="font-mono text-[10px] text-naviigo-brown/50">REGIONAL ETIQUETTE</span>
+                                </div>
+                                <h2 className="font-display font-black text-2xl uppercase tracking-tight text-naviigo-brown mb-4">
+                                    🧭 Travel Tips from Locals
+                                </h2>
+                                <div className="bg-paper-light border border-[#EADFD4] rounded-3xl p-6 sm:p-8 shadow-sm space-y-3.5">
                                     {data.travelTips.map((tip: string, i: number) => (
-                                        <div key={`travel-tip-${i}`} className="flex gap-3 items-start">
-                                            <span className="text-jungle-green-500 font-bold text-sm mt-0.5">💡</span>
-                                            <p className="text-sm text-muted-600 dark:text-muted-400 leading-relaxed">{tip}</p>
+                                        <div key={`travel-tip-${i}`} className="flex gap-3.5 items-start p-3.5 rounded-xl bg-paper-warm/50 border border-[#EADFD4]/60">
+                                            <span className="text-brand-primary font-bold text-base mt-0.5">✦</span>
+                                            <p className="font-sans text-sm text-naviigo-brown/85 leading-relaxed font-normal">{tip}</p>
                                         </div>
                                     ))}
                                 </div>
                             </div>
                         )}
 
-
                         {generatedData && (
-                            <div className="flex items-center gap-2 text-xs text-muted-400 bg-muted-50 dark:bg-muted-800/50 rounded-xl px-4 py-3 border border-muted-100 dark:border-muted-800">
-                                <span>✨</span>
-                                <span>This itinerary was crafted by the <strong className="text-jungle-green-500">NaviiGo Personalization Engine</strong> based on your preferences, browsing behavior, and real traveler data.</span>
+                            <div className="flex items-center gap-3.5 text-xs text-naviigo-brown/80 bg-paper-light border border-[#EADFD4] rounded-2xl p-4 sm:p-5 shadow-xs">
+                                <span className="w-8 h-8 rounded-xl bg-brand-primary/10 border border-brand-primary/20 text-brand-primary flex items-center justify-center shrink-0 text-base">✨</span>
+                                <span className="font-sans leading-relaxed">
+                                    This bespoke itinerary was crafted by the <strong className="font-semibold text-brand-primary">NaviiGo Personalization Engine</strong> based on your preferences, browsing behavior, and real traveler field data.
+                                </span>
                             </div>
                         )}
                     </div>
 
                     {/* Sticky Map */}
                     <div className="w-full max-w-full lg:w-[400px] lg:sticky lg:top-[140px] lg:self-start">
-                        <div className="h-[350px] max-h-[calc(100vh-200px)] lg:h-[500px] lg:max-h-[calc(100vh-200px)] rounded-2xl overflow-hidden border border-muted-100 dark:border-muted-800 shadow-sm">
+                        <div className="h-[350px] max-h-[calc(100vh-200px)] lg:h-[500px] lg:max-h-[calc(100vh-200px)] rounded-2xl overflow-hidden border border-[#EADFD4] shadow-sm bg-paper-light">
                             <ItineraryMap pins={mapPins} center={data.mapCenter} zoom={10} className="w-full h-full" />
                         </div>
                     </div>
