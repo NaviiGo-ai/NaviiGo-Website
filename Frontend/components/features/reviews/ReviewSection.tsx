@@ -132,15 +132,15 @@ export default function ReviewSection({ destId, destName }: ReviewSectionProps) 
         <section className="mt-16 mb-8">
             <div className="flex items-center justify-between mb-8">
                 <div>
-                    <h2 className="text-2xl md:text-3xl font-bold text-muted-900 dark:text-white flex items-center gap-2">
-                        <MessageSquare className="w-6 h-6 text-saffron-500" /> Traveler Reviews
+                    <h2 className="text-2xl md:text-3xl font-display font-bold text-naviigo-brown flex items-center gap-2 uppercase tracking-tight">
+                        <MessageSquare className="w-6 h-6 text-brand-primary" /> Traveler Reviews
                     </h2>
-                    <p className="text-sm text-muted-500 mt-1">{avgRating.count > 0 ? `${avgRating.count} reviews · ${avgRating.avg} average` : 'No reviews yet'}</p>
+                    <p className="text-sm font-sans text-naviigo-brown/60 mt-1">{avgRating.count > 0 ? `${avgRating.count} reviews · ${avgRating.avg} average` : 'No reviews recorded yet for this route'}</p>
                 </div>
                 {user && (
                     <button
                         onClick={() => setShowForm(!showForm)}
-                        className="px-4 py-2 bg-saffron-500 text-white rounded-xl text-sm font-semibold hover:bg-saffron-600 transition-colors shadow-lg shadow-saffron-500/20"
+                        className="px-4 py-2 bg-brand-primary text-white rounded-xl text-xs font-mono uppercase font-bold hover:bg-brand-primary/90 transition-colors shadow-sm"
                     >
                         Write a Review
                     </button>
@@ -150,21 +150,21 @@ export default function ReviewSection({ destId, destName }: ReviewSectionProps) 
             {/* Rating Summary */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                 {/* Average rating */}
-                <div className="flex flex-col items-center justify-center p-6 bg-white/60 dark:bg-white/5 backdrop-blur-sm rounded-2xl border border-muted-200 dark:border-white/10">
-                    <div className="text-5xl font-bold text-muted-900 dark:text-white mb-2">{avgRating.count > 0 ? avgRating.avg : '—'}</div>
+                <div className="flex flex-col items-center justify-center p-6 bg-paper-light rounded-2xl border border-[#EADFD4] shadow-sm">
+                    <div className="text-5xl font-display font-black text-naviigo-brown mb-2">{avgRating.count > 0 ? avgRating.avg : '—'}</div>
                     <StarRating rating={Math.round(avgRating.avg)} size="md" />
-                    <p className="text-sm text-muted-500 mt-1">{avgRating.count} reviews</p>
+                    <p className="text-xs font-mono uppercase text-naviigo-brown/60 mt-2">{avgRating.count} verified reviews</p>
                 </div>
 
                 {/* Distribution */}
-                <div className="col-span-2 p-6 bg-white/60 dark:bg-white/5 backdrop-blur-sm rounded-2xl border border-muted-200 dark:border-white/10">
+                <div className="col-span-2 p-6 bg-paper-light rounded-2xl border border-[#EADFD4] shadow-sm flex flex-col justify-center">
                     {distribution.map(d => (
                         <div key={d.star} className="flex items-center gap-3 mb-1.5">
-                            <span className="text-sm font-medium text-muted-600 dark:text-muted-400 w-6">{d.star}★</span>
-                            <div className="flex-1 h-2.5 bg-muted-200 dark:bg-muted-700 rounded-full overflow-hidden">
-                                <div className="h-full bg-saffron-400 rounded-full transition-all duration-500" style={{ width: `${d.pct}%` }} />
+                            <span className="text-xs font-mono font-bold text-naviigo-brown w-6">{d.star}★</span>
+                            <div className="flex-1 h-2 bg-paper-warm border border-[#EADFD4] rounded-full overflow-hidden">
+                                <div className="h-full bg-brand-primary rounded-full transition-all duration-500" style={{ width: `${d.pct}%` }} />
                             </div>
-                            <span className="text-xs text-muted-500 w-8">{d.pct}%</span>
+                            <span className="text-xs font-mono text-naviigo-brown/60 w-8">{d.pct}%</span>
                         </div>
                     ))}
                 </div>
@@ -176,10 +176,10 @@ export default function ReviewSection({ destId, destName }: ReviewSectionProps) 
                     <button
                         key={s}
                         onClick={() => setSortBy(s)}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                        className={`px-3.5 py-1.5 rounded-lg font-mono text-xs uppercase font-bold tracking-wider transition-colors ${
                             sortBy === s
-                                ? 'bg-saffron-500 text-white'
-                                : 'bg-muted-100 dark:bg-muted-800 text-muted-600 dark:text-muted-400 hover:bg-muted-200 dark:hover:bg-muted-700'
+                                ? 'bg-brand-primary text-white shadow-sm'
+                                : 'bg-paper-light border border-[#EADFD4] text-naviigo-brown/70 hover:text-naviigo-brown'
                         }`}
                     >
                         {s === 'helpful' ? 'Most Helpful' : s === 'recent' ? 'Most Recent' : 'Highest Rated'}
