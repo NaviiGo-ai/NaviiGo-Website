@@ -103,18 +103,18 @@ export default function ItineraryMap({
             attributionControl: true,
         });
 
-        // Primary: CARTO Voyager (Powered by OpenStreetMap data, high CDN availability, warm aesthetic)
-        const primaryTileUrl = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
-        const fallbackTileUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+        // OpenStreetMap Standard Tile Layer (Clean, official OSM, zero watermarks)
+        const primaryTileUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+        const fallbackTileUrl = 'https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png';
 
         const tileLayer = L.tileLayer(primaryTileUrl, {
-            subdomains: 'abcd',
+            subdomains: ['a', 'b', 'c'],
             maxZoom: 19,
-            attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a> contributors, © <a href="https://carto.com/attributions" target="_blank" rel="noreferrer">CARTO</a>',
+            attribution: '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noreferrer">OpenStreetMap</a> contributors',
         }).addTo(map);
 
         tileLayer.on('tileerror', () => {
-            // Fall back to OSM standard tiles if CARTO has any localized network issues
+            // Fall back to OSM Humanitarian CDN if standard OSM has any network hiccups
             tileLayer.setUrl(fallbackTileUrl);
         });
 

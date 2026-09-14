@@ -89,6 +89,30 @@ img, video, canvas, svg {
   height: auto;
 }
 
+/* ── Leaflet Map Tile Fixes (Prevent global img max-width/height from collapsing tiles) ── */
+.leaflet-container img {
+  max-width: none !important;
+  max-height: none !important;
+}
+
+.leaflet-pane img,
+.leaflet-tile,
+.leaflet-marker-icon,
+.leaflet-marker-shadow,
+.leaflet-tile-container img {
+  max-width: none !important;
+  max-height: none !important;
+}
+
+.leaflet-tile {
+  visibility: inherit !important;
+}
+
+.leaflet-container {
+  font-family: inherit;
+  background-color: #f2ede7 !important;
+}
+
 /* ── Mobile Touch Optimizations ── */
 * {
   -webkit-tap-highlight-color: transparent;
