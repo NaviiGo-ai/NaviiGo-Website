@@ -91,6 +91,54 @@ class PaymentError(AppError):
     user_message = "The payment could not be completed."
 
 
+class WalletError(AppError):
+    code = "WALLET_ERROR"
+    status_code = 400
+    user_message = "Wallet transaction could not be processed."
+
+
+class InsufficientBalanceError(WalletError):
+    code = "INSUFFICIENT_WALLET_BALANCE"
+    status_code = 400
+    user_message = "Insufficient Naviigo Credit balance."
+
+
+class InvalidCouponError(WalletError):
+    code = "INVALID_COUPON"
+    status_code = 400
+    user_message = "Invalid or unrecognized coupon code."
+
+
+class CouponExpiredError(WalletError):
+    code = "COUPON_EXPIRED"
+    status_code = 400
+    user_message = "This coupon code has expired."
+
+
+class CouponUsageLimitError(WalletError):
+    code = "COUPON_USAGE_LIMIT_EXCEEDED"
+    status_code = 400
+    user_message = "This coupon has reached its maximum usage limit."
+
+
+class CouponMinBookingAmountError(WalletError):
+    code = "COUPON_MIN_BOOKING_AMOUNT"
+    status_code = 400
+    user_message = "Booking amount does not meet the minimum requirement for this coupon."
+
+
+class WalletLockedError(WalletError):
+    code = "WALLET_LOCKED"
+    status_code = 403
+    user_message = "Your wallet account is temporarily locked. Please contact support."
+
+
+class DuplicateTransactionError(WalletError):
+    code = "DUPLICATE_TRANSACTION"
+    status_code = 409
+    user_message = "This transaction has already been processed."
+
+
 class BookingFailedError(AppError):
     code = "BOOKING_FAILED"
     status_code = 502

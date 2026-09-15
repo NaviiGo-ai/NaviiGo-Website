@@ -121,3 +121,25 @@ class ActorType(str, enum.Enum):
     USER = "user"
     AI = "ai"
     SYSTEM = "system"
+
+
+# ── Wallet & Ledger ──────────────────────────────────────────────────────────
+class WalletTxType(str, enum.Enum):
+    CREDIT = "CREDIT"
+    DEBIT = "DEBIT"
+    REFUND = "REFUND"
+    REWARD = "REWARD"
+    ADJUSTMENT = "ADJUSTMENT"
+
+
+class WalletTxStatus(str, enum.Enum):
+    PENDING = "PENDING"
+    COMPLETED = "COMPLETED"
+    FAILED = "FAILED"
+    REVERSED = "REVERSED"
+
+
+class CouponDiscountType(str, enum.Enum):
+    PERCENTAGE = "PERCENTAGE"
+    FIXED = "FIXED"
+

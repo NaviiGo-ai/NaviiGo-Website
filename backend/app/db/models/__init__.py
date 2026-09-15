@@ -28,6 +28,12 @@ from app.db.models.payment import (  # noqa: F401
 )
 from app.db.models.review import Review  # noqa: F401
 from app.db.models.event import TripEvent, UserEvent  # noqa: F401
+from app.db.models.wallet import (  # noqa: F401
+    Coupon,
+    CouponRedemption,
+    WalletAccount,
+    WalletTransaction,
+)
 
 __all__ = [
     "Base",
@@ -49,4 +55,8 @@ __all__ = [
     "Review",
     "TripEvent",
     "UserEvent",
+    "WalletAccount",
+    "WalletTransaction",
+    "Coupon",
+    "CouponRedemption",
 ]

@@ -19,7 +19,7 @@ load_dotenv(dotenv_path=_backend_dir / ".env")
 load_dotenv(dotenv_path=_base_dir / ".env")
 
 from routers import itinerary, chat, recommendations, explore, weather, transport, taste, places, admin
-from app.api import bookings, payments
+from app.api import bookings, payments, wallet
 from app.core.errors import register_app_error_handler
 
 
@@ -74,6 +74,7 @@ app.include_router(places.router,          prefix="/api/places",          tags=[
 app.include_router(admin.router,           prefix="/api/admin",           tags=["Admin"])
 app.include_router(bookings.router,        prefix="/api/bookings",        tags=["Bookings"])
 app.include_router(payments.router,        prefix="/api/payments",        tags=["Payments"])
+app.include_router(wallet.router,          prefix="/api/wallet",          tags=["Wallet"])
 
 
 @app.get("/")
