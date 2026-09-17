@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import DayViewPage from '@/components/features/itinerary/DayViewPage';
 import { getItineraryByUUID } from '@/lib/firestore';
+import { DEST_DATA } from '@/app/itinerary/data';
 
 /**
  * /itinerary/plan/[uuid]/day/[dayNumber]
@@ -14,9 +15,10 @@ import { getItineraryByUUID } from '@/lib/firestore';
  *
  * Guaranteed reliability:
  * 1. Fast-path: checks sessionStorage cache for instant 0ms rendering on client navigation
- * 2. Firestore fetch fallback for direct URLs, refresh, or external sharing
- * 3. 5-second timeout safeguard to prevent any infinite "Loading Day X..." lockup
- * 4. Refined editorial skeleton matching the Naviigo light paper canvas
+ * 2. Static catalog fallback: checks DEST_DATA if uuid/destKey matches known destinations (e.g. jaipur, varanasi)
+ * 3. Firestore fetch fallback for direct URLs, refresh, or external sharing
+ * 4. 5-second timeout safeguard to prevent any infinite "Loading Day X..." lockup
+ * 5. Refined editorial skeleton matching the Naviigo light paper canvas
  */
 function DayViewContent() {
     const params = useParams();
@@ -25,8 +27,8 @@ function DayViewContent() {
     const uuid = decodeURIComponent(rawUuid).trim().replace(/\s+/g, '-').toLowerCase();
     const dayNumber = parseInt(params?.dayNumber as string, 10);
 
-    const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(uuid);
-    const isInvalid = !uuid || !isValidUUID || isNaN(dayNumber) || dayNumber < 1;
+    const isValidId = /^[a-zA-Z0-9_-]{1,128}$/.test(uuid);
+    const isInvalid = !uuid || !isValidId || isNaN(dayNumber) || dayNumber < 1;
 
     const [phase, setPhase] = useState<'loading' | 'ready' | 'generating' | 'not-found' | 'slow-loading'>('loading');
     const [form, setForm] = useState<Record<string, unknown>>({});
@@ -64,14 +66,43 @@ function DayViewContent() {
             }
         }
 
-        // 2. Fallback timeout to prevent infinite spinner
+        // 2. Direct static destination fallback (e.g. /itinerary/plan/jaipur/day/1)
+        const directStatic = DEST_DATA[uuid.toLowerCase()];
+        if (directStatic && directStatic.dayPlans?.length > 0) {
+            const totalDays = directStatic.dayPlans.length;
+            if (dayNumber > totalDays) {
+                router.replace(`/itinerary/plan/${uuid}/day/1`);
+                return;
+            }
+            const defaultForm = {
+                destId: uuid,
+                destination: uuid,
+                destName: uuid.charAt(0).toUpperCase() + uuid.slice(1),
+                days: totalDays,
+                budget: 25000,
+                purpose: 'cultural',
+                group: 'solo',
+            };
+            setForm(defaultForm);
+            setGeneratedData(directStatic);
+            setPhase('ready');
+            try {
+                sessionStorage.setItem(`naviigo_plan_${uuid}`, JSON.stringify({
+                    form: defaultForm,
+                    generatedData: directStatic,
+                }));
+            } catch {}
+            return;
+        }
+
+        // 3. Fallback timeout to prevent infinite spinner
         const timer = setTimeout(() => {
             if (active && phase === 'loading') {
                 setPhase('slow-loading');
             }
         }, 5000);
 
-        // 3. Fetch from Firestore
+        // 4. Fetch from Firestore
         getItineraryByUUID(uuid).then((data) => {
             if (!active) return;
             clearTimeout(timer);
@@ -79,9 +110,17 @@ function DayViewContent() {
             if (data?.generatedData) {
                 const totalDays = data.generatedData?.dayPlans?.length ?? 0;
                 if (totalDays === 0) {
+                    const destKey = ((data.form?.destination || data.form?.destId || '') as string).toLowerCase();
+                    const staticMatch = DEST_DATA[destKey];
+                    if (staticMatch && staticMatch.dayPlans?.length > 0) {
+                        setForm(data.form || {});
+                        setGeneratedData(staticMatch);
+                        setPhase('ready');
+                        return;
+                    }
+
                     if (data.form) {
-                        setForm(data.form);
-                        setPhase('generating');
+                        router.replace(`/itinerary/plan/${uuid}`);
                     } else {
                         setPhase('not-found');
                     }
@@ -106,8 +145,28 @@ function DayViewContent() {
                     }));
                 } catch {}
             } else if (data?.form) {
-                setForm(data.form ?? {});
-                setPhase('generating');
+                const destKey = ((data.form.destination || data.form.destId || '') as string).toLowerCase();
+                const staticMatch = DEST_DATA[destKey];
+                if (staticMatch && staticMatch.dayPlans?.length > 0) {
+                    const totalDays = staticMatch.dayPlans.length;
+                    if (dayNumber > totalDays) {
+                        router.replace(`/itinerary/plan/${uuid}/day/1`);
+                        return;
+                    }
+                    setForm(data.form);
+                    setGeneratedData(staticMatch);
+                    setPhase('ready');
+                    try {
+                        sessionStorage.setItem(`naviigo_plan_${uuid}`, JSON.stringify({
+                            form: data.form,
+                            generatedData: staticMatch,
+                        }));
+                    } catch {}
+                    return;
+                }
+
+                // If generating, send to the plan page which displays live progress
+                router.replace(`/itinerary/plan/${uuid}`);
             } else {
                 setPhase('not-found');
             }

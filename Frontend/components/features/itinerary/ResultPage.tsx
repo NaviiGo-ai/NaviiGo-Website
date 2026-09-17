@@ -28,7 +28,7 @@ interface ResultPageProps {
     generatedData?: any;
     shareId?: string | null;
     isLoaded?: boolean;
-    onDayView: () => void;
+    onDayView: (day?: number, currentData?: any) => void;
     onReset: () => void;
 }
 
@@ -450,7 +450,7 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                             {/* Actions */}
                             <div className="flex flex-wrap items-center gap-4">
                                 <button
-                                    onClick={onDayView}
+                                    onClick={() => onDayView(1, data)}
                                     className="px-8 py-4 bg-brand-primary hover:bg-naviigo-brown text-white font-mono text-xs font-bold uppercase tracking-widest rounded-full shadow-lg shadow-brand-primary/20 transition-all active:scale-95 flex items-center gap-2"
                                 >
                                     <span>OPEN DAY-BY-DAY ROADBOOK</span>
@@ -559,7 +559,7 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                             </h2>
                         </div>
                         <button
-                            onClick={onDayView}
+                            onClick={() => onDayView(1, data)}
                             className="inline-flex items-center gap-2 font-mono text-xs font-bold uppercase tracking-wider text-brand-primary hover:text-naviigo-brown transition-colors"
                         >
                             Open Day-by-Day View →
@@ -571,12 +571,13 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                         <div className="absolute left-[19px] sm:left-[23px] top-6 bottom-6 w-[2px] bg-brand-primary/20 pointer-events-none" />
 
                         {data.dayPlans?.map((dp: any, idx: number) => {
-                            const formattedDay = String(dp.day || idx + 1).padStart(2, '0');
+                            const dayNum = dp.day || idx + 1;
+                            const formattedDay = String(dayNum).padStart(2, '0');
                             const actCount = dp.activities?.length || 0;
                             return (
                                 <div
                                     key={dp.day || idx}
-                                    onClick={onDayView}
+                                    onClick={() => onDayView(dayNum, data)}
                                     className="relative flex items-start gap-4 sm:gap-6 group cursor-pointer"
                                 >
                                     {/* Numbered Waypoint */}
@@ -605,21 +606,34 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                                             {dp.activities?.[0]?.desc || 'Morning arrivals, local trails, and authenticated cultural stops.'}
                                         </p>
 
-                                        {/* Activity timestamps preview */}
-                                        <div className="flex flex-wrap gap-2 pt-3 border-t border-[#EADFD4]/60">
-                                            {dp.activities?.slice(0, 3).map((a: any, aIdx: number) => (
-                                                <span
-                                                    key={aIdx}
-                                                    className="font-mono text-[11px] bg-paper-light border border-[#EADFD4] text-naviigo-brown/80 px-2.5 py-1 rounded-lg"
-                                                >
-                                                    {a.time ? `${a.time} · ` : ''}{a.name}
-                                                </span>
-                                            ))}
-                                            {actCount > 3 && (
-                                                <span className="font-mono text-[11px] text-brand-primary font-bold px-2 py-1">
-                                                    +{actCount - 3} more
-                                                </span>
-                                            )}
+                                        {/* Activity timestamps preview & direct day button */}
+                                        <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-[#EADFD4]/60">
+                                            <div className="flex flex-wrap gap-2">
+                                                {dp.activities?.slice(0, 3).map((a: any, aIdx: number) => (
+                                                    <span
+                                                        key={aIdx}
+                                                        className="font-mono text-[11px] bg-paper-light border border-[#EADFD4] text-naviigo-brown/80 px-2.5 py-1 rounded-lg"
+                                                    >
+                                                        {a.time ? `${a.time} · ` : ''}{a.name}
+                                                    </span>
+                                                ))}
+                                                {actCount > 3 && (
+                                                    <span className="font-mono text-[11px] text-brand-primary font-bold px-2 py-1">
+                                                        +{actCount - 3} more
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    onDayView(dayNum, data);
+                                                }}
+                                                className="shrink-0 inline-flex items-center gap-1.5 font-mono text-[11px] font-bold uppercase tracking-wider text-brand-primary group-hover:text-naviigo-brown hover:underline transition-colors py-1 px-2.5 rounded-lg bg-paper-light border border-[#EADFD4]"
+                                            >
+                                                <span>Open Day {formattedDay}</span>
+                                                <span>→</span>
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
@@ -1198,7 +1212,7 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                     </p>
                     <div className="flex flex-wrap items-center justify-center gap-4">
                         <button
-                            onClick={onDayView}
+                            onClick={() => onDayView(1, data)}
                             className="px-8 py-4 bg-brand-primary hover:bg-naviigo-brown text-white font-mono text-xs font-bold uppercase tracking-widest rounded-full shadow-lg shadow-brand-primary/20 transition-all active:scale-95 flex items-center gap-2"
                         >
                             <span>EXPLORE ROADBOOK</span>

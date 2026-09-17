@@ -7,6 +7,8 @@ import ResultPage from '@/components/features/itinerary/ResultPage';
 import { listenToItineraryByUUID } from '@/lib/firestore';
 
 
+import { DEST_DATA } from '@/app/itinerary/data';
+
 /**
  * /itinerary/plan/[uuid]
  *
@@ -15,7 +17,8 @@ import { listenToItineraryByUUID } from '@/lib/firestore';
  *   1. On mount: subscribe to Firestore `itineraries/{uuid}` via getItineraryByUUID
  *   2. If doc has generatedData → show ResultPage immediately
  *   3. If doc has form but no generatedData → show LoadingScreen, which calls the generate API and writes the result to Firestore (calls onDone when complete). The onSnapshot fires → ResultPage shows.
- *   4. If doc is missing completely → show 404-style message.
+ *   4. Fallback to DEST_DATA if uuid matches a known catalog destination (e.g. jaipur, varanasi)
+ *   5. If doc is missing completely → show 404-style message.
  */
 function ItineraryUUIDContent() {
     const params = useParams();
@@ -27,11 +30,11 @@ function ItineraryUUIDContent() {
     const [form, setForm] = useState<Record<string, unknown>>({});
     const [generatedData, setGeneratedData] = useState<any>(null);
 
-    // Validate UUID format on mount to prevent Firebase path injection
-    const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(uuid);
+    // Validate ID format on mount to prevent path traversal
+    const isValidId = /^[a-zA-Z0-9_-]{1,128}$/.test(uuid);
 
     useEffect(() => {
-        if (!uuid || !isValidUUID) {
+        if (!uuid || !isValidId) {
             setPhase('not-found');
             return;
         }
@@ -64,10 +67,49 @@ function ItineraryUUIDContent() {
                     return;
                 }
 
-                // If we have a form but no generatedData, we are in generating state
+                // If we have a form but no generatedData, check if it's in generating state or static
                 if (data?.form) {
+                    const destKey = ((data.form.destination || data.form.destId || '') as string).toLowerCase();
+                    const staticMatch = DEST_DATA[destKey];
+                    if (staticMatch) {
+                        setForm(data.form);
+                        setGeneratedData(staticMatch);
+                        setPhase('result');
+                        try {
+                            sessionStorage.setItem(`naviigo_plan_${uuid}`, JSON.stringify({
+                                form: data.form,
+                                generatedData: staticMatch,
+                            }));
+                        } catch {}
+                        return;
+                    }
+
                     setForm(data.form ?? {});
                     setPhase('generating');
+                    return;
+                }
+
+                // Fallback: Check if UUID itself is a known static destination
+                const directStatic = DEST_DATA[uuid.toLowerCase()];
+                if (directStatic) {
+                    const defaultForm = {
+                        destId: uuid,
+                        destination: uuid,
+                        destName: uuid.charAt(0).toUpperCase() + uuid.slice(1),
+                        days: directStatic.dayPlans?.length || 3,
+                        budget: 25000,
+                        purpose: 'cultural',
+                        group: 'solo',
+                    };
+                    setForm(defaultForm);
+                    setGeneratedData(directStatic);
+                    setPhase('result');
+                    try {
+                        sessionStorage.setItem(`naviigo_plan_${uuid}`, JSON.stringify({
+                            form: defaultForm,
+                            generatedData: directStatic,
+                        }));
+                    } catch {}
                     return;
                 }
 
@@ -77,6 +119,24 @@ function ItineraryUUIDContent() {
             } catch (err) {
                 console.warn('[UUID Page] Firestore fetch skipped/failed:', err);
                 if (!isMounted) return;
+
+                const directStatic = DEST_DATA[uuid.toLowerCase()];
+                if (directStatic) {
+                    const defaultForm = {
+                        destId: uuid,
+                        destination: uuid,
+                        destName: uuid.charAt(0).toUpperCase() + uuid.slice(1),
+                        days: directStatic.dayPlans?.length || 3,
+                        budget: 25000,
+                        purpose: 'cultural',
+                        group: 'solo',
+                    };
+                    setForm(defaultForm);
+                    setGeneratedData(directStatic);
+                    setPhase('result');
+                    return;
+                }
+
                 setPhase('not-found');
             }
         };
@@ -84,7 +144,7 @@ function ItineraryUUIDContent() {
         loadData();
 
         return () => { isMounted = false; };
-    }, [uuid, isValidUUID, rawUuid]);
+    }, [uuid, isValidId, rawUuid]);
 
     /**
      * Called by LoadingScreen when generation completes.
@@ -109,16 +169,18 @@ function ItineraryUUIDContent() {
         router.push('/itinerary');
     }, [router]);
 
-    const handleDayView = useCallback(() => {
-        if (generatedData) {
+    const handleDayView = useCallback((targetDay: number = 1, currentData?: any) => {
+        const dayToOpen = typeof targetDay === 'number' && targetDay >= 1 ? targetDay : 1;
+        const dataToSave = currentData || generatedData;
+        if (dataToSave) {
             try {
                 sessionStorage.setItem(`naviigo_plan_${uuid}`, JSON.stringify({
                     form,
-                    generatedData,
+                    generatedData: dataToSave,
                 }));
             } catch {}
         }
-        router.push(`/itinerary/plan/${uuid}/day/1`);
+        router.push(`/itinerary/plan/${uuid}/day/${dayToOpen}`);
     }, [uuid, router, form, generatedData]);
 
     if (phase === 'loading-data') {
