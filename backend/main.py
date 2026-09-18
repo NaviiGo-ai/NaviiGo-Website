@@ -18,7 +18,7 @@ load_dotenv(dotenv_path=_base_dir / ".env.local")
 load_dotenv(dotenv_path=_backend_dir / ".env")
 load_dotenv(dotenv_path=_base_dir / ".env")
 
-from routers import itinerary, chat, recommendations, explore, weather, transport, taste, places, admin
+from routers import itinerary, chat, recommendations, explore, weather, transport, taste, places, admin, analytics
 from app.api import bookings, payments, wallet
 from app.core.errors import register_app_error_handler
 
@@ -45,11 +45,25 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS — allow Next.js frontend (read from env, no wildcard in production)
+# CORS — allow Next.js frontend + Flutter Web dev server (read from env, no wildcard in production)
 _cors_origins = os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",")
+_allowed_origins = list(
+    set(
+        [
+            "http://localhost:3000",
+            "https://naviigo.in",
+            "https://www.naviigo.in",
+        ]
+        + [origin.strip() for origin in _cors_origins if origin.strip()]
+    )
+)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=list(set(["http://localhost:3000", "https://naviigo.in", "https://www.naviigo.in"] + [origin.strip() for origin in _cors_origins if origin.strip()])),
+    allow_origins=_allowed_origins,
+    # Flutter Web dev server binds to a random port (e.g. :52411).
+    # This narrow regex accepts any localhost / 127.0.0.1 port without
+    # opening production CORS to a wildcard.
+    allow_origin_regex=r'^http://(localhost|127\.0\.0\.1):\d+$',
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -71,7 +85,7 @@ app.include_router(weather.router,         prefix="/api/weather",         tags=[
 app.include_router(transport.router,       prefix="/api/transport",       tags=["Transport"])
 app.include_router(taste.router,           prefix="/api/taste",           tags=["Taste"])
 app.include_router(places.router,          prefix="/api/places",          tags=["Places"])
-app.include_router(admin.router,           prefix="/api/admin",           tags=["Admin"])
+app.include_router(admin.router,           prefix="/api/admin",           tags=["Admin"])\napp.include_router(analytics.router,       prefix="/api/analytics",       tags=["Analytics"])
 app.include_router(bookings.router,        prefix="/api/bookings",        tags=["Bookings"])
 app.include_router(payments.router,        prefix="/api/payments",        tags=["Payments"])
 app.include_router(wallet.router,          prefix="/api/wallet",          tags=["Wallet"])
