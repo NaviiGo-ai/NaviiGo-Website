@@ -81,43 +81,46 @@ function ConfirmDeleteModal({
 
 export default function SavedPage() {
   const router = useRouter();
-  const { user, signInWithGoogle } = useAuth();
-  const [savedItems, setSavedItems] = useState<SavedItineraryDoc[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { user, loading: authLoading, signInWithGoogle } = useAuth();
+  const [savedItems, setSavedItems] = useState<SavedItineraryDoc[] | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<{ id: string; title: string } | null>(null);
   const [confirmClearAll, setConfirmClearAll] = useState(false);
 
   useEffect(() => {
-    if (!user?.uid) {
-      setLoading(false);
-      return;
-    }
+    if (!user?.uid) return;
+    let active = true;
     getUserItineraries(user.uid)
       .then((items) => {
-        setSavedItems(items);
-        setLoading(false);
+        if (active) setSavedItems(items);
       })
-      .catch(() => setLoading(false));
+      .catch(() => {
+        if (active) setSavedItems([]);
+      });
+    return () => { active = false; };
   }, [user?.uid]);
 
   const handleDelete = async (id: string) => {
     if (!user?.uid) return;
     setDeletingId(id);
     await deleteItineraryFromFirestore(user.uid, id);
-    setSavedItems(prev => prev.filter(i => i.id !== id));
+    setSavedItems(prev => prev ? prev.filter(i => i.id !== id) : prev);
     setDeletingId(null);
     setConfirmDelete(null);
   };
 
   const handleClearAll = async () => {
     if (!user?.uid) return;
-    for (const item of savedItems) {
+    const toClear = savedItems ?? [];
+    for (const item of toClear) {
       await deleteItineraryFromFirestore(user.uid, item.id);
     }
     setSavedItems([]);
     setConfirmClearAll(false);
   };
+
+  const loading = authLoading || (!!user && savedItems === null);
+  const items = savedItems ?? [];
 
   const container = {
     hidden: { opacity: 0 },
@@ -142,7 +145,7 @@ export default function SavedPage() {
             <h1 className="text-3xl sm:text-5xl md:text-7xl font-extrabold tracking-tighter text-foreground font-serif">Your <span className="italic text-primary">Saved</span> Trips.</h1>
             <p className="text-muted-foreground mt-4 text-lg">Pick up right where you left off.</p>
           </div>
-          {savedItems.length > 0 && (
+          {items.length > 0 && (
             <button
               onClick={() => setConfirmClearAll(true)}
               className="hidden md:flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-muted-foreground hover:text-destructive transition-colors"
@@ -170,7 +173,7 @@ export default function SavedPage() {
         )}
 
         {/* Empty state */}
-        {user && !loading && savedItems.length === 0 && (
+        {user && !loading && items.length === 0 && (
           <div className="text-center py-20">
             <div className="text-6xl mb-4">🧳</div>
             <h3 className="text-xl font-bold text-foreground mb-2">No saved trips yet</h3>
@@ -180,9 +183,9 @@ export default function SavedPage() {
         )}
 
         {/* Trip cards */}
-        {user && !loading && savedItems.length > 0 && (
+        {user && !loading && items.length > 0 && (
           <motion.div variants={container} initial="hidden" animate="show" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {savedItems.map((saved) => {
+            {items.map((saved) => {
               const destInfo = DESTINATIONS.find(d => d.id === saved.destId);
               const imgUrl = destInfo ? resolveImgSrc(destInfo.img, 800) : '';
               const form = saved.form as any;
@@ -244,7 +247,7 @@ export default function SavedPage() {
       </div>
 
       {/* Mobile clear all FAB */}
-      {savedItems.length > 0 && (
+      {items.length > 0 && (
         <div className="md:hidden fixed bottom-6 right-6 z-40">
           <button
             onClick={() => setConfirmClearAll(true)}

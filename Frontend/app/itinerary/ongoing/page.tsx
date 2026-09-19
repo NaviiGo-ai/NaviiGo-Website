@@ -274,15 +274,14 @@ export default function OngoingTripsPage() {
                     </div>
                 )}
             </div>
-        </div>
 
-        {/* Confirm delete modal */}
-        <ConfirmDeleteModal
-            open={!!confirmDelete}
-            title={confirmDelete?.destination}
-            onConfirm={() => confirmDelete && handleDelete(confirmDelete.id)}
-            onCancel={() => setConfirmDelete(null)}
-        />
-    </div>
+            {/* Confirm delete modal */}
+            <ConfirmDeleteModal
+                open={!!confirmDelete}
+                title={confirmDelete?.destination}
+                onConfirm={() => confirmDelete && handleDelete(confirmDelete.id)}
+                onCancel={() => setConfirmDelete(null)}
+            />
+        </div>
     );
 }
