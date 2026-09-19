@@ -262,4 +262,5 @@ async def get_full_user_context(uid: str) -> Dict[str, Any]:
         "tasteVector": (ai_profile or {}).get("tasteVector", []),
         "browsingSignals": (ai_profile or {}).get("browsingSignals", {}),
         "pastDestinations": (ai_profile or {}).get("pastDestinations", []),
+        "ai_profile": ai_profile,
     }

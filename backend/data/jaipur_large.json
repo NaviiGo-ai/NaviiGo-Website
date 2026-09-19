@@ -1,0 +1,1209 @@
+{
+  "id": "jaipur_large",
+  "name": "Jaipur",
+  "description": "A vibrant synthetic testing destination with 150 POIs.",
+  "highlights": [
+    {
+      "id": "jaipur_architecture_0",
+      "name": "Jaipur Architecture Place 0",
+      "category": "Architecture",
+      "description": "A wonderful architecture experience in Jaipur.",
+      "duration": "1 hours",
+      "estimatedCost": "INR 958"
+    },
+    {
+      "id": "jaipur_architecture_1",
+      "name": "Jaipur Architecture Place 1",
+      "category": "Architecture",
+      "description": "A wonderful architecture experience in Jaipur.",
+      "duration": "3 hours",
+      "estimatedCost": "INR 844"
+    },
+    {
+      "id": "jaipur_architecture_2",
+      "name": "Jaipur Architecture Place 2",
+      "category": "Architecture",
+      "description": "A wonderful architecture experience in Jaipur.",
+      "duration": "3 hours",
+      "estimatedCost": "INR 129"
+    },
+    {
+      "id": "jaipur_architecture_3",
+      "name": "Jaipur Architecture Place 3",
+      "category": "Architecture",
+      "description": "A wonderful architecture experience in Jaipur.",
+      "duration": "2 hours",
+      "estimatedCost": "INR 674"
+    },
+    {
+      "id": "jaipur_architecture_4",
+      "name": "Jaipur Architecture Place 4",
+      "category": "Architecture",
+      "description": "A wonderful architecture experience in Jaipur.",
+      "duration": "3 hours",
+      "estimatedCost": "INR 834"
+    },
+    {
+      "id": "jaipur_architecture_5",
+      "name": "Jaipur Architecture Place 5",
+      "category": "Architecture",
+      "description": "A wonderful architecture experience in Jaipur.",
+      "duration": "2 hours",
+      "estimatedCost": "INR 475"
+    },
+    {
+      "id": "jaipur_architecture_6",
+      "name": "Jaipur Architecture Place 6",
+      "category": "Architecture",
+      "description": "A wonderful architecture experience in Jaipur.",
+      "duration": "3 hours",
+      "estimatedCost": "INR 624"
+    },
+    {
+      "id": "jaipur_architecture_7",
+      "name": "Jaipur Architecture Place 7",
+      "category": "Architecture",
+      "description": "A wonderful architecture experience in Jaipur.",
+      "duration": "3 hours",
+      "estimatedCost": "INR 251"
+    },
+    {
+      "id": "jaipur_architecture_8",
+      "name": "Jaipur Architecture Place 8",
+      "category": "Architecture",
+      "description": "A wonderful architecture experience in Jaipur.",
+      "duration": "1 hours",
+      "estimatedCost": "INR 289"
+    },
+    {
+      "id": "jaipur_architecture_9",
+      "name": "Jaipur Architecture Place 9",
+      "category": "Architecture",
+      "description": "A wonderful architecture experience in Jaipur.",
+      "duration": "2 hours",
+      "estimatedCost": "INR 116"
+    },
+    {
+      "id": "jaipur_heritage_0",
+      "name": "Jaipur Heritage Place 0",
+      "category": "Heritage",
+      "description": "A wonderful heritage experience in Jaipur.",
+      "duration": "1 hours",
+      "estimatedCost": "INR 349"
+    },
+    {
+      "id": "jaipur_heritage_1",
+      "name": "Jaipur Heritage Place 1",
+      "category": "Heritage",
+      "description": "A wonderful heritage experience in Jaipur.",
+      "duration": "2 hours",
+      "estimatedCost": "INR 251"
+    },
+    {
+      "id": "jaipur_heritage_2",
+      "name": "Jaipur Heritage Place 2",
+      "category": "Heritage",
+      "description": "A wonderful heritage experience in Jaipur.",
+      "duration": "1 hours",
+      "estimatedCost": "INR 207"
+    },
+    {
+      "id": "jaipur_heritage_3",
+      "name": "Jaipur Heritage Place 3",
+      "category": "Heritage",
+      "description": "A wonderful heritage experience in Jaipur.",
+      "duration": "1 hours",
+      "estimatedCost": "INR 837"
+    },
+    {
+      "id": "jaipur_heritage_4",
+      "name": "Jaipur Heritage Place 4",
+      "category": "Heritage",
+      "description": "A wonderful heritage experience in Jaipur.",
+      "duration": "1 hours",
+      "estimatedCost": "INR 308"
+    },
+    {
+      "id": "jaipur_heritage_5",
+      "name": "Jaipur Heritage Place 5",
+      "category": "Heritage",
+      "description": "A wonderful heritage experience in Jaipur.",
+      "duration": "2 hours",
+      "estimatedCost": "INR 253"
+    },
+    {
+      "id": "jaipur_heritage_6",
+      "name": "Jaipur Heritage Place 6",
+      "category": "Heritage",
+      "description": "A wonderful heritage experience in Jaipur.",
+      "duration": "1 hours",
+      "estimatedCost": "INR 132"
+    },
+    {
+      "id": "jaipur_heritage_7",
+      "name": "Jaipur Heritage Place 7",
+      "category": "Heritage",
+      "description": "A wonderful heritage experience in Jaipur.",
+      "duration": "1 hours",
+      "estimatedCost": "INR 713"
+    },
+    {
+      "id": "jaipur_heritage_8",
+      "name": "Jaipur Heritage Place 8",
+      "category": "Heritage",
+      "description": "A wonderful heritage experience in Jaipur.",
+      "duration": "3 hours",
+      "estimatedCost": "INR 465"
+    },
+    {
+      "id": "jaipur_heritage_9",
+      "name": "Jaipur Heritage Place 9",
+      "category": "Heritage",
+      "description": "A wonderful heritage experience in Jaipur.",
+      "duration": "3 hours",
+      "estimatedCost": "INR 297"
+    },
+    {
+      "id": "jaipur_food_0",
+      "name": "Jaipur Food Place 0",
+      "category": "Food",
+      "description": "A wonderful food experience in Jaipur.",
+      "duration": "3 hours",
+      "estimatedCost": "INR 730"
+    },
+    {
+      "id": "jaipur_food_1",
+      "name": "Jaipur Food Place 1",
+      "category": "Food",
+      "description": "A wonderful food experience in Jaipur.",
+      "duration": "3 hours",
+      "estimatedCost": "INR 708"
+    },
+    {
+      "id": "jaipur_food_2",
+      "name": "Jaipur Food Place 2",
+      "category": "Food",
+      "description": "A wonderful food experience in Jaipur.",
+      "duration": "1 hours",
+      "estimatedCost": "INR 192"
+    },
+    {
+      "id": "jaipur_food_3",
+      "name": "Jaipur Food Place 3",
+      "category": "Food",
+      "description": "A wonderful food experience in Jaipur.",
+      "duration": "2 hours",
+      "estimatedCost": "INR 675"
+    },
+    {
+      "id": "jaipur_food_4",
+      "name": "Jaipur Food Place 4",
+      "category": "Food",
+      "description": "A wonderful food experience in Jaipur.",
+      "duration": "2 hours",
+      "estimatedCost": "INR 278"
+    },
+    {
+      "id": "jaipur_food_5",
+      "name": "Jaipur Food Place 5",
+      "category": "Food",
+      "description": "A wonderful food experience in Jaipur.",
+      "duration": "2 hours",
+      "estimatedCost": "INR 941"
+    },
+    {
+      "id": "jaipur_food_6",
+      "name": "Jaipur Food Place 6",
+      "category": "Food",
+      "description": "A wonderful food experience in Jaipur.",
+      "duration": "3 hours",
+      "estimatedCost": "INR 922"
+    },
+    {
+      "id": "jaipur_food_7",
+      "name": "Jaipur Food Place 7",
+      "category": "Food",
+      "description": "A wonderful food experience in Jaipur.",
+      "duration": "3 hours",
+      "estimatedCost": "INR 462"
+    },
+    {
+      "id": "jaipur_food_8",
+      "name": "Jaipur Food Place 8",
+      "category": "Food",
+      "description": "A wonderful food experience in Jaipur.",
+      "duration": "2 hours",
+      "estimatedCost": "INR 851"
+    },
+    {
+      "id": "jaipur_food_9",
+      "name": "Jaipur Food Place 9",
+      "category": "Food",
+      "description": "A wonderful food experience in Jaipur.",
+      "duration": "3 hours",
+      "estimatedCost": "INR 846"
+    },
+    {
+      "id": "jaipur_nightlife_0",
+      "name": "Jaipur Nightlife Place 0",
+      "category": "Nightlife",
+      "description": "A wonderful nightlife experience in Jaipur.",
+      "duration": "1 hours",
+      "estimatedCost": "INR 443"
+    },
+    {
+      "id": "jaipur_nightlife_1",
+      "name": "Jaipur Nightlife Place 1",
+      "category": "Nightlife",
+      "description": "A wonderful nightlife experience in Jaipur.",
+      "duration": "1 hours",
+      "estimatedCost": "INR 568"
+    },
+    {
+      "id": "jaipur_nightlife_2",
+      "name": "Jaipur Nightlife Place 2",
+      "category": "Nightlife",
+      "description": "A wonderful nightlife experience in Jaipur.",
+      "duration": "3 hours",
+      "estimatedCost": "INR 797"
+    },
+    {
+      "id": "jaipur_nightlife_3",
+      "name": "Jaipur Nightlife Place 3",
+      "category": "Nightlife",
+      "description": "A wonderful nightlife experience in Jaipur.",
+      "duration": "3 hours",
+      "estimatedCost": "INR 270"
+    },
+    {
+      "id": "jaipur_nightlife_4",
+      "name": "Jaipur Nightlife Place 4",
+      "category": "Nightlife",
+      "description": "A wonderful nightlife experience in Jaipur.",
+      "duration": "1 hours",
+      "estimatedCost": "INR 361"
+    },
+    {
+      "id": "jaipur_nightlife_5",
+      "name": "Jaipur Nightlife Place 5",
+      "category": "Nightlife",
+      "description": "A wonderful nightlife experience in Jaipur.",
+      "duration": "1 hours",
+      "estimatedCost": "INR 113"
+    },
+    {
+      "id": "jaipur_nightlife_6",
+      "name": "Jaipur Nightlife Place 6",
+      "category": "Nightlife",
+      "description": "A wonderful nightlife experience in Jaipur.",
+      "duration": "3 hours",
+      "estimatedCost": "INR 197"
+    },
+    {
+      "id": "jaipur_nightlife_7",
+      "name": "Jaipur Nightlife Place 7",
+      "category": "Nightlife",
+      "description": "A wonderful nightlife experience in Jaipur.",
+      "duration": "3 hours",
+      "estimatedCost": "INR 537"
+    },
+    {
+      "id": "jaipur_nightlife_8",
+      "name": "Jaipur Nightlife Place 8",
+      "category": "Nightlife",
+      "description": "A wonderful nightlife experience in Jaipur.",
+      "duration": "1 hours",
+      "estimatedCost": "INR 492"
+    },
+    {
+      "id": "jaipur_nightlife_9",
+      "name": "Jaipur Nightlife Place 9",
+      "category": "Nightlife",
+      "description": "A wonderful nightlife experience in Jaipur.",
+      "duration": "3 hours",
+      "estimatedCost": "INR 346"
+    },
+    {
+      "id": "jaipur_nature_0",
+      "name": "Jaipur Nature Place 0",
+      "category": "Nature",
+      "description": "A wonderful nature experience in Jaipur.",
+      "duration": "2 hours",
+      "estimatedCost": "INR 213"
+    },
+    {
+      "id": "jaipur_nature_1",
+      "name": "Jaipur Nature Place 1",
+      "category": "Nature",
+      "description": "A wonderful nature experience in Jaipur.",
+      "duration": "1 hours",
+      "estimatedCost": "INR 585"
+    },
+    {
+      "id": "jaipur_nature_2",
+      "name": "Jaipur Nature Place 2",
+      "category": "Nature",
+      "description": "A wonderful nature experience in Jaipur.",
+      "duration": "1 hours",
+      "estimatedCost": "INR 288"
+    },
+    {
+      "id": "jaipur_nature_3",
+      "name": "Jaipur Nature Place 3",
+      "category": "Nature",
+      "description": "A wonderful nature experience in Jaipur.",
+      "duration": "2 hours",
+      "estimatedCost": "INR 386"
+    },
+    {
+      "id": "jaipur_nature_4",
+      "name": "Jaipur Nature Place 4",
+      "category": "Nature",
+      "description": "A wonderful nature experience in Jaipur.",
+      "duration": "3 hours",
+      "estimatedCost": "INR 69"
+    },
+    {
+      "id": "jaipur_nature_5",
+      "name": "Jaipur Nature Place 5",
+      "category": "Nature",
+      "description": "A wonderful nature experience in Jaipur.",
+      "duration": "2 hours",
+      "estimatedCost": "INR 177"
+    },
+    {
+      "id": "jaipur_nature_6",
+      "name": "Jaipur Nature Place 6",
+      "category": "Nature",
+      "description": "A wonderful nature experience in Jaipur.",
+      "duration": "1 hours",
+      "estimatedCost": "INR 947"
+    },
+    {
+      "id": "jaipur_nature_7",
+      "name": "Jaipur Nature Place 7",
+      "category": "Nature",
+      "description": "A wonderful nature experience in Jaipur.",
+      "duration": "2 hours",
+      "estimatedCost": "INR 469"
+    },
+    {
+      "id": "jaipur_nature_8",
+      "name": "Jaipur Nature Place 8",
+      "category": "Nature",
+      "description": "A wonderful nature experience in Jaipur.",
+      "duration": "2 hours",
+      "estimatedCost": "INR 234"
+    },
+    {
+      "id": "jaipur_nature_9",
+      "name": "Jaipur Nature Place 9",
+      "category": "Nature",
+      "description": "A wonderful nature experience in Jaipur.",
+      "duration": "1 hours",
+      "estimatedCost": "INR 397"
+    },
+    {
+      "id": "jaipur_adventure_0",
+      "name": "Jaipur Adventure Place 0",
+      "category": "Adventure",
+      "description": "A wonderful adventure experience in Jaipur.",
+      "duration": "1 hours",
+      "estimatedCost": "INR 292"
+    },
+    {
+      "id": "jaipur_adventure_1",
+      "name": "Jaipur Adventure Place 1",
+      "category": "Adventure",
+      "description": "A wonderful adventure experience in Jaipur.",
+      "duration": "3 hours",
+      "estimatedCost": "INR 803"
+    },
+    {
+      "id": "jaipur_adventure_2",
+      "name": "Jaipur Adventure Place 2",
+      "category": "Adventure",
+      "description": "A wonderful adventure experience in Jaipur.",
+      "duration": "2 hours",
+      "estimatedCost": "INR 707"
+    },
+    {
+      "id": "jaipur_adventure_3",
+      "name": "Jaipur Adventure Place 3",
+      "category": "Adventure",
+      "description": "A wonderful adventure experience in Jaipur.",
+      "duration": "2 hours",
+      "estimatedCost": "INR 127"
+    },
+    {
+      "id": "jaipur_adventure_4",
+      "name": "Jaipur Adventure Place 4",
+      "category": "Adventure",
+      "description": "A wonderful adventure experience in Jaipur.",
+      "duration": "2 hours",
+      "estimatedCost": "INR 217"
+    },
+    {
+      "id": "jaipur_adventure_5",
+      "name": "Jaipur Adventure Place 5",
+      "category": "Adventure",
+      "description": "A wonderful adventure experience in Jaipur.",
+      "duration": "2 hours",
+      "estimatedCost": "INR 149"
+    },
+    {
+      "id": "jaipur_adventure_6",
+      "name": "Jaipur Adventure Place 6",
+      "category": "Adventure",
+      "description": "A wonderful adventure experience in Jaipur.",
+      "duration": "1 hours",
+      "estimatedCost": "INR 597"
+    },
+    {
+      "id": "jaipur_adventure_7",
+      "name": "Jaipur Adventure Place 7",
+      "category": "Adventure",
+      "description": "A wonderful adventure experience in Jaipur.",
+      "duration": "3 hours",
+      "estimatedCost": "INR 626"
+    },
+    {
+      "id": "jaipur_adventure_8",
+      "name": "Jaipur Adventure Place 8",
+      "category": "Adventure",
+      "description": "A wonderful adventure experience in Jaipur.",
+      "duration": "1 hours",
+      "estimatedCost": "INR 739"
+    },
+    {
+      "id": "jaipur_adventure_9",
+      "name": "Jaipur Adventure Place 9",
+      "category": "Adventure",
+      "description": "A wonderful adventure experience in Jaipur.",
+      "duration": "1 hours",
+      "estimatedCost": "INR 94"
+    },
+    {
+      "id": "jaipur_markets_0",
+      "name": "Jaipur Markets Place 0",
+      "category": "Markets",
+      "description": "A wonderful markets experience in Jaipur.",
+      "duration": "1 hours",
+      "estimatedCost": "INR 170"
+    },
+    {
+      "id": "jaipur_markets_1",
+      "name": "Jaipur Markets Place 1",
+      "category": "Markets",
+      "description": "A wonderful markets experience in Jaipur.",
+      "duration": "2 hours",
+      "estimatedCost": "INR 834"
+    },
+    {
+      "id": "jaipur_markets_2",
+      "name": "Jaipur Markets Place 2",
+      "category": "Markets",
+      "description": "A wonderful markets experience in Jaipur.",
+      "duration": "3 hours",
+      "estimatedCost": "INR 166"
+    },
+    {
+      "id": "jaipur_markets_3",
+      "name": "Jaipur Markets Place 3",
+      "category": "Markets",
+      "description": "A wonderful markets experience in Jaipur.",
+      "duration": "1 hours",
+      "estimatedCost": "INR 757"
+    },
+    {
+      "id": "jaipur_markets_4",
+      "name": "Jaipur Markets Place 4",
+      "category": "Markets",
+      "description": "A wonderful markets experience in Jaipur.",
+      "duration": "1 hours",
+      "estimatedCost": "INR 940"
+    },
+    {
+      "id": "jaipur_markets_5",
+      "name": "Jaipur Markets Place 5",
+      "category": "Markets",
+      "description": "A wonderful markets experience in Jaipur.",
+      "duration": "1 hours",
+      "estimatedCost": "INR 738"
+    },
+    {
+      "id": "jaipur_markets_6",
+      "name": "Jaipur Markets Place 6",
+      "category": "Markets",
+      "description": "A wonderful markets experience in Jaipur.",
+      "duration": "2 hours",
+      "estimatedCost": "INR 602"
+    },
+    {
+      "id": "jaipur_markets_7",
+      "name": "Jaipur Markets Place 7",
+      "category": "Markets",
+      "description": "A wonderful markets experience in Jaipur.",
+      "duration": "1 hours",
+      "estimatedCost": "INR 888"
+    },
+    {
+      "id": "jaipur_markets_8",
+      "name": "Jaipur Markets Place 8",
+      "category": "Markets",
+      "description": "A wonderful markets experience in Jaipur.",
+      "duration": "2 hours",
+      "estimatedCost": "INR 523"
+    },
+    {
+      "id": "jaipur_markets_9",
+      "name": "Jaipur Markets Place 9",
+      "category": "Markets",
+      "description": "A wonderful markets experience in Jaipur.",
+      "duration": "1 hours",
+      "estimatedCost": "INR 616"
+    },
+    {
+      "id": "jaipur_craft_0",
+      "name": "Jaipur Craft Place 0",
+      "category": "Craft",
+      "description": "A wonderful craft experience in Jaipur.",
+      "duration": "1 hours",
+      "estimatedCost": "INR 546"
+    },
+    {
+      "id": "jaipur_craft_1",
+      "name": "Jaipur Craft Place 1",
+      "category": "Craft",
+      "description": "A wonderful craft experience in Jaipur.",
+      "duration": "2 hours",
+      "estimatedCost": "INR 772"
+    },
+    {
+      "id": "jaipur_craft_2",
+      "name": "Jaipur Craft Place 2",
+      "category": "Craft",
+      "description": "A wonderful craft experience in Jaipur.",
+      "duration": "2 hours",
+      "estimatedCost": "INR 735"
+    },
+    {
+      "id": "jaipur_craft_3",
+      "name": "Jaipur Craft Place 3",
+      "category": "Craft",
+      "description": "A wonderful craft experience in Jaipur.",
+      "duration": "1 hours",
+      "estimatedCost": "INR 213"
+    },
+    {
+      "id": "jaipur_craft_4",
+      "name": "Jaipur Craft Place 4",
+      "category": "Craft",
+      "description": "A wonderful craft experience in Jaipur.",
+      "duration": "1 hours",
+      "estimatedCost": "INR 654"
+    },
+    {
+      "id": "jaipur_craft_5",
+      "name": "Jaipur Craft Place 5",
+      "category": "Craft",
+      "description": "A wonderful craft experience in Jaipur.",
+      "duration": "1 hours",
+      "estimatedCost": "INR 257"
+    },
+    {
+      "id": "jaipur_craft_6",
+      "name": "Jaipur Craft Place 6",
+      "category": "Craft",
+      "description": "A wonderful craft experience in Jaipur.",
+      "duration": "2 hours",
+      "estimatedCost": "INR 995"
+    },
+    {
+      "id": "jaipur_craft_7",
+      "name": "Jaipur Craft Place 7",
+      "category": "Craft",
+      "description": "A wonderful craft experience in Jaipur.",
+      "duration": "2 hours",
+      "estimatedCost": "INR 725"
+    },
+    {
+      "id": "jaipur_craft_8",
+      "name": "Jaipur Craft Place 8",
+      "category": "Craft",
+      "description": "A wonderful craft experience in Jaipur.",
+      "duration": "1 hours",
+      "estimatedCost": "INR 135"
+    },
+    {
+      "id": "jaipur_craft_9",
+      "name": "Jaipur Craft Place 9",
+      "category": "Craft",
+      "description": "A wonderful craft experience in Jaipur.",
+      "duration": "1 hours",
+      "estimatedCost": "INR 545"
+    },
+    {
+      "id": "jaipur_museum_0",
+      "name": "Jaipur Museum Place 0",
+      "category": "Museum",
+      "description": "A wonderful museum experience in Jaipur.",
+      "duration": "2 hours",
+      "estimatedCost": "INR 858"
+    },
+    {
+      "id": "jaipur_museum_1",
+      "name": "Jaipur Museum Place 1",
+      "category": "Museum",
+      "description": "A wonderful museum experience in Jaipur.",
+      "duration": "1 hours",
+      "estimatedCost": "INR 217"
+    },
+    {
+      "id": "jaipur_museum_2",
+      "name": "Jaipur Museum Place 2",
+      "category": "Museum",
+      "description": "A wonderful museum experience in Jaipur.",
+      "duration": "2 hours",
+      "estimatedCost": "INR 935"
+    },
+    {
+      "id": "jaipur_museum_3",
+      "name": "Jaipur Museum Place 3",
+      "category": "Museum",
+      "description": "A wonderful museum experience in Jaipur.",
+      "duration": "1 hours",
+      "estimatedCost": "INR 119"
+    },
+    {
+      "id": "jaipur_museum_4",
+      "name": "Jaipur Museum Place 4",
+      "category": "Museum",
+      "description": "A wonderful museum experience in Jaipur.",
+      "duration": "3 hours",
+      "estimatedCost": "INR 769"
+    },
+    {
+      "id": "jaipur_museum_5",
+      "name": "Jaipur Museum Place 5",
+      "category": "Museum",
+      "description": "A wonderful museum experience in Jaipur.",
+      "duration": "2 hours",
+      "estimatedCost": "INR 725"
+    },
+    {
+      "id": "jaipur_museum_6",
+      "name": "Jaipur Museum Place 6",
+      "category": "Museum",
+      "description": "A wonderful museum experience in Jaipur.",
+      "duration": "3 hours",
+      "estimatedCost": "INR 359"
+    },
+    {
+      "id": "jaipur_museum_7",
+      "name": "Jaipur Museum Place 7",
+      "category": "Museum",
+      "description": "A wonderful museum experience in Jaipur.",
+      "duration": "3 hours",
+      "estimatedCost": "INR 931"
+    },
+    {
+      "id": "jaipur_museum_8",
+      "name": "Jaipur Museum Place 8",
+      "category": "Museum",
+      "description": "A wonderful museum experience in Jaipur.",
+      "duration": "2 hours",
+      "estimatedCost": "INR 302"
+    },
+    {
+      "id": "jaipur_museum_9",
+      "name": "Jaipur Museum Place 9",
+      "category": "Museum",
+      "description": "A wonderful museum experience in Jaipur.",
+      "duration": "2 hours",
+      "estimatedCost": "INR 802"
+    },
+    {
+      "id": "jaipur_neighborhood_0",
+      "name": "Jaipur Neighborhood Place 0",
+      "category": "Neighborhood",
+      "description": "A wonderful neighborhood experience in Jaipur.",
+      "duration": "3 hours",
+      "estimatedCost": "INR 232"
+    },
+    {
+      "id": "jaipur_neighborhood_1",
+      "name": "Jaipur Neighborhood Place 1",
+      "category": "Neighborhood",
+      "description": "A wonderful neighborhood experience in Jaipur.",
+      "duration": "3 hours",
+      "estimatedCost": "INR 307"
+    },
+    {
+      "id": "jaipur_neighborhood_2",
+      "name": "Jaipur Neighborhood Place 2",
+      "category": "Neighborhood",
+      "description": "A wonderful neighborhood experience in Jaipur.",
+      "duration": "1 hours",
+      "estimatedCost": "INR 658"
+    },
+    {
+      "id": "jaipur_neighborhood_3",
+      "name": "Jaipur Neighborhood Place 3",
+      "category": "Neighborhood",
+      "description": "A wonderful neighborhood experience in Jaipur.",
+      "duration": "1 hours",
+      "estimatedCost": "INR 876"
+    },
+    {
+      "id": "jaipur_neighborhood_4",
+      "name": "Jaipur Neighborhood Place 4",
+      "category": "Neighborhood",
+      "description": "A wonderful neighborhood experience in Jaipur.",
+      "duration": "3 hours",
+      "estimatedCost": "INR 981"
+    },
+    {
+      "id": "jaipur_neighborhood_5",
+      "name": "Jaipur Neighborhood Place 5",
+      "category": "Neighborhood",
+      "description": "A wonderful neighborhood experience in Jaipur.",
+      "duration": "1 hours",
+      "estimatedCost": "INR 472"
+    },
+    {
+      "id": "jaipur_neighborhood_6",
+      "name": "Jaipur Neighborhood Place 6",
+      "category": "Neighborhood",
+      "description": "A wonderful neighborhood experience in Jaipur.",
+      "duration": "3 hours",
+      "estimatedCost": "INR 291"
+    },
+    {
+      "id": "jaipur_neighborhood_7",
+      "name": "Jaipur Neighborhood Place 7",
+      "category": "Neighborhood",
+      "description": "A wonderful neighborhood experience in Jaipur.",
+      "duration": "1 hours",
+      "estimatedCost": "INR 109"
+    },
+    {
+      "id": "jaipur_neighborhood_8",
+      "name": "Jaipur Neighborhood Place 8",
+      "category": "Neighborhood",
+      "description": "A wonderful neighborhood experience in Jaipur.",
+      "duration": "1 hours",
+      "estimatedCost": "INR 271"
+    },
+    {
+      "id": "jaipur_neighborhood_9",
+      "name": "Jaipur Neighborhood Place 9",
+      "category": "Neighborhood",
+      "description": "A wonderful neighborhood experience in Jaipur.",
+      "duration": "1 hours",
+      "estimatedCost": "INR 575"
+    },
+    {
+      "id": "jaipur_family_0",
+      "name": "Jaipur Family Place 0",
+      "category": "Family",
+      "description": "A wonderful family experience in Jaipur.",
+      "duration": "1 hours",
+      "estimatedCost": "INR 616"
+    },
+    {
+      "id": "jaipur_family_1",
+      "name": "Jaipur Family Place 1",
+      "category": "Family",
+      "description": "A wonderful family experience in Jaipur.",
+      "duration": "2 hours",
+      "estimatedCost": "INR 926"
+    },
+    {
+      "id": "jaipur_family_2",
+      "name": "Jaipur Family Place 2",
+      "category": "Family",
+      "description": "A wonderful family experience in Jaipur.",
+      "duration": "1 hours",
+      "estimatedCost": "INR 602"
+    },
+    {
+      "id": "jaipur_family_3",
+      "name": "Jaipur Family Place 3",
+      "category": "Family",
+      "description": "A wonderful family experience in Jaipur.",
+      "duration": "2 hours",
+      "estimatedCost": "INR 161"
+    },
+    {
+      "id": "jaipur_family_4",
+      "name": "Jaipur Family Place 4",
+      "category": "Family",
+      "description": "A wonderful family experience in Jaipur.",
+      "duration": "3 hours",
+      "estimatedCost": "INR 136"
+    },
+    {
+      "id": "jaipur_family_5",
+      "name": "Jaipur Family Place 5",
+      "category": "Family",
+      "description": "A wonderful family experience in Jaipur.",
+      "duration": "1 hours",
+      "estimatedCost": "INR 104"
+    },
+    {
+      "id": "jaipur_family_6",
+      "name": "Jaipur Family Place 6",
+      "category": "Family",
+      "description": "A wonderful family experience in Jaipur.",
+      "duration": "2 hours",
+      "estimatedCost": "INR 252"
+    },
+    {
+      "id": "jaipur_family_7",
+      "name": "Jaipur Family Place 7",
+      "category": "Family",
+      "description": "A wonderful family experience in Jaipur.",
+      "duration": "2 hours",
+      "estimatedCost": "INR 182"
+    },
+    {
+      "id": "jaipur_family_8",
+      "name": "Jaipur Family Place 8",
+      "category": "Family",
+      "description": "A wonderful family experience in Jaipur.",
+      "duration": "2 hours",
+      "estimatedCost": "INR 966"
+    },
+    {
+      "id": "jaipur_family_9",
+      "name": "Jaipur Family Place 9",
+      "category": "Family",
+      "description": "A wonderful family experience in Jaipur.",
+      "duration": "3 hours",
+      "estimatedCost": "INR 663"
+    },
+    {
+      "id": "jaipur_slow_experiences_0",
+      "name": "Jaipur Slow Experiences Place 0",
+      "category": "Slow Experiences",
+      "description": "A wonderful slow experiences experience in Jaipur.",
+      "duration": "3 hours",
+      "estimatedCost": "INR 354"
+    },
+    {
+      "id": "jaipur_slow_experiences_1",
+      "name": "Jaipur Slow Experiences Place 1",
+      "category": "Slow Experiences",
+      "description": "A wonderful slow experiences experience in Jaipur.",
+      "duration": "1 hours",
+      "estimatedCost": "INR 969"
+    },
+    {
+      "id": "jaipur_slow_experiences_2",
+      "name": "Jaipur Slow Experiences Place 2",
+      "category": "Slow Experiences",
+      "description": "A wonderful slow experiences experience in Jaipur.",
+      "duration": "3 hours",
+      "estimatedCost": "INR 932"
+    },
+    {
+      "id": "jaipur_slow_experiences_3",
+      "name": "Jaipur Slow Experiences Place 3",
+      "category": "Slow Experiences",
+      "description": "A wonderful slow experiences experience in Jaipur.",
+      "duration": "1 hours",
+      "estimatedCost": "INR 410"
+    },
+    {
+      "id": "jaipur_slow_experiences_4",
+      "name": "Jaipur Slow Experiences Place 4",
+      "category": "Slow Experiences",
+      "description": "A wonderful slow experiences experience in Jaipur.",
+      "duration": "3 hours",
+      "estimatedCost": "INR 418"
+    },
+    {
+      "id": "jaipur_slow_experiences_5",
+      "name": "Jaipur Slow Experiences Place 5",
+      "category": "Slow Experiences",
+      "description": "A wonderful slow experiences experience in Jaipur.",
+      "duration": "2 hours",
+      "estimatedCost": "INR 802"
+    },
+    {
+      "id": "jaipur_slow_experiences_6",
+      "name": "Jaipur Slow Experiences Place 6",
+      "category": "Slow Experiences",
+      "description": "A wonderful slow experiences experience in Jaipur.",
+      "duration": "3 hours",
+      "estimatedCost": "INR 686"
+    },
+    {
+      "id": "jaipur_slow_experiences_7",
+      "name": "Jaipur Slow Experiences Place 7",
+      "category": "Slow Experiences",
+      "description": "A wonderful slow experiences experience in Jaipur.",
+      "duration": "1 hours",
+      "estimatedCost": "INR 902"
+    },
+    {
+      "id": "jaipur_slow_experiences_8",
+      "name": "Jaipur Slow Experiences Place 8",
+      "category": "Slow Experiences",
+      "description": "A wonderful slow experiences experience in Jaipur.",
+      "duration": "1 hours",
+      "estimatedCost": "INR 345"
+    },
+    {
+      "id": "jaipur_slow_experiences_9",
+      "name": "Jaipur Slow Experiences Place 9",
+      "category": "Slow Experiences",
+      "description": "A wonderful slow experiences experience in Jaipur.",
+      "duration": "1 hours",
+      "estimatedCost": "INR 690"
+    }
+  ],
+  "restaurants": [
+    {
+      "id": "jaipur_restaurant_0",
+      "name": "Jaipur Dining Spot 0",
+      "category": "Food",
+      "description": "Delicious local cuisine.",
+      "duration": "1-2 hours",
+      "estimatedCost": "INR 1599"
+    },
+    {
+      "id": "jaipur_restaurant_1",
+      "name": "Jaipur Dining Spot 1",
+      "category": "Food",
+      "description": "Delicious local cuisine.",
+      "duration": "1-2 hours",
+      "estimatedCost": "INR 1985"
+    },
+    {
+      "id": "jaipur_restaurant_2",
+      "name": "Jaipur Dining Spot 2",
+      "category": "Food",
+      "description": "Delicious local cuisine.",
+      "duration": "1-2 hours",
+      "estimatedCost": "INR 1058"
+    },
+    {
+      "id": "jaipur_restaurant_3",
+      "name": "Jaipur Dining Spot 3",
+      "category": "Food",
+      "description": "Delicious local cuisine.",
+      "duration": "1-2 hours",
+      "estimatedCost": "INR 696"
+    },
+    {
+      "id": "jaipur_restaurant_4",
+      "name": "Jaipur Dining Spot 4",
+      "category": "Food",
+      "description": "Delicious local cuisine.",
+      "duration": "1-2 hours",
+      "estimatedCost": "INR 1655"
+    },
+    {
+      "id": "jaipur_restaurant_5",
+      "name": "Jaipur Dining Spot 5",
+      "category": "Food",
+      "description": "Delicious local cuisine.",
+      "duration": "1-2 hours",
+      "estimatedCost": "INR 1576"
+    },
+    {
+      "id": "jaipur_restaurant_6",
+      "name": "Jaipur Dining Spot 6",
+      "category": "Food",
+      "description": "Delicious local cuisine.",
+      "duration": "1-2 hours",
+      "estimatedCost": "INR 1314"
+    },
+    {
+      "id": "jaipur_restaurant_7",
+      "name": "Jaipur Dining Spot 7",
+      "category": "Food",
+      "description": "Delicious local cuisine.",
+      "duration": "1-2 hours",
+      "estimatedCost": "INR 1879"
+    },
+    {
+      "id": "jaipur_restaurant_8",
+      "name": "Jaipur Dining Spot 8",
+      "category": "Food",
+      "description": "Delicious local cuisine.",
+      "duration": "1-2 hours",
+      "estimatedCost": "INR 1404"
+    },
+    {
+      "id": "jaipur_restaurant_9",
+      "name": "Jaipur Dining Spot 9",
+      "category": "Food",
+      "description": "Delicious local cuisine.",
+      "duration": "1-2 hours",
+      "estimatedCost": "INR 1063"
+    },
+    {
+      "id": "jaipur_restaurant_10",
+      "name": "Jaipur Dining Spot 10",
+      "category": "Food",
+      "description": "Delicious local cuisine.",
+      "duration": "1-2 hours",
+      "estimatedCost": "INR 1490"
+    },
+    {
+      "id": "jaipur_restaurant_11",
+      "name": "Jaipur Dining Spot 11",
+      "category": "Food",
+      "description": "Delicious local cuisine.",
+      "duration": "1-2 hours",
+      "estimatedCost": "INR 1444"
+    },
+    {
+      "id": "jaipur_restaurant_12",
+      "name": "Jaipur Dining Spot 12",
+      "category": "Food",
+      "description": "Delicious local cuisine.",
+      "duration": "1-2 hours",
+      "estimatedCost": "INR 1090"
+    },
+    {
+      "id": "jaipur_restaurant_13",
+      "name": "Jaipur Dining Spot 13",
+      "category": "Food",
+      "description": "Delicious local cuisine.",
+      "duration": "1-2 hours",
+      "estimatedCost": "INR 1449"
+    },
+    {
+      "id": "jaipur_restaurant_14",
+      "name": "Jaipur Dining Spot 14",
+      "category": "Food",
+      "description": "Delicious local cuisine.",
+      "duration": "1-2 hours",
+      "estimatedCost": "INR 1602"
+    },
+    {
+      "id": "jaipur_restaurant_15",
+      "name": "Jaipur Dining Spot 15",
+      "category": "Food",
+      "description": "Delicious local cuisine.",
+      "duration": "1-2 hours",
+      "estimatedCost": "INR 1499"
+    },
+    {
+      "id": "jaipur_restaurant_16",
+      "name": "Jaipur Dining Spot 16",
+      "category": "Food",
+      "description": "Delicious local cuisine.",
+      "duration": "1-2 hours",
+      "estimatedCost": "INR 1980"
+    },
+    {
+      "id": "jaipur_restaurant_17",
+      "name": "Jaipur Dining Spot 17",
+      "category": "Food",
+      "description": "Delicious local cuisine.",
+      "duration": "1-2 hours",
+      "estimatedCost": "INR 1194"
+    },
+    {
+      "id": "jaipur_restaurant_18",
+      "name": "Jaipur Dining Spot 18",
+      "category": "Food",
+      "description": "Delicious local cuisine.",
+      "duration": "1-2 hours",
+      "estimatedCost": "INR 1413"
+    },
+    {
+      "id": "jaipur_restaurant_19",
+      "name": "Jaipur Dining Spot 19",
+      "category": "Food",
+      "description": "Delicious local cuisine.",
+      "duration": "1-2 hours",
+      "estimatedCost": "INR 820"
+    },
+    {
+      "id": "jaipur_restaurant_20",
+      "name": "Jaipur Dining Spot 20",
+      "category": "Food",
+      "description": "Delicious local cuisine.",
+      "duration": "1-2 hours",
+      "estimatedCost": "INR 1541"
+    },
+    {
+      "id": "jaipur_restaurant_21",
+      "name": "Jaipur Dining Spot 21",
+      "category": "Food",
+      "description": "Delicious local cuisine.",
+      "duration": "1-2 hours",
+      "estimatedCost": "INR 460"
+    },
+    {
+      "id": "jaipur_restaurant_22",
+      "name": "Jaipur Dining Spot 22",
+      "category": "Food",
+      "description": "Delicious local cuisine.",
+      "duration": "1-2 hours",
+      "estimatedCost": "INR 1102"
+    },
+    {
+      "id": "jaipur_restaurant_23",
+      "name": "Jaipur Dining Spot 23",
+      "category": "Food",
+      "description": "Delicious local cuisine.",
+      "duration": "1-2 hours",
+      "estimatedCost": "INR 832"
+    },
+    {
+      "id": "jaipur_restaurant_24",
+      "name": "Jaipur Dining Spot 24",
+      "category": "Food",
+      "description": "Delicious local cuisine.",
+      "duration": "1-2 hours",
+      "estimatedCost": "INR 1048"
+    },
+    {
+      "id": "jaipur_restaurant_25",
+      "name": "Jaipur Dining Spot 25",
+      "category": "Food",
+      "description": "Delicious local cuisine.",
+      "duration": "1-2 hours",
+      "estimatedCost": "INR 774"
+    },
+    {
+      "id": "jaipur_restaurant_26",
+      "name": "Jaipur Dining Spot 26",
+      "category": "Food",
+      "description": "Delicious local cuisine.",
+      "duration": "1-2 hours",
+      "estimatedCost": "INR 548"
+    },
+    {
+      "id": "jaipur_restaurant_27",
+      "name": "Jaipur Dining Spot 27",
+      "category": "Food",
+      "description": "Delicious local cuisine.",
+      "duration": "1-2 hours",
+      "estimatedCost": "INR 1996"
+    },
+    {
+      "id": "jaipur_restaurant_28",
+      "name": "Jaipur Dining Spot 28",
+      "category": "Food",
+      "description": "Delicious local cuisine.",
+      "duration": "1-2 hours",
+      "estimatedCost": "INR 1105"
+    },
+    {
+      "id": "jaipur_restaurant_29",
+      "name": "Jaipur Dining Spot 29",
+      "category": "Food",
+      "description": "Delicious local cuisine.",
+      "duration": "1-2 hours",
+      "estimatedCost": "INR 1841"
+    }
+  ]
+}

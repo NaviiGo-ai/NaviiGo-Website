@@ -1,0 +1,31 @@
+# personalization_config.py
+
+# Historical vs Current Intent Weights
+HISTORICAL_AFFINITY_WEIGHT = 0.5
+CURRENT_INTENT_WEIGHT_MULTIPLIER = 3.0
+CURRENT_INTENT_FLAT_BOOST = 50.0
+
+# Exact Match Penalties
+EXACT_VISITED_PENALTY = -99999
+EXACT_DISMISSED_PENALTY = -99999
+
+# Affinity Event Weights
+EVENT_WEIGHTS = {
+    'PLACE_VIEWED': 1,
+    'PLACE_SAVED': 10,
+    'PLACE_UNSAVED': -10,
+    'PLACE_ADDED_TO_TRIP': 15,
+    'ACTIVITY_CHECKED_IN': 6,
+    'ACTIVITY_COMPLETED': 12,
+    'EXPLICITLY_LIKED': 30,
+    'RECOMMENDATION_DISMISSED': -12,
+}
+
+SKIP_PENALTIES = {
+    'NOT_INTERESTED': -10,
+    'TOO_TIRED': 0,
+    'WEATHER': 0,
+    'CLOSED': 0,
+    'TOO_FAR': 0,
+    'NO_TIME': 0,
+}

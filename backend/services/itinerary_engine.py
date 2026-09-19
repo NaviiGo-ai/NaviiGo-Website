@@ -12,7 +12,39 @@ from services.prompt_builder import build_itinerary_prompt
 
 # Cache schema version — bump this when the prompt changes significantly
 # so the cache layer knows to re-fetch stale data.
-DEST_DATA_VERSION = 2
+DEST_DATA_VERSION = 3
+
+
+def get_pool_requirements(days: int) -> dict:
+    """Calculate dynamic candidate pool requirements based on trip duration."""
+    days = max(1, int(days or 3))
+    min_hl = max(20, min(65, days * 4 + 8))
+    min_rest = max(8, min(30, days * 2 + 4))
+    min_hotels = max(5, min(12, 5 + days // 3))
+
+    must_see = max(6, int(min_hl * 0.35))
+    hidden_gem = max(5, int(min_hl * 0.30))
+    local_secret = max(2, int(min_hl * 0.15))
+    experience = max(3, min_hl - must_see - hidden_gem - local_secret)
+
+    street_food = max(2, int(min_rest * 0.25))
+    casual = max(3, int(min_rest * 0.35))
+    fine_dining = max(2, int(min_rest * 0.25))
+    cafe = max(1, min_rest - street_food - casual - fine_dining)
+
+    return {
+        "highlights": min_hl,
+        "restaurants": min_rest,
+        "hotels": min_hotels,
+        "must_see": must_see,
+        "hidden_gem": hidden_gem,
+        "local_secret": local_secret,
+        "experience": experience,
+        "street_food": street_food,
+        "casual": casual,
+        "fine_dining": fine_dining,
+        "cafe": cafe,
+    }
 
 
 async def with_retry(func, max_retries=2):
@@ -55,6 +87,7 @@ async def _get_full_gemini_data(dest_name: str, purpose: str, budget: int, days:
         return None
 
     client = get_client()
+    reqs = get_pool_requirements(days)
 
     prompt = f"""You are a hyper-local Indian travel expert who has lived in {dest_name} for 20 years. You know every hidden lane, every sunrise viewpoint that tourists miss, and every street food stall that locals swear by.
 
@@ -126,17 +159,17 @@ Return ONLY strictly valid JSON (no markdown, no comments) for {dest_name}, Indi
 }}
 
 CRITICAL RULES:
-1. Generate exactly 18-22 highlights with this MIX:
-   - 6-8 "must-see" (iconic attractions every visitor should see)
-   - 5-7 "hidden-gem" (lesser-known spots that are genuinely special — NOT just less popular tourist spots)
-   - 2-3 "local-secret" (places ONLY locals know — a specific viewpoint, a family-run workshop, a dawn ritual)
-   - 3-4 "experience" (food walks, cooking classes, pottery workshops, sunrise yoga, photography walks, boat rides, cycling tours, night bazaar walks)
-2. Generate exactly 8 restaurants with this MIX:
-   - 2-3 street food stalls/carts (with exact location descriptions since they won't have addresses)
-   - 2-3 casual/local restaurants (the kind a local would take a friend visiting for the first time)
-   - 1-2 fine-dining or rooftop with views
-   - 1 cafe/bakery for breakfast or afternoon break
-3. Generate exactly 5 hotels across budget tiers.
+1. Generate exactly {reqs['highlights']} unique highlights with this MIX:
+   - {reqs['must_see']} "must-see" (iconic attractions every visitor should see)
+   - {reqs['hidden_gem']} "hidden-gem" (lesser-known spots that are genuinely special — NOT just less popular tourist spots)
+   - {reqs['local_secret']} "local-secret" (places ONLY locals know — a specific viewpoint, a family-run workshop, a dawn ritual)
+   - {reqs['experience']} "experience" (food walks, cooking classes, pottery workshops, sunrise yoga, photography walks, boat rides, cycling tours, night bazaar walks)
+2. Generate exactly {reqs['restaurants']} unique restaurants with this MIX:
+   - {reqs['street_food']} street food stalls/carts (with exact location descriptions since they won't have addresses)
+   - {reqs['casual']} casual/local restaurants (the kind a local would take a friend visiting for the first time)
+   - {reqs['fine_dining']} fine-dining or rooftop with views
+   - {reqs['cafe']} cafe/bakery for breakfast or afternoon break
+3. Generate exactly {reqs['hotels']} hotels across budget tiers.
 4. Every coordinate must be REAL and accurate to 4 decimal places.
 5. Every "insiderTip" must be genuinely useful and specific — NO generic advice like "go early" or "carry water."
 6. For "img" field, use: temple_generic, heritage_scene, fort_exterior, palace_interior, beach_scene, nature_landscape, mountain_view, trekking_trail, market_bazaar, lake_view, garden_park, waterfall_cascade, sunset_view, museum_interior, spiritual_site, food_street, restaurant_scene, hotel_exterior, resort_pool, workshop_craft, night_scene, sunrise_view, cooking_class, boat_ride, cycling_tour.

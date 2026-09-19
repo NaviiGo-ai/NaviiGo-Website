@@ -412,3 +412,168 @@ def _build_transit_day(
             },
         ],
     }
+
+
+class ReplanRequest(BaseModel):
+    tripId: str
+    currentDay: int
+    currentTime: str
+    reason: str
+    completedActivityIds: List[str] = Field(default_factory=list)
+    skippedActivityIds: List[str] = Field(default_factory=list)
+    location: Optional[Dict[str, float]] = None
+    destinationTimezone: str = "UTC"
+    baseRevisionId: Optional[str] = None
+
+class ReplanAcceptRequest(BaseModel):
+    tripId: str
+    proposalId: str
+    proposalData: Dict[str, Any]
+
+@router.post("/replan")
+async def replan_itinerary(payload: ReplanRequest, request: Request):
+    try:
+        authorization = request.headers.get("Authorization", "")
+        if not authorization.startswith("Bearer "):
+            raise HTTPException(status_code=401, detail="Sign in required")
+            
+        token_claims = verify_firebase_id_token(authorization.removeprefix("Bearer ").strip())
+        uid = token_claims.get("uid")
+        if not uid:
+            raise HTTPException(status_code=401, detail="Invalid session")
+            
+        from services.firebase_client import get_db
+        db = get_db()
+        trip_doc = db.collection("users").document(uid).collection("trips").document(payload.tripId).get()
+        if not trip_doc.exists:
+            raise HTTPException(status_code=404, detail="Trip not found")
+            
+        trip_data = trip_doc.to_dict()
+        trip_obj = trip_data.get("generatedData", trip_data)
+        
+        dest_name = trip_obj.get("destName", "").lower()
+        gemini_data = await get_destination_data(dest_name=dest_name, purpose="cultural", budget=1000, days=3)
+        
+        from services.replan_engine import generate_replan_proposal
+        proposal = generate_replan_proposal(
+            trip=trip_obj,
+            dest_data=gemini_data,
+            current_day_idx=payload.currentDay,
+            current_time=payload.currentTime,
+            reason=payload.reason,
+            completed_activity_ids=payload.completedActivityIds,
+            skipped_activity_ids=payload.skippedActivityIds,
+            location=payload.location,
+            destinationTimezone=payload.destinationTimezone,
+            baseRevisionId=payload.baseRevisionId
+        )
+        
+        # Save to DB (Server-side proposal)
+        proposal_dict = proposal.dict()
+        db.collection("users").document(uid).collection("trips").document(payload.tripId).collection("proposals").document(proposal.proposalId).set(proposal_dict)
+        
+        return {"success": True, "proposal": proposal_dict}
+        
+    except Exception as e:
+        print(f"[Replan] Error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/replan/accept")
+async def accept_replan(payload: ReplanAcceptRequest, request: Request):
+    try:
+        authorization = request.headers.get("Authorization", "")
+        if not authorization.startswith("Bearer "):
+            raise HTTPException(status_code=401, detail="Sign in required")
+            
+        token_claims = verify_firebase_id_token(authorization.removeprefix("Bearer ").strip())
+        uid = token_claims.get("uid")
+        
+        from services.firebase_client import get_db
+        db = get_db()
+        trip_ref = db.collection("users").document(uid).collection("trips").document(payload.tripId)
+        trip_doc = trip_ref.get()
+        if not trip_doc.exists:
+            raise HTTPException(status_code=404, detail="Trip not found")
+            
+        trip_data = trip_doc.to_dict()
+        trip_obj = trip_data.get("generatedData", trip_data)
+        
+        # Server-known validated proposal
+        prop_ref = trip_ref.collection("proposals").document(payload.proposalId)
+        prop_doc = prop_ref.get()
+        if not prop_doc.exists:
+            raise HTTPException(status_code=404, detail="Proposal not found or expired")
+            
+        proposal = prop_doc.to_dict()
+        
+        revisions = trip_data.get("revisions", [])
+        current_rev_id = revisions[-1].get("revisionId") if revisions else "init"
+        
+        # Check if already accepted (Idempotency)
+        if current_rev_id == f"rev_{payload.proposalId}":
+            return {"success": True, "message": "Already accepted"}
+            
+        # Stale Detection
+        if proposal.get("baseRevisionId") != current_rev_id:
+            raise HTTPException(status_code=409, detail="STALE_PROPOSAL")
+            
+        day_idx = int(str(proposal.get("affectedDate")).replace("Day ", "")) - 1
+        
+        # Apply mutation from explicitly typed actions
+        changed_days = {day_idx: trip_obj["dayPlans"][day_idx]} if day_idx < len(trip_obj["dayPlans"]) else {}
+        
+        if day_idx < len(trip_obj["dayPlans"]):
+            day_plan = trip_obj["dayPlans"][day_idx]
+            new_activities = []
+            
+            acts = day_plan.get("activities", [])
+            acts_dict = {a.get("id", a.get("title")): a for a in acts}
+            
+            for action in proposal.get("actions", []):
+                act_type = action.get("actionType")
+                act_id = action.get("activityId")
+                
+                if act_type == "KEEP":
+                    if act_id in acts_dict:
+                        new_activities.append(acts_dict[act_id])
+                elif act_type == "REPLACE" and action.get("replacementActivity"):
+                    new_activities.append(action["replacementActivity"])
+                elif act_type == "MOVE_TO_LATER_DAY":
+                    target_date_str = action.get("targetDate", "")
+                    if target_date_str.startswith("Day "):
+                        try:
+                            target_day_num = int(target_date_str.replace("Day ", ""))
+                            target_idx = target_day_num - 1
+                            if target_idx < len(trip_obj["dayPlans"]) and target_idx != day_idx:
+                                if target_idx not in changed_days:
+                                    changed_days[target_idx] = trip_obj["dayPlans"][target_idx]
+                                if act_id in acts_dict:
+                                    changed_days[target_idx]["activities"].append(acts_dict[act_id])
+                        except ValueError:
+                            pass
+                # REMOVE, SAVE_FOR_LATER, END_DAY_EARLY skip appending to new_activities
+                
+            day_plan["activities"] = new_activities
+            
+        # Generate deterministic revision identity tied to proposal
+        new_revision_id = f"rev_{payload.proposalId}"
+        
+        revisions.append({
+            "revisionId": new_revision_id,
+            "reason": proposal.get("reason"),
+            "timestamp": datetime.utcnow().isoformat(),
+            "dayPlans": [trip_obj["dayPlans"][idx] for idx in sorted(changed_days.keys())]
+        })
+        
+        if "generatedData" in trip_data:
+            trip_data["generatedData"] = trip_obj
+            trip_data["revisions"] = revisions
+            trip_ref.set(trip_data, merge=True)
+        else:
+            trip_ref.set({"dayPlans": trip_obj["dayPlans"], "revisions": revisions}, merge=True)
+            
+        return {"success": True}
+        
+    except Exception as e:
+        print(f"[ReplanAccept] Error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
