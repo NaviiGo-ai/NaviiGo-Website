@@ -5,10 +5,10 @@ import { useRef, useLayoutEffect, useState, useEffect } from 'react';
 import Image from 'next/image';
 import PlaceImage from '@/components/shared/PlaceImage';
 import gsap from 'gsap';
-import { X, MapPin, Calendar, CheckCircle2, Trophy, Flame, Star, Target, ChevronRight, Zap, Globe2, TrendingUp, Award, Heart, Lock, ArrowRight, Activity, Plane } from 'lucide-react';
+import { X, MapPin, Calendar, CheckCircle2, Trophy, Flame, Star, Target, ChevronRight, Zap, Globe2, TrendingUp, Award, Heart, Lock, ArrowRight, Activity, Plane, Trash2, AlertTriangle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/AuthContext';
-import { getPassportStats, getPassportStamps, getUserBucketList, getUserItineraries } from '@/lib/firestore';
+import { getPassportStats, getPassportStamps, getUserBucketList, getUserItineraries, deleteItineraryFromFirestore } from '@/lib/firestore';
 import { getLeaderboard, type LeaderboardEntry } from '@/lib/leaderboard';
 import {
     xpProgress, getLevelTitle, ACHIEVEMENTS, getDefaultStats,
@@ -48,6 +48,8 @@ export default function PassportPage() {
     const [savedJourneys, setSavedJourneys] = useState<any[]>([]);
     const [bucketList, setBucketList] = useState<any[]>([]);
     const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+    const [deletingJourneyId, setDeletingJourneyId] = useState<string | null>(null);
+    const [confirmDeleteJourney, setConfirmDeleteJourney] = useState<{ id: string; title: string } | null>(null);
     const [loadedUid, setLoadedUid] = useState<string | null>(null);
 
     const [prevUserUid, setPrevUserUid] = useState(user?.uid);
@@ -488,7 +490,7 @@ export default function PassportPage() {
                                                 return (
                                                     <div
                                                         key={journey.id}
-                                                        className="group bg-paper-light rounded-2xl overflow-hidden border border-[#EADFD4] shadow-sm hover:border-brand-primary/40 transition-all duration-300 flex flex-col justify-between"
+                                                        className={`group bg-paper-light rounded-2xl overflow-hidden border border-[#EADFD4] shadow-sm hover:border-brand-primary/40 transition-all duration-300 flex flex-col justify-between ${deletingJourneyId === journey.id ? 'opacity-40 pointer-events-none' : ''}`}
                                                     >
                                                         <div>
                                                             {/* Cover Image */}
@@ -506,6 +508,18 @@ export default function PassportPage() {
                                                                         {totalDays} {totalDays === 1 ? 'DAY' : 'DAYS'} CHAPTERS
                                                                     </span>
                                                                 </div>
+
+                                                                {/* Delete button — always visible */}
+                                                                <button
+                                                                    onClick={(e) => {
+                                                                        e.stopPropagation();
+                                                                        setConfirmDeleteJourney({ id: journey.id, title: destTitle });
+                                                                    }}
+                                                                    title="Delete journey"
+                                                                    className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center text-red-500 border border-red-200 hover:bg-red-500 hover:text-white transition-all shadow-sm z-10"
+                                                                >
+                                                                    <Trash2 className="w-3.5 h-3.5" />
+                                                                </button>
 
                                                                 <div className="absolute bottom-3 left-4 right-4 text-white">
                                                                     <h3 className="font-display font-black text-2xl uppercase tracking-tight leading-tight">
@@ -568,6 +582,61 @@ export default function PassportPage() {
                                             })}
                                         </div>
                                     )}
+
+                                    {/* Confirm delete journey modal */}
+                                    <AnimatePresence>
+                                        {confirmDeleteJourney && (
+                                            <motion.div
+                                                initial={{ opacity: 0 }}
+                                                animate={{ opacity: 1 }}
+                                                exit={{ opacity: 0 }}
+                                                className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4"
+                                                onClick={() => setConfirmDeleteJourney(null)}
+                                            >
+                                                <motion.div
+                                                    initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                                                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                                                    exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                                                    transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                                                    className="bg-paper-light border border-[#EADFD4] rounded-2xl p-8 max-w-sm w-full shadow-2xl"
+                                                    onClick={(e) => e.stopPropagation()}
+                                                >
+                                                    <div className="flex flex-col items-center text-center gap-4">
+                                                        <div className="w-14 h-14 rounded-xl bg-red-50 border border-red-100 flex items-center justify-center">
+                                                            <AlertTriangle className="w-7 h-7 text-red-500" />
+                                                        </div>
+                                                        <div>
+                                                            <h3 className="font-display font-black text-lg text-naviigo-brown uppercase mb-1">Delete Journey?</h3>
+                                                            <p className="font-sans text-sm text-naviigo-brown/70">
+                                                                &ldquo;{confirmDeleteJourney.title}&rdquo; will be permanently removed. This cannot be undone.
+                                                            </p>
+                                                        </div>
+                                                        <div className="flex gap-3 w-full pt-2">
+                                                            <button
+                                                                onClick={() => setConfirmDeleteJourney(null)}
+                                                                className="flex-1 px-4 py-2.5 rounded-xl border border-[#EADFD4] font-mono text-xs font-bold uppercase text-naviigo-brown hover:bg-paper-warm transition-colors"
+                                                            >
+                                                                Cancel
+                                                            </button>
+                                                            <button
+                                                                onClick={async () => {
+                                                                    if (!user?.uid || !confirmDeleteJourney) return;
+                                                                    setDeletingJourneyId(confirmDeleteJourney.id);
+                                                                    await deleteItineraryFromFirestore(user.uid, confirmDeleteJourney.id);
+                                                                    setSavedJourneys(prev => prev.filter(j => j.id !== confirmDeleteJourney.id));
+                                                                    setDeletingJourneyId(null);
+                                                                    setConfirmDeleteJourney(null);
+                                                                }}
+                                                                className="flex-1 px-4 py-2.5 rounded-xl bg-red-500 text-white font-mono text-xs font-bold uppercase hover:bg-red-600 transition-colors"
+                                                            >
+                                                                Delete
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </motion.div>
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
                                 </motion.div>
                             )}
 

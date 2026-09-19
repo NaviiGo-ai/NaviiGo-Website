@@ -1,11 +1,11 @@
 'use client';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
-import { Navigation, MapPin, Calendar, Clock, ChevronRight, Plane, LogIn } from 'lucide-react';
+import { Navigation, MapPin, Calendar, Clock, ChevronRight, Plane, LogIn, Trash2, AlertTriangle } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import PlaceImage from '@/components/shared/PlaceImage';
 import { useAuth } from '@/lib/AuthContext';
-import { getUserItineraries } from '@/lib/firestore';
+import { getUserItineraries, deleteItineraryFromFirestore } from '@/lib/firestore';
 import type { SavedItineraryDoc } from '@/lib/firestoreSchema';
 
 interface TripData {
@@ -54,9 +54,73 @@ function mapItineraryToOngoing(itin: SavedItineraryDoc): TripData | null {
     };
 }
 
+// ─── Confirm Delete Modal ────────────────────────────────────────────────────
+function ConfirmDeleteModal({
+    open,
+    title,
+    onConfirm,
+    onCancel,
+}: {
+    open: boolean;
+    title?: string;
+    onConfirm: () => void;
+    onCancel: () => void;
+}) {
+    return (
+        <AnimatePresence>
+            {open && (
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm px-4"
+                    onClick={onCancel}
+                >
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                        transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                        className="bg-white dark:bg-muted-900 border border-muted-200 dark:border-muted-700 rounded-3xl p-8 max-w-sm w-full shadow-2xl"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="flex flex-col items-center text-center gap-4">
+                            <div className="w-14 h-14 rounded-2xl bg-red-50 dark:bg-red-500/10 flex items-center justify-center">
+                                <AlertTriangle className="w-7 h-7 text-red-500" />
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-bold text-muted-900 dark:text-white mb-1">Remove This Trip?</h3>
+                                <p className="text-muted-500 dark:text-muted-400 text-sm">
+                                    &ldquo;{title}&rdquo; will be permanently deleted from your itineraries. This cannot be undone.
+                                </p>
+                            </div>
+                            <div className="flex gap-3 w-full pt-2">
+                                <button
+                                    onClick={onCancel}
+                                    className="flex-1 px-4 py-2.5 rounded-xl border border-muted-200 dark:border-muted-700 text-sm font-semibold text-muted-700 dark:text-muted-300 hover:bg-muted-50 dark:hover:bg-muted-800 transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={onConfirm}
+                                    className="flex-1 px-4 py-2.5 rounded-xl bg-red-500 text-white text-sm font-semibold hover:bg-red-600 transition-colors"
+                                >
+                                    Delete
+                                </button>
+                            </div>
+                        </div>
+                    </motion.div>
+                </motion.div>
+            )}
+        </AnimatePresence>
+    );
+}
+
 export default function OngoingTripsPage() {
     const { user, loading: authLoading, signInWithGoogle } = useAuth();
     const [trips, setTrips] = useState<TripData[] | null>(null);
+    const [deletingId, setDeletingId] = useState<string | null>(null);
+    const [confirmDelete, setConfirmDelete] = useState<{ id: string; destination: string } | null>(null);
 
     useEffect(() => {
         if (!user?.uid) return;
@@ -72,6 +136,15 @@ export default function OngoingTripsPage() {
         });
         return () => { active = false; };
     }, [user?.uid]);
+
+    const handleDelete = async (id: string) => {
+        if (!user?.uid) return;
+        setDeletingId(id);
+        await deleteItineraryFromFirestore(user.uid, id);
+        setTrips(prev => prev ? prev.filter(t => t.id !== id) : prev);
+        setDeletingId(null);
+        setConfirmDelete(null);
+    };
 
     const loading = authLoading || (!!user && trips === null);
     const tripList = trips ?? [];
@@ -125,7 +198,7 @@ export default function OngoingTripsPage() {
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: i * 0.1 }}
-                                className="bg-white dark:bg-muted-900 rounded-3xl border border-muted-100 dark:border-muted-800 shadow-sm overflow-hidden hover:shadow-lg transition-all"
+                                className={`bg-white dark:bg-muted-900 rounded-3xl border border-muted-100 dark:border-muted-800 shadow-sm overflow-hidden hover:shadow-lg transition-all group ${deletingId === trip.id ? 'opacity-50 pointer-events-none' : ''}`}
                             >
                                 <div className="flex flex-col md:flex-row">
                                     <div className="relative md:w-72 h-48 md:h-auto shrink-0">
@@ -152,7 +225,17 @@ export default function OngoingTripsPage() {
                                                     <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> {new Date(trip.startDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} – {new Date(trip.endDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</span>
                                                 </div>
                                             </div>
-                                            <span className="text-sm font-bold text-deep-sea-600 dark:text-deep-sea-400 bg-deep-sea-50 dark:bg-deep-sea-500/10 px-3 py-1 rounded-full">{trip.status}</span>
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-sm font-bold text-deep-sea-600 dark:text-deep-sea-400 bg-deep-sea-50 dark:bg-deep-sea-500/10 px-3 py-1 rounded-full">{trip.status}</span>
+                                                {/* Delete button */}
+                                                <button
+                                                    onClick={() => setConfirmDelete({ id: trip.id, destination: trip.destination })}
+                                                    title="Delete trip"
+                                                    className="w-8 h-8 rounded-full bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 flex items-center justify-center text-red-500 transition-all hover:bg-red-500 hover:text-white shrink-0"
+                                                >
+                                                    <Trash2 className="w-3.5 h-3.5" />
+                                                </button>
+                                            </div>
                                         </div>
 
                                         <div className="mb-4">
@@ -192,5 +275,14 @@ export default function OngoingTripsPage() {
                 )}
             </div>
         </div>
+
+        {/* Confirm delete modal */}
+        <ConfirmDeleteModal
+            open={!!confirmDelete}
+            title={confirmDelete?.destination}
+            onConfirm={() => confirmDelete && handleDelete(confirmDelete.id)}
+            onCancel={() => setConfirmDelete(null)}
+        />
+    </div>
     );
 }

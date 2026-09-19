@@ -55,15 +55,20 @@ service cloud.firestore {
       allow create: if true;
 
       allow update: if signedIn() && (
-        // (a) Owner of a UUID itinerary
+        // (a) Owner of a UUID itinerary (doc already has userId set)
         resource.data.userId == request.auth.uid
-        // (b) Collaborator editing only the collaboration fields
+        // (b) Claiming an itinerary: incoming data sets userId to the requester
+        || request.resource.data.userId == request.auth.uid
+        // (c) Collaborator editing only the collaboration fields
         || changedKeys().hasOnly(['collaborators', 'invitedUsers', 'customPlans', 'updatedAt'])
-        // (c) Legacy share doc that carries no owner field
+        // (d) Legacy share doc that carries no owner field
         || !('userId' in resource.data)
       );
 
-      allow delete: if signedIn() && resource.data.userId == request.auth.uid;
+      allow delete: if signedIn() && (
+        resource.data.userId == request.auth.uid
+        || resource.data.ownerUid == request.auth.uid
+      );
     }
 
     // ─── Leaderboard — leaderboard/{uid} ─────────────────────────────────────

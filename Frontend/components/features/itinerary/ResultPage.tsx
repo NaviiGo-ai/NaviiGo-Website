@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import Image from 'next/image';
-import { saveSharedItinerary, listenToItinerary, saveItineraryToFirestore, updateSharedPlans } from '@/lib/firestore';
+import { saveSharedItinerary, listenToItinerary, saveItineraryToFirestore, updateSharedPlans, deleteItineraryFromFirestore } from '@/lib/firestore';
 import { useAuth } from '@/lib/AuthContext';
 import { resolveImgSrc } from '@/lib/imageService';
 import PlaceImage from '@/components/shared/PlaceImage';
@@ -53,6 +53,8 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
     const [isSaving, setIsSaving] = useState(false);
     const [saveError, setSaveError] = useState(false);
     const saveInFlightRef = useRef(false);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [collaborators, setCollaborators] = useState(1);
     const [isSharing, setIsSharing] = useState(false);
     const [hiddenGems, setHiddenGems] = useState<any[]>([]);
@@ -491,8 +493,77 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                                         )}
                                     </button>
                                 )}
+                                {/* Delete button — inline with other actions */}
+                                {user && stableTripId && (
+                                    <button
+                                        onClick={() => setShowDeleteConfirm(true)}
+                                        title="Delete this itinerary"
+                                        className="w-11 h-11 rounded-full border-2 border-red-200 bg-red-50 flex items-center justify-center text-red-500 hover:bg-red-500 hover:text-white hover:border-red-500 transition-all shrink-0"
+                                    >
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                                    </button>
+                                )}
                             </div>
                         </div>
+
+
+                        {/* ── Delete confirm modal ── */}
+                        <AnimatePresence>
+                            {showDeleteConfirm && (
+                                <motion.div
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                    className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 backdrop-blur-sm px-4"
+                                    onClick={() => setShowDeleteConfirm(false)}
+                                >
+                                    <motion.div
+                                        initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                                        exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                                        transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                                        className="bg-paper-light border border-[#EADFD4] rounded-2xl p-8 max-w-sm w-full shadow-2xl"
+                                        onClick={(e) => e.stopPropagation()}
+                                    >
+                                        <div className="flex flex-col items-center text-center gap-4">
+                                            <div className="w-14 h-14 rounded-xl bg-red-50 border border-red-100 flex items-center justify-center">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                                            </div>
+                                            <div>
+                                                <h3 className="font-display font-black text-lg text-naviigo-brown uppercase mb-1">Delete This Journey?</h3>
+                                                <p className="font-sans text-sm text-naviigo-brown/70">
+                                                    &ldquo;{destName}&rdquo; will be permanently removed from your passport and saved trips. This cannot be undone.
+                                                </p>
+                                            </div>
+                                            <div className="flex gap-3 w-full pt-2">
+                                                <button
+                                                    onClick={() => setShowDeleteConfirm(false)}
+                                                    className="flex-1 px-4 py-2.5 rounded-xl border border-[#EADFD4] font-mono text-xs font-bold uppercase text-naviigo-brown hover:bg-paper-warm transition-colors"
+                                                >
+                                                    Cancel
+                                                </button>
+                                                <button
+                                                    disabled={isDeleting}
+                                                    onClick={async () => {
+                                                        if (!user?.uid || !stableTripId) return;
+                                                        setIsDeleting(true);
+                                                        await deleteItineraryFromFirestore(user.uid, stableTripId);
+                                                        setIsDeleting(false);
+                                                        setShowDeleteConfirm(false);
+                                                        router.push('/passport');
+                                                    }}
+                                                    className="flex-1 px-4 py-2.5 rounded-xl bg-red-500 text-white font-mono text-xs font-bold uppercase hover:bg-red-600 transition-colors flex items-center justify-center gap-2 disabled:opacity-60"
+                                                >
+                                                    {isDeleting ? (
+                                                        <><span className="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" /> Deleting…</>
+                                                    ) : 'Delete'}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
 
                         {/* Right 55vw Visual Anchor */}
                         <div className="lg:col-span-6 relative">
