@@ -2,10 +2,11 @@
 # Layer 1: In-memory LRU (instant, ~0ms)
 # Layer 2: File cache — backend/cache/destinations/<key>.json (~5ms)
 # Layer 3: CSV/bulk-loaded data — backend/data/destinations/ (~10ms)
-# Layer 4: Gemini API (last resort, 5-15s, rate-limited)
+# Layer 4: Geoapify Candidate Builder (real-world POIs, 0 LLM cost)
+# Layer 5: Gemini API (dormant fallback only if Geoapify fails or is unconfigured)
 #
-# Write-through: Gemini results are stored in ALL layers so subsequent
-# requests for the same destination never touch the API again.
+# Write-through: Candidate data is stored in ALL layers so subsequent
+# requests for the same destination never touch external APIs again.
 
 import os
 import re
@@ -17,7 +18,8 @@ import threading
 from pathlib import Path
 from typing import Optional, Dict, Any, List
 from collections import OrderedDict
-from services.itinerary_engine import fetch_destination_data_with_gemini, DEST_DATA_VERSION, get_pool_requirements, get_pool_requirements
+from services.itinerary_engine import fetch_destination_data_with_gemini, DEST_DATA_VERSION, get_pool_requirements
+from services.geoapify_service import build_destination_candidate_pool, is_geoapify_configured
 
 # ── Paths ────────────────────────────────────────────────────────────────────
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -29,7 +31,7 @@ DATA_DIR.mkdir(parents=True, exist_ok=True)
 
 # ── In-Memory LRU Cache (Layer 1) ───────────────────────────────────────────
 MAX_MEMORY_ENTRIES = 200
-CACHE_TTL_SECONDS = 24 * 60 * 60  # 24 hours
+CACHE_TTL_SECONDS = 60 * 24 * 60 * 60  # 60 days decoupled POI cache (weather is cached separately)
 
 _memory_cache: OrderedDict[str, Dict[str, Any]] = OrderedDict()
 # Each entry: {"data": {...}, "ts": unix_timestamp}
@@ -168,8 +170,10 @@ async def load_csv_destinations():
 
 def _csv_row_to_dest_data(row: dict, name: str) -> dict:
     """Convert a CSV row to the destination data format expected by the engine."""
-    lat = float(row.get("lat") or row.get("latitude") or 20.5937)
-    lng = float(row.get("lng") or row.get("longitude") or row.get("lon") or 78.9629)
+    raw_lat = row.get("lat") or row.get("latitude")
+    raw_lng = row.get("lng") or row.get("longitude") or row.get("lon")
+    lat = float(raw_lat) if raw_lat is not None else None
+    lng = float(raw_lng) if raw_lng is not None else None
 
     # Build highlights from CSV columns if available
     highlights = []
@@ -179,19 +183,21 @@ def _csv_row_to_dest_data(row: dict, name: str) -> dict:
             highlights = json.loads(row["highlights_json"])
         except Exception:
             pass
-    
+
     # Check for numbered highlight columns: highlight_1, highlight_2, ...
     if not highlights:
         for i in range(1, 20):
             h_name = row.get(f"highlight_{i}") or row.get(f"highlight_{i}_name")
             if not h_name:
                 break
+            h_lat = float(row.get(f"highlight_{i}_lat")) if row.get(f"highlight_{i}_lat") else (lat + (i * 0.005) if lat is not None else None)
+            h_lng = float(row.get(f"highlight_{i}_lng")) if row.get(f"highlight_{i}_lng") else (lng + (i * 0.003) if lng is not None else None)
             highlights.append({
                 "name": h_name,
                 "desc": row.get(f"highlight_{i}_desc", f"A must-visit attraction in {name}."),
                 "tags": (row.get(f"highlight_{i}_tags") or "Heritage,Culture").split(","),
-                "lat": float(row.get(f"highlight_{i}_lat") or lat + (i * 0.005)),
-                "lng": float(row.get(f"highlight_{i}_lng") or lng + (i * 0.003)),
+                "lat": h_lat,
+                "lng": h_lng,
                 "duration": row.get(f"highlight_{i}_duration", "1-2 hrs"),
                 "img": row.get(f"highlight_{i}_img", ""),
                 "bestMonths": row.get(f"highlight_{i}_best_months", "Oct-Mar"),
@@ -210,15 +216,17 @@ def _csv_row_to_dest_data(row: dict, name: str) -> dict:
             r_name = row.get(f"restaurant_{i}") or row.get(f"restaurant_{i}_name")
             if not r_name:
                 break
+            r_lat = float(row.get(f"restaurant_{i}_lat")) if row.get(f"restaurant_{i}_lat") else (lat + 0.002 if lat is not None else None)
+            r_lng = float(row.get(f"restaurant_{i}_lng")) if row.get(f"restaurant_{i}_lng") else (lng + 0.002 if lng is not None else None)
             restaurants.append({
                 "name": r_name,
                 "desc": row.get(f"restaurant_{i}_desc", f"Popular restaurant in {name}."),
                 "cuisine": row.get(f"restaurant_{i}_cuisine", "Indian"),
                 "priceRange": row.get(f"restaurant_{i}_price", "₹300-600"),
-                "rating": float(row.get(f"restaurant_{i}_rating") or 4.3),
+                "rating": float(row.get(f"restaurant_{i}_rating")) if row.get(f"restaurant_{i}_rating") else None,
                 "mustTry": row.get(f"restaurant_{i}_must_try", "Local special"),
-                "lat": float(row.get(f"restaurant_{i}_lat") or lat + 0.002),
-                "lng": float(row.get(f"restaurant_{i}_lng") or lng + 0.002),
+                "lat": r_lat,
+                "lng": r_lng,
                 "tags": (row.get(f"restaurant_{i}_tags") or "Local").split(","),
                 "id": f"r{i}",
                 "img": "",
@@ -237,15 +245,17 @@ def _csv_row_to_dest_data(row: dict, name: str) -> dict:
             h_name = row.get(f"hotel_{i}") or row.get(f"hotel_{i}_name")
             if not h_name:
                 break
+            h_lat = float(row.get(f"hotel_{i}_lat")) if row.get(f"hotel_{i}_lat") else (lat + 0.003 if lat is not None else None)
+            h_lng = float(row.get(f"hotel_{i}_lng")) if row.get(f"hotel_{i}_lng") else (lng + 0.003 if lng is not None else None)
             hotels.append({
                 "name": h_name,
                 "desc": row.get(f"hotel_{i}_desc", f"Comfortable stay in {name}."),
                 "type": row.get(f"hotel_{i}_type", "Hotel"),
                 "priceRange": row.get(f"hotel_{i}_price", "₹1500-3000/night"),
-                "rating": float(row.get(f"hotel_{i}_rating") or 4.3),
+                "rating": float(row.get(f"hotel_{i}_rating")) if row.get(f"hotel_{i}_rating") else None,
                 "amenities": (row.get(f"hotel_{i}_amenities") or "WiFi,AC").split(","),
-                "lat": float(row.get(f"hotel_{i}_lat") or lat + 0.003),
-                "lng": float(row.get(f"hotel_{i}_lng") or lng + 0.003),
+                "lat": h_lat,
+                "lng": h_lng,
                 "id": f"h{i}",
                 "img": "",
             })
@@ -254,13 +264,13 @@ def _csv_row_to_dest_data(row: dict, name: str) -> dict:
         "description": row.get("description", f"{name} is a vibrant destination in India."),
         "avgCost": row.get("avg_cost") or row.get("avgCost") or "₹2,000 – ₹8,000 per day",
         "crowdLevel": row.get("crowd_level") or row.get("crowdLevel") or "Medium",
-        "crowdNote": row.get("crowd_note") or row.get("crowdNote") or "Check local advisories",
+        "crowdNote": row.get("crowd_note") or row.get("crowdNote") or None,
         "logistics": {
-            "flights": row.get("flights") or row.get("airport") or "Check airline websites",
-            "trains": row.get("trains") or row.get("station") or "Check IRCTC",
+            "flights": row.get("flights") or row.get("airport") or None,
+            "trains": row.get("trains") or row.get("station") or None,
         },
         "weather": {},
-        "mapCenter": {"lat": lat, "lng": lng},
+        "mapCenter": {"lat": lat, "lng": lng} if (lat is not None and lng is not None) else None,
         "highlights": highlights,
         "restaurants": restaurants,
         "hotels": hotels,
@@ -344,10 +354,19 @@ def _is_stale_or_undersized(data: Optional[Dict[str, Any]], days: int = 3) -> bo
 
 
 async def _background_refetch(key: str, dest_name: str, purpose: str, budget: int, days: int, existing_data: Optional[Dict[str, Any]] = None):
-    """Re-fetch destination data from Gemini in background, merge with existing, and update all cache layers."""
+    """Re-fetch destination data in background (Geoapify -> Gemini fallback), merge with existing, and update all cache layers."""
     try:
         print(f"[Cache] Background pool enrichment for {dest_name} (days={days})...")
-        fresh_data = await fetch_destination_data_with_gemini(dest_name, purpose, budget, days)
+        fresh_data = None
+        if is_geoapify_configured():
+            try:
+                fresh_data = await build_destination_candidate_pool(dest_name, days, purpose, budget)
+            except Exception as ge:
+                print(f"[Cache] Background Geoapify enrichment failed for {dest_name}: {ge}")
+
+        if not fresh_data:
+            fresh_data = await fetch_destination_data_with_gemini(dest_name, purpose, budget, days)
+
         if fresh_data:
             merged = _merge_destination_data(existing_data, fresh_data)
             _mem_set(key, merged)
@@ -365,7 +384,7 @@ async def get_destination_data(
 ) -> Optional[Dict[str, Any]]:
     """
     Get destination data from the fastest available source.
-    Layer 1 (memory) → Layer 2 (file) → Layer 3 (CSV) → Layer 4 (Gemini API).
+    Layer 1 (memory) → Layer 2 (file) → Layer 3 (CSV) → Layer 4 (Geoapify) → Layer 5 (Gemini API fallback).
     Results are written through to all layers for future requests.
 
     Version- & Pool-aware: if cached data is stale or undersized for the requested trip
@@ -420,21 +439,35 @@ async def get_destination_data(
                     asyncio.create_task(_background_refetch(key, dest_name, purpose, budget, days, data))
                 return data
 
-    # Layer 4: Gemini API (expansion or first-time fetch)
-    print(f"[Cache] Fetching {dest_name} (days={days}) from Gemini API to satisfy candidate pool...")
+    # Layer 4: Geoapify Candidate Pool Builder (0 LLM cost)
+    if is_geoapify_configured():
+        print(f"[Cache] Fetching {dest_name} (days={days}) from Geoapify candidate builder...")
+        try:
+            geo_data = await build_destination_candidate_pool(dest_name, days, purpose, budget)
+            if geo_data:
+                merged = _merge_destination_data(data, geo_data)
+                _mem_set(key, merged)
+                await _file_set(key, merged)
+                print(f"[Cache] Stored {dest_name} from Geoapify in all cache layers (v{DEST_DATA_VERSION}, {len(merged.get('highlights', []))} hl, {len(merged.get('restaurants', []))} rest)")
+                return merged
+        except Exception as ge:
+            print(f"[Cache] Geoapify candidate builder error for {dest_name}: {ge}")
+
+    # Layer 5: Gemini API (dormant fallback)
+    print(f"[Cache] Fetching {dest_name} (days={days}) from Gemini API fallback...")
     fresh_data = await fetch_destination_data_with_gemini(dest_name, purpose, budget, days)
     if fresh_data:
         merged = _merge_destination_data(data, fresh_data)
         _mem_set(key, merged)
         await _file_set(key, merged)
-        print(f"[Cache] Stored {dest_name} in all cache layers (v{DEST_DATA_VERSION}, {len(merged.get('highlights', []))} hl, {len(merged.get('restaurants', []))} rest)")
+        print(f"[Cache] Stored {dest_name} from Gemini fallback in all cache layers (v{DEST_DATA_VERSION}, {len(merged.get('highlights', []))} hl, {len(merged.get('restaurants', []))} rest)")
         return merged
 
     if data:
-        print(f"[Cache] Gemini fetch failed, returning available {len(data.get('highlights', []))} highlights for {dest_name}")
+        print(f"[Cache] Fresh fetch failed, returning available {len(data.get('highlights', []))} highlights for {dest_name}")
         return data
 
-    print(f"[Cache] Gemini failed for {dest_name} and no cached data available")
+    print(f"[Cache] All candidate data sources failed for {dest_name} and no cached data available")
     return None
 
 

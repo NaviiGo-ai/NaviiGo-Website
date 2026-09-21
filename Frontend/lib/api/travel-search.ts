@@ -1,4 +1,4 @@
-import { CITY_CODES_MAP } from '@/lib/constants/destinations';
+import { CITY_CODES_MAP, getDestinationById } from '@/lib/constants/destinations';
 
 export interface SearchParams {
   type: "flights" | "hotels" | "cabs" | "trains";
@@ -105,18 +105,147 @@ export async function searchFlights(params: SearchParams, page = 1) {
   return [];
 }
 
+const geocodeCache = new Map<string, {lat: number, lng: number}>();
+const routingCache = new Map<string, any>();
+
+export async function getCoordinates(cityName: string, apiKey: string): Promise<{lat: number, lng: number} | null> {
+  if (!cityName) return null;
+  const normalized = cityName.trim().toLowerCase();
+  
+  const dest = getDestinationById(normalized);
+  if (dest && dest.lat && dest.lng) {
+    return { lat: dest.lat, lng: dest.lng };
+  }
+  
+  if (geocodeCache.has(normalized)) {
+    return geocodeCache.get(normalized)!;
+  }
+  
+  if (!apiKey) return null;
+  
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    const res = await fetch(`https://api.geoapify.com/v1/geocode/search?text=${encodeURIComponent(cityName)}&apiKey=${apiKey}`, {
+      signal: controller.signal
+    });
+    clearTimeout(timeoutId);
+    
+    const data = await res.json();
+    if (data.features && data.features.length > 0) {
+      const coords = {
+        lat: data.features[0].properties.lat,
+        lng: data.features[0].properties.lon
+      };
+      geocodeCache.set(normalized, coords);
+      return coords;
+    }
+  } catch (err) {
+    console.error("Geocoding failed:", err);
+  }
+  return null;
+}
+
 export async function searchTrains(params: SearchParams) {
-  // Return empty results when no live API is available — never fabricate trains.
-  // (The frontend shows the IRCTC/Cleartrip deep link directly when results are empty.)
-  return [];
+  const dateStr = params.date || new Date().toISOString().split('T')[0];
+  return [{
+    id: `rail-handoff-${params.from}-${params.to}`,
+    type: "rail_handoff",
+    from: params.from,
+    to: params.to,
+    date: dateStr,
+    title: "Check live train availability"
+  }];
 }
 
 export async function searchCabs(params: SearchParams) {
-  const pickupEnc = encodeURIComponent(params.from || 'Airport');
-  const dropEnc = encodeURIComponent(params.to || 'City');
+  const apiKey = process.env.GEOAPIFY_API_KEY || '';
+  if (!apiKey) {
+    return [{
+      id: `cab-handoff-noapi`,
+      type: "cab_handoff",
+      from: params.from,
+      to: params.to,
+      distanceKm: null,
+      durationMinutes: null,
+      estimatedFareMin: null,
+      estimatedFareMax: null,
+      estimateSource: null,
+      fareIsLive: false
+    }];
+  }
 
-  // Return empty results when API is unavailable - never fabricate data
-  return [];
+  const origin = await getCoordinates(params.from, apiKey);
+  const dest = await getCoordinates(params.to, apiKey);
+
+  if (!origin || !dest) {
+     return [{
+      id: `cab-handoff-nocoords`,
+      type: "cab_handoff",
+      from: params.from,
+      to: params.to,
+      distanceKm: null,
+      durationMinutes: null,
+      estimatedFareMin: null,
+      estimatedFareMax: null,
+      estimateSource: null,
+      fareIsLive: false
+    }];
+  }
+
+  const routeKey = `${origin.lat},${origin.lng}|${dest.lat},${dest.lng}`;
+  let routeData = routingCache.get(routeKey);
+
+  if (!routeData) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 8000);
+      const res = await fetch(`https://api.geoapify.com/v1/routing?waypoints=${routeKey}&mode=drive&apiKey=${apiKey}`, {
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+      
+      const data = await res.json();
+      if (data.features && data.features.length > 0) {
+        const props = data.features[0].properties;
+        routeData = {
+          distance: props.distance, // in meters
+          time: props.time // in seconds
+        };
+        routingCache.set(routeKey, routeData);
+      }
+    } catch (err) {
+      console.error("Routing failed:", err);
+    }
+  }
+
+  const distanceKm = routeData ? Math.round(routeData.distance / 1000) : null;
+  const durationMinutes = routeData ? Math.round(routeData.time / 60) : null;
+
+  const baseFare = Number(process.env.CAB_BASE_FARE_ESTIMATE || 100);
+  const minPerKm = Number(process.env.CAB_PER_KM_ESTIMATE_MIN || 12);
+  const maxPerKm = Number(process.env.CAB_PER_KM_ESTIMATE_MAX || 18);
+
+  let estimatedFareMin = null;
+  let estimatedFareMax = null;
+
+  if (distanceKm !== null) {
+    estimatedFareMin = baseFare + distanceKm * minPerKm;
+    estimatedFareMax = baseFare + distanceKm * maxPerKm;
+  }
+
+  return [{
+    id: `cab-handoff-${params.from}-${params.to}`,
+    type: "cab_handoff",
+    from: params.from,
+    to: params.to,
+    distanceKm,
+    durationMinutes,
+    estimatedFareMin,
+    estimatedFareMax,
+    estimateSource: distanceKm !== null ? "naviigo_distance_model" : null,
+    fareIsLive: false
+  }];
 }
 
 export async function searchHotels(params: SearchParams, page = 1) {

@@ -214,18 +214,49 @@ def _get_survey_tip(tags: List[str], seed_str: str = "") -> str:
     return defaults[h % len(defaults)]
 
 
+def _extract_center(center: Optional[dict], fallback_items: Optional[List[dict]] = None) -> Tuple[Optional[float], Optional[float]]:
+    """Extract lat/lng from center dict, or calculate centroid from items if missing."""
+    if center and center.get("lat") is not None and center.get("lng") is not None:
+        try:
+            return float(center["lat"]), float(center["lng"])
+        except (ValueError, TypeError):
+            pass
+    if fallback_items:
+        valid_lats = []
+        valid_lngs = []
+        for it in fallback_items:
+            lat = it.get("lat")
+            lng = it.get("lng")
+            if lat is not None and lng is not None:
+                try:
+                    valid_lats.append(float(lat))
+                    valid_lngs.append(float(lng))
+                except (ValueError, TypeError):
+                    pass
+        if valid_lats and valid_lngs:
+            return sum(valid_lats) / len(valid_lats), sum(valid_lngs) / len(valid_lngs)
+    return None, None
+
+
 def _geo_filter_and_snap(items: List[dict], center: dict) -> Tuple[List[dict], List[dict]]:
     in_range: List[dict] = []
     flagged: List[dict] = []
-    c_lat = center.get("lat", 20.5937)
-    c_lng = center.get("lng", 78.9629)
+    c_lat, c_lng = _extract_center(center, items)
+    if c_lat is None or c_lng is None:
+        for item in items:
+            if item.get("lat") is None or item.get("lng") is None:
+                flagged.append({**item, "geoFlag": "missing-coordinates"})
+            else:
+                in_range.append(item)
+        return in_range, flagged
+
     for item in items:
         lat = item.get("lat")
         lng = item.get("lng")
         if lat is None or lng is None:
             flagged.append({**item, "geoFlag": "missing-coordinates"})
             continue
-        dist_km = _haversine_m(c_lat, c_lng, lat, lng) / 1000.0
+        dist_km = _haversine_m(c_lat, c_lng, float(lat), float(lng)) / 1000.0
         if dist_km <= GEO_RADIUS_KM:
             in_range.append(item)
         else:
@@ -235,13 +266,14 @@ def _geo_filter_and_snap(items: List[dict], center: dict) -> Tuple[List[dict], L
 
 # ─── Spatial Clustering (Angular Sectors + TSP) ──────────────────────────────
 
-def _nearest_neighbor_sort(attractions: List[dict], center: dict):
+def _nearest_neighbor_sort(attractions: List[dict], center: Optional[dict] = None):
     """Sort attractions in-place using nearest-neighbor greedy algorithm starting from center to minimize backtracking."""
     if len(attractions) <= 1:
         return
 
-    c_lat = center.get("lat", 20.5937) if center else 20.5937
-    c_lng = center.get("lng", 78.9629) if center else 78.9629
+    c_lat, c_lng = _extract_center(center, attractions)
+    if c_lat is None or c_lng is None:
+        return
 
     remaining = list(attractions)
     sorted_list = []
@@ -252,14 +284,20 @@ def _nearest_neighbor_sort(attractions: List[dict], center: dict):
         nearest_idx = 0
         nearest_dist = float("inf")
         for i, attr in enumerate(remaining):
-            dist = _haversine_m(current_lat, current_lng, attr.get("lat", c_lat), attr.get("lng", c_lng))
+            a_lat = attr.get("lat")
+            a_lng = attr.get("lng")
+            if a_lat is not None and a_lng is not None:
+                dist = _haversine_m(current_lat, current_lng, float(a_lat), float(a_lng))
+            else:
+                dist = 99999999.0
             if dist < nearest_dist:
                 nearest_dist = dist
                 nearest_idx = i
         nearest = remaining.pop(nearest_idx)
         sorted_list.append(nearest)
-        current_lat = nearest.get("lat", c_lat)
-        current_lng = nearest.get("lng", c_lng)
+        if nearest.get("lat") is not None and nearest.get("lng") is not None:
+            current_lat = float(nearest["lat"])
+            current_lng = float(nearest["lng"])
 
     attractions[:] = sorted_list
 
@@ -293,7 +331,7 @@ def _filter_restaurants_by_diet(restaurants: List[dict], diet_pref: str) -> List
     return filtered if filtered else restaurants
 
 
-def _cluster_by_angular_sectors(attractions: List[dict], center: dict, num_clusters: int) -> List[List[dict]]:
+def _cluster_by_angular_sectors(attractions: List[dict], center: Optional[dict], num_clusters: int) -> List[List[dict]]:
     """
     Divide attractions into contiguous geographic sectors using polar angles (atan2)
     relative to destination center, then sort each sector via Nearest-Neighbor TSP.
@@ -306,15 +344,28 @@ def _cluster_by_angular_sectors(attractions: List[dict], center: dict, num_clust
         _nearest_neighbor_sort(cluster, center)
         return [cluster]
 
-    c_lat = center.get("lat", 20.5937)
-    c_lng = center.get("lng", 78.9629)
+    c_lat, c_lng = _extract_center(center, attractions)
+    if c_lat is None or c_lng is None:
+        total = len(attractions)
+        base_size = total // num_clusters
+        remainder = total % num_clusters
+        clusters: List[List[dict]] = []
+        idx = 0
+        for i in range(num_clusters):
+            size = base_size + (1 if i < remainder else 0)
+            clusters.append(attractions[idx:idx + size])
+            idx += size
+        return clusters
 
     # Compute polar angle for each attraction
     annotated = []
     for attr in attractions:
-        lat = attr.get("lat", c_lat)
-        lng = attr.get("lng", c_lng)
-        theta = math.atan2(lat - c_lat, lng - c_lng)
+        lat = attr.get("lat")
+        lng = attr.get("lng")
+        if lat is not None and lng is not None:
+            theta = math.atan2(float(lat) - c_lat, float(lng) - c_lng)
+        else:
+            theta = 0.0
         annotated.append((theta, attr))
 
     # Sort contiguously by polar angle theta (-pi to +pi)
@@ -723,7 +774,9 @@ def generate_itinerary(ctx: dict, dest_data: dict) -> Optional[dict]:
     budget_per_day = budget / max(days, 1)
     budget_tier = "luxury" if budget_per_day > 12000 else ("mid-range" if budget_per_day > 5000 else "budget")
 
-    map_center = dest_data.get("mapCenter", {"lat": 20.5937, "lng": 78.9629})
+    map_center = dest_data.get("mapCenter") or {}
+    m_lat, m_lng = _extract_center(map_center, dest_data.get("highlights", []))
+    map_center = {"lat": m_lat, "lng": m_lng}
     generic_dining_fallback_count = 0
 
     # Score all attractions with diversity tracking
@@ -1010,7 +1063,9 @@ def generate_itinerary(ctx: dict, dest_data: dict) -> Optional[dict]:
             prev_lng = act.get("lng", prev_lng)
             return True
 
-        def travel_between(to_lat: float, to_lng: float) -> Tuple[float, str]:
+        def travel_between(to_lat: Optional[float], to_lng: Optional[float]) -> Tuple[float, str]:
+            if prev_lat is None or prev_lng is None or to_lat is None or to_lng is None:
+                return 0.25, "Short transit"
             dist_m = _haversine_m(prev_lat, prev_lng, to_lat, to_lng)
             return _travel_overhead_hours(dist_m), _estimate_travel_time(dist_m)
 

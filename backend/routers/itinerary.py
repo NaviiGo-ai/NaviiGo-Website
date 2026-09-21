@@ -173,20 +173,36 @@ async def generate(payload: ItineraryRequest, request: Request):
         # Enrich with real weather data
         try:
             from services.weather_engine import get_weather
-            map_center = gemini_data.get("mapCenter", {})
-            lat = map_center.get("lat", 20.5937)
-            lng = map_center.get("lng", 78.9629)
+            map_center = gemini_data.get("mapCenter") or {}
+            lat = map_center.get("lat")
+            lng = map_center.get("lng")
             weather_data = await get_weather(lat=lat, lng=lng)
             gemini_data["weather"] = weather_data
         except Exception as e:
             print(f"[Itinerary] Weather fetch failed: {e}")
             # If weather fails, we still proceed without weather data (will be None in the model)
-            gemini_data["weather"] = {"current": None, "daily": []}
+            gemini_data["weather"] = {"current": None, "daily": [], "source": "none"}
 
         # ── Step 2: Run deterministic personalization engine ──
         print(f"[Itinerary] Got destination data, running personalization...")
         result = generate_itinerary(user_context, gemini_data)
         if result:
+            from services.geoapify_service import is_geoapify_configured
+            dest_source = gemini_data.get("dataSources", {}).get("source", "cache")
+            llm_used = gemini_data.get("dataSources", {}).get("llmUsed", False)
+            weather_source = gemini_data.get("weather", {}).get("source", "none")
+
+            data_sources_provenance = {
+                "destination": dest_source,
+                "weather": weather_source,
+                "routing": "geoapify" if is_geoapify_configured() else "osrm",
+                "grounding": "none",
+                "llmUsed": llm_used,
+            }
+            if "dataSources" in gemini_data and isinstance(gemini_data["dataSources"], dict):
+                data_sources_provenance.update(gemini_data["dataSources"])
+                data_sources_provenance["weather"] = weather_source
+
             # ── Step 3: Save to Firebase if userId provided ──
             if authenticated_user_id:
                 await save_itinerary(authenticated_user_id, {
@@ -208,6 +224,7 @@ async def generate(payload: ItineraryRequest, request: Request):
                 "success": True,
                 "itinerary": result,
                 "source": "ai-personalized",
+                "dataSources": data_sources_provenance,
                 "userId": authenticated_user_id,
             }
 
@@ -302,8 +319,8 @@ async def _generate_multi_city_itinerary(base_context: Dict[str, Any], route_sto
                 travel_time=stop.travelTime,
                 from_hotel=(city_result.get("hotels") or [{}])[0],
                 to_hotel=(next_result.get("hotels") or [{}])[0],
-                from_center=city_result.get("mapCenter") or {"lat": 20.5937, "lng": 78.9629},
-                to_center=next_result.get("mapCenter") or {"lat": 20.5937, "lng": 78.9629},
+                from_center=city_result.get("mapCenter") or {},
+                to_center=next_result.get("mapCenter") or {},
             ))
 
     for day_number, plan in enumerate(combined_plans, start=1):

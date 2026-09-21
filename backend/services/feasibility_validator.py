@@ -199,7 +199,9 @@ def repair_itinerary_feasibility(
     used_attraction_names: Set[str] = set()
     used_restaurant_names: Set[str] = set()
 
-    map_center = dest_data.get("mapCenter", {"lat": 20.5937, "lng": 78.9629})
+    map_center = dest_data.get("mapCenter") or {}
+    m_lat = map_center.get("lat")
+    m_lng = map_center.get("lng")
     all_highlights = dest_data.get("highlights", [])
     all_restaurants = dest_data.get("restaurants", [])
 
@@ -235,8 +237,8 @@ def repair_itinerary_feasibility(
                             prefix = "Dinner at " if "dinner" in name.lower() else "Lunch at "
                             act["name"] = f"{prefix}{replacement['name']}"
                             act["desc"] = f"{replacement.get('desc', '')} Must-try: {replacement.get('mustTry', '')}."
-                            act["lat"] = replacement.get("lat", map_center["lat"])
-                            act["lng"] = replacement.get("lng", map_center["lng"])
+                            act["lat"] = replacement.get("lat", m_lat)
+                            act["lng"] = replacement.get("lng", m_lng)
                             clean_r_name = replacement["name"]
                         else:
                             # Truthful generic dining exploration (zero fictitious entity names)
@@ -253,8 +255,8 @@ def repair_itinerary_feasibility(
                         if replacement:
                             act["name"] = replacement["name"]
                             act["desc"] = replacement.get("desc", act.get("desc"))
-                            act["lat"] = replacement.get("lat", map_center["lat"])
-                            act["lng"] = replacement.get("lng", map_center["lng"])
+                            act["lat"] = replacement.get("lat", m_lat)
+                            act["lng"] = replacement.get("lng", m_lng)
                             name = replacement["name"]
                         else:
                             # Modify name to avoid collision
