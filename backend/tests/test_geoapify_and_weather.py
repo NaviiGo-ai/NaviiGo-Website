@@ -151,6 +151,38 @@ async def test_geoapify_candidate_pool_builder():
         assert pool_3d["dataSources"]["llmUsed"] is False
         assert pool_3d["mapCenter"]["lat"] == 26.9124
         assert pool_3d["mapCenter"]["lng"] == 75.7873
+        
+        # Verify zero-LLM path
+        with patch("services.itinerary_engine.fetch_destination_data_with_gemini") as mock_gemini:
+            from services.destination_cache import get_destination_data
+            await get_destination_data("Jaipur", days=3)
+            mock_gemini.assert_not_called()
+
+@pytest.mark.asyncio
+async def test_gemini_fallback_flag():
+    """Verify Gemini fallback respects ENABLE_GEMINI_DESTINATION_FALLBACK."""
+    from services.destination_cache import get_destination_data
+    import services.destination_cache as dest_cache
+    
+    with patch("services.geoapify_service.is_geoapify_configured", return_value=False), \
+         patch("services.destination_cache._mem_get", return_value=None), \
+         patch("services.destination_cache._file_get", new_callable=AsyncMock, return_value=None), \
+         patch("services.destination_cache._csv_get", new_callable=AsyncMock, return_value=None):
+        
+        # When disabled, Gemini should not be called
+        dest_cache.ENABLE_GEMINI_DESTINATION_FALLBACK = False
+        with patch("services.destination_cache.fetch_destination_data_with_gemini", new_callable=AsyncMock) as mock_gemini:
+            res = await get_destination_data("Unknown Place", days=3)
+            assert res is None
+            mock_gemini.assert_not_called()
+            
+        # When enabled, Gemini should be called
+        dest_cache.ENABLE_GEMINI_DESTINATION_FALLBACK = True
+        with patch("services.destination_cache.fetch_destination_data_with_gemini", new_callable=AsyncMock, return_value={"highlights": []}) as mock_gemini:
+            res = await get_destination_data("Unknown Place", days=3)
+            assert res is not None
+            mock_gemini.assert_called_once()
+
 
 
 @pytest.mark.asyncio
@@ -164,41 +196,53 @@ async def test_weather_engine_nullable_coordinates():
 
 @pytest.mark.asyncio
 async def test_weather_engine_caching():
-    """Verify get_weather caches results for 30 minutes."""
+    """Verify get_weather caches results for Google Weather."""
     _WEATHER_CACHE.clear()
 
-    mock_om_data = {
-        "current": {
-            "temperature_2m": 28.5,
-            "apparent_temperature": 29.0,
-            "relative_humidity_2m": 50,
-            "precipitation_probability": 0,
-            "weather_code": 0,
-            "wind_speed_10m": 12.0,
-        },
-        "daily": {
-            "time": ["2026-09-21", "2026-09-22"],
-            "temperature_2m_max": [32.0, 31.5],
-            "temperature_2m_min": [22.0, 21.0],
-            "precipitation_probability_max": [10, 5],
-            "weather_code": [0, 1],
-        }
+    mock_current = {
+        "temperature": {"degrees": 28.5},
+        "feelsLikeTemperature": {"degrees": 29.0},
+        "relativeHumidity": 50,
+        "precipitationProbability": 0,
+        "weatherCondition": {"description": {"text": "Clear"}},
+        "wind": {"speed": {"value": 12.0}}
+    }
+    
+    mock_daily = {
+        "days": [
+            {
+                "date": {"year": 2026, "month": 9, "day": 21},
+                "temperatureMax": {"degrees": 32.0},
+                "temperatureMin": {"degrees": 22.0},
+                "dayTimeForecast": {
+                    "precipitationProbability": 10,
+                    "weatherCondition": {"description": {"text": "Clear"}}
+                }
+            }
+        ]
     }
 
-    mock_resp = MagicMock()
-    mock_resp.status_code = 200
-    mock_resp.json.return_value = mock_om_data
+    async def mock_get(url, params=None, headers=None, **kwargs):
+        m = MagicMock()
+        m.status_code = 200
+        if "currentConditions" in url:
+            m.json.return_value = mock_current
+        else:
+            m.json.return_value = mock_daily
+        return m
 
-    with patch("services.weather_engine._fetch_google_weather", new_callable=AsyncMock, return_value=None), \
-         patch("httpx.AsyncClient.get", new_callable=AsyncMock, return_value=mock_resp):
+    with patch.dict("os.environ", {"GOOGLE_WEATHER_API_KEY": "valid_key_123"}), \
+         patch("services.weather_engine.GOOGLE_WEATHER_API_KEY", "valid_key_123"), \
+         patch("httpx.AsyncClient.get", side_effect=mock_get):
 
         # First call fetches and caches
         w1 = await get_weather(26.9124, 75.7873)
-        assert w1["source"] == "open_meteo"
+        assert w1["source"] == "google_weather"
         assert w1["current"]["temp"] in (28, 29, 28.5)
+        assert len(w1["daily"]) == 1
 
         # Second call returns from cache
-        with patch("services.weather_engine._fetch_open_meteo", side_effect=Exception("Should not be called")):
+        with patch("services.weather_engine._fetch_google_current", side_effect=Exception("Should not be called")):
             w2 = await get_weather(26.9124, 75.7873)
             assert w2 == w1
 

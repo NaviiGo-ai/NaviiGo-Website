@@ -210,30 +210,28 @@ def _infer_image_hint(categories: List[str], name: str) -> str:
 
 def _infer_highlight_category(categories: List[str], rank: Optional[Dict[str, Any]], idx: int) -> str:
     """
-    Distribute highlights across must-see, hidden-gem, local-secret, and experience
-    based on Geoapify categories and popularity ranks.
+    Distribute highlights neutrally based on Geoapify categories.
     """
     cat_set = set(categories)
-    popularity = (rank or {}).get("popularity", 0.5) if rank else 0.5
 
-    if "heritage.unesco" in cat_set or "tourism.attraction" in cat_set or popularity > 0.75 or idx < 5:
-        return "must-see"
+    if "heritage.unesco" in cat_set or "tourism.attraction" in cat_set:
+        return "attraction"
     if "activity" in cat_set or "entertainment" in cat_set or "leisure.park" in cat_set:
         return "experience"
-    if "religion" in cat_set or popularity < 0.4 or idx % 3 == 0:
-        return "local-secret"
-    return "hidden-gem"
+    if "religion" in cat_set:
+        return "religious"
+    return "heritage"
 
 
 def _infer_dining_category(categories: List[str]) -> str:
-    """Map Geoapify dining categories to NaviiGo dining types."""
+    """Map Geoapify dining categories to NaviiGo dining types conservatively."""
     cat_set = set(categories)
     if "catering.cafe" in cat_set or "catering.ice_cream" in cat_set:
         return "cafe"
     if "catering.fast_food" in cat_set:
         return "street-food"
-    if "catering.bar" in cat_set or "catering.restaurant" in cat_set:
-        return "fine-dining"
+    if "catering.bar" in cat_set:
+        return "bar"
     return "casual"
 
 
@@ -278,33 +276,22 @@ def normalize_geoapify_place(feature: Dict[str, Any], place_type: str = "highlig
     if place_type == "highlight":
         category = _infer_highlight_category(categories, rank, idx)
 
-        # Best time to visit heuristic based on category
-        best_time = "morning"
-        if "religion" in categories or "spiritual_site" in img_hint:
-            best_time = "sunrise" if idx % 2 == 0 else "morning"
-        elif "fort_exterior" in img_hint or "lake_view" in img_hint:
-            best_time = "sunset"
-        elif "market_bazaar" in img_hint or "entertainment" in categories:
-            best_time = "evening"
-        elif "experience" in category:
-            best_time = "afternoon"
-
         return {
             "name": name,
             "img": img_hint,
-            "desc": props.get("description") or f"Renowned {category.replace('-', ' ')} in the region offering authentic local heritage and atmosphere.",
+            "desc": props.get("description"),
             "tags": tags,
             "category": category,
             "lat": float(lat),
             "lng": float(lng),
-            "duration": "1.5-2 hrs",
+            "duration": None,
             "entryFee": None,  # Truthful null — do not fabricate fake ticket prices
             "openingHours": props.get("opening_hours"),  # Truthful null if not provided
-            "bestTimeToVisit": best_time,
+            "bestTimeToVisit": None,
             "bestPhotoSpot": None,
             "insiderTip": None,  # Truthful null — no LLM hallucinations
             "avoidTime": None,
-            "openDays": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+            "openDays": None,
             "nearbyGem": None,
             "whatToWear": None,
             "formattedAddress": formatted_addr,
@@ -321,7 +308,7 @@ def normalize_geoapify_place(feature: Dict[str, Any], place_type: str = "highlig
         return {
             "name": name,
             "img": img_hint,
-            "desc": f"Popular {category} dining spot known for authentic flavors.",
+            "desc": props.get("description"),
             "cuisine": cuisine,
             "priceRange": None,  # Truthful null
             "rating": None,      # Truthful null — Google Places grounding will enrich if available
@@ -331,7 +318,7 @@ def normalize_geoapify_place(feature: Dict[str, Any], place_type: str = "highlig
             "tags": tags,
             "category": category,
             "insiderTip": None,
-            "bestTime": "dinner" if category in ("fine-dining", "casual") else ("lunch" if category == "street-food" else "anytime"),
+            "bestTime": None,
             "formattedAddress": formatted_addr,
             "geoapifyPlaceId": props.get("place_id"),
         }
@@ -348,11 +335,11 @@ def normalize_geoapify_place(feature: Dict[str, Any], place_type: str = "highlig
         return {
             "name": name,
             "img": img_hint,
-            "desc": f"Well-located {hotel_type.lower()} with modern hospitality.",
+            "desc": props.get("description"),
             "type": hotel_type,
             "priceRange": None,  # Truthful null
             "rating": None,      # Truthful null
-            "amenities": ["WiFi", "AC"],
+            "amenities": [],
             "lat": float(lat),
             "lng": float(lng),
             "insiderTip": None,
@@ -481,9 +468,9 @@ async def build_destination_candidate_pool(
     state_info = f", {geocoded.get('state')}" if geocoded.get("state") else ""
     return {
         "_v": DEST_DATA_VERSION,
-        "description": f"{dest_name}{state_info} offers an extraordinary blend of historical landmarks, regional culture, and timeless hospitality.",
-        "avgCost": "₹2,500 – ₹8,000 per day",
-        "crowdLevel": "Medium",
+        "description": None,
+        "avgCost": None,
+        "crowdLevel": None,
         "crowdNote": None,  # Truthful null — do not fabricate crowd patterns
         "logistics": {
             "flights": None,

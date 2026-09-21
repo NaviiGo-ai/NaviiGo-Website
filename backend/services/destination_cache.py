@@ -21,6 +21,10 @@ from collections import OrderedDict
 from services.itinerary_engine import fetch_destination_data_with_gemini, DEST_DATA_VERSION, get_pool_requirements
 from services.geoapify_service import build_destination_candidate_pool, is_geoapify_configured
 
+ENABLE_GEMINI_DESTINATION_FALLBACK = (
+    os.getenv("ENABLE_GEMINI_DESTINATION_FALLBACK", "false").lower() == "true"
+)
+
 # ── Paths ────────────────────────────────────────────────────────────────────
 BASE_DIR = Path(__file__).resolve().parent.parent
 CACHE_DIR = BASE_DIR / "cache" / "destinations"
@@ -364,7 +368,7 @@ async def _background_refetch(key: str, dest_name: str, purpose: str, budget: in
             except Exception as ge:
                 print(f"[Cache] Background Geoapify enrichment failed for {dest_name}: {ge}")
 
-        if not fresh_data:
+        if not fresh_data and ENABLE_GEMINI_DESTINATION_FALLBACK:
             fresh_data = await fetch_destination_data_with_gemini(dest_name, purpose, budget, days)
 
         if fresh_data:
@@ -454,14 +458,15 @@ async def get_destination_data(
             print(f"[Cache] Geoapify candidate builder error for {dest_name}: {ge}")
 
     # Layer 5: Gemini API (dormant fallback)
-    print(f"[Cache] Fetching {dest_name} (days={days}) from Gemini API fallback...")
-    fresh_data = await fetch_destination_data_with_gemini(dest_name, purpose, budget, days)
-    if fresh_data:
-        merged = _merge_destination_data(data, fresh_data)
-        _mem_set(key, merged)
-        await _file_set(key, merged)
-        print(f"[Cache] Stored {dest_name} from Gemini fallback in all cache layers (v{DEST_DATA_VERSION}, {len(merged.get('highlights', []))} hl, {len(merged.get('restaurants', []))} rest)")
-        return merged
+    if ENABLE_GEMINI_DESTINATION_FALLBACK:
+        print(f"[Cache] Fetching {dest_name} (days={days}) from Gemini API fallback...")
+        fresh_data = await fetch_destination_data_with_gemini(dest_name, purpose, budget, days)
+        if fresh_data:
+            merged = _merge_destination_data(data, fresh_data)
+            _mem_set(key, merged)
+            await _file_set(key, merged)
+            print(f"[Cache] Stored {dest_name} from Gemini fallback in all cache layers (v{DEST_DATA_VERSION}, {len(merged.get('highlights', []))} hl, {len(merged.get('restaurants', []))} rest)")
+            return merged
 
     if data:
         print(f"[Cache] Fresh fetch failed, returning available {len(data.get('highlights', []))} highlights for {dest_name}")
