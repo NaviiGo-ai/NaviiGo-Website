@@ -244,6 +244,7 @@ export default function BookingsPage() {
       from: from || to,
       to,
       date: normalizedDate,
+      checkout: (formData.checkout as string) || undefined,
       type: activeTab,
       page: 1
     };

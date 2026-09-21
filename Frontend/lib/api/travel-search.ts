@@ -84,13 +84,10 @@ export async function searchFlights(params: SearchParams, page = 1) {
             arr: flight.arrival_airport?.time?.substring(11, 16) || 'N/A',
             duration: f.total_duration ? `${Math.floor(f.total_duration / 60)}h ${f.total_duration % 60}m` : 'N/A',
             stops: f.flights.length > 1 ? `${f.flights.length - 1} stop${f.flights.length > 2 ? 's' : ''}` : 'Non-stop',
-            price: `₹${Number(f.price).toLocaleString('en-IN')}`,
-            priceNum: f.price,
-            class: 'Economy',
-            seats: 'Available',
-            tags: i === 0 && page === 1 ? ['Fastest'] : [],
+            price: f.price ? `₹${Number(f.price).toLocaleString('en-IN')}` : 'Check price',
+            priceNum: f.price || null,
+            travelClass: flight.travel_class || null,
             logo: '✈️',
-            badge: i === 0 && page === 1 ? 'cheapest' : null,
             priceDiff: null,
             deepLink: deepLink
           };
@@ -105,8 +102,39 @@ export async function searchFlights(params: SearchParams, page = 1) {
   return [];
 }
 
-const geocodeCache = new Map<string, {lat: number, lng: number}>();
-const routingCache = new Map<string, any>();
+function createBoundedCache(maxSize: number, ttlSeconds: number) {
+  const cache = new Map<string, { value: any; timestamp: number }>();
+  return {
+    get: (key: string) => {
+      const item = cache.get(key);
+      if (!item) return undefined;
+      if (Date.now() - item.timestamp > ttlSeconds * 1000) {
+        cache.delete(key);
+        return undefined;
+      }
+      return item.value;
+    },
+    set: (key: string, value: any) => {
+      if (cache.size >= maxSize) {
+        const oldestKey = cache.keys().next().value;
+        if (oldestKey !== undefined) cache.delete(oldestKey);
+      }
+      cache.set(key, { value, timestamp: Date.now() });
+    },
+    has: (key: string) => {
+      const item = cache.get(key);
+      if (!item) return false;
+      if (Date.now() - item.timestamp > ttlSeconds * 1000) {
+        cache.delete(key);
+        return false;
+      }
+      return true;
+    }
+  };
+}
+
+const geocodeCache = createBoundedCache(1000, 30 * 24 * 60 * 60); // 30 days
+const routingCache = createBoundedCache(500, 60 * 60); // 1 hour
 
 export async function getCoordinates(cityName: string, apiKey: string): Promise<{lat: number, lng: number} | null> {
   if (!cityName) return null;
@@ -148,11 +176,18 @@ export async function getCoordinates(cityName: string, apiKey: string): Promise<
 
 export async function searchTrains(params: SearchParams) {
   const dateStr = params.date || new Date().toISOString().split('T')[0];
+  const fromCodes = getCodes(params.from);
+  const toCodes = getCodes(params.to);
+  
   return [{
     id: `rail-handoff-${params.from}-${params.to}`,
     type: "rail_handoff",
     from: params.from,
     to: params.to,
+    fromName: params.from,
+    fromStationCode: fromCodes.station,
+    toName: params.to,
+    toStationCode: toCodes.station,
     date: dateStr,
     title: "Check live train availability"
   }];
@@ -264,18 +299,18 @@ export async function searchHotels(params: SearchParams, page = 1) {
           id: `api-h${offset + i}`,
           name: h.name || 'Unknown Hotel',
           area: city,
-          stars: h.hotel_class || 3,
+          stars: h.hotel_class ?? null,
           price: h.rate_per_night?.lowest ? `₹${Number(String(h.rate_per_night.lowest).replace(/[^0-9]/g, '')).toLocaleString('en-IN')}` : 'Price unavailable',
-          priceNum: Number(String(h.rate_per_night?.lowest || '5000').replace(/[^0-9]/g, '')),
+          priceNum: h.rate_per_night?.lowest ? Number(String(h.rate_per_night.lowest).replace(/[^0-9]/g, '')) : null,
           perNight: '/night',
-          rating: h.overall_rating || 4.0,
-          reviews: h.reviews || 0,
-          amenities: h.amenities?.slice(0, 5) || ['Wifi', 'AC'],
-          tags: i === 0 && page === 1 ? ['Top Pick'] : [],
+          rating: h.overall_rating ?? null,
+          reviews: h.reviews ?? 0,
+          amenities: h.amenities ?? [],
+          tags: [],
           image: h.images?.[0]?.thumbnail || '🏨',
-          refundable: true,
-          distance: h.nearby_places?.[0]?.name ? `Near ${h.nearby_places[0].name}` : 'Central location',
-          badge: i === 0 && page === 1 ? 'bestvalue' : null,
+          refundable: null,
+          distance: null,
+          badge: null,
           deepLink: h.link || `https://www.booking.com/searchresults.html?ss=${encodeURIComponent(city)}`
         }));
       }

@@ -8,9 +8,8 @@ export async function POST(req: Request) {
     if (!body.type || !body.from || !body.to || !body.date) {
       return NextResponse.json({ success: false, error: "Missing required fields" }, { status: 400 });
     }
-
-    const { type, from, to, date, travelers = 1, page = 1 } = body;
-    const params: SearchParams = { type, from, to, date, travelers };
+    const { type, from, to, date, checkout, travelers = 1, page = 1 } = body;
+    const params: any = { type, from, to, date, checkout, travelers };
 
     let results: any[] = [];
     switch (type) {
@@ -25,11 +24,16 @@ export async function POST(req: Request) {
     if (Array.isArray(results)) {
       results.forEach(res => {
         if (!res) return;
-        const baseRating = res.rating || (res.stars ? res.stars : 4.0);
-        res.score = (baseRating * 1000) - (res.priceNum || Number.MAX_SAFE_INTEGER);
         res._date = date; // Pass search date to booking portal for OTA deep links
+        res._checkout = checkout;
       });
-      results.sort((a, b) => (b.score || 0) - (a.score || 0));
+      // Sort strictly by truthful price if available
+      results.sort((a, b) => {
+        if (a.priceNum && b.priceNum) return a.priceNum - b.priceNum;
+        if (a.priceNum) return -1;
+        if (b.priceNum) return 1;
+        return 0;
+      });
     } else {
       results = [];
     }

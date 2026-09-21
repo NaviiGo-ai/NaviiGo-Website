@@ -130,3 +130,94 @@ test('searchCabs Geoapify routing timeout', async (t) => {
     process.env.GEOAPIFY_API_KEY = originalEnv;
   }
 });
+
+test('searchCabs Geoapify routing HTTP non-200 returns controlled handoff', async (t) => {
+  const originalFetch = global.fetch;
+  const originalEnv = process.env.GEOAPIFY_API_KEY;
+  process.env.GEOAPIFY_API_KEY = 'mock-key';
+
+  global.fetch = async (url: any) => {
+    const urlStr = url.toString();
+    if (urlStr.includes('geocode')) {
+      return { json: async () => ({ features: [{ properties: { lat: 30, lon: 40 } }] }) } as any;
+    }
+    if (urlStr.includes('routing')) {
+      return { status: 500, ok: false } as any; // Simulate error
+    }
+    throw new Error('Unknown url');
+  };
+
+  try {
+    const result = await searchCabs({ type: 'cabs', from: 'Non200City', to: 'Non200City2', date: '2026-10-10', travelers: 1 });
+    assert.strictEqual(result.length, 1);
+    const handoff = result[0];
+    assert.strictEqual(handoff.distanceKm, null);
+    assert.strictEqual(handoff.fareIsLive, false);
+    assert.strictEqual((handoff as any).uberPrice, undefined);
+  } finally {
+    global.fetch = originalFetch;
+    process.env.GEOAPIFY_API_KEY = originalEnv;
+  }
+});
+
+test('searchCabs Geoapify routing malformed JSON returns controlled handoff', async (t) => {
+  const originalFetch = global.fetch;
+  const originalEnv = process.env.GEOAPIFY_API_KEY;
+  process.env.GEOAPIFY_API_KEY = 'mock-key';
+
+  global.fetch = async (url: any) => {
+    const urlStr = url.toString();
+    if (urlStr.includes('geocode')) {
+      return { json: async () => ({ features: [{ properties: { lat: 30, lon: 40 } }] }) } as any;
+    }
+    if (urlStr.includes('routing')) {
+      return { ok: true, json: async () => ({ unexpected: "data" }) } as any; // Simulate malformed JSON
+    }
+    throw new Error('Unknown url');
+  };
+
+  try {
+    const result = await searchCabs({ type: 'cabs', from: 'Malformed', to: 'Malformed2', date: '2026-10-10', travelers: 1 });
+    assert.strictEqual(result.length, 1);
+    const handoff = result[0];
+    assert.strictEqual(handoff.distanceKm, null);
+    assert.strictEqual(handoff.fareIsLive, false);
+  } finally {
+    global.fetch = originalFetch;
+    process.env.GEOAPIFY_API_KEY = originalEnv;
+  }
+});
+
+test('searchCabs repeated request hits cache and does not fetch twice', async (t) => {
+  const originalFetch = global.fetch;
+  const originalEnv = process.env.GEOAPIFY_API_KEY;
+  process.env.GEOAPIFY_API_KEY = 'mock-key';
+
+  let fetchCount = 0;
+  global.fetch = async (url: any) => {
+    fetchCount++;
+    const urlStr = url.toString();
+    if (urlStr.includes('geocode')) {
+      return { json: async () => ({ features: [{ properties: { lat: 30, lon: 40 } }] }) } as any;
+    }
+    if (urlStr.includes('routing')) {
+      return { ok: true, json: async () => ({ features: [{ properties: { distance: 50000, time: 3600 } }] }) } as any;
+    }
+    throw new Error('Unknown url');
+  };
+
+  try {
+    // First call
+    const result1 = await searchCabs({ type: 'cabs', from: 'CacheCityA', to: 'CacheCityB', date: '2026-10-10', travelers: 1 });
+    const initialFetches = fetchCount;
+    // Second call
+    const result2 = await searchCabs({ type: 'cabs', from: 'CacheCityA', to: 'CacheCityB', date: '2026-10-10', travelers: 1 });
+    
+    assert.strictEqual(result1[0].distanceKm, 50);
+    assert.strictEqual(result2[0].distanceKm, 50);
+    assert.strictEqual(fetchCount, initialFetches); // No new fetches
+  } finally {
+    global.fetch = originalFetch;
+    process.env.GEOAPIFY_API_KEY = originalEnv;
+  }
+});

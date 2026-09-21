@@ -26,7 +26,6 @@ interface OTAOption {
   logo: string;
   color: string;
   buildUrl: (item: any) => string;
-  priceMultiplier: number; // relative to base price
 }
 
 // Date helper for OTA deep links
@@ -52,7 +51,6 @@ const FLIGHT_OTAS: OTAOption[] = [
     tag: 'Compare',
     logo: '🔍',
     color: 'bg-deep-sea-500',
-    priceMultiplier: 1.0,
     buildUrl: (item) => {
       const dates = getOTADates(item);
       return `https://www.skyscanner.co.in/transport/flights/${item.from?.toLowerCase() || 'del'}/${item.to?.toLowerCase() || 'bom'}/${dates.yymmdd}`;
@@ -62,7 +60,6 @@ const FLIGHT_OTAS: OTAOption[] = [
     name: 'Cleartrip',
     logo: '🟢',
     color: 'bg-jungle-green-600',
-    priceMultiplier: 1.02,
     buildUrl: (item) => {
       const dates = getOTADates(item);
       return `https://www.cleartrip.com/flights/results?from=${item.from}&to=${item.to}&adults=1&childs=0&infants=0&class=Economy&depart_date=${dates.dmy}&intl=n`;
@@ -72,7 +69,6 @@ const FLIGHT_OTAS: OTAOption[] = [
     name: 'Yatra',
     logo: '🔴',
     color: 'bg-temple-red-600',
-    priceMultiplier: 1.04,
     buildUrl: (item) => {
       const dates = getOTADates(item);
       // Yatra 404s if format is wrong, DD/MM/YYYY is required
@@ -83,7 +79,6 @@ const FLIGHT_OTAS: OTAOption[] = [
     name: 'MakeMyTrip',
     logo: '🔵',
     color: 'bg-deep-sea-600',
-    priceMultiplier: 1.05,
     buildUrl: (item) => {
        const dates = getOTADates(item);
        return `https://www.makemytrip.com/flight/search?itinerary=${item.from}-${item.to}-${dates.dmy}&tripType=O&paxType=A-1_C-0_I-0&intl=false&cabinClass=E`;
@@ -93,7 +88,6 @@ const FLIGHT_OTAS: OTAOption[] = [
     name: 'Google Flights',
     logo: '🌐',
     color: 'bg-muted-600',
-    priceMultiplier: 1.0,
     buildUrl: (item) => {
       const dates = getOTADates(item);
       return `https://www.google.com/travel/flights?q=flights+from+${item.from}+to+${item.to}+on+${dates.ymd}&curr=INR`;
@@ -107,13 +101,14 @@ const HOTEL_OTAS: OTAOption[] = [
     tag: 'Direct',
     logo: '🅱️',
     color: 'bg-deep-sea-700',
-    priceMultiplier: 1.0,
     buildUrl: (item) => {
       const dates = getOTADates(item);
       const city = encodeURIComponent(item.area || item.to || item.name || 'India');
-      const [y, m, d] = dates.ymd.split('-');
-      const co = new Date(Number(y), Number(m) - 1, Number(d) + 1);
-      const checkout = `${co.getFullYear()}-${String(co.getMonth() + 1).padStart(2, '0')}-${String(co.getDate()).padStart(2, '0')}`;
+      const checkout = item._checkout || (() => {
+        const [y, m, d] = dates.ymd.split('-');
+        const co = new Date(Number(y), Number(m) - 1, Number(d) + 1);
+        return `${co.getFullYear()}-${String(co.getMonth() + 1).padStart(2, '0')}-${String(co.getDate()).padStart(2, '0')}`;
+      })();
       return `https://www.booking.com/searchresults.html?ss=${city}&checkin=${dates.ymd}&checkout=${checkout}&group_adults=${item._travelers || 1}&no_rooms=1&selected_currency=INR`;
     },
   },
@@ -122,13 +117,14 @@ const HOTEL_OTAS: OTAOption[] = [
     tag: 'TravelPayouts',
     logo: '🏨',
     color: 'bg-deep-sea-600',
-    priceMultiplier: 0.98,
     buildUrl: (item) => {
       const dates = getOTADates(item);
       const city = encodeURIComponent(item.area || item.to || item.name || 'India');
-      const [y, m, d] = dates.ymd.split('-');
-      const co = new Date(Number(y), Number(m) - 1, Number(d) + 1);
-      const checkout = `${co.getFullYear()}-${String(co.getMonth() + 1).padStart(2, '0')}-${String(co.getDate()).padStart(2, '0')}`;
+      const checkout = item._checkout || (() => {
+        const [y, m, d] = dates.ymd.split('-');
+        const co = new Date(Number(y), Number(m) - 1, Number(d) + 1);
+        return `${co.getFullYear()}-${String(co.getMonth() + 1).padStart(2, '0')}-${String(co.getDate()).padStart(2, '0')}`;
+      })();
       return `https://search.hotellook.com/hotels?destination=${city}&checkIn=${dates.ymd}&checkOut=${checkout}&adults=${item._travelers || 1}&currency=INR&language=en`;
     },
   },
@@ -136,13 +132,14 @@ const HOTEL_OTAS: OTAOption[] = [
     name: 'Google Hotels',
     logo: '🌐',
     color: 'bg-deep-sea-500',
-    priceMultiplier: 1.0,
     buildUrl: (item) => {
       const dates = getOTADates(item);
       const city = encodeURIComponent(item.area || item.to || item.name || 'India');
-      const [y, m, d] = dates.ymd.split('-');
-      const co = new Date(Number(y), Number(m) - 1, Number(d) + 1);
-      const checkout = `${co.getFullYear()}-${String(co.getMonth() + 1).padStart(2, '0')}-${String(co.getDate()).padStart(2, '0')}`;
+      const checkout = item._checkout || (() => {
+        const [y, m, d] = dates.ymd.split('-');
+        const co = new Date(Number(y), Number(m) - 1, Number(d) + 1);
+        return `${co.getFullYear()}-${String(co.getMonth() + 1).padStart(2, '0')}-${String(co.getDate()).padStart(2, '0')}`;
+      })();
       return `https://www.google.com/travel/hotels?q=hotels+in+${city}&dates=${dates.ymd},${checkout}&guests=${item._travelers || 1}&currency=INR`;
     },
   },
@@ -150,13 +147,14 @@ const HOTEL_OTAS: OTAOption[] = [
     name: 'Goibibo',
     logo: '🟠',
     color: 'bg-saffron-600',
-    priceMultiplier: 0.97,
     buildUrl: (item) => {
       const dates = getOTADates(item);
       const city = encodeURIComponent(item.area || item.to || '');
-      const [y, m, d] = dates.ymd.split('-');
-      const co = new Date(Number(y), Number(m) - 1, Number(d) + 1);
-      const checkout = `${co.getFullYear()}-${String(co.getMonth() + 1).padStart(2, '0')}-${String(co.getDate()).padStart(2, '0')}`;
+      const checkout = item._checkout || (() => {
+        const [y, m, d] = dates.ymd.split('-');
+        const co = new Date(Number(y), Number(m) - 1, Number(d) + 1);
+        return `${co.getFullYear()}-${String(co.getMonth() + 1).padStart(2, '0')}-${String(co.getDate()).padStart(2, '0')}`;
+      })();
       return `https://www.goibibo.com/hotels/search/?city=${city}&checkin=${dates.ymd}&checkout=${checkout}&adults=${item._travelers || 1}&children=0&rooms=1`;
     },
   },
@@ -168,7 +166,6 @@ const TRAIN_OTAS: OTAOption[] = [
     tag: 'Official',
     logo: '🚆',
     color: 'bg-deep-sea-800',
-    priceMultiplier: 1.0,
     buildUrl: () => `https://www.irctc.co.in/nget/train-search`,
   },
   {
@@ -176,12 +173,11 @@ const TRAIN_OTAS: OTAOption[] = [
     tag: 'Pre-filled',
     logo: '🔴',
     color: 'bg-temple-red-600',
-    priceMultiplier: 1.0,
     buildUrl: (item) => {
       const dates = getOTADates(item);
       // Exact RailYatri format: trains-between-stations with from_code, to_code, from_name, to_name
-      const fromCode = encodeURIComponent(item.from || 'NDLS');
-      const toCode = encodeURIComponent(item.to || 'BSB');
+      const fromCode = encodeURIComponent(item.fromStationCode || item.from || 'NDLS');
+      const toCode = encodeURIComponent(item.toStationCode || item.to || 'BSB');
       const fromName = encodeURIComponent(item.fromName || item.from || 'NEW DELHI');
       const toName = encodeURIComponent(item.toName || item.to || 'VARANASI');
       return `https://www.railyatri.in/booking/trains-between-stations?from_code=${fromCode}&from_name=${fromName}&to_code=${toCode}&to_name=${toName}&journey_date=${dates.ymd}&homequota=GN`;
@@ -192,7 +188,6 @@ const TRAIN_OTAS: OTAOption[] = [
     tag: 'TravelPayouts',
     logo: '🌏',
     color: 'bg-green-700',
-    priceMultiplier: 1.05,
     buildUrl: (item) => {
       const dates = getOTADates(item);
       const fromCity = encodeURIComponent(item.fromName || item.from || 'Delhi');
@@ -208,7 +203,6 @@ const CAB_OTAS: OTAOption[] = [
     tag: 'Pre-filled',
     logo: '⚫',
     color: 'bg-black',
-    priceMultiplier: 1.08,
     // Uber documented deep link API — uses formatted_address to pre-fill locations
     buildUrl: (item) => {
       const pickup = encodeURIComponent(item.from || '');
@@ -220,7 +214,6 @@ const CAB_OTAS: OTAOption[] = [
     name: 'Ola',
     logo: '🟢',
     color: 'bg-green-600',
-    priceMultiplier: 1.0,
     // Ola web does not support URL-based prefilling
     buildUrl: () => `https://www.olacabs.com/`,
   },
@@ -228,7 +221,6 @@ const CAB_OTAS: OTAOption[] = [
     name: 'InDrive',
     logo: '🟣',
     color: 'bg-indigo-600',
-    priceMultiplier: 0.95,
     buildUrl: () => `https://indrive.com/en/city-ride/`,
   },
 ];
@@ -254,16 +246,12 @@ export default function BookingPortal({
   if (!isOpen || !selectedItem) return null;
 
   const otas = OTA_MAP[bookingType] || FLIGHT_OTAS;
-  const basePrice = selectedItem.priceNum || 5000;
 
-  // Sort by price (cheapest first)
   const options = otas
     .map((ota) => ({
       ...ota,
-      finalPrice: Math.round(basePrice * ota.priceMultiplier * travelersCount),
       url: ota.buildUrl(selectedItem),
-    }))
-    .sort((a, b) => a.finalPrice - b.finalPrice);
+    }));
 
   return (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
@@ -351,18 +339,13 @@ export default function BookingPortal({
                         {ota.tag}
                       </span>
                     )}
-                    {i === 0 && (
-                      <span className="text-[10px] font-bold text-jungle-green-600 dark:text-jungle-green-400 bg-jungle-green-50 dark:bg-jungle-green-500/10 px-2 py-0.5 rounded-full">
-                        Best price
-                      </span>
-                    )}
                   </div>
                 </div>
 
                 {/* Price */}
                 <div className="text-right shrink-0 flex items-center gap-4">
-                  <span className={`text-sm font-bold ${i === 0 ? 'text-jungle-green-600 dark:text-jungle-green-400' : 'text-muted-700 dark:text-muted-300'}`}>
-                    {formatPrice(ota.finalPrice)}
+                  <span className="text-sm font-bold text-muted-700 dark:text-muted-300">
+                    {selectedItem.priceNum ? formatPrice(selectedItem.priceNum * travelersCount) : 'Check price'}
                   </span>
                   <span className="text-xs font-semibold text-deep-sea-600 dark:text-deep-sea-400 bg-deep-sea-50 dark:bg-deep-sea-500/10 px-4 py-2 rounded-full border border-deep-sea-200 dark:border-deep-sea-500/20 group-hover:bg-deep-sea-100 dark:group-hover:bg-deep-sea-500/20 transition-colors whitespace-nowrap">
                     Continue
