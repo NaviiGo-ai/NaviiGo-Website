@@ -1,0 +1,1728 @@
+{
+  "_v": 3,
+  "description": "Beyond the commercial beach shacks lies the true Goa—a slow-paced 'susegad' beat woven through Portuguese-era Latin quarters, golden ocean shores, vibrant beach clubs, and deep-jungle springs. Morning smells like freshly baked poee bread carrying through the humid sea breeze, afternoons unfold on sun-drenched bays with water sports, and evenings ignite with cliffside sunsets, live music lounges, and beachside dining. It is an addictive blend of Konkani heritage, Iberian soul, coastal party culture, and unhurried tropical magic.",
+  "avgCost": "₹2,500 – ₹7,000 per day",
+  "crowdLevel": "High",
+  "crowdNote": "North Goa beach strips (Baga, Calangute, Anjuna) peak from 4 PM till late night. South Goa beaches (Palolem, Agonda) and inland hinterlands remain serene and peaceful before 11 AM.",
+  "logistics": {
+    "flights": "Dabolim Airport (GOI) - 28km to Panjim (₹1,000-1,300 pre-paid taxi); Manohar International Airport Mopa (GOX) - 35km to North Goa (₹1,200-1,600 taxi).",
+    "trains": "Madgaon Junction (MAO) for South Goa and Thivim (THVM) for North Goa. Vande Bharat Express from Mumbai takes 8 hours. Pre-paid taxi counter at MAO charges ₹1,200 to Panjim."
+  },
+  "weather": {
+    "october_march": "22°C - 31°C, dry sunny days, cool ocean breeze; peak travel and beach season.",
+    "april_may": "26°C - 35°C, warm and humid; ideal for water activities, swimming, and sundowner shacks.",
+    "june_september": "24°C - 29°C, heavy monsoons, lush green waterfalls, raging seas; great for nature lovers."
+  },
+  "mapCenter": {
+    "lat": 15.4989,
+    "lng": 73.8278
+  },
+  "highlights": [
+    {
+      "name": "Basilica of Bom Jesus",
+      "img": "spiritual_site",
+      "desc": "A UNESCO World Heritage site and a masterwork of Baroque architecture built in 1605. Holding the mortal remains of St. Francis Xavier inside a silver casket, the air smells of ancient teak wood, burning incense, and centuries of devotion.",
+      "tags": [
+        "Heritage",
+        "Culture",
+        "Architecture"
+      ],
+      "category": "must-see",
+      "lat": 15.5009,
+      "lng": 73.9116,
+      "duration": "1-2 hrs",
+      "entryFee": "Free",
+      "openingHours": "9:00 AM - 6:30 PM",
+      "bestTimeToVisit": "morning",
+      "bestPhotoSpot": "From the lawn across the southern wall framing the unplastered red laterite facade against blue sky",
+      "insiderTip": "Walk into the side sacristy museum for ₹10 to see original 17th-century woodcarvings away from tour buses.",
+      "nearbyGem": "Archeological Museum (100m east) — try chilled kokum juice at the courtyard stall."
+    },
+    {
+      "name": "Se Cathedral",
+      "img": "spiritual_site",
+      "desc": "One of the largest churches in Asia, dedicated to St. Catherine of Alexandria. Famous for its majestic Tuscan exterior, Corinthian interior, and the massive Golden Bell whose chimes carry across Old Goa.",
+      "tags": [
+        "Heritage",
+        "Architecture",
+        "Spiritual"
+      ],
+      "category": "must-see",
+      "lat": 15.5039,
+      "lng": 73.9118,
+      "duration": "1 hr",
+      "entryFee": "Free",
+      "openingHours": "7:30 AM - 6:00 PM",
+      "bestTimeToVisit": "morning",
+      "bestPhotoSpot": "The central altar framed through the towering vaulted nave",
+      "insiderTip": "Stand directly beneath the Golden Bell tower on the left to admire the 16th-century stonework.",
+      "nearbyGem": "Church of St. Francis of Assisi adjacent to Se Cathedral."
+    },
+    {
+      "name": "Fontainhas Latin Quarter",
+      "img": "heritage_scene",
+      "desc": "Asia's only official Portuguese Latin Quarter, where centuries-old yellow, mint, and sky-blue tiled houses line narrow cobbled alleys. You will hear older locals conversing in Portuguese while birdcages sway on wrought-iron balconies.",
+      "tags": [
+        "Heritage",
+        "Walking",
+        "Photography",
+        "Culture"
+      ],
+      "category": "must-see",
+      "lat": 15.4989,
+      "lng": 73.8278,
+      "duration": "2 hrs",
+      "entryFee": "Free",
+      "openingHours": "All Day",
+      "bestTimeToVisit": "morning",
+      "bestPhotoSpot": "The narrow cross-lane near 31 de Janeiro Bakery where bright yellow and indigo facades face each other",
+      "insiderTip": "Early morning before 9 AM is best for photography without parked scooters or delivery vans.",
+      "nearbyGem": "Confeitaria 31 De Janeiro (50m down alley) — fresh wood-fired warm bebinca."
+    },
+    {
+      "name": "Church of Our Lady of the Immaculate Conception",
+      "img": "spiritual_site",
+      "desc": "Panjim's most recognizable icon, built in 1541 overlooking Church Square with its striking zig-zag baroque staircases and pristine white facade modeled after the sanctuary at Lamego in Portugal.",
+      "tags": [
+        "Heritage",
+        "Architecture",
+        "Views"
+      ],
+      "category": "must-see",
+      "lat": 15.4984,
+      "lng": 73.8294,
+      "duration": "45 mins",
+      "entryFee": "Free",
+      "openingHours": "9:00 AM - 12:30 PM, 3:30 PM - 7:30 PM",
+      "bestTimeToVisit": "morning",
+      "bestPhotoSpot": "From the center of Church Square looking up the symmetric zig-zag stairways",
+      "insiderTip": "Climb to the upper balustrade at dusk when the entire church is illuminated with fairy lights.",
+      "nearbyGem": "Panjim Church cutlet pao stall right across the garden."
+    },
+    {
+      "name": "Aguada Fort & 1864 Lighthouse",
+      "img": "fort_view",
+      "desc": "A formidable 17th-century Portuguese fortress standing proudly on the headland of the Mandovi River. Its ancient freshwater spring once supplied passing ocean galleons, and its 4-storey lighthouse is one of Asia's oldest.",
+      "tags": [
+        "History",
+        "Views",
+        "Fort"
+      ],
+      "category": "must-see",
+      "lat": 15.4925,
+      "lng": 73.7736,
+      "duration": "2 hrs",
+      "entryFee": "₹50",
+      "openingHours": "9:30 AM - 6:00 PM",
+      "bestTimeToVisit": "morning",
+      "bestPhotoSpot": "From the upper parapet looking south toward Panjim and the open Arabian Sea",
+      "insiderTip": "Visit by 10 AM to explore the expansive ramparts before mid-day coastal heat sets in.",
+      "nearbyGem": "Lower Aguada jail museum and Sinquerim beach jetty."
+    },
+    {
+      "name": "Chapora Fort & Sunset Point",
+      "img": "sunset_view",
+      "desc": "The iconic cliff-top red laterite fortress immortalized in Bollywood's 'Dil Chahta Hai'. Perched high above the estuary, it commands breathtaking 360-degree views of Vagator Beach, Morjim spit, and the Chapora River mouth.",
+      "tags": [
+        "Views",
+        "Sunset",
+        "Fort",
+        "Iconic"
+      ],
+      "category": "must-see",
+      "lat": 15.6058,
+      "lng": 73.738,
+      "duration": "1.5 hrs",
+      "entryFee": "Free",
+      "openingHours": "All Day",
+      "bestTimeToVisit": "sunset",
+      "bestPhotoSpot": "Sitting on the perimeter laterite stone ramparts overlooking the crashing waves of Vagator at golden hour",
+      "insiderTip": "Wear sports shoes; the gravel ascent trail can be slippery. Sunset here is unforgettable.",
+      "nearbyGem": "Fresh juice stalls at Chapora junction serving chilled ginger-lemon-cane juice."
+    },
+    {
+      "name": "Cabo de Rama Fort",
+      "img": "fort_view",
+      "desc": "A wild, windswept clifftop fortress in deep South Goa steeped in Hindu mythology (where Lord Rama was exiled) and later fortified by the Portuguese. Sheer laterite cliffs plunge 150 feet straight into emerald sea waters.",
+      "tags": [
+        "History",
+        "Views",
+        "Nature",
+        "Sunset"
+      ],
+      "category": "must-see",
+      "lat": 15.088,
+      "lng": 73.921,
+      "duration": "2 hrs",
+      "entryFee": "Free",
+      "openingHours": "9:00 AM - 5:30 PM",
+      "bestTimeToVisit": "afternoon",
+      "bestPhotoSpot": "The western bastion cliff edge where the old white chapel overlooks the endless turquoise sea",
+      "insiderTip": "Pack water bottles; there are no shops inside the extensive fort grounds.",
+      "nearbyGem": "Cabo de Rama Beach overlook shack (200m north) for fresh coconut water."
+    },
+    {
+      "name": "Reis Magos Fort",
+      "img": "fort_view",
+      "desc": "A meticulously restored 1551 defense citadel situated on the northern bank of the Mandovi River. Its sturdy laterite walls, mounted cannons, and vaulted watchtowers provide brilliant views across to Panjim harbor.",
+      "tags": [
+        "History",
+        "Views",
+        "Heritage"
+      ],
+      "category": "hidden-gem",
+      "lat": 15.4983,
+      "lng": 73.8083,
+      "duration": "1.5 hrs",
+      "entryFee": "₹50",
+      "openingHours": "9:30 AM - 5:00 PM (Closed Mon)",
+      "bestTimeToVisit": "morning",
+      "bestPhotoSpot": "The cannon embrasures looking directly across the river estuary toward Miramar",
+      "insiderTip": "Check out the permanent exhibition of Mario Miranda cartoon sketches in the upper gallery.",
+      "nearbyGem": "Reis Magos church at the foot of the hill with wooden carved pulpits."
+    },
+    {
+      "name": "Tiracol Fort & Heritage Bastion",
+      "img": "fort_view",
+      "desc": "Perched at the northernmost tip of Goa overlooking the meeting point of the Tiracol River and Arabian Sea. Once an armed enclave that traded hands between Marathas and Portuguese, now a serene heritage lookout.",
+      "tags": [
+        "History",
+        "Nature",
+        "Views",
+        "Quiet"
+      ],
+      "category": "local-secret",
+      "lat": 15.728,
+      "lng": 73.684,
+      "duration": "1.5 hrs",
+      "entryFee": "Free",
+      "openingHours": "9:00 AM - 6:00 PM",
+      "bestTimeToVisit": "morning",
+      "bestPhotoSpot": "The terrace ramparts overlooking the ferry crossing and endless open sea horizon",
+      "insiderTip": "Take the scenic river ferry from Querim with your vehicle — the crossing takes just 10 minutes.",
+      "nearbyGem": "Querim Beach casuarina pine grove right opposite the ferry."
+    },
+    {
+      "name": "Baga Beach Watersports & Shacks",
+      "img": "beach_scene",
+      "desc": "Goa's most buzzing and electric shoreline, filled with vibrant beach shacks, jet skiing, parasailing, banana boat rides, and energetic music drifting over golden sands.",
+      "tags": [
+        "Beach",
+        "Watersports",
+        "Nightlife",
+        "Vibrant"
+      ],
+      "category": "must-see",
+      "lat": 15.5553,
+      "lng": 73.7517,
+      "duration": "3 hrs",
+      "entryFee": "Free",
+      "openingHours": "All Day",
+      "bestTimeToVisit": "afternoon",
+      "bestPhotoSpot": "Parasailing parachute soaring above the turquoise Baga bay at 4 PM",
+      "insiderTip": "Negotiate water sports packages near Britto's shack for the best combo rates on jet ski + parasailing.",
+      "nearbyGem": "Britto's famous beach shack for baked crab and chilled beer."
+    },
+    {
+      "name": "Calangute Beach Promenade",
+      "img": "beach_scene",
+      "desc": "The 'Queen of Beaches' — a sprawling golden sandy stretch known for bustling flea stalls, oceanfront cafes, beach lounging, and evening breezes.",
+      "tags": [
+        "Beach",
+        "Shopping",
+        "Fun"
+      ],
+      "category": "must-see",
+      "lat": 15.5442,
+      "lng": 73.7553,
+      "duration": "2 hrs",
+      "entryFee": "Free",
+      "openingHours": "All Day",
+      "bestTimeToVisit": "morning",
+      "bestPhotoSpot": "The shoreline line of wooden fishing boats resting on golden sand in the morning light",
+      "insiderTip": "Head 500m north toward Baga for cleaner water and fewer beach hawkers.",
+      "nearbyGem": "Infantaria Bakery for warm Goan egg tarts and beef patties."
+    },
+    {
+      "name": "Anjuna Beach & Rocky Sunset Cove",
+      "img": "beach_scene",
+      "desc": "The birthplace of Goa's 1960s hippie and psychedelic trance revolution. Red laterite rocky headlands jut into crashing waves, lined with eclectic seaside shacks and chill music lounges.",
+      "tags": [
+        "Beach",
+        "Sunset",
+        "Culture",
+        "Nightlife"
+      ],
+      "category": "must-see",
+      "lat": 15.574,
+      "lng": 73.7411,
+      "duration": "3 hrs",
+      "entryFee": "Free",
+      "openingHours": "All Day",
+      "bestTimeToVisit": "sunset",
+      "bestPhotoSpot": "The rocky shelf in front of Curlies during golden hour with waves splashing over the stones",
+      "insiderTip": "Grab a beachfront lounger at 5:00 PM for the sunset session before the evening music kicks in.",
+      "nearbyGem": "Guru Bar for live retro and classic rock jams."
+    },
+    {
+      "name": "Vagator & Little Vagator (Ozran) Beach",
+      "img": "beach_scene",
+      "desc": "Dramatically beautiful cove framed by towering rust-red laterite cliffs. Home to the legendary carved Shiva face on the rocks, bohemian beach shacks, and a sophisticated sundowner crowd.",
+      "tags": [
+        "Beach",
+        "Sunset",
+        "Views",
+        "Vibe"
+      ],
+      "category": "must-see",
+      "lat": 15.599,
+      "lng": 73.738,
+      "duration": "3 hrs",
+      "entryFee": "Free",
+      "openingHours": "All Day",
+      "bestTimeToVisit": "sunset",
+      "bestPhotoSpot": "The cliff staircase leading down to Ozran framing the palm trees and crashing waves",
+      "insiderTip": "Look for the sculpted stone face of Lord Shiva on the southern rocks of Little Vagator beach.",
+      "nearbyGem": "Olive Bar & Kitchen atop the cliffs for prime sunset cocktails."
+    },
+    {
+      "name": "Palolem Beach Crescent Bay",
+      "img": "beach_scene",
+      "desc": "South Goa's crown jewel — a postcard-perfect crescent bay of soft white sand fringed by thousands of coconut palms and calm, shallow emerald waters ideal for swimming and sea kayaking.",
+      "tags": [
+        "Beach",
+        "Nature",
+        "Relaxation",
+        "Sunset"
+      ],
+      "category": "must-see",
+      "lat": 15.01,
+      "lng": 74.023,
+      "duration": "4 hrs",
+      "entryFee": "Free",
+      "openingHours": "All Day",
+      "bestTimeToVisit": "morning",
+      "bestPhotoSpot": "From the northern sandbar at low tide looking across the curved bay",
+      "insiderTip": "Rent a sea kayak (₹250/hr) in the calm morning water to paddle out to Canacona Island.",
+      "nearbyGem": "Dropadi Beach Shack for fresh tandoori butter garlic lobster."
+    },
+    {
+      "name": "Agonda Turtle Beach",
+      "img": "beach_scene",
+      "desc": "A 3km pristine, wide-open expanse of quiet sand where Olive Ridley sea turtles nest. There are no jet skis, no hawkers, and no loud music — pure sea breeze, rolling waves, and solitude.",
+      "tags": [
+        "Beach",
+        "Nature",
+        "Quiet",
+        "Relaxation"
+      ],
+      "category": "hidden-gem",
+      "lat": 15.044,
+      "lng": 73.987,
+      "duration": "3 hrs",
+      "entryFee": "Free",
+      "openingHours": "All Day",
+      "bestTimeToVisit": "sunset",
+      "bestPhotoSpot": "The southern rock boulders at low tide during pastel pink dusk",
+      "insiderTip": "Ideal for a long barefoot evening walk. Stargazing at night here is unmatched in Goa.",
+      "nearbyGem": "Fatima's Corner (village road) for authentic homestyle Goan fish curry."
+    },
+    {
+      "name": "Morjim & Ashwem Bohemian Beach",
+      "img": "beach_scene",
+      "desc": "Known as 'Turtle Beach', this wide uncrowded northern stretch blends tranquil nature with upscale bohemian beach lounges, artisan boutiques, and kite-surfing schools.",
+      "tags": [
+        "Beach",
+        "Nature",
+        "Sunset",
+        "Chill"
+      ],
+      "category": "must-see",
+      "lat": 15.632,
+      "lng": 73.729,
+      "duration": "3 hrs",
+      "entryFee": "Free",
+      "openingHours": "All Day",
+      "bestTimeToVisit": "afternoon",
+      "bestPhotoSpot": "The Chapora River mouth where white sand dunes meet the sea",
+      "insiderTip": "Stay for the sunset kite-surfers gliding across the golden waves.",
+      "nearbyGem": "Burger Factory Morjim for sunset burgers on the sand."
+    },
+    {
+      "name": "Arambol Beach, Sweet Water Lake & Drum Circle",
+      "img": "beach_scene",
+      "desc": "The beating bohemian heart of Goa. Features a unique freshwater lagoon just 50m from the sea, a healing sulfur mud bath in the jungle, and the famous sunset drum circle where travelers dance to djembe beats.",
+      "tags": [
+        "Beach",
+        "Culture",
+        "Music",
+        "Adventure"
+      ],
+      "category": "must-see",
+      "lat": 15.686,
+      "lng": 73.703,
+      "duration": "4 hrs",
+      "entryFee": "Free",
+      "openingHours": "All Day",
+      "bestTimeToVisit": "sunset",
+      "bestPhotoSpot": "The sunset drum circle gathering on the sand as the red sun touches the water",
+      "insiderTip": "Walk north around the cliff path to discover the Sweet Water Lake tucked beneath the mountain.",
+      "nearbyGem": "Banyan tree jungle trek (20 min past the lake) where local babas sit in meditation."
+    },
+    {
+      "name": "Butterfly Beach & Dolphin Bay",
+      "img": "beach_scene",
+      "desc": "A secluded hidden amphitheater cove surrounded by dense forested hills. Named for the millions of colorful butterflies that flit over the hilltops, with dolphins regularly frolicking near the shore.",
+      "tags": [
+        "Beach",
+        "Nature",
+        "Secluded",
+        "Adventure"
+      ],
+      "category": "hidden-gem",
+      "lat": 15.025,
+      "lng": 74.001,
+      "duration": "3 hrs",
+      "entryFee": "Free",
+      "openingHours": "All Day",
+      "bestTimeToVisit": "morning",
+      "bestPhotoSpot": "From the rocky headland looking down into the secret semi-circular beach cove",
+      "insiderTip": "Hire a local fishing boat from Palolem Beach (₹1,500 for return boat including dolphin spotting).",
+      "nearbyGem": "Secret trek route from Leopard Valley for adventurous hikers."
+    },
+    {
+      "name": "Kakolem (Tiger) Beach",
+      "img": "beach_scene",
+      "desc": "One of Goa's most breathtaking hidden wild beaches. Accessible only via a steep cliffside trail descending down red earth steps, with a freshwater natural waterfall cascading directly onto the golden sand.",
+      "tags": [
+        "Beach",
+        "Adventure",
+        "Nature",
+        "Wild"
+      ],
+      "category": "hidden-gem",
+      "lat": 15.093,
+      "lng": 73.931,
+      "duration": "2.5 hrs",
+      "entryFee": "Free",
+      "openingHours": "Sunrise to Sunset",
+      "bestTimeToVisit": "morning",
+      "bestPhotoSpot": "The freshwater stream tumbling over boulders directly into the ocean waves",
+      "insiderTip": "Wear shoes with good grip for the 15-minute downhill climb. Carry all your own drinking water.",
+      "nearbyGem": "Cliff-top rustic shack near the parking area for sweet lime soda."
+    },
+    {
+      "name": "Colva & Benaulim Beach Stretch",
+      "img": "beach_scene",
+      "desc": "A 25km uninterrupted ribbon of powdery white sand in South Goa, famed for historical colonial fishing culture, traditional outrigger boats, and laid-back sunset dining.",
+      "tags": [
+        "Beach",
+        "Relaxation",
+        "Food"
+      ],
+      "category": "must-see",
+      "lat": 15.275,
+      "lng": 73.918,
+      "duration": "2 hrs",
+      "entryFee": "Free",
+      "openingHours": "All Day",
+      "bestTimeToVisit": "morning",
+      "bestPhotoSpot": "Traditional Goan wooden fishing boats resting along the tide line at dawn",
+      "insiderTip": "Head to Pedro's shack in Benaulim for fresh calamari fry with zero crowds.",
+      "nearbyGem": "St. John the Baptist Church in Benaulim with exquisite gilded wood altars."
+    },
+    {
+      "name": "Dona Paula Viewpoint & Jetty",
+      "img": "sunset_view",
+      "desc": "The 'Lovers' Paradise' overlooking the vast confluence of the Zuari and Mandovi rivers into the Arabian Sea, featuring the famous 'Image of India' sculpture and views of Mormugao Harbor.",
+      "tags": [
+        "Views",
+        "Sunset",
+        "History"
+      ],
+      "category": "must-see",
+      "lat": 15.454,
+      "lng": 73.804,
+      "duration": "1 hr",
+      "entryFee": "Free",
+      "openingHours": "All Day",
+      "bestTimeToVisit": "sunset",
+      "bestPhotoSpot": "The white gazebo on the rocky island looking across the river bay",
+      "insiderTip": "Water scooters and speed boats are available at the jetty for short bay rides.",
+      "nearbyGem": "National Institute of Oceanography marine center nearby."
+    },
+    {
+      "name": "Dudhsagar Waterfalls Expedition",
+      "img": "nature_waterfall",
+      "desc": "A monumental 310m (1,017 ft) four-tiered milky-white cascade crashing down the Western Ghats mountain face inside Bhagwan Mahaveer Wildlife Sanctuary. The railway bridge crossing right in front is world-renowned.",
+      "tags": [
+        "Nature",
+        "Adventure",
+        "Waterfalls",
+        "Trekking"
+      ],
+      "category": "must-see",
+      "lat": 15.3144,
+      "lng": 74.3143,
+      "duration": "5 hrs",
+      "entryFee": "₹500 (jeep safari package)",
+      "openingHours": "7:00 AM - 5:00 PM",
+      "bestTimeToVisit": "morning",
+      "bestPhotoSpot": "From the natural plunge pool below as a goods train rumbles across the arched bridge above",
+      "insiderTip": "Book the forest department 4x4 open jeep from Kulem early morning to beat the afternoon rush.",
+      "nearbyGem": "Tambdi Surla Mahadev Temple (15km drive away) — 12th century Kadamba temple."
+    },
+    {
+      "name": "Harvalem Waterfall & Rock Cut Caves",
+      "img": "nature_waterfall",
+      "desc": "A picturesque 50-meter waterfall tumbling into a deep jungle pool near Sanquelim, adjacent to the 6th-century rock-cut Pandava Buddhist/Shaivite caves carved from laterite stone.",
+      "tags": [
+        "Nature",
+        "Caves",
+        "History",
+        "Offbeat"
+      ],
+      "category": "hidden-gem",
+      "lat": 15.5539,
+      "lng": 74.027,
+      "duration": "2 hrs",
+      "entryFee": "Free",
+      "openingHours": "9:00 AM - 6:00 PM",
+      "bestTimeToVisit": "morning",
+      "bestPhotoSpot": "The viewing bridge spanning the gorge right in front of the roaring cascade",
+      "insiderTip": "Walk 300m up the road to explore the ancient five-compartment caves with stone lingas.",
+      "nearbyGem": "Rudrareshwar Temple right next to the falls with steps descending to the river."
+    },
+    {
+      "name": "Grande Island Scuba Diving & Dolphin Cruise",
+      "img": "adventure_sea",
+      "desc": "Take a morning catamaran past playful Arabian Sea dolphins to Grande Island for guided scuba diving and snorkeling over sunken shipwrecks, coral reefs, and schools of tropical fish.",
+      "tags": [
+        "Adventure",
+        "Scuba",
+        "Dolphins",
+        "Watersports"
+      ],
+      "category": "experience",
+      "lat": 15.352,
+      "lng": 73.761,
+      "duration": "5 hrs",
+      "entryFee": "₹2,000 - ₹3,500 (diving + boat)",
+      "openingHours": "7:00 AM - 2:00 PM",
+      "bestTimeToVisit": "morning",
+      "bestPhotoSpot": "Underwater GoPro shot with clownfish and coral outcrops at Suzy's Wreck",
+      "insiderTip": "Pre-book with PADI-certified dive operators in Calangute or Candolim for safety.",
+      "nearbyGem": "Monkey Beach barbecue lunch included on most island boat trips."
+    },
+    {
+      "name": "Mandovi River Backwater Kayaking",
+      "img": "adventure_nature",
+      "desc": "A peaceful sunrise or sunset paddle through dense mangrove canopies, calm estuarine backwaters, and narrow bird-filled canals along the Mandovi and Chapora rivers.",
+      "tags": [
+        "Adventure",
+        "Kayaking",
+        "Nature",
+        "Eco"
+      ],
+      "category": "experience",
+      "lat": 15.52,
+      "lng": 73.86,
+      "duration": "2.5 hrs",
+      "entryFee": "₹1,200 - ₹1,800",
+      "openingHours": "6:30 AM - 9:30 AM, 4:00 PM - 6:30 PM",
+      "bestTimeToVisit": "morning",
+      "bestPhotoSpot": "Kayak gliding through the sunlit mangrove tunnel reflection in calm glassy water",
+      "insiderTip": "Early morning at 7:00 AM offers the best chance of spotting smooth-coated river otters and kingfishers.",
+      "nearbyGem": "Aldona Church Plaza and stone bridge nearby."
+    },
+    {
+      "name": "Sahakari Spice Plantation Tour & Lunch",
+      "img": "food_experience",
+      "desc": "A guided walking tour through 130 acres of lush organic tropical farmland where cardamom, cinnamon, vanilla, and peri-peri chilies grow under tall betel nut trees, concluding with a traditional Goan buffet on banana leaves.",
+      "tags": [
+        "Food",
+        "Nature",
+        "Culture",
+        "Experience"
+      ],
+      "category": "experience",
+      "lat": 15.405,
+      "lng": 74.015,
+      "duration": "3 hrs",
+      "entryFee": "₹500 (includes buffet lunch)",
+      "openingHours": "9:00 AM - 4:30 PM",
+      "bestTimeToVisit": "morning",
+      "bestPhotoSpot": "The elephant pond crossing and the fresh green betel palm canopy",
+      "insiderTip": "Enjoy the complimentary warm spiced lemongrass herbal tea served in earthen cups upon arrival.",
+      "nearbyGem": "Sahakari farm store for 100% pure cold-pressed spices and cashew feni."
+    },
+    {
+      "name": "Dr. Salim Ali Bird Sanctuary (Chorão Island)",
+      "img": "nature_wildlife",
+      "desc": "Goa's only bird sanctuary, located along the tidal mangrove marshes of Chorão Island. Accessible via a quick free river ferry from Ribandar, featuring elevated wooden boardwalks through mudflats.",
+      "tags": [
+        "Eco",
+        "Wildlife",
+        "Nature",
+        "Birds"
+      ],
+      "category": "local-secret",
+      "lat": 15.512,
+      "lng": 73.864,
+      "duration": "2.5 hrs",
+      "entryFee": "₹20",
+      "openingHours": "6:00 AM - 6:00 PM",
+      "bestTimeToVisit": "morning",
+      "bestPhotoSpot": "The three-tier watchtower looking over the mangrove marsh at high tide",
+      "insiderTip": "Hire a manual rowboat at the entrance (₹800/boat) to venture into narrow internal creeks.",
+      "nearbyGem": "Chorão Ferry Dock tea stall for hot chai and fresh batata vadas."
+    },
+    {
+      "name": "Divar Island & Piedade Village",
+      "img": "village_scene",
+      "desc": "Step back 50 years into Goa's tranquil past. An island in the Mandovi river with zero traffic, sleepy winding roads, centuries-old Portuguese villas, and the stunning hilltop Church of Our Lady of Compassion.",
+      "tags": [
+        "Island",
+        "Village",
+        "Culture",
+        "Heritage"
+      ],
+      "category": "hidden-gem",
+      "lat": 15.515,
+      "lng": 73.905,
+      "duration": "3 hrs",
+      "entryFee": "Free",
+      "openingHours": "All Day",
+      "bestTimeToVisit": "morning",
+      "bestPhotoSpot": "From the Piedade Church hilltop looking across the green paddy fields to Old Goa steeples",
+      "insiderTip": "Rent a bicycle or scooter in Panjim and ride onto the ferry to explore the island lanes.",
+      "nearbyGem": "Vrindavan Bakery on Divar for fresh hot pao straight from the wood kiln."
+    },
+    {
+      "name": "Netravali Bubble Lake (Budbudyali Tali)",
+      "img": "nature_mystery",
+      "desc": "A mystical freshwater temple tank located in Sanguem where continuous streams of gas bubbles rise from the laterite pond floor in direct response to acoustic vibrations like rhythmic clapping.",
+      "tags": [
+        "Mystery",
+        "Nature",
+        "Culture",
+        "Offbeat"
+      ],
+      "category": "hidden-gem",
+      "lat": 15.118,
+      "lng": 74.225,
+      "duration": "1.5 hrs",
+      "entryFee": "Free",
+      "openingHours": "8:00 AM - 6:00 PM",
+      "bestTimeToVisit": "morning",
+      "bestPhotoSpot": "Clapping hands at the stone steps as hundreds of bubbles instantly surge to the clear water surface",
+      "insiderTip": "Combine with a visit to Savoi spice farms or Netravali Wildlife Sanctuary waterfalls.",
+      "nearbyGem": "Gopinath Temple stone sanctum right beside the tank."
+    },
+    {
+      "name": "Curlies Beach Shack & Sunset Bar",
+      "img": "night_party",
+      "desc": "The quintessential Anjuna institution since the 1970s. Perched directly where the rocky cliffs meet Anjuna Beach, offering chilled sunset beers, sea breeze, and late-night electronic music on the sand.",
+      "tags": [
+        "Nightlife",
+        "Sunset",
+        "Beach",
+        "Party",
+        "Iconic"
+      ],
+      "category": "must-see",
+      "lat": 15.5745,
+      "lng": 73.7405,
+      "duration": "3 hrs",
+      "entryFee": "Free / Cover on special nights",
+      "openingHours": "9:00 AM - 3:00 AM",
+      "bestTimeToVisit": "sunset",
+      "bestPhotoSpot": "The upper wooden deck looking out over the setting sun with psychedelic tapestries behind you",
+      "insiderTip": "Arrive by 5:15 PM to grab front-row sunset lounge chairs right on the beach.",
+      "nearbyGem": "Shiva Valley next door — host of legendary Tuesday trance beach sessions."
+    },
+    {
+      "name": "Purple Martini at Sunset Point",
+      "img": "sunset_lounge",
+      "desc": "An Aegean-inspired cliffside sundowner bar with whitewashed walls, blue cushions, craft cocktails, and a resident saxophonist playing smooth jazzy tracks as the crimson sun sinks into the sea.",
+      "tags": [
+        "Sunset",
+        "Nightlife",
+        "Cocktails",
+        "Views"
+      ],
+      "category": "must-see",
+      "lat": 15.579,
+      "lng": 73.738,
+      "duration": "2.5 hrs",
+      "entryFee": "₹1,000 cover on weekends",
+      "openingHours": "4:00 PM - 1:00 AM",
+      "bestTimeToVisit": "sunset",
+      "bestPhotoSpot": "The cliff edge sofa with the Greek-style arched window overlooking the sea horizon",
+      "insiderTip": "Reserve a sunset table at least 2 days ahead; walk-ins wait in long queues from 5 PM.",
+      "nearbyGem": "Anjuna cliff trail path down to South Anjuna beach."
+    },
+    {
+      "name": "HillTop Goa Psytrance Sanctuary & Market",
+      "img": "party_scene",
+      "desc": "A world-famous open-air music venue nestled in an enchanted grove of illuminated coconut palms atop Vagator hill. Renowned globally for legendary Friday and Sunday parties and vibrant flea markets.",
+      "tags": [
+        "Party",
+        "Music",
+        "Nightlife",
+        "FleaMarket"
+      ],
+      "category": "must-see",
+      "lat": 15.597,
+      "lng": 73.742,
+      "duration": "4 hrs",
+      "entryFee": "₹1,000 - ₹2,500 depending on event",
+      "openingHours": "5:00 PM - 10:00 PM (Sundays & Festivals)",
+      "bestTimeToVisit": "night",
+      "bestPhotoSpot": "Under the neon UV-painted palm trees glowing in the twilight evening",
+      "insiderTip": "The Sunday daytime artisan market starts at 4 PM and transitions into an electric musical gathering by 7 PM.",
+      "nearbyGem": "Mango Tree bar at Vagator junction for late night snacks."
+    },
+    {
+      "name": "Tito's Lane & Cafe Mambo",
+      "img": "night_club",
+      "desc": "The pulsating nightlife epicenter of Baga. A pedestrian lane glowing with neon signage, bustling bars, open-air dance floors, and clubs playing commercial Bollywood and EDM tracks till late.",
+      "tags": [
+        "Nightlife",
+        "Clubbing",
+        "Party",
+        "Baga"
+      ],
+      "category": "must-see",
+      "lat": 15.556,
+      "lng": 73.753,
+      "duration": "3 hrs",
+      "entryFee": "₹1,500 - ₹3,000 couple entry",
+      "openingHours": "7:00 PM - 4:00 AM",
+      "bestTimeToVisit": "night",
+      "bestPhotoSpot": "The glowing red neon Tito's archway buzzing with night crowds",
+      "insiderTip": "Cafe Mambo at the end of the lane sits directly on the beach with an open-air beachfront dance floor.",
+      "nearbyGem": "Late night shawarma stalls along Baga main road."
+    },
+    {
+      "name": "Saturday Night Market (Arpora)",
+      "img": "market_night",
+      "desc": "A sprawling hilltop carnival of fashion, live music, and international gastronomy. Over 500 stalls by bohemian designers, artisanal leather crafters, jewelry makers, and live bands performing under fairy lights.",
+      "tags": [
+        "Shopping",
+        "Nightlife",
+        "Food",
+        "Music"
+      ],
+      "category": "must-see",
+      "lat": 15.576,
+      "lng": 73.765,
+      "duration": "3.5 hrs",
+      "entryFee": "Free",
+      "openingHours": "6:00 PM - 2:00 AM (Saturdays, Nov-Apr)",
+      "bestTimeToVisit": "night",
+      "bestPhotoSpot": "From the upper beer garden overlooking the glowing tiered market stalls and live central stage",
+      "insiderTip": "Arrive early around 6:30 PM for easy parking; peak crowd hits between 9:00 PM and midnight.",
+      "nearbyGem": "The central food court serving wood-fired pizzas, Goan chorizo, and Greek gyros."
+    },
+    {
+      "name": "Anjuna Flea Market",
+      "img": "market_scene",
+      "desc": "The historic open-air market founded in the 1960s where travelers sold belongings to fund their journeys. Now a vibrant Wednesday bazaar filled with Tibetan silver, Kashmiri shawls, spices, and acoustic buskers.",
+      "tags": [
+        "Shopping",
+        "Culture",
+        "Market",
+        "Heritage"
+      ],
+      "category": "must-see",
+      "lat": 15.574,
+      "lng": 73.7411,
+      "duration": "3 hrs",
+      "entryFee": "Free",
+      "openingHours": "9:00 AM - 7:00 PM (Wednesdays)",
+      "bestTimeToVisit": "morning",
+      "bestPhotoSpot": "The central palm pathway lined with colorful Rajasthani patchwork umbrellas",
+      "insiderTip": "Friendly bargaining is expected — start around 50-60% of the initial asking price.",
+      "nearbyGem": "Beachside juice shacks at South Anjuna for fresh cold watermelon juice."
+    },
+    {
+      "name": "Mandovi River Sunset Catamaran Cruise",
+      "img": "cruise_sunset",
+      "desc": "A 1-hour relaxing cruise down the Mandovi River as the sun dips below the Arabian Sea horizon. Features live Goan folk dance performances (Dekhni and Fugdi), DJ music, and views of Panjim's illuminated riverfront.",
+      "tags": [
+        "Cruise",
+        "Sunset",
+        "Music",
+        "Views"
+      ],
+      "category": "experience",
+      "lat": 15.501,
+      "lng": 73.829,
+      "duration": "1.5 hrs",
+      "entryFee": "₹500 - ₹800",
+      "openingHours": "5:30 PM - 7:00 PM",
+      "bestTimeToVisit": "sunset",
+      "bestPhotoSpot": "The open upper deck framing the glowing red sunset over the Atal Setu cable bridge",
+      "insiderTip": "Board from the Santa Monica Jetty in Panjim 20 minutes prior to secure front railings.",
+      "nearbyGem": "Riverside floating casinos (Deltin Royale & Big Daddy) illuminated along the quay."
+    },
+    {
+      "name": "Cohiba Bar & Kitchen (Sinquerim)",
+      "img": "night_lounge",
+      "desc": "A sophisticated outdoor lounge and live music hotspot near Candolim. Known for energetic Saturday Latin salsa nights, live retro classic rock bands, and open-air wooden decking under fairy lights.",
+      "tags": [
+        "Nightlife",
+        "LiveMusic",
+        "Dancing",
+        "Cocktails"
+      ],
+      "category": "experience",
+      "lat": 15.502,
+      "lng": 73.771,
+      "duration": "3 hrs",
+      "entryFee": "Cover on weekends",
+      "openingHours": "7:00 PM - 2:00 AM",
+      "bestTimeToVisit": "night",
+      "bestPhotoSpot": "The illuminated Cuban-themed brick archways and stage area",
+      "insiderTip": "Wednesday is Ladies Night and Saturday is live retro band night — both draw Goa's best crowd.",
+      "nearbyGem": "Sinquerim beach night breeze walk just 500m away."
+    },
+    {
+      "name": "LPK Waterfront (Love Passion Karma)",
+      "img": "night_club",
+      "desc": "A visually extraordinary open-air nightclub set on the banks of the Nerul River. Features surreal hand-sculpted terracotta figures, an ancient illuminated church backdrop, and high-energy dance floors.",
+      "tags": [
+        "Nightlife",
+        "Party",
+        "Dance",
+        "Unique"
+      ],
+      "category": "experience",
+      "lat": 15.518,
+      "lng": 73.778,
+      "duration": "3 hrs",
+      "entryFee": "₹1,500 - ₹3,000 couple entry",
+      "openingHours": "8:00 PM - 3:00 AM",
+      "bestTimeToVisit": "night",
+      "bestPhotoSpot": "The waterfront boardwalk with illuminated sculpted clay faces reflected in the river",
+      "insiderTip": "The indoor cave dance floor is carved from natural mud and stone with heavy bass systems.",
+      "nearbyGem": "Nerul river bridge overlook."
+    },
+    {
+      "name": "Candolim Beach & Water Sports Adventure",
+      "desc": "Thrilling high-energy water sports including parasailing, jet ski runs, and banana boat rides along a clean, golden shoreline.",
+      "bestMonths": "Oct–May",
+      "duration": "2.5 hrs",
+      "tags": [
+        "Beach",
+        "Adventure",
+        "WaterSports",
+        "Fun"
+      ],
+      "lat": 15.518,
+      "lng": 73.763,
+      "category": "must-see",
+      "walking": "Easy",
+      "value": "High",
+      "bestTimeToVisit": "morning",
+      "insiderTip": "Book water sports package directly with registered beach operators in the morning before noon winds pick up."
+    },
+    {
+      "name": "Cola Beach & Hidden Emerald Lagoon",
+      "desc": "Secluded paradise in South Goa where a freshwater emerald lagoon meets the Arabian Sea, flanked by coconut palms and volcanic rocks.",
+      "bestMonths": "Oct–May",
+      "duration": "2.5 hrs",
+      "tags": [
+        "Beach",
+        "Nature",
+        "HiddenGem",
+        "Scenic",
+        "Sunset"
+      ],
+      "lat": 15.056,
+      "lng": 73.974,
+      "category": "hidden-gem",
+      "walking": "Medium",
+      "value": "High",
+      "bestTimeToVisit": "afternoon",
+      "insiderTip": "Rent a kayak on the calm freshwater river lagoon and paddle under the coconut canopy right to the ocean."
+    },
+    {
+      "name": "Three Kings Church & Cansaulim Hilltop Panoramic Lookout",
+      "desc": "Mystical isolated hilltop chapel offering 360-degree breathtaking panoramic views of the South Goa coastline and paddy fields.",
+      "bestMonths": "Oct–Apr",
+      "duration": "1.5 hrs",
+      "tags": [
+        "Heritage",
+        "Viewpoint",
+        "Sunset",
+        "Scenic"
+      ],
+      "lat": 15.352,
+      "lng": 73.918,
+      "category": "hidden-gem",
+      "walking": "Easy",
+      "value": "High",
+      "bestTimeToVisit": "sunset",
+      "insiderTip": "One of the best uninterrupted sunset vantage points in all of South Goa; gates close promptly after sunset."
+    },
+    {
+      "name": "Palolem Sea Kayaking & Monkey Island Crossing",
+      "desc": "Guided ocean kayaking across the gentle crescent waves of Palolem Bay to secluded coves and Monkey Island.",
+      "bestMonths": "Oct–May",
+      "duration": "2 hrs",
+      "tags": [
+        "Beach",
+        "Adventure",
+        "Kayaking",
+        "WaterSports"
+      ],
+      "lat": 15.01,
+      "lng": 74.023,
+      "category": "experience",
+      "walking": "Medium",
+      "value": "High",
+      "bestTimeToVisit": "morning",
+      "insiderTip": "Calmest water is before 10 AM; spot playful dolphins just beyond the headland."
+    },
+    {
+      "name": "Mapusa Friday Local Produce & Spice Market",
+      "desc": "Sensory riot of colorful Goan spices, homemade sausages, dried fish, local pottery, and fresh cashew feni sold by village matriarchs.",
+      "bestMonths": "Oct–May",
+      "duration": "2 hrs",
+      "tags": [
+        "Market",
+        "Culture",
+        "Shopping",
+        "Local"
+      ],
+      "lat": 15.592,
+      "lng": 73.815,
+      "category": "experience",
+      "walking": "Medium",
+      "value": "High",
+      "bestTimeToVisit": "morning",
+      "insiderTip": "Visit between 9 AM and noon; bargain with friendly Goan grannies selling freshly made spiced pork choriz."
+    },
+    {
+      "name": "Houses of Goa Museum & Mario Miranda Gallery",
+      "desc": "Unique multi-level ship-shaped architectural museum celebrating the history and design of Goan-Portuguese residential architecture.",
+      "bestMonths": "All year",
+      "duration": "1.5 hrs",
+      "tags": [
+        "Museum",
+        "Culture",
+        "Heritage",
+        "Architecture"
+      ],
+      "lat": 15.541,
+      "lng": 73.843,
+      "category": "experience",
+      "walking": "Easy",
+      "value": "Medium",
+      "bestTimeToVisit": "afternoon",
+      "insiderTip": "Curated by architect Gerard da Cunha; the adjacent Mario Miranda gallery sells original art prints."
+    },
+    {
+      "name": "Morjim Turtle Nesting Shore & Sunset Estuary",
+      "desc": "Serene wide-open beach protected as an Olive Ridley sea turtle nesting habitat where Chapora river empties into the Arabian Sea.",
+      "bestMonths": "Nov–Apr",
+      "duration": "2 hrs",
+      "tags": [
+        "Beach",
+        "Nature",
+        "Sunset",
+        "Wildlife"
+      ],
+      "lat": 15.623,
+      "lng": 73.734,
+      "category": "must-see",
+      "walking": "Easy",
+      "value": "High",
+      "bestTimeToVisit": "sunset",
+      "insiderTip": "Walk south toward the river mouth at 5:30 PM to watch migratory birds and the crimson sun sink below the horizon."
+    },
+    {
+      "name": "Ashwem & Mandrem Tranquil Sand Dunes Walk",
+      "desc": "Pristine white-sand stretches with wooden footbridges crossing tidal streams, palm groves, and laidback bamboo cabanas.",
+      "bestMonths": "Oct–May",
+      "duration": "2 hrs",
+      "tags": [
+        "Beach",
+        "Relaxation",
+        "Nature",
+        "Scenic"
+      ],
+      "lat": 15.662,
+      "lng": 73.714,
+      "category": "must-see",
+      "walking": "Easy",
+      "value": "High",
+      "bestTimeToVisit": "morning",
+      "insiderTip": "Cross the rustic bamboo bridge over the creek to reach the softest sands and quietest swim zones in North Goa."
+    }
+  ],
+  "restaurants": [
+    {
+      "name": "Thalassa Greek Tavern & Sunset Lounge",
+      "img": "food_fine",
+      "desc": "Goa's most iconic sunset dining experience. Perched on a cliffside overlooking the Siolim backwaters and sea, with fire dancers, Greek hospitality, fairy lights, and live music.",
+      "cuisine": "Greek & Mediterranean",
+      "priceRange": "₹1,200–₹2,500 per person",
+      "rating": 4.7,
+      "mustTry": "Grilled Seafood Platter, Saganaki, Souvlaki & Baklava",
+      "lat": 15.618,
+      "lng": 73.743,
+      "tags": [
+        "Sunset",
+        "FineDining",
+        "Views",
+        "Nightlife"
+      ],
+      "category": "fine-dining",
+      "insiderTip": "Must reserve sunset tables 1-2 weeks in advance. The 6 PM sunset seating includes live fire performances.",
+      "bestTime": "sunset"
+    },
+    {
+      "name": "Martin's Corner (Betalbatim)",
+      "img": "food_seafood",
+      "desc": "A legendary South Goa culinary pilgrimage site. Started as a modest 4-table stall, now an expansive open-air institution famous for live music and the finest Goan Catholic seafood curries.",
+      "cuisine": "Goan Catholic & Seafood",
+      "priceRange": "₹600–₹1,500 per person",
+      "rating": 4.7,
+      "mustTry": "King Crab Masala Fry, Prawn Balchão & Pork Vindaloo",
+      "lat": 15.295,
+      "lng": 73.914,
+      "tags": [
+        "Seafood",
+        "Iconic",
+        "LiveMusic",
+        "Goan"
+      ],
+      "category": "casual",
+      "insiderTip": "Ask the captain to bring you the fresh catch platter so you can pick your live lobster or crab by weight.",
+      "bestTime": "dinner"
+    },
+    {
+      "name": "Gunpowder (Assagao)",
+      "img": "food_garden",
+      "desc": "Set inside the lush courtyard of a restored 150-year-old Portuguese heritage villa in stylish Assagao. Renowned for rich coastal South Indian and Goan flavors.",
+      "cuisine": "South Indian Coastal",
+      "priceRange": "₹600–₹1,200 per person",
+      "rating": 4.6,
+      "mustTry": "Kerala Beef Fry, Malabar Parotta, Pandi Curry & Toddy Shop Fish Curry",
+      "lat": 15.589,
+      "lng": 73.774,
+      "tags": [
+        "Courtyard",
+        "Heritage",
+        "MustTry",
+        "Cocktails"
+      ],
+      "category": "casual",
+      "insiderTip": "Pair your meal with their signature Kokum Margarita or Tamarind Whiskey Sour.",
+      "bestTime": "dinner"
+    },
+    {
+      "name": "Fisherman's Wharf (Cavelossim & Panjim)",
+      "img": "food_riverside",
+      "desc": "A stunning riverside restaurant on the banks of the Sal River, featuring traditional Goan architecture, live local acoustic bands, and authentic river-catch seafood.",
+      "cuisine": "Goan & Seafood",
+      "priceRange": "₹800–₹1,800 per person",
+      "rating": 4.6,
+      "mustTry": "Goan Fish Curry Rice, Butter Garlic Prawns & Bebinca with Ice Cream",
+      "lat": 15.178,
+      "lng": 73.942,
+      "tags": [
+        "Riverside",
+        "LiveMusic",
+        "Seafood",
+        "Views"
+      ],
+      "category": "casual",
+      "insiderTip": "Sit on the outer wooden deck overlooking the fishing trawlers floating on the Sal river.",
+      "bestTime": "lunch"
+    },
+    {
+      "name": "Britto's Beach Shack (Baga)",
+      "img": "food_beach",
+      "desc": "Operating right on the sand of Baga Beach since 1965. Famous worldwide for ocean breezes, seafood displays, chilled beer, and exceptional freshly baked desserts.",
+      "cuisine": "Goan, Continental & Seafood",
+      "priceRange": "₹500–₹1,200 per person",
+      "rating": 4.5,
+      "mustTry": "Baked Stuffed Crab, Prawn Rawa Fry & Blueberry Cheesecake",
+      "lat": 15.556,
+      "lng": 73.751,
+      "tags": [
+        "BeachShack",
+        "Seafood",
+        "Iconic",
+        "Baga"
+      ],
+      "category": "casual",
+      "insiderTip": "Grab an ocean-facing front table around 7 PM to listen to the waves while dining by candlelight.",
+      "bestTime": "dinner"
+    },
+    {
+      "name": "Vinayak Family Restaurant (Assagao)",
+      "img": "food_local",
+      "desc": "An unpretentious, beloved local eatery set in an open-air village hall overlooking green fields. Universally rated as serving the freshest, most authentic fish thali in North Goa.",
+      "cuisine": "Authentic Goan Saraswat",
+      "priceRange": "₹200–₹500 per person",
+      "rating": 4.6,
+      "mustTry": "Special Fish Thali (Kingfish/Surmai), Chonak Rawa Fry & Tisryo (Clams) Masala",
+      "lat": 15.587,
+      "lng": 73.769,
+      "tags": [
+        "Local",
+        "Thali",
+        "Seafood",
+        "Budget"
+      ],
+      "category": "casual",
+      "insiderTip": "Arrive by 12:45 PM for lunch; queues form quickly outside and tables turn fast.",
+      "bestTime": "lunch"
+    },
+    {
+      "name": "Baba Au Rhum (Anjuna)",
+      "img": "food_cafe",
+      "desc": "A legendary open-air bakery and cafe nestled among bamboo groves and paddy fields in Anjuna. Known for artisanal wood-fired pizzas, gourmet burgers, and fresh morning croissants.",
+      "cuisine": "French Bakery & Italian Cafe",
+      "priceRange": "₹400–₹900 per person",
+      "rating": 4.6,
+      "mustTry": "Hercules Wood-Fired Pizza, Bacon Burger & Fresh Almond Croissant with Espresso",
+      "lat": 15.583,
+      "lng": 73.752,
+      "tags": [
+        "Bakery",
+        "Pizza",
+        "Breakfast",
+        "Garden"
+      ],
+      "category": "cafe",
+      "insiderTip": "Prime breakfast spot after morning beach walks; try their homemade cold brew coffee.",
+      "bestTime": "morning"
+    },
+    {
+      "name": "Artjuna Garden Cafe (Anjuna)",
+      "img": "food_cafe",
+      "desc": "A tranquil open-air lifestyle oasis under tall mango trees. Features healthy Mediterranean mezze, fresh organic smoothies, artisan coffee, and an open lifestyle boutique.",
+      "cuisine": "Mediterranean, Health & Cafe",
+      "priceRange": "₹350–₹750 per person",
+      "rating": 4.5,
+      "mustTry": "Shakshuka, Falafel Mezze Platter, Bagels & Spirulina Smoothie",
+      "lat": 15.578,
+      "lng": 73.746,
+      "tags": [
+        "Healthy",
+        "Cafe",
+        "Breakfast",
+        "Garden"
+      ],
+      "category": "cafe",
+      "insiderTip": "Check out their outdoor library corner and morning yoga classes held in the garden pavilion.",
+      "bestTime": "morning"
+    },
+    {
+      "name": "Pousada by the Beach (Calangute)",
+      "img": "food_beach",
+      "desc": "An understated, deeply charming barefoot beachfront sanctuary hidden from the noise. Enjoy relaxed dining on a teak deck with sea breezes and authentic gourmet Goan recipes.",
+      "cuisine": "Goan & Portuguese",
+      "priceRange": "₹1,000–₹2,000 per person",
+      "rating": 4.7,
+      "mustTry": "Feijoada, Sungta (Prawn) Curry, Stuffed Squid & Bebinca",
+      "lat": 15.539,
+      "lng": 73.758,
+      "tags": [
+        "Beachfront",
+        "Romantic",
+        "FineDining",
+        "Goan"
+      ],
+      "category": "fine-dining",
+      "insiderTip": "Greet the resident friendly golden retrievers lounging happily on the beach deck.",
+      "bestTime": "lunch"
+    },
+    {
+      "name": "Dropadi Beach Shack (Palolem)",
+      "img": "food_beach",
+      "desc": "The most celebrated dining spot on Palolem's white crescent beach. Tables sit directly on the sand with candlelit sea views and the freshest tandoori seafood catches.",
+      "cuisine": "Goan, Tandoori & Seafood",
+      "priceRange": "₹450–₹1,200 per person",
+      "rating": 4.6,
+      "mustTry": "Tandoori Butter Garlic Red Snapper, Tiger Prawn Masala & Garlic Naan",
+      "lat": 15.009,
+      "lng": 74.0225,
+      "tags": [
+        "Beachfront",
+        "Candlelit",
+        "Palolem",
+        "Seafood"
+      ],
+      "category": "casual",
+      "insiderTip": "Pick your fresh catch from the ice display out front; they grill it immediately to order.",
+      "bestTime": "dinner"
+    },
+    {
+      "name": "Ritz Classic (Panjim)",
+      "img": "food_local",
+      "desc": "The quintessential Panjim lunch institution since decades. Locals and travelers pack the dining hall for their legendary multi-dish Goan fish curry thali.",
+      "cuisine": "Goan Seafood & Thali",
+      "priceRange": "₹250–₹600 per person",
+      "rating": 4.5,
+      "mustTry": "Ritz Classic Special Seafood Thali with Crab Xacuti & Fried Surmai",
+      "lat": 15.496,
+      "lng": 73.824,
+      "tags": [
+        "Thali",
+        "Iconic",
+        "Local",
+        "Panjim"
+      ],
+      "category": "casual",
+      "insiderTip": "Reach by 12:30 PM for lunch to avoid the 30-minute afternoon waitlist.",
+      "bestTime": "lunch"
+    },
+    {
+      "name": "Kokni Kanteen (Panjim)",
+      "img": "food_local",
+      "desc": "A charming retro eatery decorated with vintage film posters and brass tiffin carriers. Dedicated to authentic, traditional Hindu Saraswat homestyle cooking.",
+      "cuisine": "Goan Hindu Saraswat",
+      "priceRange": "₹200–₹500 per person",
+      "rating": 4.6,
+      "mustTry": "Tisryo Sukke (Dry Clams), Fish Curry Thali, Sol Kadi & Serradura dessert",
+      "lat": 15.498,
+      "lng": 73.829,
+      "tags": [
+        "Heritage",
+        "Local",
+        "Thali",
+        "Dessert"
+      ],
+      "category": "casual",
+      "insiderTip": "End your meal with their Portuguese sawdust pudding ('Serradura') — best in Panjim.",
+      "bestTime": "lunch"
+    },
+    {
+      "name": "Mum's Kitchen (Panjim)",
+      "img": "food_fine",
+      "desc": "An award-winning heritage culinary project preserving dying heirloom recipes from Goan mothers of all communities. Set in an elegant rustic indoor courtyard.",
+      "cuisine": "Heirloom Goan (Catholic & Hindu)",
+      "priceRange": "₹800–₹1,800 per person",
+      "rating": 4.6,
+      "mustTry": "Crab Xec Xec, Poi with Goan Chorizo, Stuffed Calamari & Alle Belle",
+      "lat": 15.489,
+      "lng": 73.818,
+      "tags": [
+        "FineDining",
+        "Heirloom",
+        "Culture"
+      ],
+      "category": "fine-dining",
+      "insiderTip": "Their menu specifies which village mother contributed each traditional recipe.",
+      "bestTime": "dinner"
+    },
+    {
+      "name": "Olive Bar & Kitchen (Vagator)",
+      "img": "food_rooftop",
+      "desc": "Perched dramatically on the cliff overlooking Vagator Beach with whitewashed walls, sweeping sea views, gourmet Mediterranean wood-fired fare, and chic sunset cocktails.",
+      "cuisine": "Mediterranean & Coastal",
+      "priceRange": "₹1,200–₹2,800 per person",
+      "rating": 4.6,
+      "mustTry": "Truffle Mushroom Pizza, Grilled Tiger Prawns & Sangria Pitchers",
+      "lat": 15.602,
+      "lng": 73.737,
+      "tags": [
+        "Clifftop",
+        "Rooftop",
+        "Sunset",
+        "Cocktails"
+      ],
+      "category": "rooftop",
+      "insiderTip": "Arrive at 5:00 PM for front-row cliff loungers as the sun sinks into the sea.",
+      "bestTime": "sunset"
+    },
+    {
+      "name": "Burger Factory (Anjuna & Morjim)",
+      "img": "food_casual",
+      "desc": "Cult-favorite gourmet burger parlor in Goa with ocean views, craft beer, and towering burgers made with homemade buns and gourmet brioche.",
+      "cuisine": "Gourmet Burgers & Shakes",
+      "priceRange": "₹350–₹750 per person",
+      "rating": 4.7,
+      "mustTry": "Blue Cheese & Bacon Burger, Pulled Pork Burger & Sweet Potato Fries",
+      "lat": 15.578,
+      "lng": 73.743,
+      "tags": [
+        "Burgers",
+        "Casual",
+        "MustTry"
+      ],
+      "category": "casual",
+      "insiderTip": "The Anjuna outlet has wooden tables overlooking the crashing waves.",
+      "bestTime": "lunch"
+    },
+    {
+      "name": "Confeitaria 31 De Janeiro (Fontainhas)",
+      "img": "food_bakery",
+      "desc": "Operating continuously since 1930 in a cobbled lane of Fontainhas. One of Goa's oldest traditional bakeries where traditional wood-fired ovens produce seven-layer bebinca.",
+      "cuisine": "Goan Portuguese Bakery",
+      "priceRange": "₹100–₹300 per person",
+      "rating": 4.6,
+      "mustTry": "Traditional 7-Layer Bebinca, Warm Pastel de Nata & Beef Samosas",
+      "lat": 15.4975,
+      "lng": 73.829,
+      "tags": [
+        "Bakery",
+        "Historic",
+        "Dessert",
+        "Fontainhas"
+      ],
+      "category": "cafe",
+      "insiderTip": "Take a freshly baked warm bebinca box home; they package it specially for travelers.",
+      "bestTime": "morning"
+    },
+    {
+      "name": "Joseph Bar (Fontainhas)",
+      "img": "food_bar",
+      "desc": "A pint-sized heritage tavern in Fontainhas that became a cult legend. Locals and travelers sit on plastic stools on the cobbled street sipping craft beer and artisanal Feni cocktails.",
+      "cuisine": "Tavern & Craft Cocktails",
+      "priceRange": "₹200–₹500 per person",
+      "rating": 4.8,
+      "mustTry": "Tambdi Rosa (Feni cocktail), Craft Beer on Tap & Prawn Cutlet Pao",
+      "lat": 15.4985,
+      "lng": 73.832,
+      "tags": [
+        "Bar",
+        "Local",
+        "Cocktails",
+        "Cult"
+      ],
+      "category": "casual",
+      "insiderTip": "Reach by 7:00 PM; space inside fits only 10 people and the street crowd gets electric.",
+      "bestTime": "evening"
+    },
+    {
+      "name": "Infantaria Bakery & Cafe (Calangute)",
+      "img": "food_bakery",
+      "desc": "The iconic breakfast hub on the Calangute beach road since decades. Always bustling with morning travelers enjoying flaky pastries, Goan sausages, and full English breakfasts.",
+      "cuisine": "Bakery, Goan & Continental",
+      "priceRange": "₹250–₹600 per person",
+      "rating": 4.4,
+      "mustTry": "Goan Sausage (Chorizo) Pao, Croissants, Quiche & Caramel Custard",
+      "lat": 15.541,
+      "lng": 73.762,
+      "tags": [
+        "Breakfast",
+        "Bakery",
+        "Calangute"
+      ],
+      "category": "cafe",
+      "insiderTip": "Their takeaway counter is stocked with traditional Goan dodol and fruit cakes.",
+      "bestTime": "morning"
+    },
+    {
+      "name": "Souza Lobo (Calangute Beach)",
+      "img": "food_beach",
+      "desc": "Serving travelers directly on Calangute Beach since 1932. Known for open-air beachfront seating, breezy sea views, and authentic time-tested Goan seafood recipes.",
+      "cuisine": "Traditional Goan Seafood",
+      "priceRange": "₹600–₹1,400 per person",
+      "rating": 4.5,
+      "mustTry": "Goan Prawn Curry Rice, Crab Xacuti & Masala Fried Pomfret",
+      "lat": 15.543,
+      "lng": 73.754,
+      "tags": [
+        "Beachfront",
+        "Historic",
+        "Seafood"
+      ],
+      "category": "casual",
+      "insiderTip": "Pair your seafood with a chilled pitcher of house sangria overlooking the sea.",
+      "bestTime": "dinner"
+    },
+    {
+      "name": "Noronha's Corner Food Truck (Anjuna)",
+      "img": "food_street",
+      "desc": "A legendary family-run food truck at Anjuna Circle run by three brothers. Serving traditional Catholic meat delicacies tucked into freshly baked local poi bread.",
+      "cuisine": "Goan Catholic Street Food",
+      "priceRange": "₹100–₹250 per person",
+      "rating": 4.8,
+      "mustTry": "Spicy Pork Vindaloo Pao, Goan Chorizo Pao & Beef Cutlet Pao",
+      "lat": 15.5891,
+      "lng": 73.7485,
+      "tags": [
+        "StreetFood",
+        "LateNight",
+        "Local"
+      ],
+      "category": "street-food",
+      "insiderTip": "Open from 6:30 PM onwards; cutlet pao often sells out before 8:30 PM.",
+      "bestTime": "evening"
+    },
+    {
+      "name": "Titlie Culinary Bar (Vagator)",
+      "cuisine": "Modern Indian & Experiential Cocktails",
+      "priceRange": "₹1,400–₹2,500",
+      "rating": 4.8,
+      "mustTry": "Burrata with Poached Figs, Smoked Pork Belly Skewers & Sunset Spritzers",
+      "lat": 15.596,
+      "lng": 73.737,
+      "tags": [
+        "Sunset",
+        "Bar",
+        "Modern",
+        "Cocktails",
+        "BeachView"
+      ],
+      "category": "fine-dining",
+      "insiderTip": "Reserve a sunset-facing clifftop table by 5:00 PM for the ultimate golden hour transition into evening lounge beats.",
+      "bestTime": "sunset"
+    },
+    {
+      "name": "Antares Restaurant & Beach Club (Vagator)",
+      "cuisine": "Australian-Goan Fusion & Woodfire Grills",
+      "priceRange": "₹1,500–₹3,000",
+      "rating": 4.7,
+      "mustTry": "Charred King Prawns, Woodfired Artisan Pizza & Passionfruit Martinis",
+      "lat": 15.5975,
+      "lng": 73.738,
+      "tags": [
+        "Sunset",
+        "FineDining",
+        "Clifftop",
+        "BeachClub"
+      ],
+      "category": "fine-dining",
+      "insiderTip": "Founded by MasterChef Sarah Todd; perched directly above Small Vagator beach with 180-degree ocean views.",
+      "bestTime": "dinner"
+    },
+    {
+      "name": "Anand Seafood Restaurant (Anjuna)",
+      "cuisine": "Authentic Goan Seafood & Thali",
+      "priceRange": "₹350–₹700",
+      "rating": 4.6,
+      "mustTry": "Special Fish Thali with Surmai Rawa Fry & Crab Xec Xec",
+      "lat": 15.584,
+      "lng": 73.749,
+      "tags": [
+        "Seafood",
+        "Thali",
+        "Local",
+        "MustTry"
+      ],
+      "category": "casual",
+      "insiderTip": "A local institution where locals and surfers eat daily. Unpretentious and always freshly caught.",
+      "bestTime": "lunch"
+    },
+    {
+      "name": "Fat Fish (Arpora/Baga)",
+      "cuisine": "Goan Saraswat & Seafood",
+      "priceRange": "₹600–₹1,200",
+      "rating": 4.5,
+      "mustTry": "Giant Goan Fish Thali, Butter Garlic Lobster & Tisreo (Clams) Sukka",
+      "lat": 15.568,
+      "lng": 73.762,
+      "tags": [
+        "Seafood",
+        "Thali",
+        "Goan",
+        "Family"
+      ],
+      "category": "casual",
+      "insiderTip": "Located on the Calangute-Arpora road; ask for the catch of the day on display by the kitchen.",
+      "bestTime": "lunch"
+    },
+    {
+      "name": "Viva Panjim (Fontainhas)",
+      "cuisine": "Portuguese-Goan Heritage Home Cooking",
+      "priceRange": "₹450–₹900",
+      "rating": 4.6,
+      "mustTry": "Pork Vindaloo, Prawn Balchão & Bebinca with Vanilla Ice Cream",
+      "lat": 15.4985,
+      "lng": 73.8325,
+      "tags": [
+        "Portuguese",
+        "Heritage",
+        "LatinQuarter",
+        "Authentic"
+      ],
+      "category": "casual",
+      "insiderTip": "Tucked away in a narrow alley in the Latin Quarter inside a family heritage house. Award-winning traditional recipes.",
+      "bestTime": "lunch"
+    },
+    {
+      "name": "The Black Sheep Bistro (Panjim)",
+      "cuisine": "Farm-to-Table Goan European",
+      "priceRange": "₹1,200–₹2,200",
+      "rating": 4.7,
+      "mustTry": "Chorizo Pav Bao, Red Wine Braised Ribs & Signature Botanical Cocktails",
+      "lat": 15.495,
+      "lng": 73.826,
+      "tags": [
+        "FineDining",
+        "FarmToTable",
+        "Cocktails",
+        "Wine"
+      ],
+      "category": "fine-dining",
+      "insiderTip": "One of India's top 50 restaurants. All produce is sourced within a 100km radius.",
+      "bestTime": "dinner"
+    },
+    {
+      "name": "La Plage (Ashvem Beach)",
+      "cuisine": "Gourmet French & Coastal European",
+      "priceRange": "₹1,200–₹2,500",
+      "rating": 4.8,
+      "mustTry": "Tuna Carpaccio, Seared Duck Breast & Chocolate Fondant",
+      "lat": 15.656,
+      "lng": 73.717,
+      "tags": [
+        "Beachfront",
+        "French",
+        "Bohemian",
+        "Relaxed"
+      ],
+      "category": "fine-dining",
+      "insiderTip": "Kick off your sandals and dine directly on Ashvem's soft sand under colorful sunshades.",
+      "bestTime": "lunch"
+    },
+    {
+      "name": "Sublime (Assagao)",
+      "cuisine": "Modern European Fusion",
+      "priceRange": "₹1,400–₹2,600",
+      "rating": 4.7,
+      "mustTry": "Blue Cheese Steak, Herb-Crusted Red Snapper & Truffle Gnocchi",
+      "lat": 15.589,
+      "lng": 73.765,
+      "tags": [
+        "Gourmet",
+        "Villa",
+        "Courtyard",
+        "Romantic"
+      ],
+      "category": "fine-dining",
+      "insiderTip": "Chef Chris Saleem's courtyard bistro in peaceful Assagao is ideal for quiet, candlelit evenings.",
+      "bestTime": "dinner"
+    },
+    {
+      "name": "Soro - The Village Pub (Assagao)",
+      "cuisine": "Rustic Italian, Burgers & Craft Beers",
+      "priceRange": "₹700–₹1,400",
+      "rating": 4.6,
+      "mustTry": "Woodfired Pepperoni Pizza, Pulled Pork Burgers & Gin Botanical Cocktails",
+      "lat": 15.587,
+      "lng": 73.771,
+      "tags": [
+        "Pub",
+        "LiveMusic",
+        "Nightlife",
+        "Billiards"
+      ],
+      "category": "casual",
+      "insiderTip": "A converted brick warehouse with pool tables and indie salsa/rock nights on Tuesdays and Sundays.",
+      "bestTime": "dinner"
+    },
+    {
+      "name": "Cavala Seaside Resort & Bar (Baga)",
+      "cuisine": "Goan Tavern Fare & Continental Grills",
+      "priceRange": "₹600–₹1,200",
+      "rating": 4.5,
+      "mustTry": "Pork Chops, Rawa Calamari Fry & Chilled Goan Kings Beer",
+      "lat": 15.5535,
+      "lng": 73.753,
+      "tags": [
+        "Retro",
+        "LiveMusic",
+        "Legendary",
+        "Nightlife"
+      ],
+      "category": "casual",
+      "insiderTip": "Goa's original live rock 'n' roll institution since 1979. Friday nights with the retro band are legendary.",
+      "bestTime": "dinner"
+    },
+    {
+      "name": "Zeebop by the Sea (Utorda Beach)",
+      "cuisine": "South Goan Seafood & Beach Shack",
+      "priceRange": "₹800–₹1,600",
+      "rating": 4.6,
+      "mustTry": "Grilled Jumbo Prawns in Garlic Butter, Goan Caldine Curry & Crab Masala",
+      "lat": 15.334,
+      "lng": 73.905,
+      "tags": [
+        "Beachfront",
+        "Seafood",
+        "SouthGoa",
+        "Sunset"
+      ],
+      "category": "casual",
+      "insiderTip": "Right on the pristine sand of Utorda; pick live crabs and fish directly from the ice counter.",
+      "bestTime": "lunch"
+    },
+    {
+      "name": "Mickey's (Colva Beach)",
+      "cuisine": "Goan, Continental & Tandoor",
+      "priceRange": "₹500–₹1,000",
+      "rating": 4.5,
+      "mustTry": "Goan Fish Curry with Rice, Squid Pepper Fry & Mango Kulfi",
+      "lat": 15.275,
+      "lng": 73.916,
+      "tags": [
+        "SouthGoa",
+        "BeachShack",
+        "WarmVibe",
+        "LiveMusic"
+      ],
+      "category": "casual",
+      "insiderTip": "Overlooks the river inlet leading to Colva beach; live acoustic duos play on weekends.",
+      "bestTime": "dinner"
+    },
+    {
+      "name": "Nostalgia by Chef Fernando (Raia)",
+      "cuisine": "Ancestral Catholic Goan Heritage",
+      "priceRange": "₹700–₹1,300",
+      "rating": 4.6,
+      "mustTry": "Sorpotel with Sannas, Chicken Xacuti & Dodol/Bebinca Dessert Platter",
+      "lat": 15.308,
+      "lng": 74.002,
+      "tags": [
+        "Heritage",
+        "Ancestral",
+        "Culture",
+        "Village"
+      ],
+      "category": "casual",
+      "insiderTip": "Preserves genuine, rare 16th-century Goan-Portuguese recipes in a village setting with live Fado on select days.",
+      "bestTime": "dinner"
+    },
+    {
+      "name": "Cafe Bodega (Sunaparanta, Panjim)",
+      "cuisine": "Artisan Cafe, Quiches & Specialty Coffee",
+      "priceRange": "₹350–₹700",
+      "rating": 4.6,
+      "mustTry": "Goat Cheese Salad, Spinach Corn Tart & Red Velvet Cupcake with Cold Brew",
+      "lat": 15.491,
+      "lng": 73.829,
+      "tags": [
+        "Cafe",
+        "Bakery",
+        "ArtGallery",
+        "Courtyard"
+      ],
+      "category": "cafe",
+      "insiderTip": "Peaceful courtyard of Sunaparanta Centre for the Arts on Altinho hill; perfect peaceful break after church visits.",
+      "bestTime": "lunch"
+    },
+    {
+      "name": "Jamun (Assagao)",
+      "cuisine": "Regional Indian Heritage & Coastal Grills",
+      "priceRange": "₹1,400–₹2,500",
+      "rating": 4.7,
+      "mustTry": "Kerela Prawn Roast, Daal Makhani & Jamun Kulfi",
+      "lat": 15.588,
+      "lng": 73.766,
+      "tags": [
+        "Villa",
+        "FineDining",
+        "Heritage",
+        "Cocktails"
+      ],
+      "category": "fine-dining",
+      "insiderTip": "Stunning bougainvillea-draped heritage Portuguese villa painted in signature jamun purple.",
+      "bestTime": "dinner"
+    },
+    {
+      "name": "Bawri (Assagao)",
+      "cuisine": "Progressive Regional Indian & Clay Oven",
+      "priceRange": "₹1,500–₹2,800",
+      "rating": 4.8,
+      "mustTry": "Nalli Nihari, Truffle Naan & Kokum Mezcal Cocktails",
+      "lat": 15.591,
+      "lng": 73.768,
+      "tags": [
+        "CelebrityChef",
+        "Gourmet",
+        "CraftCocktails",
+        "Assagao"
+      ],
+      "category": "fine-dining",
+      "insiderTip": "By Chef Karan Bane; serene open-air cabanas surrounding a tranquil pool.",
+      "bestTime": "dinner"
+    }
+  ],
+  "hotels": [
+    {
+      "name": "The Hosteller Goa, Anjuna",
+      "type": "Hostel",
+      "priceRange": "₹600–₹2,500/night",
+      "rating": 4.5,
+      "amenities": [
+        "WiFi",
+        "Pool",
+        "Common Area",
+        "Cafe"
+      ],
+      "checkIn": "1:00 PM",
+      "lat": 15.581,
+      "lng": 73.748
+    },
+    {
+      "name": "W Goa (Vagator)",
+      "type": "Resort",
+      "priceRange": "₹15,000–₹35,000/night",
+      "rating": 4.7,
+      "amenities": [
+        "Beachfront",
+        "Pool",
+        "Spa",
+        "Nightlife"
+      ],
+      "checkIn": "3:00 PM",
+      "lat": 15.599,
+      "lng": 73.738
+    },
+    {
+      "name": "Elsewhere Beach Huts (Mandrem)",
+      "type": "Homestay",
+      "priceRange": "₹5,000–₹12,000/night",
+      "rating": 4.8,
+      "amenities": [
+        "Beachfront",
+        "Eco-Friendly",
+        "Quiet"
+      ],
+      "checkIn": "2:00 PM",
+      "lat": 15.655,
+      "lng": 73.712
+    },
+    {
+      "name": "Taj Fort Aguada Resort & Spa (Sinquerim)",
+      "type": "Resort",
+      "priceRange": "₹18,000–₹45,000/night",
+      "rating": 4.8,
+      "amenities": [
+        "Heritage",
+        "Ocean View",
+        "Spa",
+        "Pool"
+      ],
+      "checkIn": "2:00 PM",
+      "lat": 15.495,
+      "lng": 73.769
+    },
+    {
+      "name": "Zostel Morjim",
+      "type": "Hostel",
+      "priceRange": "₹700–₹3,000/night",
+      "rating": 4.4,
+      "amenities": [
+        "Beachfront",
+        "WiFi",
+        "Coworking",
+        "Cafe"
+      ],
+      "checkIn": "1:00 PM",
+      "lat": 15.63,
+      "lng": 73.731
+    }
+  ]
+}

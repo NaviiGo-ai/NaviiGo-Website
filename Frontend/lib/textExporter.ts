@@ -7,7 +7,7 @@ export function formatItineraryForWhatsApp(destName: string, planData: any): str
     }
 
     planData.dayPlans.forEach((day: any, index: number) => {
-        text += `*Day ${index + 1}: ${day.theme || 'Exploration'}*\n`;
+        text += `*Day ${index + 1}: ${day.title || day.theme || 'Day Plan'}*\n`;
         if (day.activities && Array.isArray(day.activities)) {
             day.activities.forEach((act: any) => {
                 const timeStr = act.time ? `${act.time} - ` : '';

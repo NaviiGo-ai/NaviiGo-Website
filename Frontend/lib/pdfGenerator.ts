@@ -43,7 +43,7 @@ export function downloadItineraryAsPDF(destName: string, planData: any) {
             doc.setFontSize(14);
             doc.setTextColor(15, 23, 42); // slate-900
             doc.setFont("helvetica", "bold");
-            doc.text(`Day ${index + 1}: ${day.theme || 'Exploration'}`, margin, yPos);
+            doc.text(`Day ${index + 1}: ${day.title || day.theme || 'Day Plan'}`, margin, yPos);
             yPos += 10;
 
             if (day.activities && Array.isArray(day.activities)) {

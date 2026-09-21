@@ -566,6 +566,16 @@ _SYNTHETIC_RESTAURANT_TEMPLATES = [
     {"name": "Home-Style Regional Flavors & Culinary Heritage", "cuisine": "Slow Cooked Curries", "mustTry": "Hand-Pounded Masala Curry with Rice Cakes", "category": "casual", "desc": "Time-honored recipes passed down through generations of master cooks."},
 ]
 
+_SYNTHETIC_COASTAL_RESTAURANT_TEMPLATES = [
+    {"name": "Sunset Beach Shack & Fresh Catch Seafood", "cuisine": "Coastal Seafood & Grills", "mustTry": "Grilled Tiger Prawns in Garlic Butter & Poi Bread", "category": "casual", "desc": "Rustic palm-thatched beach shack with sea breeze, sandy floors, and chilled beverages."},
+    {"name": "Portuguese Villa Cafe & Courtyard Dining", "cuisine": "Goan Portuguese Heritage", "mustTry": "Pork Vindaloo or Mushroom Xacuti with Sannas", "category": "casual", "desc": "Restored colonial villa courtyard shaded by bougainvillea with old-world charm."},
+    {"name": "Candlelit Clifftop Bistro & Sunset Views", "cuisine": "Coastal European & Woodfired Grills", "mustTry": "Wood-Fired Calzone & Tropical Spritzers", "category": "fine-dining", "desc": "Perched on seaside cliffs capturing the evening sea breeze and glowing ocean sunset."},
+    {"name": "Beachside Lounge & Live Acoustic Session", "cuisine": "Continental & Coastal Tapas", "mustTry": "Calamari Peri-Peri & Fresh Passionfruit Mocktail", "category": "rooftop", "desc": "Laid-back beachfront lounge with low seating, fairy lights, and soothing acoustic tunes."},
+    {"name": "Tropical Garden Bistro & Local Fish Curry", "cuisine": "Traditional Goan Saraswat", "mustTry": "Special Fish Curry Thali with Sol Kadi & Rice", "category": "casual", "desc": "Lush tropical garden setting serving time-honored coastal clay-pot recipes."},
+    {"name": "Bohemian Beach Cafe & Artisan Coffee", "cuisine": "Health Cafe & Bakery", "mustTry": "Acai Smoothie Bowl & Fresh Coconut Cold Brew", "category": "cafe", "desc": "Vibrant seaside spot with hammocks, dreamcatchers, and artisanal roasted brews."},
+    {"name": "Village Tavern & Local Spiced Grills", "cuisine": "Goan Tavern & Tapas", "mustTry": "Goan Sausage (Choriz) Pao & Butter Garlic Squid", "category": "casual", "desc": "Authentic village watering hole with nostalgic Goan music and friendly hospitality."},
+]
+
 
 def _synthesize_contextual_restaurant(
     dest_name: str,
@@ -582,17 +592,19 @@ def _synthesize_contextual_restaurant(
     on extended (7-14 day) trips. Guarantees 0 duplicate restaurants and 0 hallucinated business names.
     """
     dest_clean = dest_name.title() if dest_name else "Heritage"
+    is_coastal = any(c in dest_name.lower() for c in ("goa", "kerala", "andaman", "gokarna", "pondicherry", "varkala", "daman", "diu"))
+
+    templates = _SYNTHETIC_COASTAL_RESTAURANT_TEMPLATES + _SYNTHETIC_RESTAURANT_TEMPLATES if is_coastal else _SYNTHETIC_RESTAURANT_TEMPLATES
 
     # Pick unused template
     chosen_template = None
-    for tmpl in _SYNTHETIC_RESTAURANT_TEMPLATES:
+    for tmpl in templates:
         cand_name = tmpl["name"].replace("{dest}", dest_clean)
         if cand_name not in used_names:
             chosen_template = tmpl
             break
 
     if not chosen_template:
-        # Generate truthful generic regional discovery slot
         suffix = f"Culinary Exploration (Day {day_index + 1})"
         chosen_template = {
             "name": f"Explore {dest_clean} {suffix}",
@@ -642,15 +654,27 @@ def _synthesize_contextual_experience(
     prev_lng: float,
     used_names: Set[str],
 ) -> Dict[str, Any]:
-    """Synthesize an authentic local cultural activity if highlight pool is fully exhausted."""
+    """Synthesize an authentic local cultural or coastal activity if highlight pool is fully exhausted."""
     dest_clean = dest_name.title() if dest_name else "Heritage"
-    options = [
-        ("Artisanal Craft & Loom Workshop", "Meet master weavers and observe traditional handloom techniques handed down across centuries.", "1.5 hrs", "experience"),
-        ("Old City Spice & Perfume Walk", "Guided sensory walk exploring century-old apothecaries, attar distillers, and botanical spice merchants.", "1.5 hrs", "experience"),
-        ("Heritage Sunset Promenade", "Unwind along panoramic vantage points capturing serene evening vistas and historic architecture.", "1 hr", "local-secret"),
-        ("Classical Music & Sarod Baithak", "Intimate evening recital in a restored stone haveli courtyard featuring celebrated local musicians.", "1.5 hrs", "experience"),
-        ("Pottery & Terracotta Studio", "Hands-on pottery session crafting clay lamps and terracotta vessels alongside local artisans.", "1.5 hrs", "experience"),
-    ]
+    is_coastal = any(c in dest_name.lower() for c in ("goa", "kerala", "andaman", "gokarna", "pondicherry", "varkala"))
+
+    if is_coastal:
+        options = [
+            ("Sunset Beach Volleyball & Sundowner", "Casual beach volleyball with fellow travelers followed by fresh coconut water watching golden hour.", "1.5 hrs", "experience"),
+            ("Coastal Cliff Walk & Sea Breeze Trail", "Scenic clifftop walking path winding above crashing waves and secret coves.", "1.5 hrs", "experience"),
+            ("Beach Flea & Artisan Souvenir Walk", "Stroll through vibrant evening stalls of handcrafted jewelry, beachwear, and local curios.", "1.5 hrs", "experience"),
+            ("Estuary Dolphin Watch & Boat Trail", "Traditional wooden boat ride across calm backwaters spotting playful estuary dolphins.", "1.5 hrs", "experience"),
+            ("Heritage Sunset Promenade", "Unwind along panoramic vantage points capturing serene evening vistas and coastal architecture.", "1 hr", "local-secret"),
+        ]
+    else:
+        options = [
+            ("Artisanal Craft & Loom Workshop", "Meet master weavers and observe traditional handloom techniques handed down across centuries.", "1.5 hrs", "experience"),
+            ("Old City Spice & Perfume Walk", "Guided sensory walk exploring century-old apothecaries, attar distillers, and botanical spice merchants.", "1.5 hrs", "experience"),
+            ("Heritage Sunset Promenade", "Unwind along panoramic vantage points capturing serene evening vistas and historic architecture.", "1 hr", "local-secret"),
+            ("Classical Music & Sarod Baithak", "Intimate evening recital in a restored stone haveli courtyard featuring celebrated local musicians.", "1.5 hrs", "experience"),
+            ("Pottery & Terracotta Studio", "Hands-on pottery session crafting clay lamps and terracotta vessels alongside local artisans.", "1.5 hrs", "experience"),
+        ]
+
     for opt_title, opt_desc, opt_dur, opt_cat in options:
         cand_name = f"{dest_clean} {opt_title}"
         if cand_name not in used_names:
@@ -661,8 +685,8 @@ def _synthesize_contextual_experience(
                 "category": opt_cat,
                 "lat": prev_lat + 0.003,
                 "lng": prev_lng + 0.003,
-                "tags": ["Culture", "Experience", "Heritage"],
-                "insiderTip": "Photography is welcomed. Arrive 10 minutes prior for the best seating.",
+                "tags": ["Culture", "Experience", "Coastal" if is_coastal else "Heritage"],
+                "insiderTip": "Photography is welcomed. Arrive 10 minutes prior for the best vantage point.",
                 "synthesized": True,
             }
 
@@ -954,15 +978,20 @@ def generate_itinerary(ctx: dict, dest_data: dict) -> Optional[dict]:
         else:
             clock = pace["wakeHour"] + 0.5
 
-        day_end_hour = 21.5
-        day_start = clock
-        max_end = day_start + pace["maxActiveHours"]
-        hard_stop = min(day_end_hour, max_end)
+        is_nightlife_vibe = (
+            pace.get("nightlifeOk")
+            or ctx.get("group") in ("friends", "solo", "couple", "duo")
+            or (ctx.get("purpose") in ("celebrate", "nightlife", "leisure", "cultural") and "goa" in ctx.get("destination", "").lower())
+            or ctx.get("purpose") in ("celebrate", "nightlife")
+            or "goa" in ctx.get("destination", "").lower()
+        )
+        day_end_hour = 23.0 if is_nightlife_vibe else 21.5
+        hard_stop = day_end_hour
 
         if is_last_day and departure_time_str:
             if is_multi_day:
                 clock = checkout_hour
-            hard_stop = min(hard_stop, last_day_hard_stop)
+            hard_stop = min(day_end_hour, last_day_hard_stop)
 
         prev_lat = map_center["lat"]
         prev_lng = map_center["lng"]
@@ -1238,6 +1267,46 @@ def generate_itinerary(ctx: dict, dest_data: dict) -> Optional[dict]:
                 afternoon_count += 1
                 clock = _maybe_inject_nearby_gem(attr, day_activities, clock, hard_stop)
 
+        # Fallback to scored_attractions if day cluster ran out of afternoon attractions
+        if afternoon_count < afternoon_slots and clock < 17.0 and not (is_last_day and departure_time_str and hard_stop < 16.0):
+            for fallback_attr in scored_attractions:
+                if afternoon_count >= afternoon_slots:
+                    break
+                if fallback_attr["name"] in used_attractions:
+                    continue
+                if fallback_attr.get("bestTimeToVisit") == "sunset" and clock < 16.0:
+                    continue
+                open_on = fallback_attr.get("_openOnDays")
+                if open_on is not None and day_index not in open_on:
+                    continue
+                overhead, label = travel_between(fallback_attr.get("lat", prev_lat), fallback_attr.get("lng", prev_lng))
+                attr_duration = min(2.0, _parse_duration_hours(fallback_attr.get("duration")))
+                if clock + overhead + attr_duration > 18.0:
+                    continue
+                if is_last_day and departure_time_str and (clock + overhead + attr_duration > hard_stop):
+                    continue
+                clock += overhead
+                pushed = push_activity(_build_activity(fallback_attr, label), attr_duration)
+                if pushed:
+                    used_attractions.add(fallback_attr["name"])
+                    afternoon_count += 1
+                    clock = _maybe_inject_nearby_gem(fallback_attr, day_activities, clock, hard_stop)
+
+        if afternoon_count == 0 and clock < 16.5 and not (is_last_day and departure_time_str and hard_stop < 16.0):
+            synth_exp = _synthesize_contextual_experience(
+                dest_name=ctx.get("destName", ""),
+                day_index=day_index,
+                prev_lat=prev_lat,
+                prev_lng=prev_lng,
+                used_names=used_attractions,
+            )
+            overhead, label = travel_between(synth_exp["lat"], synth_exp["lng"])
+            clock += overhead
+            pushed = push_activity(_build_activity(synth_exp, label), 1.5)
+            if pushed:
+                used_attractions.add(synth_exp["name"])
+                afternoon_count += 1
+
         # Evening attractions
         evening_slots = pace["activitiesPerSlot"][2]
         if is_last_day and departure_time_str and hard_stop < 18.0:
@@ -1250,13 +1319,20 @@ def generate_itinerary(ctx: dict, dest_data: dict) -> Optional[dict]:
             sunset_attrs = [
                 a for a in day_attraction_pool
                 if a["name"] not in used_attractions
-                and a.get("bestTimeToVisit") == "sunset"
+                and (a.get("bestTimeToVisit") == "sunset" or any(t in ("Sunset", "Beach", "Viewpoint") for t in a.get("tags", [])))
             ]
+            if not sunset_attrs:
+                sunset_attrs = [
+                    a for a in scored_attractions
+                    if a["name"] not in used_attractions
+                    and (a.get("bestTimeToVisit") == "sunset" or any(t in ("Sunset", "Beach", "Viewpoint") for t in a.get("tags", [])))
+                ]
+
             for sunset_attr in sunset_attrs[:1]:
                 if clock >= 19.5 or evening_slots <= 0:
                     break
                 overhead, label = travel_between(sunset_attr.get("lat", prev_lat), sunset_attr.get("lng", prev_lng))
-                attr_duration = _parse_duration_hours(sunset_attr.get("duration"))
+                attr_duration = min(2.0, _parse_duration_hours(sunset_attr.get("duration")))
                 if clock + overhead + attr_duration <= 19.5:
                     clock += overhead
                     sunset_act = _build_activity(sunset_attr, label)
@@ -1293,6 +1369,24 @@ def generate_itinerary(ctx: dict, dest_data: dict) -> Optional[dict]:
                     used_attractions.add(attr["name"])
                     evening_count += 1
                     clock = _maybe_inject_nearby_gem(attr, day_activities, clock, hard_stop)
+
+            # Fallback to scored_attractions if evening_count < evening_slots
+            if evening_count < evening_slots and clock < 19.0:
+                for fallback_attr in scored_attractions:
+                    if evening_count >= evening_slots:
+                        break
+                    if fallback_attr["name"] in used_attractions:
+                        continue
+                    overhead, label = travel_between(fallback_attr.get("lat", prev_lat), fallback_attr.get("lng", prev_lng))
+                    attr_duration = min(1.5, _parse_duration_hours(fallback_attr.get("duration")))
+                    if clock + overhead + attr_duration > 19.5:
+                        continue
+                    clock += overhead
+                    pushed = push_activity(_build_activity(fallback_attr, label), attr_duration)
+                    if pushed:
+                        used_attractions.add(fallback_attr["name"])
+                        evening_count += 1
+                        clock = _maybe_inject_nearby_gem(fallback_attr, day_activities, clock, hard_stop)
 
         # ── Dinner ──
         skip_dinner = is_last_day and departure_time_str and hard_stop < 19.5
@@ -1334,6 +1428,52 @@ def generate_itinerary(ctx: dict, dest_data: dict) -> Optional[dict]:
                 "category": dinner_restaurant.get("category", "casual"),
             }, 1.25)
 
+        # ── Nightlife & Evening Beach Vibe (for Goa, friends, or nightlife trips) ──
+        if is_nightlife_vibe and not is_last_day and clock < hard_stop - 0.75:
+            nightlife_attr = next(
+                (a for a in scored_attractions
+                 if a["name"] not in used_attractions
+                 and any(t.lower() in ("nightlife", "bar", "club", "pub", "market", "beach", "sunset") for t in a.get("tags", []))
+                 and a.get("category") in ("experience", "local-secret", "must-see")),
+                None
+            )
+            if nightlife_attr and clock < 22.0:
+                overhead, label = travel_between(nightlife_attr.get("lat", prev_lat), nightlife_attr.get("lng", prev_lng))
+                nl_duration = 1.5
+                if clock + overhead + nl_duration <= hard_stop + 0.25:
+                    clock += overhead
+                    nl_act = _build_activity(nightlife_attr, label)
+                    nl_act["slot"] = "Night"
+                    nl_act["crowdTip"] = nightlife_attr.get("insiderTip") or "🌙 Evening vibe peaks between 9:30 PM and midnight."
+                    pushed = push_activity(nl_act, nl_duration)
+                    if pushed:
+                        used_attractions.add(nightlife_attr["name"])
+            elif not nightlife_attr and clock < 21.5 and "goa" in ctx.get("destination", "").lower():
+                goa_nightlife_options = [
+                    ("Anjuna Beach Shack & Acoustic Chillout", "Relax on reclining beach loungers under fairy lights with cold drinks, sound of crashing waves, and live acoustic music.", "1.5 hrs", "experience"),
+                    ("Vagator Clifftop Sunset Lounge & DJ Set", "Panoramic ocean breeze lounge with deep house rhythms, ambient lighting, and tropical handcrafted mocktails.", "1.5 hrs", "experience"),
+                    ("Baga Beach Night Stroll & Shacks", "Lively beachfront promenade lined with glowing beach shacks, candlelit tables in the sand, and retro classics.", "1.5 hrs", "experience"),
+                    ("Fontainhas Heritage Tavern & Live Jazz", "Cozy Latin Quarter heritage bar with friendly conversation, local feni cocktails, and live jazz/retro duos.", "1.5 hrs", "experience"),
+                ]
+                for nl_title, nl_desc, nl_dur, nl_cat in goa_nightlife_options:
+                    if nl_title not in used_attractions:
+                        pushed = push_activity({
+                            "name": nl_title,
+                            "desc": nl_desc,
+                            "crowd": "Medium",
+                            "crowdTip": "🌙 Nightlife ambiance is at its best after 9:30 PM.",
+                            "travelFromPrev": "Short ride",
+                            "lat": prev_lat + 0.002,
+                            "lng": prev_lng + 0.002,
+                            "type": "attraction",
+                            "durationMins": 90,
+                            "slot": "Night",
+                            "category": nl_cat,
+                        }, 1.5)
+                        if pushed:
+                            used_attractions.add(nl_title)
+                            break
+
         # Departure marker on last day
         if is_last_day and departure_time_str and departure_mode:
             mode_labels = {
@@ -1357,7 +1497,40 @@ def generate_itinerary(ctx: dict, dest_data: dict) -> Optional[dict]:
 
         # Day Title & Weather
         purpose_titles = DAY_TITLES_MAP.get(ctx.get("purpose", "cultural"), DAY_TITLES_MAP["cultural"])
-        day_title = purpose_titles[day_index % len(purpose_titles)] if purpose_titles else f"Day {day_index + 1}"
+        base_title = purpose_titles[day_index % len(purpose_titles)] if purpose_titles else f"Day {day_index + 1}"
+
+        # Contextually name day after its most prominent highlight
+        prominent_act = next(
+            (a["name"] for a in day_activities
+             if a.get("type") == "attraction"
+             and not any(a.get("name", "").startswith(p) for p in ("Check-in", "Checkout", "Head to", "Free Day"))),
+            None
+        )
+        if prominent_act:
+            clean_name = re.sub(r"\s*\(.*?\)", "", prominent_act)
+            if "waterfall" in clean_name.lower():
+                day_title = f"{clean_name} & Forest Trail"
+            elif "fort" in clean_name.lower():
+                day_title = f"{clean_name} & Coastal Bastions"
+            elif "beach" in clean_name.lower():
+                day_title = f"{clean_name} & Sunset Shacks"
+            elif "latin quarter" in clean_name.lower() or "fontainhas" in clean_name.lower():
+                day_title = "Fontainhas Latin Quarter & Heritage Walk"
+            elif "church" in clean_name.lower() or "basilica" in clean_name.lower() or "cathedral" in clean_name.lower():
+                day_title = f"{clean_name} & Old Heritage"
+            elif "island" in clean_name.lower():
+                day_title = f"{clean_name} & Backwaters"
+            elif "spice" in clean_name.lower():
+                day_title = f"{clean_name} & Farm Trail"
+            elif "market" in clean_name.lower():
+                day_title = f"{clean_name} & Local Treasures"
+            elif len(clean_name) <= 32:
+                day_title = f"{clean_name} & {base_title}"
+            else:
+                first_part = clean_name.split("&")[0].split(",")[0].strip()
+                day_title = f"{first_part} Exploration" if len(first_part) <= 30 else first_part
+        else:
+            day_title = base_title
 
         if is_first_day and is_multi_day:
             arrival_mode = ctx.get("arrivalMode", "")
@@ -1396,6 +1569,7 @@ def generate_itinerary(ctx: dict, dest_data: dict) -> Optional[dict]:
         day_plans.append({
             "day": day_index + 1,
             "title": day_title,
+            "theme": day_title,
             "weather": {
                 "temp": temp_str,
                 "condition": condition,
