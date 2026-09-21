@@ -100,9 +100,11 @@ async def _fetch_google_daily(client: httpx.AsyncClient, lat: float, lng: float)
                 # Google Weather returns displayDate as {year, month, day} dict
                 raw_display = day.get("displayDate")
                 if isinstance(raw_display, dict) and raw_display:
-                    y = raw_display.get("year", 2000)
-                    m = raw_display.get("month", 1)
-                    d = raw_display.get("day", 1)
+                    y = raw_display.get("year")
+                    m = raw_display.get("month")
+                    d = raw_display.get("day")
+                    if y is None or m is None or d is None:
+                        continue
                     date_str = f"{y}-{m:02d}-{d:02d}"
                 elif isinstance(raw_display, str) and raw_display:
                     date_str = raw_display

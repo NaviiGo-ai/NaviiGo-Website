@@ -21,15 +21,18 @@ from services.itinerary_engine import get_pool_requirements
 @pytest.mark.asyncio
 async def test_geoapify_config_check():
     """Verify is_geoapify_configured responds accurately to API key presence."""
-    with patch.dict("os.environ", {"GEOAPIFY_API_KEY": "test_api_key_12345"}):
-        from services import geoapify_service
-        geoapify_service.GEOAPIFY_API_KEY = "test_api_key_12345"
-        assert is_geoapify_configured() is True
+    from services import geoapify_service
+    original_key = geoapify_service.GEOAPIFY_API_KEY
+    try:
+        with patch.dict("os.environ", {"GEOAPIFY_API_KEY": "test_api_key_12345"}):
+            geoapify_service.GEOAPIFY_API_KEY = "test_api_key_12345"
+            assert is_geoapify_configured() is True
 
-    with patch.dict("os.environ", {"GEOAPIFY_API_KEY": ""}):
-        from services import geoapify_service
-        geoapify_service.GEOAPIFY_API_KEY = ""
-        assert is_geoapify_configured() is False
+        with patch.dict("os.environ", {"GEOAPIFY_API_KEY": ""}):
+            geoapify_service.GEOAPIFY_API_KEY = ""
+            assert is_geoapify_configured() is False
+    finally:
+        geoapify_service.GEOAPIFY_API_KEY = original_key
 
 
 @pytest.mark.asyncio
@@ -222,7 +225,7 @@ async def test_gemini_background_refetch_marks_provenance():
     dest_cache.ENABLE_GEMINI_DESTINATION_FALLBACK = True
     
     try:
-        with patch("services.geoapify_service.is_geoapify_configured", return_value=False), \
+        with patch("services.destination_cache.is_geoapify_configured", return_value=False), \
              patch("services.destination_cache.fetch_destination_data_with_gemini", new_callable=AsyncMock) as mock_gemini, \
              patch("services.destination_cache._file_set", new_callable=AsyncMock):
             mock_gemini.return_value = {"highlights": [{"name": "Test Place"}], "restaurants": []}
