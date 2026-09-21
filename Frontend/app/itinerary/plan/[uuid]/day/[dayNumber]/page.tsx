@@ -30,14 +30,13 @@ function DayViewContent() {
     const isValidId = /^[a-zA-Z0-9_-]{1,128}$/.test(uuid);
     const isInvalid = !uuid || !isValidId || isNaN(dayNumber) || dayNumber < 1;
 
-    const [phase, setPhase] = useState<'loading' | 'ready' | 'generating' | 'not-found' | 'slow-loading'>('loading');
+    const [phase, setPhase] = useState<'loading' | 'ready' | 'generating' | 'not-found' | 'slow-loading'>(() => isInvalid ? 'not-found' : 'loading');
     const [form, setForm] = useState<Record<string, unknown>>({});
     const [generatedData, setGeneratedData] = useState<any>(null);
     const [retryCount, setRetryCount] = useState(0);
 
     useEffect(() => {
         if (isInvalid) {
-            setPhase('not-found');
             return;
         }
 
@@ -56,9 +55,12 @@ function DayViewContent() {
                             router.replace(`/itinerary/plan/${uuid}/day/1`);
                             return;
                         }
-                        setForm(parsed.form || {});
-                        setGeneratedData(parsed.generatedData);
-                        setPhase('ready');
+                        queueMicrotask(() => {
+                            if (!active) return;
+                            setForm(parsed.form || {});
+                            setGeneratedData(parsed.generatedData);
+                            setPhase('ready');
+                        });
                         return;
                     }
                 }
@@ -84,9 +86,12 @@ function DayViewContent() {
                 purpose: 'cultural',
                 group: 'solo',
             };
-            setForm(defaultForm);
-            setGeneratedData(directStatic);
-            setPhase('ready');
+            queueMicrotask(() => {
+                if (!active) return;
+                setForm(defaultForm);
+                setGeneratedData(directStatic);
+                setPhase('ready');
+            });
             try {
                 sessionStorage.setItem(`naviigo_plan_${uuid}`, JSON.stringify({
                     form: defaultForm,
@@ -175,6 +180,7 @@ function DayViewContent() {
             active = false;
             clearTimeout(timer);
         };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [uuid, dayNumber, isInvalid, router, retryCount]);
 
     const handleBack = useCallback(() => {

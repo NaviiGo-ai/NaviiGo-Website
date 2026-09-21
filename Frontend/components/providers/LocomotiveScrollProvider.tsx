@@ -19,13 +19,7 @@ interface LocomotiveScrollProviderProps {
 }
 
 export default function LocomotiveScrollProvider({ children }: LocomotiveScrollProviderProps) {
-  const [isReady, setIsReady] = useState(false);
-
-  useEffect(() => {
-    // GSAP ScrollTrigger is the primary, hardware-accelerated scroll animation
-    // engine powering Naviigo. This provider maintains context compatibility cleanly.
-    setIsReady(true);
-  }, []);
+  const [isReady] = useState(true);
 
   return (
     <LocomotiveScrollContext.Provider value={{ scroll: null, isReady }}>

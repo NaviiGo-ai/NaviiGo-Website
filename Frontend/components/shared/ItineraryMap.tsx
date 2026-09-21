@@ -159,6 +159,7 @@ export default function ItineraryMap({
                 mapRef.current = null;
             }
         };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [leafletLoaded]);
 
     // Build pins and route only when pins or showRoute change

@@ -154,6 +154,7 @@ export default function DestinationDeepDive() {
         }
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [destination, companion, vibe, cacheKey]
   );
 

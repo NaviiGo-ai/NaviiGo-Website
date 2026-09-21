@@ -17,11 +17,19 @@ const COOKIE_NAME = 'naviigo_consent_given';
 export default function CookieConsent() {
   const [isOpen, setIsOpen] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
-  const [preferences, setPreferences] = useState<CookiePreferences>({
-    essential: true, // Always true and cannot be disabled
-    analytics: false, // Strict GDPR: requires explicit opt-in
-    personalization: false,
-    timestamp: '',
+  const [preferences, setPreferences] = useState<CookiePreferences>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) return JSON.parse(saved);
+      } catch {}
+    }
+    return {
+      essential: true, // Always true and cannot be disabled
+      analytics: false, // Strict GDPR: requires explicit opt-in
+      personalization: false,
+      timestamp: '',
+    };
   });
 
   const saveConsent = useCallback((prefs: CookiePreferences) => {
@@ -53,12 +61,9 @@ export default function CookieConsent() {
         // Small delay for buttery smooth entry after page loads
         const timer = setTimeout(() => setIsOpen(true), 900);
         return () => clearTimeout(timer);
-      } else {
-        const parsed = JSON.parse(saved);
-        setPreferences(parsed);
       }
     } catch {
-      setIsOpen(true);
+      setTimeout(() => setIsOpen(true), 0);
     }
 
     // Allow opening cookie preferences from anywhere (e.g. footer link)

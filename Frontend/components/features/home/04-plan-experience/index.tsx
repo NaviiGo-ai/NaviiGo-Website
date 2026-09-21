@@ -120,11 +120,6 @@ export default function EditorialSensationsCarousel() {
           : item.category === activeCategory
       );
 
-  // Keep active index within bounds when filter changes
-  useEffect(() => {
-    setActiveIndex(0);
-  }, [activeCategory]);
-
   const handlePrev = () => {
     setActiveIndex((prev) => (prev > 0 ? prev - 1 : filteredItems.length - 1));
   };
@@ -211,7 +206,10 @@ export default function EditorialSensationsCarousel() {
             return (
               <button
                 key={cat.id}
-                onClick={() => setActiveCategory(cat.id)}
+                onClick={() => {
+                  setActiveCategory(cat.id);
+                  setActiveIndex(0);
+                }}
                 className={`relative pb-3 flex items-center gap-2 font-mono text-xs uppercase tracking-widest transition-colors whitespace-nowrap shrink-0 min-h-[44px] touch-manipulation ${
                   isActive ? 'text-[#EC6426] font-bold' : 'text-naviigo-brown/60 hover:text-naviigo-brown'
                 }`}

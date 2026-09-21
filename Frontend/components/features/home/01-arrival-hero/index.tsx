@@ -180,7 +180,6 @@ export default function ArrivalHero() {
       >
         <picture className="w-full h-full">
           <source media="(max-width: 767px)" srcSet="/brand/india-cover-mobile.png" />
-          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/brand/india-cover-full.png"
             alt=""

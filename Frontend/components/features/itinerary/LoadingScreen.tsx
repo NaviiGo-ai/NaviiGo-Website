@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
+import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DEST_DATA } from '@/app/itinerary/data';
@@ -291,12 +292,12 @@ export default function LoadingScreen({ form, uuid, onDone }: LoadingScreenProps
                     ↻ Retry Generation
                   </button>
                 )}
-                <a
+                <Link
                   href="/itinerary"
                   className="px-5 py-2.5 rounded-xl bg-paper-warm border border-[#EADFD4] hover:border-naviigo-brown text-naviigo-brown font-mono text-xs uppercase font-bold transition-colors"
                 >
                   Return to Wizard
-                </a>
+                </Link>
               </div>
             </div>
           )}

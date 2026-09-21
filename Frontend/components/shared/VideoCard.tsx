@@ -53,6 +53,7 @@ export default function VideoCard({ destId, destName }: VideoCardProps) {
                         onClick={() => setPlaying(true)}
                         className="absolute inset-0 w-full h-full group text-left cursor-pointer overflow-hidden"
                     >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                             src={thumbUrl}
                             alt={video.title}
