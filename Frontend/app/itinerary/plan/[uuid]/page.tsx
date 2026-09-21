@@ -53,6 +53,34 @@ function ItineraryUUIDContent() {
 
                 if (!isMounted) return;
 
+                if (data?.form) {
+                    const loadedForm = data.form ?? {};
+                    const expectedDays = Number(loadedForm.days) || 0;
+                    const actualDays = Array.isArray(data.generatedData?.dayPlans) ? data.generatedData.dayPlans.length : 0;
+                    const isComplete = actualDays > 0 && (expectedDays <= 1 || actualDays >= expectedDays);
+
+                    if (isComplete) {
+                        setForm(loadedForm);
+                        setGeneratedData(data.generatedData);
+                        setPhase('result');
+                        try {
+                            sessionStorage.setItem(`naviigo_plan_${uuid}`, JSON.stringify({
+                                form: loadedForm,
+                                generatedData: data.generatedData,
+                            }));
+                        } catch {}
+                        return;
+                    }
+
+                    // Incomplete, missing, or corrupted stub -> trigger generation
+                    try {
+                        sessionStorage.removeItem(`naviigo_plan_${uuid}`);
+                    } catch {}
+                    setForm(loadedForm);
+                    setPhase('generating');
+                    return;
+                }
+
                 if (data?.generatedData) {
                     const loadedForm = data.form ?? {};
                     setForm(loadedForm);
@@ -67,29 +95,7 @@ function ItineraryUUIDContent() {
                     return;
                 }
 
-                // If we have a form but no generatedData, check if it's in generating state or static
-                if (data?.form) {
-                    const destKey = ((data.form.destination || data.form.destId || '') as string).toLowerCase();
-                    const staticMatch = DEST_DATA[destKey];
-                    if (staticMatch) {
-                        setForm(data.form);
-                        setGeneratedData(staticMatch);
-                        setPhase('result');
-                        try {
-                            sessionStorage.setItem(`naviigo_plan_${uuid}`, JSON.stringify({
-                                form: data.form,
-                                generatedData: staticMatch,
-                            }));
-                        } catch {}
-                        return;
-                    }
-
-                    setForm(data.form ?? {});
-                    setPhase('generating');
-                    return;
-                }
-
-                // Fallback: Check if UUID itself is a known static destination
+                // Fallback: Check if UUID itself is a known static catalog destination
                 const directStatic = DEST_DATA[uuid.toLowerCase()];
                 if (directStatic) {
                     const defaultForm = {

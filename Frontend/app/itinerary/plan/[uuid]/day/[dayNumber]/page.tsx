@@ -49,9 +49,10 @@ function DayViewContent() {
                 const cached = sessionStorage.getItem(`naviigo_plan_${uuid}`);
                 if (cached) {
                     const parsed = JSON.parse(cached);
-                    if (parsed?.generatedData?.dayPlans?.length > 0) {
-                        const totalDays = parsed.generatedData.dayPlans.length;
-                        if (dayNumber > totalDays) {
+                    const expectedDays = Number(parsed?.form?.days) || 0;
+                    const actualDays = parsed?.generatedData?.dayPlans?.length || 0;
+                    if (actualDays > 0 && (expectedDays <= 1 || actualDays >= expectedDays)) {
+                        if (dayNumber > actualDays) {
                             router.replace(`/itinerary/plan/${uuid}/day/1`);
                             return;
                         }
@@ -107,23 +108,14 @@ function DayViewContent() {
             if (!active) return;
             clearTimeout(timer);
 
-            if (data?.generatedData) {
+            if (data?.form) {
+                const expectedDays = Number(data.form?.days) || 0;
                 const totalDays = data.generatedData?.dayPlans?.length ?? 0;
-                if (totalDays === 0) {
-                    const destKey = ((data.form?.destination || data.form?.destId || '') as string).toLowerCase();
-                    const staticMatch = DEST_DATA[destKey];
-                    if (staticMatch && staticMatch.dayPlans?.length > 0) {
-                        setForm(data.form || {});
-                        setGeneratedData(staticMatch);
-                        setPhase('ready');
-                        return;
-                    }
+                const isComplete = totalDays > 0 && (expectedDays <= 1 || totalDays >= expectedDays);
 
-                    if (data.form) {
-                        router.replace(`/itinerary/plan/${uuid}`);
-                    } else {
-                        setPhase('not-found');
-                    }
+                if (!isComplete) {
+                    // Itinerary needs generation or repair -> redirect to plan page to generate
+                    router.replace(`/itinerary/plan/${uuid}`);
                     return;
                 }
 
@@ -144,32 +136,36 @@ function DayViewContent() {
                         generatedData: data.generatedData,
                     }));
                 } catch {}
-            } else if (data?.form) {
-                const destKey = ((data.form.destination || data.form.destId || '') as string).toLowerCase();
-                const staticMatch = DEST_DATA[destKey];
-                if (staticMatch && staticMatch.dayPlans?.length > 0) {
-                    const totalDays = staticMatch.dayPlans.length;
-                    if (dayNumber > totalDays) {
-                        router.replace(`/itinerary/plan/${uuid}/day/1`);
-                        return;
-                    }
-                    setForm(data.form);
-                    setGeneratedData(staticMatch);
-                    setPhase('ready');
-                    try {
-                        sessionStorage.setItem(`naviigo_plan_${uuid}`, JSON.stringify({
-                            form: data.form,
-                            generatedData: staticMatch,
-                        }));
-                    } catch {}
+                return;
+            }
+
+            if (data?.generatedData) {
+                const totalDays = data.generatedData?.dayPlans?.length ?? 0;
+                if (totalDays === 0) {
+                    setPhase('not-found');
                     return;
                 }
 
-                // If generating, send to the plan page which displays live progress
-                router.replace(`/itinerary/plan/${uuid}`);
-            } else {
-                setPhase('not-found');
+                if (dayNumber > totalDays) {
+                    router.replace(`/itinerary/plan/${uuid}/day/1`);
+                    return;
+                }
+
+                const loadedForm = data.form ?? {};
+                setForm(loadedForm);
+                setGeneratedData(data.generatedData);
+                setPhase('ready');
+
+                try {
+                    sessionStorage.setItem(`naviigo_plan_${uuid}`, JSON.stringify({
+                        form: loadedForm,
+                        generatedData: data.generatedData,
+                    }));
+                } catch {}
+                return;
             }
+
+            setPhase('not-found');
         }).catch((err) => {
             console.error('[DayView] getItineraryByUUID failed:', err);
             if (active) setPhase('not-found');

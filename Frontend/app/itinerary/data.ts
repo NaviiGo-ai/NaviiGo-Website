@@ -400,6 +400,27 @@ export const DEST_DATA: Record<string, DestInfo> = {
                     { time: '08:00 PM', slot: 'Evening', name: 'Dinner at Thalassa', desc: 'Cliff-top Greek restaurant with fairy lights and live music over the sea.', crowd: 'High', crowdTip: 'Must reserve — booked out weeks ahead', travelFromPrev: '10 min drive', lat: 15.5950, lng: 73.7430, type: 'restaurant' },
                 ],
             },
+            {
+                day: 2, title: 'South Goa Bays & Coastal Serenity',
+                weather: { temp: '23–32°C', condition: 'Sunny & Coastal Breeze', emoji: '🌴', rain: 0, tip: 'Carry swimwear and towel for Palolem & Agonda' },
+                activities: [
+                    { time: '08:30 AM', slot: 'Morning', name: 'Cabo de Rama Fort', desc: 'Ancient clifftop fortress with dramatic panoramic views over the Arabian Sea.', crowd: 'Low', crowdTip: 'Quiet morning atmosphere with spectacular cliffs', lat: 15.0880, lng: 73.9210 },
+                    { time: '11:00 AM', slot: 'Morning', name: 'Palolem Beach Walk', desc: 'Crescent-shaped white sand haven framed by palm groves and calm waters.', crowd: 'Medium', crowdTip: 'Gentle water ideal for kayaking', travelFromPrev: '25 min drive', lat: 15.0100, lng: 74.0230 },
+                    { time: '01:00 PM', slot: 'Afternoon', name: 'Seafood Lunch at Dropadi', desc: 'Fresh grilled tiger prawns and Goan butter garlic crab right by the beach.', crowd: 'Medium', crowdTip: 'Beach-facing table offers the best ocean breeze', travelFromPrev: '3 min walk', lat: 15.0090, lng: 74.0225, type: 'restaurant' },
+                    { time: '03:30 PM', slot: 'Afternoon', name: 'Agonda Turtle Beach', desc: 'Pristine, peaceful stretch known for Olive Ridley sea turtle nesting and silence.', crowd: 'Low', crowdTip: 'Uncommercialized and wonderfully calm', travelFromPrev: '15 min drive', lat: 15.0440, lng: 73.9870 },
+                    { time: '06:00 PM', slot: 'Evening', name: 'Butterfly Beach Sunset', desc: 'Secluded cove accessible via scenic boat or hike with golden hour horizon.', crowd: 'Low', crowdTip: 'Hire a local fishing boat from Palolem', travelFromPrev: '10 min boat', lat: 15.0250, lng: 74.0010 },
+                ],
+            },
+            {
+                day: 3, title: 'Fontainhas Heritage & Hinterland Trails',
+                weather: { temp: '24–31°C', condition: 'Clear Skies', emoji: '☀️', rain: 0, tip: 'Comfortable walking shoes for heritage cobblestones' },
+                activities: [
+                    { time: '08:30 AM', slot: 'Morning', name: 'Fontainhas Latin Quarter Walking Tour', desc: 'Vibrant Portuguese heritage lanes with 18th-century yellow, mint, and blue colonial villas.', crowd: 'Low', crowdTip: 'Best morning lighting for photography before vehicle traffic', lat: 15.4989, lng: 73.8278 },
+                    { time: '10:30 AM', slot: 'Morning', name: 'Confeitaria 31 De Janeiro', desc: 'Historic bakery from 1930 serving warm bebinca, pastel de nata, and poee bread.', crowd: 'Medium', crowdTip: 'Try the traditional Goan bebinca fresh from the wood oven', travelFromPrev: '5 min walk', lat: 15.4975, lng: 73.8290, type: 'restaurant' },
+                    { time: '01:00 PM', slot: 'Afternoon', name: 'Dudhsagar Falls Expedition', desc: 'Four-tiered 310m milky white waterfall surrounded by lush Western Ghats forest.', crowd: 'Medium', crowdTip: 'Jeep safari required through the national park', travelFromPrev: '45 min drive', lat: 15.3144, lng: 74.3143 },
+                    { time: '06:30 PM', slot: 'Evening', name: 'Mandovi River Sunset Cruise', desc: 'Evening cruise along the river with Goan folk music and views of the coastline.', crowd: 'Medium', crowdTip: 'Arrive 20 mins prior for prime upper deck viewing', travelFromPrev: '40 min drive', lat: 15.5000, lng: 73.8300 },
+                ],
+            },
         ],
     },
     manali: {
