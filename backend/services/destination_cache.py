@@ -194,17 +194,21 @@ def _csv_row_to_dest_data(row: dict, name: str) -> dict:
             h_name = row.get(f"highlight_{i}") or row.get(f"highlight_{i}_name")
             if not h_name:
                 break
-            h_lat = float(row.get(f"highlight_{i}_lat")) if row.get(f"highlight_{i}_lat") else (lat + (i * 0.005) if lat is not None else None)
-            h_lng = float(row.get(f"highlight_{i}_lng")) if row.get(f"highlight_{i}_lng") else (lng + (i * 0.003) if lng is not None else None)
+            h_lat_val = row.get(f"highlight_{i}_lat")
+            h_lng_val = row.get(f"highlight_{i}_lng")
+            h_lat = float(h_lat_val) if h_lat_val else None
+            h_lng = float(h_lng_val) if h_lng_val else None
+            tags_val = row.get(f"highlight_{i}_tags")
+            tags = tags_val.split(",") if tags_val else []
             highlights.append({
                 "name": h_name,
-                "desc": row.get(f"highlight_{i}_desc", f"A must-visit attraction in {name}."),
-                "tags": (row.get(f"highlight_{i}_tags") or "Heritage,Culture").split(","),
+                "desc": row.get(f"highlight_{i}_desc") or None,
+                "tags": tags,
                 "lat": h_lat,
                 "lng": h_lng,
-                "duration": row.get(f"highlight_{i}_duration", "1-2 hrs"),
+                "duration": row.get(f"highlight_{i}_duration") or None,
                 "img": row.get(f"highlight_{i}_img", ""),
-                "bestMonths": row.get(f"highlight_{i}_best_months", "Oct-Mar"),
+                "bestMonths": row.get(f"highlight_{i}_best_months") or None,
             })
 
     # Similarly for restaurants
@@ -220,18 +224,22 @@ def _csv_row_to_dest_data(row: dict, name: str) -> dict:
             r_name = row.get(f"restaurant_{i}") or row.get(f"restaurant_{i}_name")
             if not r_name:
                 break
-            r_lat = float(row.get(f"restaurant_{i}_lat")) if row.get(f"restaurant_{i}_lat") else (lat + 0.002 if lat is not None else None)
-            r_lng = float(row.get(f"restaurant_{i}_lng")) if row.get(f"restaurant_{i}_lng") else (lng + 0.002 if lng is not None else None)
+            r_lat_val = row.get(f"restaurant_{i}_lat")
+            r_lng_val = row.get(f"restaurant_{i}_lng")
+            r_lat = float(r_lat_val) if r_lat_val else None
+            r_lng = float(r_lng_val) if r_lng_val else None
+            tags_val = row.get(f"restaurant_{i}_tags")
+            tags = tags_val.split(",") if tags_val else []
             restaurants.append({
                 "name": r_name,
-                "desc": row.get(f"restaurant_{i}_desc", f"Popular restaurant in {name}."),
-                "cuisine": row.get(f"restaurant_{i}_cuisine", "Indian"),
-                "priceRange": row.get(f"restaurant_{i}_price", "₹300-600"),
+                "desc": row.get(f"restaurant_{i}_desc") or None,
+                "cuisine": row.get(f"restaurant_{i}_cuisine") or None,
+                "priceRange": row.get(f"restaurant_{i}_price") or None,
                 "rating": float(row.get(f"restaurant_{i}_rating")) if row.get(f"restaurant_{i}_rating") else None,
-                "mustTry": row.get(f"restaurant_{i}_must_try", "Local special"),
+                "mustTry": row.get(f"restaurant_{i}_must_try") or None,
                 "lat": r_lat,
                 "lng": r_lng,
-                "tags": (row.get(f"restaurant_{i}_tags") or "Local").split(","),
+                "tags": tags,
                 "id": f"r{i}",
                 "img": "",
             })
@@ -249,15 +257,19 @@ def _csv_row_to_dest_data(row: dict, name: str) -> dict:
             h_name = row.get(f"hotel_{i}") or row.get(f"hotel_{i}_name")
             if not h_name:
                 break
-            h_lat = float(row.get(f"hotel_{i}_lat")) if row.get(f"hotel_{i}_lat") else (lat + 0.003 if lat is not None else None)
-            h_lng = float(row.get(f"hotel_{i}_lng")) if row.get(f"hotel_{i}_lng") else (lng + 0.003 if lng is not None else None)
+            h_lat_val = row.get(f"hotel_{i}_lat")
+            h_lng_val = row.get(f"hotel_{i}_lng")
+            h_lat = float(h_lat_val) if h_lat_val else None
+            h_lng = float(h_lng_val) if h_lng_val else None
+            amenities_val = row.get(f"hotel_{i}_amenities")
+            amenities = amenities_val.split(",") if amenities_val else []
             hotels.append({
                 "name": h_name,
-                "desc": row.get(f"hotel_{i}_desc", f"Comfortable stay in {name}."),
-                "type": row.get(f"hotel_{i}_type", "Hotel"),
-                "priceRange": row.get(f"hotel_{i}_price", "₹1500-3000/night"),
+                "desc": row.get(f"hotel_{i}_desc") or None,
+                "type": row.get(f"hotel_{i}_type") or None,
+                "priceRange": row.get(f"hotel_{i}_price") or None,
                 "rating": float(row.get(f"hotel_{i}_rating")) if row.get(f"hotel_{i}_rating") else None,
-                "amenities": (row.get(f"hotel_{i}_amenities") or "WiFi,AC").split(","),
+                "amenities": amenities,
                 "lat": h_lat,
                 "lng": h_lng,
                 "id": f"h{i}",
@@ -265,9 +277,9 @@ def _csv_row_to_dest_data(row: dict, name: str) -> dict:
             })
 
     return {
-        "description": row.get("description", f"{name} is a vibrant destination in India."),
-        "avgCost": row.get("avg_cost") or row.get("avgCost") or "₹2,000 – ₹8,000 per day",
-        "crowdLevel": row.get("crowd_level") or row.get("crowdLevel") or "Medium",
+        "description": row.get("description") or None,
+        "avgCost": row.get("avg_cost") or row.get("avgCost") or None,
+        "crowdLevel": row.get("crowd_level") or row.get("crowdLevel") or None,
         "crowdNote": row.get("crowd_note") or row.get("crowdNote") or None,
         "logistics": {
             "flights": row.get("flights") or row.get("airport") or None,
@@ -462,6 +474,11 @@ async def get_destination_data(
         print(f"[Cache] Fetching {dest_name} (days={days}) from Gemini API fallback...")
         fresh_data = await fetch_destination_data_with_gemini(dest_name, purpose, budget, days)
         if fresh_data:
+            if "dataSources" not in fresh_data:
+                fresh_data["dataSources"] = {}
+            fresh_data["dataSources"]["source"] = "gemini"
+            fresh_data["dataSources"]["llmUsed"] = True
+            
             merged = _merge_destination_data(data, fresh_data)
             _mem_set(key, merged)
             await _file_set(key, merged)

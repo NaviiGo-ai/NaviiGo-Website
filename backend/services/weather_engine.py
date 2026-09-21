@@ -60,7 +60,7 @@ async def _fetch_google_current(client: httpx.AsyncClient, lat: float, lng: floa
             feels_like = round(feels_like) if feels_like is not None else None
             wind_speed = data.get("wind", {}).get("speed", {}).get("value")
             wind_speed = round(wind_speed) if wind_speed is not None else None
-            rain_chance = data.get("precipitationProbability")
+            rain_chance = data.get("precipitation", {}).get("probability", {}).get("percent")
 
             return {
                 "temp": temp,
@@ -92,24 +92,26 @@ async def _fetch_google_daily(client: httpx.AsyncClient, lat: float, lng: float)
         resp = await client.get(url, params=params)
         if resp.status_code == 200:
             data = resp.json()
-            days = data.get("days", [])
+            days = data.get("forecastDays", [])
             daily_list = []
             for day in days:
-                date_str = day.get("date", "")
+                date_str = day.get("displayDate", "")
                 if not date_str:
-                    continue
-                # the date is a dict like {'year': 2026, 'month': 9, 'day': 21}
-                if isinstance(date_str, dict):
-                    y = date_str.get("year", 2000)
-                    m = date_str.get("month", 1)
-                    d = date_str.get("day", 1)
-                    date_str = f"{y}-{m:02d}-{d:02d}"
+                    # the date is a dict like {'year': 2026, 'month': 9, 'day': 21} (if displayDate not present)
+                    date_dict = day.get("date", {})
+                    if isinstance(date_dict, dict) and date_dict:
+                        y = date_dict.get("year", 2000)
+                        m = date_dict.get("month", 1)
+                        d = date_dict.get("day", 1)
+                        date_str = f"{y}-{m:02d}-{d:02d}"
+                    else:
+                        continue
                 
-                day_cond = day.get("dayTimeForecast", {})
-                temp_max = day.get("temperatureMax", {}).get("degrees")
-                temp_min = day.get("temperatureMin", {}).get("degrees")
+                day_cond = day.get("daytimeForecast", {})
+                temp_max = day.get("maxTemperature", {}).get("degrees")
+                temp_min = day.get("minTemperature", {}).get("degrees")
                 cond_text = day_cond.get("weatherCondition", {}).get("description", {}).get("text")
-                rain_chance = day_cond.get("precipitationProbability")
+                rain_chance = day_cond.get("precipitation", {}).get("probability", {}).get("percent")
                 
                 daily_list.append({
                     "date": date_str,

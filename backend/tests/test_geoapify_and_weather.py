@@ -153,7 +153,7 @@ async def test_geoapify_candidate_pool_builder():
         assert pool_3d["mapCenter"]["lng"] == 75.7873
         
         # Verify zero-LLM path
-        with patch("services.itinerary_engine.fetch_destination_data_with_gemini") as mock_gemini:
+        with patch("services.destination_cache.fetch_destination_data_with_gemini") as mock_gemini:
             from services.destination_cache import get_destination_data
             await get_destination_data("Jaipur", days=3)
             mock_gemini.assert_not_called()
@@ -178,13 +178,14 @@ async def test_gemini_fallback_flag():
             
         # When enabled, Gemini should be called
         dest_cache.ENABLE_GEMINI_DESTINATION_FALLBACK = True
-        with patch("services.destination_cache.fetch_destination_data_with_gemini", new_callable=AsyncMock, return_value={"highlights": []}) as mock_gemini:
+        with patch("services.destination_cache.fetch_destination_data_with_gemini", new_callable=AsyncMock) as mock_gemini:
+            mock_gemini.return_value = {"name": "Test"}
             res = await get_destination_data("Unknown Place", days=3)
             assert res is not None
             mock_gemini.assert_called_once()
-
-
-
+            
+        # Restore flag
+        dest_cache.ENABLE_GEMINI_DESTINATION_FALLBACK = False
 @pytest.mark.asyncio
 async def test_weather_engine_nullable_coordinates():
     """Verify get_weather handles None coordinates truthfully without hallucinating fallback locations."""
@@ -203,19 +204,19 @@ async def test_weather_engine_caching():
         "temperature": {"degrees": 28.5},
         "feelsLikeTemperature": {"degrees": 29.0},
         "relativeHumidity": 50,
-        "precipitationProbability": 0,
+        "precipitation": {"probability": {"percent": 0}},
         "weatherCondition": {"description": {"text": "Clear"}},
         "wind": {"speed": {"value": 12.0}}
     }
     
     mock_daily = {
-        "days": [
+        "forecastDays": [
             {
-                "date": {"year": 2026, "month": 9, "day": 21},
-                "temperatureMax": {"degrees": 32.0},
-                "temperatureMin": {"degrees": 22.0},
-                "dayTimeForecast": {
-                    "precipitationProbability": 10,
+                "displayDate": "2026-09-21",
+                "maxTemperature": {"degrees": 32.0},
+                "minTemperature": {"degrees": 22.0},
+                "daytimeForecast": {
+                    "precipitation": {"probability": {"percent": 10}},
                     "weatherCondition": {"description": {"text": "Clear"}}
                 }
             }

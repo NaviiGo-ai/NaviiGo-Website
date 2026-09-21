@@ -5,6 +5,7 @@ export interface SearchParams {
   from: string;
   to: string;
   date: string;
+  checkout?: string;
   travelers: number;
 }
 
@@ -27,10 +28,7 @@ function getCodes(cityName: string) {
     if (normalized.includes(key) || key.includes(normalized)) return value;
   }
   
-  return { 
-    iata: cityName?.substring(0, 3).toUpperCase() || 'DEL', 
-    station: cityName?.substring(0, 3).toUpperCase() || 'NDLS' 
-  };
+  return null;
 }
 
 // Train search uses the Cleartrip deep link below; no fabricated train corpus.
@@ -53,8 +51,8 @@ function buildFlightLink(from: string, to: string, dateStr: string) {
 export async function searchFlights(params: SearchParams, page = 1) {
   const fromName = extractCode(params.from);
   const toName = extractCode(params.to);
-  const fromCode = getCodes(fromName).iata;
-  const toCode = getCodes(toName).iata;
+  const fromCode = getCodes(fromName)?.iata || fromName?.substring(0, 3).toUpperCase() || 'DEL';
+  const toCode = getCodes(toName)?.iata || toName?.substring(0, 3).toUpperCase() || 'BOM';
   const startIndex = (page - 1) * 4;
   const deepLink = buildFlightLink(fromCode, toCode, params.date);
 
@@ -185,9 +183,9 @@ export async function searchTrains(params: SearchParams) {
     from: params.from,
     to: params.to,
     fromName: params.from,
-    fromStationCode: fromCodes.station,
+    fromStationCode: fromCodes?.station || null,
     toName: params.to,
-    toStationCode: toCodes.station,
+    toStationCode: toCodes?.station || null,
     date: dateStr,
     title: "Check live train availability"
   }];
@@ -286,10 +284,18 @@ export async function searchCabs(params: SearchParams) {
 export async function searchHotels(params: SearchParams, page = 1) {
   const city = extractCode(params.to, true);
 
+  if (!params.date || !params.checkout) {
+    return [];
+  }
+  
+  if (new Date(params.checkout) <= new Date(params.date)) {
+    return [];
+  }
+
   if (process.env.SERPAPI_API_KEY) {
     try {
       const offset = (page - 1) * 4;
-      const url = `https://serpapi.com/search.json?engine=google_hotels&q=${encodeURIComponent(city + ' hotels')}&check_in_date=${params.date}&adults=${params.travelers}&currency=INR&gl=in&hl=en&api_key=${process.env.SERPAPI_API_KEY}`;
+      const url = `https://serpapi.com/search.json?engine=google_hotels&q=${encodeURIComponent(city + ' hotels')}&check_in_date=${params.date}&check_out_date=${params.checkout}&adults=${params.travelers}&currency=INR&gl=in&hl=en&api_key=${process.env.SERPAPI_API_KEY}`;
       const res = await fetch(url, { next: { revalidate: 600 } });
       const data = await res.json();
 

@@ -175,12 +175,14 @@ const TRAIN_OTAS: OTAOption[] = [
     color: 'bg-temple-red-600',
     buildUrl: (item) => {
       const dates = getOTADates(item);
-      // Exact RailYatri format: trains-between-stations with from_code, to_code, from_name, to_name
-      const fromCode = encodeURIComponent(item.fromStationCode || item.from || 'NDLS');
-      const toCode = encodeURIComponent(item.toStationCode || item.to || 'BSB');
-      const fromName = encodeURIComponent(item.fromName || item.from || 'NEW DELHI');
-      const toName = encodeURIComponent(item.toName || item.to || 'VARANASI');
-      return `https://www.railyatri.in/booking/trains-between-stations?from_code=${fromCode}&from_name=${fromName}&to_code=${toCode}&to_name=${toName}&journey_date=${dates.ymd}&homequota=GN`;
+      if (item.fromStationCode && item.toStationCode) {
+        const fromCode = encodeURIComponent(item.fromStationCode);
+        const toCode = encodeURIComponent(item.toStationCode);
+        const fromName = encodeURIComponent(item.fromName || item.from || '');
+        const toName = encodeURIComponent(item.toName || item.to || '');
+        return `https://www.railyatri.in/booking/trains-between-stations?from_code=${fromCode}&from_name=${fromName}&to_code=${toCode}&to_name=${toName}&journey_date=${dates.ymd}&homequota=GN`;
+      }
+      return `https://www.railyatri.in/`;
     },
   },
   {
@@ -304,15 +306,7 @@ export default function BookingPortal({
 
         {/* ── Booking Options ───────────────────────────────── */}
         <div className="px-6 pt-5 pb-2">
-          <div className="flex items-center gap-2 mb-1">
-            <h3 className="text-sm font-bold text-muted-900 dark:text-white">Booking options</h3>
-            <button className="text-muted-400 hover:text-muted-600">
-              <Info className="w-3.5 h-3.5" />
-            </button>
-          </div>
-          <p className="text-[11px] text-muted-400 mb-4">
-            How options are ranked · Prices for {travelersCount} {travelersCount > 1 ? 'travelers' : 'traveler'}
-          </p>
+          <h3 className="text-sm font-bold text-muted-900 dark:text-white mb-4">Booking options</h3>
         </div>
 
         <div className="px-6 pb-4">
@@ -345,7 +339,7 @@ export default function BookingPortal({
                 {/* Price */}
                 <div className="text-right shrink-0 flex items-center gap-4">
                   <span className="text-sm font-bold text-muted-700 dark:text-muted-300">
-                    {selectedItem.priceNum ? formatPrice(selectedItem.priceNum * travelersCount) : 'Check price'}
+                    {'Check price'}
                   </span>
                   <span className="text-xs font-semibold text-deep-sea-600 dark:text-deep-sea-400 bg-deep-sea-50 dark:bg-deep-sea-500/10 px-4 py-2 rounded-full border border-deep-sea-200 dark:border-deep-sea-500/20 group-hover:bg-deep-sea-100 dark:group-hover:bg-deep-sea-500/20 transition-colors whitespace-nowrap">
                     Continue
@@ -359,12 +353,8 @@ export default function BookingPortal({
         {/* ── Footer ─────────────────────────────────────────── */}
         <div className="px-6 pb-5 space-y-3">
           <p className="text-[11px] text-center text-muted-400">
-            Prices include required taxes + fees for {travelersCount} adult{travelersCount > 1 ? 's' : ''}. Optional charges and <span className="underline cursor-pointer hover:text-muted-600">bag fees</span> may apply.
+            Actual prices are confirmed by the provider.
           </p>
-          <div className="flex items-center justify-center gap-2 text-[10px] text-muted-400">
-            <Shield className="w-3 h-3 text-jungle-green-500" />
-            <span>NaviiGo aggregates prices · You book directly with the provider</span>
-          </div>
         </div>
       </motion.div>
     </div>
