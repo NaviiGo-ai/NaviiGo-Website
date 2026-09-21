@@ -16,7 +16,16 @@ export async function POST(req: Request) {
       case "flights": results = await searchFlights(params, page); break;
       case "trains": results = await searchTrains(params); break;
       case "cabs": results = await searchCabs(params); break;
-      case "hotels": results = await searchHotels(params, page); break;
+      case "hotels": {
+        if (!checkout) {
+          return NextResponse.json({ success: false, error: "Hotel search requires a checkout date" }, { status: 400 });
+        }
+        if (new Date(checkout) <= new Date(date)) {
+          return NextResponse.json({ success: false, error: "Checkout date must be after check-in date" }, { status: 400 });
+        }
+        results = await searchHotels(params, page);
+        break;
+      }
       default: return NextResponse.json({ success: false, error: "Invalid type" }, { status: 400 });
     }
 

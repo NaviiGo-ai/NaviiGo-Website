@@ -51,8 +51,16 @@ function buildFlightLink(from: string, to: string, dateStr: string) {
 export async function searchFlights(params: SearchParams, page = 1) {
   const fromName = extractCode(params.from);
   const toName = extractCode(params.to);
-  const fromCode = getCodes(fromName)?.iata || fromName?.substring(0, 3).toUpperCase() || 'DEL';
-  const toCode = getCodes(toName)?.iata || toName?.substring(0, 3).toUpperCase() || 'BOM';
+  const fromCodes = getCodes(fromName);
+  const toCodes = getCodes(toName);
+
+  // If we cannot resolve a known IATA code, return empty — never fabricate codes
+  if (!fromCodes?.iata || !toCodes?.iata) {
+    return [];
+  }
+
+  const fromCode = fromCodes.iata;
+  const toCode = toCodes.iata;
   const startIndex = (page - 1) * 4;
   const deepLink = buildFlightLink(fromCode, toCode, params.date);
 

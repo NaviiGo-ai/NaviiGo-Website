@@ -18,11 +18,11 @@ def _get_cache_key(lat: float, lng: float) -> str:
     return f"{round(lat, 2)}_{round(lng, 2)}"
 
 
-def _map_condition_emoji(desc: str) -> str:
-    """Map Google Weather condition description to emoji."""
+def _map_condition_emoji(desc: str) -> Optional[str]:
+    """Map Google Weather condition description to emoji. Returns None if condition is unknown."""
     desc_lower = (desc or "").lower()
     if not desc_lower:
-        return "☀️"
+        return None
     if "rain" in desc_lower or "drizzle" in desc_lower:
         return "🌧️"
     elif "cloud" in desc_lower or "overcast" in desc_lower:
@@ -33,7 +33,9 @@ def _map_condition_emoji(desc: str) -> str:
         return "❄️"
     elif "fog" in desc_lower or "mist" in desc_lower:
         return "🌫️"
-    return "☀️"
+    elif "clear" in desc_lower or "sunny" in desc_lower:
+        return "☀️"
+    return None
 
 
 async def _fetch_google_current(client: httpx.AsyncClient, lat: float, lng: float) -> Optional[Dict[str, Any]]:
@@ -95,17 +97,17 @@ async def _fetch_google_daily(client: httpx.AsyncClient, lat: float, lng: float)
             days = data.get("forecastDays", [])
             daily_list = []
             for day in days:
-                date_str = day.get("displayDate", "")
-                if not date_str:
-                    # the date is a dict like {'year': 2026, 'month': 9, 'day': 21} (if displayDate not present)
-                    date_dict = day.get("date", {})
-                    if isinstance(date_dict, dict) and date_dict:
-                        y = date_dict.get("year", 2000)
-                        m = date_dict.get("month", 1)
-                        d = date_dict.get("day", 1)
-                        date_str = f"{y}-{m:02d}-{d:02d}"
-                    else:
-                        continue
+                # Google Weather returns displayDate as {year, month, day} dict
+                raw_display = day.get("displayDate")
+                if isinstance(raw_display, dict) and raw_display:
+                    y = raw_display.get("year", 2000)
+                    m = raw_display.get("month", 1)
+                    d = raw_display.get("day", 1)
+                    date_str = f"{y}-{m:02d}-{d:02d}"
+                elif isinstance(raw_display, str) and raw_display:
+                    date_str = raw_display
+                else:
+                    continue
                 
                 day_cond = day.get("daytimeForecast", {})
                 temp_max = day.get("maxTemperature", {}).get("degrees")

@@ -314,10 +314,19 @@ def _merge_destination_data(existing: Optional[Dict[str, Any]], fresh: Optional[
         return existing
 
     merged = dict(existing)
-    # Overwrite top-level metadata with fresh
+    # Overwrite top-level metadata with fresh (except dataSources which uses OR semantics)
     for k in ["description", "avgCost", "crowdLevel", "crowdNote", "logistics", "weather", "mapCenter", "_v"]:
         if k in fresh and fresh[k]:
             merged[k] = fresh[k]
+
+    # dataSources: preserve llmUsed with OR semantics
+    existing_ds = existing.get("dataSources", {})
+    fresh_ds = fresh.get("dataSources", {})
+    merged_ds = dict(existing_ds)
+    if fresh_ds.get("source"):
+        merged_ds["source"] = fresh_ds["source"]
+    merged_ds["llmUsed"] = bool(existing_ds.get("llmUsed")) or bool(fresh_ds.get("llmUsed"))
+    merged["dataSources"] = merged_ds
 
     # Merge highlights deduplicating by normalized name
     hl_map = {re.sub(r'[^a-z0-9]+', '', h.get('name', '').lower()): h for h in existing.get("highlights", []) if isinstance(h, dict) and h.get("name")}
@@ -382,6 +391,11 @@ async def _background_refetch(key: str, dest_name: str, purpose: str, budget: in
 
         if not fresh_data and ENABLE_GEMINI_DESTINATION_FALLBACK:
             fresh_data = await fetch_destination_data_with_gemini(dest_name, purpose, budget, days)
+            if fresh_data:
+                if "dataSources" not in fresh_data:
+                    fresh_data["dataSources"] = {}
+                fresh_data["dataSources"]["source"] = "gemini"
+                fresh_data["dataSources"]["llmUsed"] = True
 
         if fresh_data:
             merged = _merge_destination_data(existing_data, fresh_data)

@@ -205,7 +205,7 @@ def _infer_image_hint(categories: List[str], name: str) -> str:
     if any(k in cat_set for k in ["accommodation.hotel", "accommodation"]):
         return "hotel_exterior"
 
-    return "heritage_scene"
+    return None
 
 
 def _infer_highlight_category(categories: List[str], rank: Optional[Dict[str, Any]], idx: int) -> str:
@@ -220,7 +220,7 @@ def _infer_highlight_category(categories: List[str], rank: Optional[Dict[str, An
         return "experience"
     if "religion" in cat_set:
         return "religious"
-    return "heritage"
+    return None
 
 
 def _infer_dining_category(categories: List[str]) -> str:
@@ -270,8 +270,6 @@ def normalize_geoapify_place(feature: Dict[str, Any], place_type: str = "highlig
 
     # Clean tags from categories
     tags = [c.split(".")[-1].capitalize() for c in categories if "." in c][:4]
-    if not tags:
-        tags = ["Culture", "Local"]
 
     if place_type == "highlight":
         category = _infer_highlight_category(categories, rank, idx)
@@ -300,10 +298,11 @@ def normalize_geoapify_place(feature: Dict[str, Any], place_type: str = "highlig
 
     elif place_type == "restaurant":
         category = _infer_dining_category(categories)
-        cuisine = "Local / Indian"
+        cuisine = None
         for c in categories:
             if c.startswith("catering.restaurant."):
                 cuisine = c.split(".")[-1].capitalize()
+                break
 
         return {
             "name": name,
@@ -324,13 +323,15 @@ def normalize_geoapify_place(feature: Dict[str, Any], place_type: str = "highlig
         }
 
     elif place_type == "hotel":
-        hotel_type = "Hotel"
+        hotel_type = None
         if "accommodation.resort" in categories:
             hotel_type = "Resort"
         elif "accommodation.hostel" in categories:
             hotel_type = "Hostel"
         elif "accommodation.guest_house" in categories:
             hotel_type = "Homestay"
+        elif "accommodation.hotel" in categories:
+            hotel_type = "Hotel"
 
         return {
             "name": name,

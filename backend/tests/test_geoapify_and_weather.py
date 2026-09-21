@@ -186,6 +186,56 @@ async def test_gemini_fallback_flag():
             
         # Restore flag
         dest_cache.ENABLE_GEMINI_DESTINATION_FALLBACK = False
+
+@pytest.mark.asyncio
+async def test_gemini_provenance_merge_preserves_llm_used():
+    """Verify _merge_destination_data preserves llmUsed with OR semantics."""
+    from services.destination_cache import _merge_destination_data
+    
+    # Case 1: existing has llmUsed=False, fresh has llmUsed=True => merged should be True
+    existing = {"highlights": [], "dataSources": {"source": "geoapify", "llmUsed": False}}
+    fresh = {"highlights": [], "dataSources": {"source": "gemini", "llmUsed": True}}
+    merged = _merge_destination_data(existing, fresh)
+    assert merged["dataSources"]["llmUsed"] is True
+    assert merged["dataSources"]["source"] == "gemini"
+
+    # Case 2: existing has llmUsed=True, fresh has llmUsed=False => merged should be True
+    existing2 = {"highlights": [], "dataSources": {"source": "gemini", "llmUsed": True}}
+    fresh2 = {"highlights": [], "dataSources": {"source": "geoapify", "llmUsed": False}}
+    merged2 = _merge_destination_data(existing2, fresh2)
+    assert merged2["dataSources"]["llmUsed"] is True
+
+    # Case 3: both False => merged should be False
+    existing3 = {"highlights": [], "dataSources": {"source": "geoapify", "llmUsed": False}}
+    fresh3 = {"highlights": [], "dataSources": {"source": "geoapify", "llmUsed": False}}
+    merged3 = _merge_destination_data(existing3, fresh3)
+    assert merged3["dataSources"]["llmUsed"] is False
+
+
+@pytest.mark.asyncio
+async def test_gemini_background_refetch_marks_provenance():
+    """Verify _background_refetch marks dataSources when Gemini fallback runs."""
+    import services.destination_cache as dest_cache
+    from services.destination_cache import _background_refetch, _mem_get
+    
+    original_flag = dest_cache.ENABLE_GEMINI_DESTINATION_FALLBACK
+    dest_cache.ENABLE_GEMINI_DESTINATION_FALLBACK = True
+    
+    try:
+        with patch("services.geoapify_service.is_geoapify_configured", return_value=False), \
+             patch("services.destination_cache.fetch_destination_data_with_gemini", new_callable=AsyncMock) as mock_gemini, \
+             patch("services.destination_cache._file_set", new_callable=AsyncMock):
+            mock_gemini.return_value = {"highlights": [{"name": "Test Place"}], "restaurants": []}
+            
+            existing = {"highlights": [], "restaurants": [], "dataSources": {"source": "csv", "llmUsed": False}}
+            await _background_refetch("test_key", "Test City", "cultural", 15000, 3, existing)
+            
+            cached = _mem_get("test_key")
+            assert cached is not None
+            assert cached["dataSources"]["llmUsed"] is True
+            assert cached["dataSources"]["source"] == "gemini"
+    finally:
+        dest_cache.ENABLE_GEMINI_DESTINATION_FALLBACK = original_flag
 @pytest.mark.asyncio
 async def test_weather_engine_nullable_coordinates():
     """Verify get_weather handles None coordinates truthfully without hallucinating fallback locations."""
@@ -212,7 +262,7 @@ async def test_weather_engine_caching():
     mock_daily = {
         "forecastDays": [
             {
-                "displayDate": "2026-09-21",
+                "displayDate": {"year": 2026, "month": 9, "day": 21},
                 "maxTemperature": {"degrees": 32.0},
                 "minTemperature": {"degrees": 22.0},
                 "daytimeForecast": {

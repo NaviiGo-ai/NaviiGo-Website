@@ -224,8 +224,17 @@ export default function BookingsPage() {
     const to = (formData.to as string) || '';
 
     if (activeTab === 'hotels') {
+      const checkout = (formData.checkout as string) || '';
       if (!to || !normalizedDate) {
         setFormError("Please provide destination and check-in date.");
+        return;
+      }
+      if (!checkout) {
+        setFormError("Please provide a checkout date for hotel search.");
+        return;
+      }
+      if (new Date(checkout) <= new Date(String(normalizedDate))) {
+        setFormError("Checkout date must be after check-in date.");
         return;
       }
     } else {

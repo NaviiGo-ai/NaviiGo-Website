@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert';
-import { searchTrains, searchCabs, getCoordinates } from '../travel-search';
+import { searchTrains, searchCabs, searchFlights, searchHotels, getCoordinates } from '../travel-search';
 import { CITY_CODES_MAP } from '@/lib/constants/destinations';
 
 test('CITY_MAP coordinate hit avoids Geoapify', async (t) => {
@@ -220,4 +220,58 @@ test('searchCabs repeated request hits cache and does not fetch twice', async (t
     global.fetch = originalFetch;
     process.env.GEOAPIFY_API_KEY = originalEnv;
   }
+});
+
+// ── Hotel checkout tests ──
+
+test('searchHotels with valid checkout includes check_out_date in SerpApi URL', async (t) => {
+  const originalFetch = global.fetch;
+  const originalEnv = process.env.SERPAPI_API_KEY;
+  process.env.SERPAPI_API_KEY = 'mock-serpapi-key';
+
+  let capturedUrl = '';
+  global.fetch = async (url: any) => {
+    capturedUrl = url.toString();
+    return { json: async () => ({ properties: [] }) } as any;
+  };
+
+  try {
+    await searchHotels({ type: 'hotels', from: '', to: 'Goa', date: '2026-10-10', checkout: '2026-10-12', travelers: 1 });
+    assert.ok(capturedUrl.includes('check_out_date=2026-10-12'), 'SerpApi URL must include check_out_date');
+    assert.ok(capturedUrl.includes('check_in_date=2026-10-10'), 'SerpApi URL must include check_in_date');
+  } finally {
+    global.fetch = originalFetch;
+    process.env.SERPAPI_API_KEY = originalEnv;
+  }
+});
+
+test('searchHotels rejects missing checkout', async (t) => {
+  const result = await searchHotels({ type: 'hotels', from: '', to: 'Goa', date: '2026-10-10', travelers: 1 });
+  assert.strictEqual(result.length, 0, 'Missing checkout must return empty results');
+});
+
+test('searchHotels rejects checkout <= checkin', async (t) => {
+  const result = await searchHotels({ type: 'hotels', from: '', to: 'Goa', date: '2026-10-10', checkout: '2026-10-10', travelers: 1 });
+  assert.strictEqual(result.length, 0, 'checkout == checkin must return empty results');
+
+  const result2 = await searchHotels({ type: 'hotels', from: '', to: 'Goa', date: '2026-10-10', checkout: '2026-10-09', travelers: 1 });
+  assert.strictEqual(result2.length, 0, 'checkout < checkin must return empty results');
+});
+
+// ── Unknown train station code tests ──
+
+test('unknown train city returns null station code and generic handoff', async (t) => {
+  const result = await searchTrains({ type: 'trains', from: 'Timbuktu', to: 'Atlantis', date: '2026-10-10', travelers: 1 });
+  assert.strictEqual(result.length, 1);
+  const handoff = result[0];
+  assert.strictEqual(handoff.fromStationCode, null, 'Unknown city must not fabricate station code');
+  assert.strictEqual(handoff.toStationCode, null, 'Unknown city must not fabricate station code');
+  assert.strictEqual(handoff.type, 'rail_handoff');
+});
+
+// ── Unknown flight city IATA tests ──
+
+test('unknown flight city does not fabricate IATA code', async (t) => {
+  const result = await searchFlights({ type: 'flights', from: 'Timbuktu', to: 'Atlantis', date: '2026-10-10', travelers: 1 });
+  assert.strictEqual(result.length, 0, 'Unknown cities must return empty flight results, not fabricated codes');
 });
