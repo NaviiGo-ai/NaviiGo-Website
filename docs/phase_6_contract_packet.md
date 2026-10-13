@@ -113,6 +113,11 @@ INTERNAL_ERROR` only for unexpected failures.
 
 ## Sharing and return data
 
+The supported `I_AM_TIRED` proposal uses the authenticated owner's existing
+itinerary and progress. It simplifies those activities without fetching fresh
+destination candidates. Provider availability is therefore not a prerequisite
+for this replan; ownership, base revision and atomic acceptance checks still apply.
+
 - Owner itineraries are private by default and are read from the owner path.
 - A public `itineraries/{shareId}` document is a sanitized, explicit share
   projection only. It is created by an explicit share action and contains no
