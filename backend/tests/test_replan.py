@@ -1,210 +1,275 @@
+from copy import deepcopy
+
 import pytest
-from services.replan_engine import generate_replan_proposal
-from pydantic import BaseModel
+from pydantic import ValidationError
 
-class MockReplanAcceptRequest:
-    tripId: str
-    proposalId: str
-    proposalData: dict
+from services.replan_engine import (
+    ActivityIdentityAmbiguousError,
+    ReplanAction,
+    ReplanValidationError,
+    generate_replan_proposal,
+)
 
-def test_replan_booking_preservation():
-    trip = {
+
+def _activity(activity_id=None, name="Activity", **extra):
+    activity = {"name": name, "durationMins": 60, **extra}
+    if activity_id is not None:
+        activity["activityId"] = activity_id
+    return activity
+
+
+def _trip(day_plans, **extra):
+    return {
         "id": "trip_123",
-        "dayPlans": [
+        "revisions": [{"revisionId": "rev_latest"}],
+        "dayPlans": day_plans,
+        **extra,
+    }
+
+
+def _proposal(trip, **overrides):
+    args = {
+        "trip": trip,
+        "dest_data": {},
+        "current_day_idx": 0,
+        "current_time": "15:00",
+        "reason": "I_AM_TIRED",
+        "completed_activity_ids": [],
+        "skipped_activity_ids": [],
+        "baseRevisionId": "rev_0",
+    }
+    args.update(overrides)
+    return generate_replan_proposal(**args)
+
+
+def test_replan_preserves_bookings_and_uses_stable_activity_ids():
+    trip = _trip(
+        [
             {
                 "dayNumber": 1,
                 "activities": [
-                    {"id": "act1", "title": "Sightseeing", "category": "Museum"},
-                    {"id": "act2", "title": "Dinner Reservation", "category": "Food", "isBooked": True}
-                ]
+                    _activity("act_optional", "Sightseeing", placeId="place-1"),
+                    _activity(
+                        "act_booking",
+                        "Dinner Reservation",
+                        isBooked=True,
+                        booking={"confirmation": "ABC"},
+                    ),
+                ],
             }
         ]
-    }
-    proposal = generate_replan_proposal(
-        trip=trip,
-        dest_data={},
-        current_day_idx=0,
-        current_time="15:00",
-        reason="I_AM_TIRED",
-        completed_activity_ids=[],
-        skipped_activity_ids=[]
     )
-    
-    assert any(a.actionType == "KEEP" and a.activityId == "act2" for a in proposal.actions)
-    assert any(a.actionType == "REMOVE" and a.activityId == "act1" for a in proposal.actions)
-    assert "act1" not in [x.get("id") for x in proposal.updatedTimeline]
-    assert "act2" in [x.get("id") for x in proposal.updatedTimeline]
+    before = deepcopy(trip)
 
-def test_replan_mustdo_preservation():
-    trip = {
-        "id": "trip_123",
-        "form": {"mustDo": ["act_must_do"]},
-        "dayPlans": [
+    proposal = _proposal(trip)
+    actions = {action.activityId: action.actionType for action in proposal.actions if action.activityId}
+
+    assert proposal.baseRevisionId == "rev_0"
+    assert actions == {"act_optional": "REMOVE", "act_booking": "KEEP"}
+    assert [activity["activityId"] for activity in proposal.updatedTimeline] == ["act_booking"]
+    assert proposal.preservedBookings == ["Dinner Reservation"]
+    assert trip == before
+
+    # The proposal owns its timeline data and cannot mutate the itinerary read.
+    proposal.updatedTimeline[0]["name"] = "changed in proposal"
+    assert trip["dayPlans"][0]["activities"][1]["name"] == "Dinner Reservation"
+
+
+def test_completed_and_skipped_activities_are_emitted_as_keep_actions():
+    trip = _trip(
+        [
             {
-                "dayNumber": 1,
+                "dayNumber": 4,
                 "activities": [
-                    {"id": "act1", "title": "Random Park", "category": "Nature"},
-                    {"id": "act_must_do", "title": "Must Do Museum", "category": "Museum"}
-                ]
+                    _activity("done", "Completed stop"),
+                    _activity("skipped", "Skipped stop"),
+                    _activity("optional", "Optional stop"),
+                ],
             }
         ]
-    }
-    proposal = generate_replan_proposal(
-        trip=trip,
-        dest_data={},
-        current_day_idx=0,
-        current_time="15:00",
-        reason="I_AM_TIRED",
-        completed_activity_ids=[],
-        skipped_activity_ids=[]
     )
-    
-    assert any(a.actionType in ["KEEP", "SAVE_FOR_LATER"] and a.activityId == "act_must_do" for a in proposal.actions)
-    assert any(a.actionType == "REMOVE" and a.activityId == "act1" for a in proposal.actions)
 
-def test_replan_future_move():
-    trip = {
-        "id": "trip_123",
-        "form": {"mustDo": ["act_must_do"]},
-        "dayPlans": [
+    proposal = _proposal(
+        trip,
+        completed_activity_ids=["done"],
+        skipped_activity_ids=["skipped"],
+    )
+    actions = {action.activityId: action for action in proposal.actions if action.activityId}
+
+    assert actions["done"].actionType == "KEEP"
+    assert "completed" in actions["done"].rationale
+    assert actions["skipped"].actionType == "KEEP"
+    assert "skipped" in actions["skipped"].rationale
+    assert actions["optional"].actionType == "REMOVE"
+    assert {activity["activityId"] for activity in proposal.updatedTimeline} == {"done", "skipped"}
+
+
+def test_protected_stop_moves_to_actual_non_sequential_day_number():
+    trip = _trip(
+        [
             {
-                "dayNumber": 1,
+                "dayNumber": 5,
                 "activities": [
-                    {"id": "act1", "title": "Random Park", "category": "Nature"},
-                    {"id": "act_must_do", "title": "Must Do Museum", "category": "Museum"}
-                ]
+                    _activity("optional", "Random Park"),
+                    _activity("must_do", "Must Do Museum"),
+                ],
             },
+            {
+                "dayNumber": 9,
+                "activities": [_activity("future", "Something else")],
+            },
+        ],
+        form={"mustDo": ["must_do"]},
+    )
+
+    proposal = _proposal(trip, current_day_number=5, baseRevisionId="rev_3")
+    move = next(action for action in proposal.actions if action.activityId == "must_do")
+
+    assert proposal.affectedDate == "Day 5"
+    assert proposal.baseRevisionId == "rev_3"
+    assert move.actionType == "MOVE_TO_LATER_DAY"
+    assert move.targetDate == "Day 9"
+    assert move.targetDate != "Day 2"
+    assert any(activity["activityId"] == "must_do" for activity in proposal.updatedTimeline)
+
+
+def test_frozen_current_day_number_argument_selects_display_day_without_index():
+    trip = _trip(
+        [{"dayNumber": 9, "activities": [_activity("optional", "A stop")]}]
+    )
+
+    proposal = generate_replan_proposal(
+        trip=trip,
+        dest_data={},
+        current_time="15:00",
+        reason="I_AM_TIRED",
+        completed_activity_ids=[],
+        skipped_activity_ids=[],
+        baseRevisionId="rev_0",
+        currentDayNumber=9,
+    )
+
+    assert proposal.affectedDate == "Day 9"
+
+
+def test_unique_legacy_name_is_resolved_without_using_place_id():
+    trip = _trip(
+        [
+            {
+                "dayNumber": 1,
+                "activities": [
+                    {"title": "Legacy Museum", "placeId": "same-place", "durationMins": 60},
+                ],
+            }
+        ]
+    )
+
+    proposal = _proposal(trip, completed_activity_ids=["Legacy Museum"])
+
+    assert proposal.actions[0].activityId == "Legacy Museum"
+    assert proposal.actions[0].actionType == "KEEP"
+    assert proposal.actions[0].activityId != "same-place"
+
+
+def test_ambiguous_legacy_name_fails_closed():
+    trip = _trip(
+        [
+            {"dayNumber": 1, "activities": [{"name": "Repeated stop"}]},
+            {"dayNumber": 3, "activities": [{"name": "Repeated stop"}]},
+        ]
+    )
+
+    with pytest.raises(ActivityIdentityAmbiguousError) as error:
+        _proposal(trip)
+
+    assert error.value.code == "ACTIVITY_IDENTITY_AMBIGUOUS"
+    assert "Repeated stop".casefold() in str(error.value).casefold()
+
+
+def test_repeated_titles_with_stable_ids_are_not_ambiguous():
+    trip = _trip(
+        [
+            {
+                "dayNumber": 1,
+                "activities": [_activity("visit-a", "Same place")],
+            },
+            {
+                "dayNumber": 7,
+                "activities": [_activity("visit-b", "Same place")],
+            },
+        ]
+    )
+
+    proposal = _proposal(trip)
+
+    assert proposal.actions[0].activityId == "visit-a"
+    assert proposal.actions[0].actionType == "REMOVE"
+
+
+def test_invalid_reason_base_revision_and_day_bounds_are_rejected():
+    trip = _trip([{"dayNumber": 1, "activities": [_activity("a")] }])
+
+    with pytest.raises(ReplanValidationError, match="unsupported replan reason"):
+        _proposal(trip, reason="RAIN")
+    with pytest.raises(ReplanValidationError, match="baseRevisionId is required"):
+        _proposal(trip, baseRevisionId=None)
+    with pytest.raises(ReplanValidationError, match="day bounds"):
+        _proposal(trip, current_day_idx=4)
+    with pytest.raises(ReplanValidationError, match="day bounds"):
+        _proposal(trip, current_day_number=2)
+
+
+def test_completed_and_skipped_overlap_is_rejected():
+    trip = _trip([{"dayNumber": 1, "activities": [_activity("a")] }])
+
+    with pytest.raises(ReplanValidationError, match="both completed and skipped"):
+        _proposal(trip, completed_activity_ids=["a"], skipped_activity_ids=["a"])
+
+
+def test_full_target_day_keeps_protected_stop_with_warning():
+    trip = _trip(
+        [
+            {"dayNumber": 1, "activities": [_activity("must", "Must Do")]},
             {
                 "dayNumber": 2,
                 "activities": [
-                    {"id": "act3", "title": "Something else"}
-                ]
-            }
-        ]
-    }
-    proposal = generate_replan_proposal(
-        trip=trip,
-        dest_data={},
-        current_day_idx=0,
-        current_time="15:00",
-        reason="I_AM_TIRED",
-        completed_activity_ids=[],
-        skipped_activity_ids=[]
-    )
-    
-    assert any(a.actionType == "MOVE_TO_LATER_DAY" and a.activityId == "act_must_do" for a in proposal.actions)
-    assert any(a.actionType == "REMOVE" and a.activityId == "act1" for a in proposal.actions)
-
-def test_replan_no_mutation():
-    trip = {
-        "id": "trip_123",
-        "dayPlans": [
-            {
-                "dayNumber": 1,
-                "activities": [
-                    {"id": "act1", "title": "Random Park", "category": "Nature"}
-                ]
-            }
-        ]
-    }
-    generate_replan_proposal(
-        trip=trip,
-        dest_data={},
-        current_day_idx=0,
-        current_time="15:00",
-        reason="I_AM_TIRED",
-        completed_activity_ids=[],
-        skipped_activity_ids=[]
-    )
-    
-    assert len(trip["dayPlans"][0]["activities"]) == 1
-
-def test_replan_move_commits_both_days_atomically():
-    trip = {
-        "id": "trip_123",
-        "form": {"mustDo": ["act_must_do"]},
-        "revisions": [{"revisionId": "rev_0"}],
-        "dayPlans": [
-            {
-                "dayNumber": 1,
-                "activities": [
-                    {"id": "act_must_do", "title": "Must Do Museum", "category": "Museum"}
-                ]
+                    _activity("a", "One", durationMins=180),
+                    _activity("b", "Two", durationMins=180),
+                    _activity("c", "Three", durationMins=180),
+                ],
             },
-            {
-                "dayNumber": 2,
-                "activities": []
-            }
-        ]
-    }
-    proposal = generate_replan_proposal(
-        trip=trip,
-        dest_data={},
-        current_day_idx=0,
-        current_time="15:00",
-        reason="I_AM_TIRED",
-        completed_activity_ids=[],
-        skipped_activity_ids=[]
+        ],
+        form={"mustDo": ["must"]},
     )
-    
-    actions = [a.dict() for a in proposal.actions]
-    
-    # Simulate Accept Logic (Mock)
-    changed_days = {0: trip["dayPlans"][0]}
-    
-    new_activities_d1 = []
-    acts_dict = {a.get("id"): a for a in trip["dayPlans"][0]["activities"]}
-    for action in actions:
-        act_type = action.get("actionType")
-        act_id = action.get("activityId")
-        if act_type == "MOVE_TO_LATER_DAY":
-            target_idx = 1
-            if target_idx not in changed_days:
-                changed_days[target_idx] = trip["dayPlans"][target_idx]
-            changed_days[target_idx]["activities"].append(acts_dict[act_id])
-    
-    changed_days[0]["activities"] = new_activities_d1
-    
-    # Assert
-    assert len(changed_days[0]["activities"]) == 0
-    assert len(changed_days[1]["activities"]) == 1
-    assert changed_days[1]["activities"][0]["id"] == "act_must_do"
-    assert list(sorted(changed_days.keys())) == [0, 1]
 
-def test_stale_multi_day_move():
-    # If Day 10 is changed before accept, baseRevisionId won't match, throwing STALE_PROPOSAL
-    pass
+    proposal = _proposal(trip)
 
-def test_target_day_failure():
-    trip = {
-        "id": "trip_123",
-        "form": {"mustDo": ["act_must_do"]},
-        "dayPlans": [
-            {
-                "dayNumber": 1,
-                "activities": [
-                    {"id": "act_must_do", "title": "Must Do Museum", "category": "Museum"}
-                ]
-            },
-            {
-                "dayNumber": 2,
-                "activities": [
-                    {"id": "act1", "title": "...", "durationMins": 180},
-                    {"id": "act2", "title": "...", "durationMins": 180},
-                    {"id": "act3", "title": "...", "durationMins": 180},
-                ]
-            }
-        ]
-    }
-    proposal = generate_replan_proposal(
-        trip=trip,
-        dest_data={},
-        current_day_idx=0,
-        current_time="15:00",
-        reason="I_AM_TIRED",
-        completed_activity_ids=[],
-        skipped_activity_ids=[]
+    assert next(action for action in proposal.actions if action.activityId == "must").actionType == "KEEP"
+    assert not any(action.actionType in {"MOVE_TO_LATER_DAY", "SAVE_FOR_LATER", "END_DAY_EARLY"} for action in proposal.actions)
+    assert proposal.warnings == ["Must Do remains on Day 1; no later day can safely fit this priority stop."]
+
+
+def test_replan_action_rejects_unsupported_or_unbounded_shapes():
+    with pytest.raises(ValidationError):
+        ReplanAction(actionType="DROP_EVERYTHING", activityId="a", rationale="bad")
+    with pytest.raises(ValidationError):
+        ReplanAction(actionType="MOVE_TO_LATER_DAY", activityId="a", rationale="bad", targetDate="Day 0")
+    with pytest.raises(ValidationError):
+        ReplanAction(actionType="REPLACE", activityId="a", rationale="bad", replacementActivity={"name": "new"})
+
+
+def test_protected_activity_fields_are_carried_by_original_timeline():
+    booking = _activity(
+        "booking",
+        "Museum booking",
+        isBooked=True,
+        booking={"confirmationCode": "keep-me", "price": 100},
+        provider={"name": "provider", "id": None},
     )
-    
-    # Should not move, should SAVE_FOR_LATER because tomorrow is full
-    assert any(a.actionType == "SAVE_FOR_LATER" and a.activityId == "act_must_do" for a in proposal.actions)
+    trip = _trip([{"dayNumber": 1, "activities": [booking]}])
+
+    proposal = _proposal(trip)
+
+    assert proposal.updatedTimeline == [booking]
+    assert proposal.updatedTimeline[0]["booking"] == booking["booking"]
+    assert proposal.updatedTimeline[0]["provider"] == booking["provider"]

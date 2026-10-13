@@ -5,10 +5,12 @@ import { useRef, useLayoutEffect, useState, useEffect } from 'react';
 import Image from 'next/image';
 import PlaceImage from '@/components/shared/PlaceImage';
 import gsap from 'gsap';
+import { collection, getDocs } from 'firebase/firestore';
 import { X, MapPin, Calendar, CheckCircle2, Trophy, Flame, Star, Target, ChevronRight, Zap, Globe2, TrendingUp, Award, Heart, Lock, ArrowRight, Activity, Plane, Trash2, AlertTriangle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/AuthContext';
-import { getPassportStats, getPassportStamps, getUserBucketList, getUserItineraries, deleteItineraryFromFirestore } from '@/lib/firestore';
+import { getPassportStats, getPassportStamps, getUserBucketList, deleteItineraryFromFirestore } from '@/lib/firestore';
+import { db } from '@/lib/firebase';
 import { getLeaderboard, type LeaderboardEntry } from '@/lib/leaderboard';
 import {
     xpProgress, getLevelTitle, ACHIEVEMENTS, getDefaultStats,
@@ -35,6 +37,11 @@ const FALLBACK_STATS: PassportStats = {
     totalActivitiesCompleted: 0,
 };
 
+async function getOwnerItineraries(uid: string) {
+    const snapshot = await getDocs(collection(db, 'users', uid, 'itineraries'));
+    return snapshot.docs.map((entry) => ({ id: entry.id, ...entry.data() }));
+}
+
 export default function PassportPage() {
     const router = useRouter();
     const containerRef = useRef<HTMLDivElement>(null);
@@ -51,6 +58,8 @@ export default function PassportPage() {
     const [deletingJourneyId, setDeletingJourneyId] = useState<string | null>(null);
     const [confirmDeleteJourney, setConfirmDeleteJourney] = useState<{ id: string; title: string } | null>(null);
     const [loadedUid, setLoadedUid] = useState<string | null>(null);
+    const [loadError, setLoadError] = useState<string | null>(null);
+    const [reloadNonce, setReloadNonce] = useState(0);
 
     const [prevUserUid, setPrevUserUid] = useState(user?.uid);
     if (user?.uid !== prevUserUid) {
@@ -61,6 +70,7 @@ export default function PassportPage() {
             setBucketList([]);
             setLeaderboard([]);
             setLoadedUid(null);
+            setLoadError(null);
         }
     }
 
@@ -73,7 +83,7 @@ export default function PassportPage() {
         Promise.all([
             getPassportStats(user.uid),
             getPassportStamps(user.uid),
-            getUserItineraries(user.uid),
+            getOwnerItineraries(user.uid),
             getUserBucketList(user.uid),
             getLeaderboard(20),
         ]).then(([fsStats, fsStamps, fsJourneys, fsBucketList, fsLeaderboard]) => {
@@ -94,12 +104,12 @@ export default function PassportPage() {
             setLoadedUid(user.uid);
         }).catch(() => {
             if (!active) return;
-            // Graceful fallback for offline / permission restrictions
             setLoadedUid(user.uid);
+            setLoadError('Your Passport could not be loaded. We did not replace it with empty data.');
         });
 
         return () => { active = false; };
-    }, [user, authLoading]);
+    }, [user, authLoading, reloadNonce]);
 
     const progress = xpProgress(stats.totalXP);
     const levelTitle = getLevelTitle(progress.level);
@@ -121,6 +131,20 @@ export default function PassportPage() {
             <div className="min-h-screen bg-paper-warm flex flex-col items-center justify-center gap-3 text-brand-primary">
                 <div className="w-8 h-8 border-2 border-brand-primary border-t-transparent rounded-full animate-spin" />
                 <span className="font-mono text-xs uppercase tracking-widest text-naviigo-brown/60">Opening Archive...</span>
+            </div>
+        );
+    }
+
+    if (user && loadError) {
+        return (
+            <div className="min-h-screen bg-paper-warm flex items-center justify-center px-6 text-naviigo-brown">
+                <div className="max-w-md text-center bg-paper-light border border-red-200 rounded-2xl p-8 shadow-sm" role="alert">
+                    <div className="text-4xl mb-4">⚠️</div>
+                    <div className="font-mono text-[10px] font-bold uppercase tracking-[0.25em] text-red-600 mb-2">ARCHIVE UNAVAILABLE</div>
+                    <h1 className="text-2xl font-display font-black uppercase mb-3">Passport not loaded</h1>
+                    <p className="text-sm text-naviigo-brown/70 mb-6">{loadError}</p>
+                    <button type="button" onClick={() => { setLoadedUid(null); setLoadError(null); setReloadNonce(value => value + 1); }} className="bg-brand-primary text-white font-mono text-xs font-bold uppercase tracking-wider py-3 px-7 rounded-xl hover:bg-brand-primary/90 transition-colors">Try again</button>
+                </div>
             </div>
         );
     }
@@ -344,7 +368,7 @@ export default function PassportPage() {
                                                         </h3>
                                                         {unlocked && (
                                                             <span className="font-mono text-[9px] font-bold text-brand-primary uppercase">
-                                                                VERIFIED
+                                                                 RECORDED
                                                             </span>
                                                         )}
                                                     </div>
@@ -503,11 +527,23 @@ export default function PassportPage() {
                                                                 />
                                                                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                                                                 
-                                                                <div className="absolute top-3 left-3">
-                                                                    <span className="font-mono text-[10px] font-bold uppercase tracking-wider bg-white/90 text-naviigo-brown px-3 py-1 rounded-full shadow-sm">
-                                                                        {totalDays} {totalDays === 1 ? 'DAY' : 'DAYS'} CHAPTERS
-                                                                    </span>
-                                                                </div>
+                                                                 <div className="absolute top-3 left-3">
+                                                                     <span className="font-mono text-[10px] font-bold uppercase tracking-wider bg-white/90 text-naviigo-brown px-3 py-1 rounded-full shadow-sm">
+                                                                         {totalDays} {totalDays === 1 ? 'DAY' : 'DAYS'} CHAPTERS
+                                                                     </span>
+                                                                 </div>
+
+                                                                 <div className="absolute top-12 left-3">
+                                                                     <span className={`font-mono text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full shadow-sm ${
+                                                                         journey.status === 'cancelled'
+                                                                             ? 'bg-red-100 text-red-700'
+                                                                             : journey.status === 'completed'
+                                                                             ? 'bg-brand-primary text-white'
+                                                                             : 'bg-white/90 text-naviigo-brown'
+                                                                     }`}>
+                                                                         {journey.status || 'saved'}
+                                                                     </span>
+                                                                 </div>
 
                                                                 {/* Delete button — always visible */}
                                                                 <button
@@ -717,7 +753,7 @@ export default function PassportPage() {
                         >
                             <div className="p-6 border-b border-[#EADFD4] flex items-baseline justify-between bg-paper-warm">
                                 <div className="font-mono text-[10px] font-bold uppercase tracking-widest text-brand-primary">
-                                    VERIFIED EXPEDITION DOSSIER
+                                     TRAVELLER-REPORTED MILESTONE
                                 </div>
                                 <button onClick={() => setSelectedStamp(null)} className="text-naviigo-brown/60 hover:text-naviigo-brown text-sm font-mono">
                                     ✕

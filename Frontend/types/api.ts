@@ -4,30 +4,53 @@
 
 export interface ItineraryGenerateRequest {
   destination: string;
-  destName?: string;
-  purpose?: string;
-  group?: string;
+  operationId: string;
+  destName?: string | null;
+  purpose?: string | null;
+  group?: string | null;
   days: number;
   budget: number;
-  startDate?: string;
-  endDate?: string;
-  userId?: string | null;
+  startDate?: string | null;
+  endDate?: string | null;
   preferences?: Record<string, unknown> | null;
   browsingSignals?: Record<string, unknown> | null;
   travelerType?: string | null;
   originCity?: string | null;
-  uuid?: string | null;
+  arrivalTime?: string | null;
+  arrivalMode?: string | null;
+  departureTime?: string | null;
+  departureMode?: string | null;
+  hotelArea?: string | null;
+  mustDo?: Array<{ name: string; dayIndex: number | null }> | null;
   routeStops?: Array<{
     name: string;
     stayDays: number;
     travelMode: 'flight' | 'train' | 'bus' | 'car';
     travelTime: 'morning' | 'afternoon' | 'evening' | 'night';
-  }>;
+  }> | null;
+}
+
+export interface ItineraryPersistence {
+  status: 'saved' | 'unsaved' | 'ambiguous';
+  durable: boolean;
+  replayed: boolean;
+}
+
+export interface ItineraryPersistenceReceipt {
+  operationId: string;
+  itineraryId: string;
+  ownerUid: string;
+  revisionId: string;
+  status: 'committed';
 }
 
 export interface ItineraryGenerateResponse {
   success: boolean;
-  itinerary?: any;
+  userId?: string;
+  itinerary?: Record<string, unknown>;
+  persistence?: ItineraryPersistence;
+  receipt?: ItineraryPersistenceReceipt;
+  code?: string;
   error?: string;
   retryAfter?: number;
 }

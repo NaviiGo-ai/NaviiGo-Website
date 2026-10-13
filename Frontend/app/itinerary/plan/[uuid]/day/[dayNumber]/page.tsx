@@ -1,10 +1,12 @@
 'use client';
 
 import { useEffect, useState, useCallback, Suspense } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import DayViewPage from '@/components/features/itinerary/DayViewPage';
-import { getItineraryByUUID } from '@/lib/firestore';
+import { getItineraryByUUID, getOwnerItinerary } from '@/lib/firestore';
+import { useAuth } from '@/lib/AuthContext';
+import { itineraryDayIndex } from '@/lib/itineraryIdentity';
 import { DEST_DATA } from '@/app/itinerary/data';
 
 /**
@@ -23,42 +25,65 @@ import { DEST_DATA } from '@/app/itinerary/data';
 function DayViewContent() {
     const params = useParams();
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const { user, loading: authLoading } = useAuth();
     const rawUuid = (params?.uuid as string) ?? '';
     const uuid = decodeURIComponent(rawUuid).trim().replace(/\s+/g, '-').toLowerCase();
     const dayNumber = parseInt(params?.dayNumber as string, 10);
 
     const isValidId = /^[a-zA-Z0-9_-]{1,128}$/.test(uuid);
     const isInvalid = !uuid || !isValidId || isNaN(dayNumber) || dayNumber < 1;
+    const isPublicShare = uuid.startsWith('share_') || searchParams.get('public') === '1';
+    const isStaticPreview = Boolean(DEST_DATA[uuid.toLowerCase()]);
+    const scopeKey = authLoading
+        ? 'auth-pending'
+        : isPublicShare
+            ? `public:${uuid}`
+            : user?.uid
+                ? `owner:${user.uid}:${uuid}`
+                : `owner:anonymous:${uuid}`;
 
     const [phase, setPhase] = useState<'loading' | 'ready' | 'generating' | 'not-found' | 'slow-loading'>(() => isInvalid ? 'not-found' : 'loading');
     const [form, setForm] = useState<Record<string, unknown>>({});
     const [generatedData, setGeneratedData] = useState<any>(null);
     const [retryCount, setRetryCount] = useState(0);
+    const [loadedScope, setLoadedScope] = useState<string | null>(null);
 
     useEffect(() => {
-        if (isInvalid) {
+        if (isInvalid) return;
+        setPhase('loading');
+        setForm({});
+        setGeneratedData(null);
+    }, [scopeKey, isInvalid]);
+
+    useEffect(() => {
+        if (isInvalid || authLoading || (!isPublicShare && !isStaticPreview && !user?.uid)) {
             return;
         }
 
         let active = true;
 
         // 1. Instant fast-path from sessionStorage
-        if (typeof window !== 'undefined') {
+        if (isStaticPreview && typeof window !== 'undefined') {
             try {
-                const cached = sessionStorage.getItem(`naviigo_plan_${uuid}`);
+                const cacheKey = isPublicShare || isStaticPreview
+                    ? `naviigo_public_plan_${uuid}`
+                    : `naviigo_plan_${user?.uid}_${uuid}`;
+                const cached = sessionStorage.getItem(cacheKey);
                 if (cached) {
                     const parsed = JSON.parse(cached);
                     const expectedDays = Number(parsed?.form?.days) || 0;
                     const actualDays = parsed?.generatedData?.dayPlans?.length || 0;
                     if (actualDays > 0 && (expectedDays <= 1 || actualDays >= expectedDays)) {
-                        if (dayNumber > actualDays) {
-                            router.replace(`/itinerary/plan/${uuid}/day/1`);
+                        if (itineraryDayIndex(parsed.generatedData.dayPlans, dayNumber) < 0) {
+                            setPhase('not-found');
                             return;
                         }
                         queueMicrotask(() => {
                             if (!active) return;
                             setForm(parsed.form || {});
                             setGeneratedData(parsed.generatedData);
+                            setLoadedScope(scopeKey);
                             setPhase('ready');
                         });
                         return;
@@ -73,8 +98,8 @@ function DayViewContent() {
         const directStatic = DEST_DATA[uuid.toLowerCase()];
         if (directStatic && directStatic.dayPlans?.length > 0) {
             const totalDays = directStatic.dayPlans.length;
-            if (dayNumber > totalDays) {
-                router.replace(`/itinerary/plan/${uuid}/day/1`);
+            if (itineraryDayIndex(directStatic.dayPlans, dayNumber) < 0) {
+                setPhase('not-found');
                 return;
             }
             const defaultForm = {
@@ -90,7 +115,8 @@ function DayViewContent() {
                 if (!active) return;
                 setForm(defaultForm);
                 setGeneratedData(directStatic);
-                setPhase('ready');
+                setLoadedScope(scopeKey);
+                            setPhase('ready');
             });
             try {
                 sessionStorage.setItem(`naviigo_plan_${uuid}`, JSON.stringify({
@@ -109,7 +135,13 @@ function DayViewContent() {
         }, 5000);
 
         // 4. Fetch from Firestore
-        getItineraryByUUID(uuid).then((data) => {
+        const ownerOrPublicPromise = isPublicShare
+            ? getItineraryByUUID(uuid)
+            : isStaticPreview
+                ? Promise.resolve(null)
+                : getOwnerItinerary(user!.uid, uuid);
+
+        ownerOrPublicPromise.then((data) => {
             if (!active) return;
             clearTimeout(timer);
 
@@ -124,19 +156,31 @@ function DayViewContent() {
                     return;
                 }
 
-                if (dayNumber > totalDays) {
-                    router.replace(`/itinerary/plan/${uuid}/day/1`);
+                if (itineraryDayIndex(data.generatedData.dayPlans, dayNumber) < 0) {
+                    setPhase('not-found');
                     return;
                 }
 
-                const loadedForm = data.form ?? {};
+                const loadedForm = isPublicShare
+                    ? data.form ?? {}
+                    : {
+                        ...(data.form ?? {}),
+                        uuid,
+                        _uuid: uuid,
+                        operationId: (data.form?.operationId as string | undefined) || uuid,
+                        ...(data.publicShareId ? { publicShareId: data.publicShareId } : {}),
+                    };
                 setForm(loadedForm);
                 setGeneratedData(data.generatedData);
-                setPhase('ready');
+                setLoadedScope(scopeKey);
+                            setPhase('ready');
 
                 // Cache for fast back/forward navigation
                 try {
-                    sessionStorage.setItem(`naviigo_plan_${uuid}`, JSON.stringify({
+                    const cacheKey = isPublicShare
+                        ? `naviigo_public_plan_${uuid}`
+                        : `naviigo_plan_${user?.uid}_${uuid}`;
+                    sessionStorage.setItem(cacheKey, JSON.stringify({
                         form: loadedForm,
                         generatedData: data.generatedData,
                     }));
@@ -151,18 +195,30 @@ function DayViewContent() {
                     return;
                 }
 
-                if (dayNumber > totalDays) {
-                    router.replace(`/itinerary/plan/${uuid}/day/1`);
+                if (itineraryDayIndex(data.generatedData.dayPlans, dayNumber) < 0) {
+                    setPhase('not-found');
                     return;
                 }
 
-                const loadedForm = data.form ?? {};
+                const loadedForm = isPublicShare
+                    ? data.form ?? {}
+                    : {
+                        ...(data.form ?? {}),
+                        uuid,
+                        _uuid: uuid,
+                        operationId: (data.form?.operationId as string | undefined) || uuid,
+                        ...(data.publicShareId ? { publicShareId: data.publicShareId } : {}),
+                    };
                 setForm(loadedForm);
                 setGeneratedData(data.generatedData);
-                setPhase('ready');
+                setLoadedScope(scopeKey);
+                            setPhase('ready');
 
                 try {
-                    sessionStorage.setItem(`naviigo_plan_${uuid}`, JSON.stringify({
+                    const cacheKey = isPublicShare
+                        ? `naviigo_public_plan_${uuid}`
+                        : `naviigo_plan_${user?.uid}_${uuid}`;
+                    sessionStorage.setItem(cacheKey, JSON.stringify({
                         form: loadedForm,
                         generatedData: data.generatedData,
                     }));
@@ -181,11 +237,11 @@ function DayViewContent() {
             clearTimeout(timer);
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [uuid, dayNumber, isInvalid, router, retryCount]);
+    }, [authLoading, isPublicShare, isStaticPreview, user?.uid, uuid, dayNumber, isInvalid, router, retryCount]);
 
     const handleBack = useCallback(() => {
-        router.push(`/itinerary/plan/${uuid}`);
-    }, [router, uuid]);
+        router.push(`/itinerary/plan/${uuid}${isPublicShare ? '?public=1' : ''}`);
+    }, [router, uuid, isPublicShare]);
 
     const handleRetry = useCallback(() => {
         setPhase('loading');
@@ -193,7 +249,10 @@ function DayViewContent() {
     }, []);
 
     // ─── REFINED LIGHT EDITORIAL SKELETON ───
-    if (phase === 'loading' || phase === 'slow-loading') {
+    if (!authLoading && !isPublicShare && !isStaticPreview && !user) return (
+        <div className="min-h-screen flex items-center justify-center bg-paper-warm p-8 text-naviigo-brown"><p>Sign in to view your saved journey.</p></div>
+    );
+    if (phase === 'loading' || phase === 'slow-loading' || (phase === 'ready' && loadedScope !== scopeKey)) {
         return (
             <div className="min-h-screen bg-paper-warm text-naviigo-brown pt-20 sm:pt-24 px-4 sm:px-8 max-w-6xl mx-auto">
                 {/* Masthead Bar Skeleton */}
@@ -297,9 +356,10 @@ function DayViewContent() {
     }
 
     return (
-        <DayViewPage
-            form={{ ...form, _uuid: uuid, uuid, _initialDay: Math.max(0, dayNumber - 1) }}
+        <DayViewPage key={scopeKey}
+            form={{ ...form, _uuid: uuid, uuid, _initialDay: Math.max(0, itineraryDayIndex(generatedData?.dayPlans || [], dayNumber)) }}
             generatedData={generatedData}
+            readOnly={isPublicShare || isStaticPreview}
             onBack={handleBack}
         />
     );

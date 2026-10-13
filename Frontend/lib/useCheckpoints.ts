@@ -14,6 +14,8 @@ export interface CheckpointState {
     dayTotals: Record<number, number>; // day → total activities count
     startedAt: string;
     isComplete: boolean;
+    /** UID that started this in-memory session; prevents account crossover. */
+    ownerUid?: string;
 }
 
 export interface TripProgress {
@@ -31,10 +33,9 @@ export interface DayProgress {
 
 // ─── Hook ────────────────────────────────────────────────────────────────────
 
-import { createTrackingSession, updateActivityStatus, stopTrackingSession, saveActiveTripProgress, setActiveItinerary } from '@/lib/firestore';
+import { createTrackingSession, updateActivityStatus, cancelActiveItinerary, saveActiveTripProgress, setActiveItinerary } from '@/lib/firestore';
 import { useAuth } from '@/lib/AuthContext';
-import { db } from '@/lib/firebase';
-import { doc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { auth } from '@/lib/firebase';
 
 // ─── Hook ────────────────────────────────────────────────────────────────────
 
@@ -43,7 +44,7 @@ export function useCheckpoints(
     destName: string,
     stateName: string,
     purpose: string,
-    dayPlans: { day: number; activities: { name: string; lat?: number; lng?: number }[] }[],
+    dayPlans: { day: number; activities: { activityId?: string; id?: string; name: string; lat?: number; lng?: number }[] }[],
     itineraryId?: string
 ) {
     const { user } = useAuth();
@@ -52,6 +53,24 @@ export function useCheckpoints(
     const [justCompleted, setJustCompleted] = useState<string | null>(null);
     const [dayJustCompleted, setDayJustCompleted] = useState<number | null>(null);
     const [tripJustCompleted, setTripJustCompleted] = useState(false);
+    const [commandError, setCommandError] = useState<string | null>(null);
+    const [isStarting, setIsStarting] = useState(false);
+    const startingRef = useRef(false);
+    const previousUidRef = useRef<string | null | undefined>(user?.uid);
+
+    // A route can remain mounted while Firebase switches accounts. Reset the
+    // local session during that transition and never persist the old session
+    // under the new UID.
+    if (previousUidRef.current !== user?.uid) {
+        previousUidRef.current = user?.uid;
+        setCommandError(null);
+        setIsStarting(false);
+        setCheckpoint(null);
+        setIsTripActive(false);
+        setJustCompleted(null);
+        setDayJustCompleted(null);
+        setTripJustCompleted(false);
+    }
 
     const [prevDestId, setPrevDestId] = useState(destId);
     if (destId !== prevDestId) {
@@ -66,7 +85,7 @@ export function useCheckpoints(
 
     // Persist checkpoint to Firestore on every change
     useEffect(() => {
-        if (!checkpoint || !user?.uid) return;
+        if (!checkpoint || !user?.uid || checkpoint.ownerUid !== user.uid) return;
         // Save progress to Firestore
         const progress = {
             completed: checkpoint.completedSet.length,
@@ -78,7 +97,13 @@ export function useCheckpoints(
         });
     }, [checkpoint, user?.uid]);
 
-    const startTrip = useCallback(() => {
+    const startTrip = useCallback(async () => {
+        const uid = user?.uid;
+        if (!uid || !itineraryId || startingRef.current) return;
+        startingRef.current = true; setIsStarting(true); setCommandError(null);
+        try {
+            await setActiveItinerary(uid, itineraryId);
+            if (auth?.currentUser?.uid !== uid) return;
         const dayTotals: Record<number, number> = {};
         let total = 0;
         const allActivities: { name: string; dayIndex: number; lat?: number; lng?: number; status: 'completed' | 'active' | 'upcoming' }[] = [];
@@ -111,6 +136,7 @@ export function useCheckpoints(
             dayTotals,
             startedAt: new Date().toISOString(),
             isComplete: false,
+            ownerUid: user?.uid,
         };
         setCheckpoint(newState);
         setIsTripActive(true);
@@ -132,35 +158,40 @@ export function useCheckpoints(
                 })),
             }).catch(err => console.warn('Live tracking session create failed:', err));
 
-            // Mark the existing itinerary as active in the user's collection — NO duplicate document created
-            if (itineraryId) {
-                setActiveItinerary(user.uid, itineraryId).catch(err => {
-                    console.warn('[useCheckpoints] Failed to mark itinerary active:', err);
-                });
-            }
+
+        }
+        } catch (error) {
+            if (auth?.currentUser?.uid === uid) setCommandError(error instanceof Error ? error.message : 'The journey could not be started.');
+        } finally {
+            startingRef.current = false;
+            if (auth?.currentUser?.uid === uid) setIsStarting(false);
         }
     }, [destId, destName, stateName, purpose, dayPlans, user, itineraryId]);
 
-    const stopTrip = useCallback(() => {
-        if (checkpoint && user?.uid) {
-            stopTrackingSession(user.uid, checkpoint.tripId).catch(err => console.warn('Live tracking stop failed:', err));
-            if (itineraryId) {
-                updateDoc(doc(db, 'users', user.uid, 'itineraries', itineraryId), {
-                    isActive: false,
-                    updatedAt: serverTimestamp(),
-                }).catch(() => {});
-            }
+    const stopTrip = useCallback(async () => {
+        const uid = user?.uid;
+        if (!checkpoint || !uid || checkpoint.ownerUid !== uid || !itineraryId || startingRef.current) return;
+        startingRef.current = true; setIsStarting(true); setCommandError(null);
+        try {
+            await cancelActiveItinerary(uid, itineraryId);
+            if (auth?.currentUser?.uid !== uid) return;
+            setCheckpoint(null); setIsTripActive(false); setJustCompleted(null);
+            setDayJustCompleted(null); setTripJustCompleted(false);
+        } catch (error) {
+            if (auth?.currentUser?.uid === uid) setCommandError(error instanceof Error ? error.message : 'The journey could not be ended.');
+        } finally {
+            startingRef.current = false;
+            if (auth?.currentUser?.uid === uid) setIsStarting(false);
         }
-        setCheckpoint(null);
-        setIsTripActive(false);
-        setJustCompleted(null);
-        setDayJustCompleted(null);
-        setTripJustCompleted(false);
     }, [checkpoint, user, itineraryId]);
 
     const toggleCheckpoint = useCallback((dayIndex: number, activityName: string) => {
         if (!checkpoint) return;
-        const key = `${dayIndex}:${activityName}`;
+        const candidates = dayPlans[dayIndex]?.activities.filter(a => a.activityId === activityName || a.id === activityName || a.name === activityName) || [];
+        if (candidates.length !== 1) return;
+        const activity = candidates[0];
+        const activityIdentity = activity?.activityId || activity?.id || activityName;
+        const key = `${dayIndex}:${activityIdentity}`;
         setCheckpoint(prev => {
             if (!prev) return prev;
             const completed = new Set(prev.completedSet);
@@ -175,7 +206,7 @@ export function useCheckpoints(
                 // Check if this day is now complete
                 const dayActivities = dayPlans[dayIndex]?.activities || [];
                 const dayCompleteCount = dayActivities.filter(a =>
-                    completed.has(`${dayIndex}:${a.name}`)
+                    completed.has(`${dayIndex}:${a.activityId || a.id || a.name}`)
                 ).length;
                 if (dayCompleteCount === dayActivities.length && dayActivities.length > 0) {
                     setDayJustCompleted(dayIndex);
@@ -212,8 +243,9 @@ export function useCheckpoints(
 
     const isChecked = useCallback((dayIndex: number, activityName: string): boolean => {
         if (!checkpoint) return false;
-        return checkpoint.completedSet.includes(`${dayIndex}:${activityName}`);
-    }, [checkpoint]);
+        const activity = dayPlans[dayIndex]?.activities.find(a => a.name === activityName);
+        return checkpoint.completedSet.includes(`${dayIndex}:${activity?.activityId || activity?.id || activityName}`);
+    }, [checkpoint, dayPlans]);
 
     const getProgress = useCallback((): TripProgress => {
         if (!checkpoint) return { completed: 0, total: 0, percent: 0 };
@@ -231,7 +263,7 @@ export function useCheckpoints(
         const dayActivities = dayPlans[dayIndex]?.activities || [];
         const total = dayActivities.length;
         const completed = dayActivities.filter(a =>
-            checkpoint.completedSet.includes(`${dayIndex}:${a.name}`)
+            checkpoint.completedSet.includes(`${dayIndex}:${a.activityId || a.id || a.name}`)
         ).length;
         return {
             completed,
@@ -246,7 +278,7 @@ export function useCheckpoints(
     const clearTripJustCompleted = useCallback(() => setTripJustCompleted(false), []);
 
     return {
-        isTripActive,
+        isTripActive, commandError, isStarting,
         checkpoint,
         startTrip,
         stopTrip,

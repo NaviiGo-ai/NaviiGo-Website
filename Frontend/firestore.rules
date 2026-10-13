@@ -31,44 +31,72 @@ service cloud.firestore {
     match /users/{userId} {
       allow read, write: if isOwner(userId);
 
-      match /{subcollection}/{document=**} {
+      match /itineraries/{itineraryId} {
         allow read, write: if isOwner(userId);
+        match /proposals/{proposalId} {
+          allow read: if isOwner(userId);
+          allow write: if false; // Admin SDK/backend creates the mutation authority.
+        }
+      }
+      match /{subcollection}/{document=**} {
+        allow read, write: if isOwner(userId) && subcollection != 'itineraries';
       }
     }
 
-    // ─── Shareable itineraries — itineraries/{uuid} ──────────────────────────
-    // Two document shapes live in this collection:
-    //   (a) UUID itineraries : { form, generatedData, destName, userId, isPublic }
-    //       written by SetupWizard / LoadingScreen / the generate API route
-    //   (b) legacy shares    : { form, customPlans, destName, ownerUid, collaborators }
-    //       written by saveSharedItinerary / updateSharedPlans
-    //
-    // Read is public so a share link opens for signed-out visitors.
-    // Write is restricted: you may only rewrite a doc you own, or touch the
-    // collaboration fields on someone else's share.
+    // ─── Public itinerary projections — itineraries/{shareId} ────────────────
+    // This collection is never an owner store.  It contains only an explicit,
+    // sanitized projection created by the authenticated owner.  Full form data,
+    // generated payloads, browsing signals, and lifecycle state live below the
+    // owner's users/{uid}/itineraries document instead.
     match /itineraries/{shareId} {
-      allow read: if true;
+      function isProjection(data) {
+        return data.shareProjection == true
+          && data.isPublic == true
+          && data.ownerUid is string
+          && data.ownerUid != ''
+          && data.shareId == shareId;
+      }
 
-      // Guests must be able to create a share link, so create stays open.
-      // A random UUID cannot be squatted meaningfully: attackers can only add
-      // junk docs, never alter an existing itinerary.
-      allow create: if true;
+      function hasProjectionShape(data) {
+        return data.keys().hasAll([
+            'shareId', 'shareProjection', 'isPublic', 'ownerUid',
+            'form', 'generatedData', 'destName', 'createdAt', 'updatedAt'
+          ])
+          && data.keys().hasOnly([
+            'shareId', 'shareProjection', 'isPublic', 'ownerUid',
+            'form', 'generatedData', 'destName', 'createdAt', 'updatedAt'
+          ])
+          && data.form is map
+          && data.form.keys().hasOnly(['destination', 'destName', 'startDate', 'endDate', 'days'])
+          && data.generatedData is map
+          && data.generatedData.keys().hasOnly([
+            'description', 'avgCost', 'weather', 'crowdLevel', 'crowdNote',
+            'mapCenter', 'highlights', 'restaurants', 'hotels', 'dayPlans'
+          ])
+          && data.destName is string;
+      }
 
-      allow update: if signedIn() && (
-        // (a) Owner of a UUID itinerary (doc already has userId set)
-        resource.data.userId == request.auth.uid
-        // (b) Claiming an itinerary: incoming data sets userId to the requester
-        || request.resource.data.userId == request.auth.uid
-        // (c) Collaborator editing only the collaboration fields
-        || changedKeys().hasOnly(['collaborators', 'invitedUsers', 'customPlans', 'updatedAt'])
-        // (d) Legacy share doc that carries no owner field
-        || !('userId' in resource.data)
-      );
+      // A signed-in creator must be able to test a fresh share ID before a transaction.
+      allow get: if (resource == null && signedIn()) || (isProjection(resource.data) && hasProjectionShape(resource.data));
+      allow list: if isProjection(resource.data) && hasProjectionShape(resource.data);
 
-      allow delete: if signedIn() && (
-        resource.data.userId == request.auth.uid
-        || resource.data.ownerUid == request.auth.uid
-      );
+      allow create: if signedIn()
+        && isProjection(request.resource.data)
+        && request.resource.data.ownerUid == request.auth.uid
+        && hasProjectionShape(request.resource.data);
+
+      allow update: if signedIn()
+        && isProjection(resource.data)
+        && resource.data.ownerUid == request.auth.uid
+        && request.resource.data.ownerUid == resource.data.ownerUid
+        && isProjection(request.resource.data)
+        && request.resource.data.ownerUid == request.auth.uid
+        && request.resource.data.shareId == resource.data.shareId
+        && hasProjectionShape(request.resource.data);
+
+      allow delete: if signedIn()
+        && isProjection(resource.data)
+        && resource.data.ownerUid == request.auth.uid;
     }
 
     // ─── Leaderboard — leaderboard/{uid} ─────────────────────────────────────

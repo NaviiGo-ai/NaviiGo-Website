@@ -1,4 +1,4 @@
-import { db } from './firebase';
+import { auth, db } from './firebase';
 import {
     doc,
     setDoc,
@@ -104,6 +104,12 @@ export async function updateUserPreferences(uid: string, prefs: Partial<UserPref
 // Concurrency guard: prevents race conditions when rapid clicks or parallel components trigger save
 const inFlightSaves = new Map<string, Promise<string>>();
 
+function assertCurrentOwner(uid: string) {
+    if (!uid || !auth?.currentUser || auth.currentUser.uid !== uid) {
+        throw new Error('The signed-in account changed before this save completed.');
+    }
+}
+
 export async function saveItineraryToFirestore(uid: string, data: {
     destId: string;
     destName: string;
@@ -112,7 +118,8 @@ export async function saveItineraryToFirestore(uid: string, data: {
     id?: string;
     uuid?: string;
 }): Promise<string> {
-    if (!db || !uid) return 'temp-local-id';
+    if (!db || !uid) throw new Error('Owner persistence is unavailable.');
+    assertCurrentOwner(uid);
 
     // 1. Resolve canonical stable ID: prefer explicit id/uuid or form._uuid/uuid
     let stableId = (
@@ -125,33 +132,14 @@ export async function saveItineraryToFirestore(uid: string, data: {
         (data.generatedData?.uuid as string)
     )?.trim();
 
-    const lockKey = `${uid}:${stableId || (data.destId + '_' + (data.form?.startDate || ''))}`;
+    if (!stableId) stableId = crypto.randomUUID();
+    const lockKey = `${uid}:${stableId}`;
     if (inFlightSaves.has(lockKey)) {
         return inFlightSaves.get(lockKey)!;
     }
 
     const savePromise = (async (): Promise<string> => {
         try {
-            const colRef = collection(db, 'users', uid, 'itineraries');
-
-            // If no stableId was provided, check if a document already exists for this exact destination + startDate + purpose
-            if (!stableId) {
-                const allSnap = await getDocs(colRef);
-                const startDate = (data.form?.startDate as string) || '';
-                const purpose = (data.form?.purpose as string) || '';
-                allSnap.forEach((d) => {
-                    const existing = d.data();
-                    const existingForm = existing.form as Record<string, unknown> | undefined;
-                    if (
-                        existing.destId === data.destId &&
-                        (existingForm?.purpose || '') === purpose &&
-                        (existingForm?.startDate || '') === startDate
-                    ) {
-                        stableId = d.id;
-                    }
-                });
-            }
-
             // If still no stableId, generate one stable UUID once and lock it into the form state
             if (!stableId) {
                 stableId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `trip_${Date.now()}`;
@@ -182,6 +170,8 @@ export async function saveItineraryToFirestore(uid: string, data: {
                 payload.createdAt = now;
             }
 
+            // Recheck after owner reads, before dispatching an account-bound write.
+            assertCurrentOwner(uid);
             // IDEMPOTENT UPSERT: target the single stable doc ID via setDoc merge
             await setDoc(ref, payload, { merge: true });
 
@@ -197,28 +187,11 @@ export async function saveItineraryToFirestore(uid: string, data: {
                 }
             }
 
-            // Mirror to root itineraries collection for public access & share links
-            try {
-                const rootRef = doc(db, 'itineraries', stableId);
-                const rootSnap = await getDoc(rootRef);
-                const rootExists = rootSnap.exists();
-                const rootData: any = {
-                    ...payload,
-                    userId: uid,
-                    isPublic: true,
-                };
-                if (!rootExists) {
-                    rootData.createdAt = now;
-                }
-                await setDoc(rootRef, rootData, { merge: true });
-            } catch (mirrorErr) {
-                console.warn('[Firestore] Mirroring to root itineraries failed (non-fatal):', mirrorErr);
-            }
-
+            assertCurrentOwner(uid);
             return stableId;
         } catch (err) {
             console.warn('[Firestore] saveItineraryToFirestore error:', err);
-            return stableId || 'temp-local-id';
+            throw err;
         }
     })();
 
@@ -231,179 +204,113 @@ export async function saveItineraryToFirestore(uid: string, data: {
 }
 
 
-export async function getUserItineraries(uid: string): Promise<SavedItineraryDoc[]> {
-    if (!db || !uid) return [];
-    try {
-        const rawMap = new Map<string, SavedItineraryDoc>();
+export type OwnerItinerary = SavedItineraryDoc & {
+    userId: string;
+    ownerUid: string;
+    isPublic: false;
+    publicShareId?: string | null;
+    revisionId?: string;
+    status?: string;
+};
 
-        // 1. Fetch from user's personal itineraries subcollection
-        try {
-            const userItinSnap = await getDocs(collection(db, 'users', uid, 'itineraries'));
-            userItinSnap.forEach(d => {
-                const data = d.data();
-                rawMap.set(d.id, {
-                    id: d.id,
-                    destId: data.destId || (data.form?.destination as string) || 'india',
-                    destName: data.destName || (data.form?.destName as string) || 'India Expedition',
-                    form: data.form || {},
-                    generatedData: data.generatedData || null,
-                    createdAt: data.createdAt,
-                    updatedAt: data.updatedAt,
-                    isActive: data.isActive ?? false,
-                } as SavedItineraryDoc);
-            });
-        } catch (e) {
-            console.warn('[Firestore] getUserItineraries user subcollection read failed:', e);
-        }
-
-        // 2. Also query root itineraries collection where userId == uid
-        try {
-            const q = query(
-                collection(db, 'itineraries'),
-                where('userId', '==', uid)
-            );
-            const rootSnap = await getDocs(q);
-            rootSnap.forEach(d => {
-                const data = d.data();
-                if (!rawMap.has(d.id)) {
-                    rawMap.set(d.id, {
-                        id: d.id,
-                        destId: data.destId || (data.form?.destination as string) || 'india',
-                        destName: data.destName || (data.form?.destName as string) || 'India Expedition',
-                        form: data.form || {},
-                        generatedData: data.generatedData || null,
-                        createdAt: data.createdAt,
-                        updatedAt: data.updatedAt,
-                        isActive: data.isActive ?? false,
-                    } as SavedItineraryDoc);
-                }
-            });
-        } catch (e) {
-            console.warn('[Firestore] getUserItineraries root collection query failed:', e);
-        }
-
-        const rawList = Array.from(rawMap.values());
-
-        // 3. Detect and reconcile legacy duplicate records for this user:
-        // A logical trip matches if:
-        // - They share the exact same UUID (e.g. form.uuid or form._uuid matches doc.id)
-        // - OR they have the exact same destId, destination name, start date, and days count
-        const canonicalMap = new Map<string, SavedItineraryDoc>();
-        const redundantIdsToDelete: string[] = [];
-
-        for (const item of rawList) {
-            const formUuid = ((item.form?.uuid || item.form?._uuid) as string | undefined)?.trim();
-            const isStandardUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(item.id);
-
-            const destNorm = (item.destId || '').toLowerCase().trim();
-            const startDate = ((item.form?.startDate as string) || '').trim();
-            const days = String(item.form?.days || '');
-            const sig = `${destNorm}__${startDate}__${days}`;
-
-            let matchedKey: string | null = null;
-            for (const [key, existing] of canonicalMap.entries()) {
-                const existingFormUuid = ((existing.form?.uuid || existing.form?._uuid) as string | undefined)?.trim();
-                const existingDestNorm = (existing.destId || '').toLowerCase().trim();
-                const existingStartDate = ((existing.form?.startDate as string) || '').trim();
-                const existingDays = String(existing.form?.days || '');
-                const existingSig = `${existingDestNorm}__${existingStartDate}__${existingDays}`;
-
-                const uuidMatch = (formUuid && formUuid === existingFormUuid) ||
-                                  (formUuid && formUuid === existing.id) ||
-                                  (existingFormUuid && existingFormUuid === item.id);
-
-                const sigMatch = sig === existingSig && destNorm.length > 0;
-
-                if (uuidMatch || sigMatch) {
-                    matchedKey = key;
-                    break;
-                }
-            }
-
-            if (!matchedKey) {
-                canonicalMap.set(item.id, item);
-            } else {
-                const existing = canonicalMap.get(matchedKey)!;
-                const existingIsUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(existing.id);
-
-                const existingPlanCount = (existing.generatedData as any)?.dayPlans?.length || 0;
-                const itemPlanCount = (item.generatedData as any)?.dayPlans?.length || 0;
-
-                let keepExisting = true;
-                if (!existingIsUUID && isStandardUUID) {
-                    keepExisting = false;
-                } else if (existingIsUUID && !isStandardUUID) {
-                    keepExisting = true;
-                } else if (itemPlanCount > existingPlanCount) {
-                    keepExisting = false;
-                } else {
-                    const timeExisting = existing.updatedAt?.toMillis?.() || existing.createdAt?.toMillis?.() || 0;
-                    const timeItem = item.updatedAt?.toMillis?.() || item.createdAt?.toMillis?.() || 0;
-                    if (timeItem > timeExisting) {
-                        keepExisting = false;
-                    }
-                }
-
-                if (keepExisting) {
-                    redundantIdsToDelete.push(item.id);
-                } else {
-                    canonicalMap.delete(matchedKey);
-                    canonicalMap.set(item.id, item);
-                    redundantIdsToDelete.push(existing.id);
-                }
-            }
-        }
-
-        // 4. Safely clean redundant legacy duplicate documents from Firestore
-        if (redundantIdsToDelete.length > 0) {
-            for (const redundantId of redundantIdsToDelete) {
-                deleteDoc(doc(db, 'users', uid, 'itineraries', redundantId)).catch(err => {
-                    console.warn(`[Firestore] Failed to clean legacy duplicate ${redundantId}:`, err);
-                });
-            }
-        }
-
-        const items = Array.from(canonicalMap.values());
-        // Sort deterministically by updated/created timestamp descending
-        items.sort((a: any, b: any) => {
-            const timeA = a.updatedAt?.toMillis?.() || a.createdAt?.toMillis?.() || (a.createdAt?.seconds ? a.createdAt.seconds * 1000 : 0);
-            const timeB = b.updatedAt?.toMillis?.() || b.createdAt?.toMillis?.() || (b.createdAt?.seconds ? b.createdAt.seconds * 1000 : 0);
-            return timeB - timeA;
-        });
-
-        return items.slice(0, 30);
-    } catch (err) {
-        console.warn('[Firestore] getUserItineraries error:', err);
-        return [];
+function ownerItineraryData(uid: string, id: string, data: Record<string, unknown>): OwnerItinerary {
+    for (const owner of [data.userId, data.ownerUid]) {
+        if (owner != null && owner !== uid) throw new Error('The owner itinerary has mismatched ownership.');
     }
+    const form = data.form && typeof data.form === 'object' && !Array.isArray(data.form)
+        ? data.form as Record<string, unknown> : {};
+    const generatedData = data.generatedData && typeof data.generatedData === 'object' && !Array.isArray(data.generatedData)
+        ? data.generatedData as Record<string, unknown> : null;
+    return {
+        ...data,
+        id,
+        destId: typeof data.destId === 'string' ? data.destId : typeof form.destination === 'string' ? form.destination : '',
+        destName: typeof data.destName === 'string' ? data.destName : typeof form.destName === 'string' ? form.destName : 'Saved trip',
+        form,
+        generatedData,
+        createdAt: data.createdAt as Timestamp,
+        updatedAt: data.updatedAt as Timestamp,
+        isActive: data.isActive === true,
+        userId: uid,
+        ownerUid: uid,
+        isPublic: false,
+        publicShareId: typeof data.publicShareId === 'string' ? data.publicShareId : null,
+        revisionId: typeof data.revisionId === 'string' ? data.revisionId : undefined,
+        status: typeof data.status === 'string' ? data.status : undefined,
+    };
+}
+
+/** Private authority: never fall back to a public projection or another owner. */
+export async function getOwnerItinerary(uid: string, itineraryId: string): Promise<OwnerItinerary | null> {
+    assertCurrentOwner(uid);
+    const snapshot = await getDoc(doc(db, 'users', uid, 'itineraries', itineraryId));
+    assertCurrentOwner(uid);
+    return snapshot.exists() ? ownerItineraryData(uid, itineraryId, snapshot.data()) : null;
+}
+
+/** A saved generation can be replayed after replanning without reverting the owner revision. */
+export function confirmsGenerationReceipt(owner: OwnerItinerary, receipt: Record<string, unknown>): boolean {
+    if (!owner.revisionId || !owner.generatedData || receipt.status !== 'committed' || receipt.ownerUid !== owner.ownerUid || receipt.itineraryId !== owner.id || receipt.operationId !== owner.id) return false;
+    if (owner.revisionId === receipt.revisionId) return true;
+    const raw = owner as OwnerItinerary & { receipt?: Record<string, unknown>; generationReceipt?: Record<string, unknown> };
+    return [raw.receipt, raw.generationReceipt].some(stored => stored && ['status', 'ownerUid', 'itineraryId', 'operationId', 'revisionId'].every(key => stored[key] === receipt[key]));
+}
+
+export async function getUserItineraries(uid: string): Promise<SavedItineraryDoc[]> {
+    assertCurrentOwner(uid);
+    const snapshot = await getDocs(collection(db, 'users', uid, 'itineraries'));
+    assertCurrentOwner(uid);
+    const items = snapshot.docs.map((entry) => ownerItineraryData(uid, entry.id, entry.data()));
+    const timestamp = (value: Timestamp | undefined) => value?.toMillis?.() ?? 0;
+    items.sort((left, right) =>
+        (timestamp(right.updatedAt) || timestamp(right.createdAt)) -
+        (timestamp(left.updatedAt) || timestamp(left.createdAt)));
+    // Separate operation IDs are separate trips, even for identical destinations
+    // and dates. Reading history must never mutate or delete owner records.
+    return items.slice(0, 30);
 }
 
 export async function setActiveItinerary(uid: string, itineraryId: string) {
-    try {
-        const all = await getUserItineraries(uid);
-        for (const itin of all) {
-            if (itin.isActive && itin.id !== itineraryId) {
-                await updateDoc(doc(db, 'users', uid, 'itineraries', itin.id), { isActive: false }).catch(() => {});
-            }
-        }
-        await setDoc(doc(db, 'users', uid, 'itineraries', itineraryId), {
-            isActive: true,
-            status: 'active',
-            startedAt: serverTimestamp(),
-            updatedAt: serverTimestamp(),
-        }, { merge: true });
-    } catch (err) {
-        console.warn('[Firestore] setActiveItinerary error:', err);
-    }
+    assertCurrentOwner(uid);
+    const target = doc(db, 'users', uid, 'itineraries', itineraryId);
+    // Starting is one confirmed owner write. Never silently end a different journey.
+    const all = await getUserItineraries(uid);
+    if (all.some(itinerary => itinerary.isActive && itinerary.id !== itineraryId)) throw new Error('End your other active journey before starting this one.');
+    await runTransaction(db, async transaction => {
+        const snapshot = await transaction.get(target);
+        assertCurrentOwner(uid);
+        if (!snapshot.exists() || !snapshot.data().generatedData) throw new Error('A saved itinerary is required.');
+        const data = snapshot.data();
+        ownerItineraryData(uid, itineraryId, data);
+        const status = String(data.status || data.generatedData?.status || '').toLowerCase();
+        if (['completed', 'cancelled', 'canceled'].includes(status)) throw new Error('This journey has ended and cannot be restarted.');
+        transaction.update(target, { isActive: true, status: 'active', ...(data.startedAt ? {} : { startedAt: serverTimestamp() }), updatedAt: serverTimestamp() });
+    });
+    assertCurrentOwner(uid);
 }
 
 export async function deleteItineraryFromFirestore(uid: string, itineraryId: string) {
-    try {
-        await deleteDoc(doc(db, 'users', uid, 'itineraries', itineraryId));
-        await deleteDoc(doc(db, 'itineraries', itineraryId)).catch(() => {});
-    } catch (err) {
-        console.warn('[Firestore] deleteItineraryFromFirestore error:', err);
-    }
+    assertCurrentOwner(uid);
+    await deleteDoc(doc(db, 'users', uid, 'itineraries', itineraryId));
+}
+
+export async function cancelActiveItinerary(uid: string, itineraryId: string) {
+    assertCurrentOwner(uid);
+    const ref = doc(db, 'users', uid, 'itineraries', itineraryId);
+    const trackingRef = doc(db, 'users', uid, 'tracking', itineraryId);
+    await runTransaction(db, async transaction => {
+        const owner = await transaction.get(ref);
+        const tracking = await transaction.get(trackingRef);
+        assertCurrentOwner(uid);
+        if (!owner.exists()) throw new Error('The saved journey was not found.');
+        ownerItineraryData(uid, itineraryId, owner.data());
+        const status = String(owner.data().status || '').toLowerCase();
+        if (['completed', 'cancelled', 'canceled'].includes(status)) return;
+        if (status !== 'active') throw new Error('This journey is not active.');
+        transaction.update(ref, { isActive: false, status: 'cancelled', endedAt: serverTimestamp(), updatedAt: serverTimestamp() });
+        if (tracking.exists()) transaction.update(trackingRef, { isActive: false, lastUpdatedAt: serverTimestamp() });
+    });
+    assertCurrentOwner(uid);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -529,36 +436,107 @@ export function listenToTracking(
 // SHARED ITINERARIES — itineraries/{shareId} (kept for backward compat)
 // ═══════════════════════════════════════════════════════════════════════════════
 
+type PublicShareInput = {
+    form: Record<string, unknown>;
+    generatedData: unknown;
+    destName: string;
+};
+
+function publicValue(field: string, value: unknown, depth: number): unknown {
+    if (typeof value === 'string' || typeof value === 'boolean') return value;
+    if (typeof value === 'number') return Number.isFinite(value) ? value : undefined;
+    if (depth > 4) return undefined;
+    if (field === 'location') return publicFields(value, ['name', 'address', 'city', 'lat', 'lng', 'latitude', 'longitude'], depth + 1);
+    if (field === 'mapCenter') return publicFields(value, ['lat', 'lng'], depth + 1);
+    const weatherFields = ['temp', 'temperature', 'feelsLike', 'condition', 'description', 'icon', 'high', 'low', 'humidity', 'windSpeed', 'rainChance', 'source', 'updatedAt', 'date', 'forecast', 'daily'];
+    if (field === 'weather') return publicFields(value, weatherFields, depth + 1);
+    if ((field === 'forecast' || field === 'daily') && Array.isArray(value)) {
+        return value.slice(0, 14).map((entry) => publicFields(entry, weatherFields, depth + 1));
+    }
+    return undefined;
+}
+
+function publicFields(value: unknown, fields: string[], depth = 0): Record<string, unknown> {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
+    const source = value as Record<string, unknown>;
+    const result: Record<string, unknown> = {};
+    for (const field of fields) {
+        const safeValue = publicValue(field, source[field], depth);
+        if (safeValue !== undefined) result[field] = safeValue;
+    }
+    return result;
+}
+
+function publicFormData(form: Record<string, unknown>) {
+    return publicFields(form, ['destination', 'destName', 'startDate', 'endDate', 'days']);
+}
+
+function publicActivityData(activity: unknown) {
+    return publicFields(activity, [
+        'activityId', 'id', 'name', 'title', 'desc', 'description', 'time',
+        'type', 'duration', 'location', 'lat', 'lng', 'img', 'placeId',
+    ]);
+}
+
+function publicItineraryData(generatedData: unknown) {
+    const source = generatedData && typeof generatedData === 'object'
+        ? generatedData as Record<string, unknown>
+        : {};
+    const result = publicFields(source, [
+        'description', 'avgCost', 'weather', 'crowdLevel', 'crowdNote',
+        'mapCenter',
+    ]);
+
+    for (const key of ['highlights', 'restaurants', 'hotels']) {
+        const value = source[key];
+        if (Array.isArray(value)) {
+            result[key] = value.map((item) => publicFields(item, [
+                'name', 'title', 'description', 'desc', 'type', 'rating',
+                'lat', 'lng', 'img', 'image', 'location', 'price', 'cuisine',
+            ]));
+        }
+    }
+
+    if (Array.isArray(source.dayPlans)) {
+        result.dayPlans = source.dayPlans.map((day) => {
+            const dayData = publicFields(day, ['day', 'dayNumber', 'title', 'theme', 'date']);
+            if (day && typeof day === 'object' && Array.isArray((day as Record<string, unknown>).activities)) {
+                dayData.activities = ((day as Record<string, unknown>).activities as unknown[])
+                    .map(publicActivityData);
+            }
+            return dayData;
+        });
+    }
+
+    return result;
+}
+
+function publicShareData(input: PublicShareInput) {
+    return {
+        form: publicFormData(input.form),
+        generatedData: publicItineraryData(input.generatedData),
+        destName: input.destName,
+    };
+}
+
 export async function saveSharedItinerary(shareId: string, data: {
     form: Record<string, unknown>;
     customPlans: unknown[];
     generatedData?: any;
     destName: string;
 }, ownerUid?: string, ownerEmail?: string) {
-    try {
-        await setDoc(doc(db, 'itineraries', shareId), {
-            ...data,
-            ownerUid: ownerUid || null,
-            collaborators: 1,
-            invitedUsers: ownerEmail ? [ownerEmail] : [],
-            updatedAt: serverTimestamp(),
-            createdAt: serverTimestamp(),
-        });
-    } catch (err) {
-        console.warn('[Firestore] saveSharedItinerary error:', err);
-    }
-    return shareId;
+    if (!ownerUid) throw new Error('Sign in is required before sharing an itinerary.');
+    return createPublicShare(ownerUid, shareId, {
+        form: data.form,
+        generatedData: data.generatedData ?? { dayPlans: data.customPlans },
+        destName: data.destName,
+    });
 }
 
 export async function updateSharedPlans(shareId: string, customPlans: unknown[]) {
-    try {
-        await updateDoc(doc(db, 'itineraries', shareId), {
-            customPlans,
-            updatedAt: serverTimestamp(),
-        });
-    } catch (err) {
-        console.warn('[Firestore] updateSharedPlans error:', err);
-    }
+    throw new Error(
+        `Public share ${shareId} is immutable; create a new owner-authorized projection instead.`
+    );
 }
 
 
@@ -575,51 +553,17 @@ export async function saveItineraryByUUID(uuid: string, data: {
     userId?: string | null;
     isPublic?: boolean;
 }) {
-    if (!db || !uuid) return;
-    try {
-        const uid = data.userId || (data.form?.userId as string);
-        if (uid) {
-            // Unified single persistence path for authenticated users
-            await saveItineraryToFirestore(uid, {
-                id: uuid,
-                uuid,
-                destId: (data.form?.destination as string) || (data.form?.destId as string) || 'india',
-                destName: data.destName,
-                form: {
-                    ...data.form,
-                    uuid,
-                    _uuid: uuid,
-                },
-                generatedData: data.generatedData,
-            });
-            return;
-        }
-
-        // Unauthenticated guest user: persist only to root itineraries/{uuid}
-        const ref = doc(db, 'itineraries', uuid);
-        const snap = await getDoc(ref);
-        const exists = snap.exists();
-
-        const now = new Date();
-        const expiresAt = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
-
-        const docData: any = {
-            ...data,
-            uuid,
-            id: uuid,
-            isPublic: data.isPublic ?? true,
-            expiresAt: Timestamp.fromDate(expiresAt),
-            updatedAt: serverTimestamp(),
-        };
-
-        if (!exists) {
-            docData.createdAt = serverTimestamp();
-        }
-
-        await setDoc(ref, docData, { merge: true });
-    } catch (err) {
-        console.warn('[Firestore] saveItineraryByUUID error (non-fatal):', err);
-    }
+    if (!db || !uuid) throw new Error('An itinerary operation ID is required.');
+    const uid = data.userId || (data.form?.userId as string);
+    if (!uid) throw new Error('Sign in is required before saving an itinerary.');
+    return saveItineraryToFirestore(uid, {
+        id: uuid,
+        uuid,
+        destId: (data.form?.destination as string) || (data.form?.destId as string) || 'india',
+        destName: data.destName,
+        form: { ...data.form, uuid, _uuid: uuid },
+        generatedData: data.generatedData,
+    });
 }
 
 export async function getItineraryByUUID(uuid: string): Promise<{
@@ -628,16 +572,89 @@ export async function getItineraryByUUID(uuid: string): Promise<{
     destName: string;
     userId?: string | null;
     isPublic?: boolean;
+    publicShareId?: string | null;
 } | null> {
     if (!db) return null;
     try {
         const snap = await getDoc(doc(db, 'itineraries', uuid));
         if (!snap.exists()) return null;
-        return snap.data() as any;
+        const data = snap.data() as any;
+        if (data.shareProjection !== true || data.isPublic !== true) return null;
+        if (data.expiresAt && data.expiresAt.toMillis?.() <= Date.now()) return null;
+        return {
+            form: data.form ?? {},
+            generatedData: data.generatedData ?? null,
+            destName: data.destName ?? 'India Expedition',
+            isPublic: true,
+            shareProjection: true,
+        } as any;
     } catch (err) {
         console.warn('[Firestore] getItineraryByUUID failed:', err);
         return null;
     }
+}
+
+export async function createPublicShare(
+    uid: string,
+    requestedShareId: string,
+    projection: PublicShareInput,
+    ownerItineraryId: string = String(projection.form.uuid || projection.form._uuid || requestedShareId),
+) {
+    assertCurrentOwner(uid);
+    const ownerRef = doc(db, 'users', uid, 'itineraries', ownerItineraryId);
+    const shareId = await runTransaction(db, async (transaction) => {
+        const owner = await transaction.get(ownerRef);
+        if (!owner.exists()) throw new Error('Save the owner itinerary before sharing it.');
+        const data = ownerItineraryData(uid, ownerItineraryId, owner.data());
+        if (!data.generatedData) throw new Error('An unconfirmed preview cannot be shared.');
+        const resolvedShareId = data.publicShareId || requestedShareId;
+        const ref = doc(db, 'itineraries', resolvedShareId);
+        const existing = await transaction.get(ref);
+        if (existing.exists() && (existing.data().ownerUid !== uid || existing.data().shareProjection !== true)) {
+            throw new Error('You do not own this public share.');
+        }
+        assertCurrentOwner(uid);
+        const safeProjection = publicShareData({ form: data.form, generatedData: data.generatedData, destName: data.destName });
+        transaction.set(ref, {
+            ...safeProjection,
+            shareId: resolvedShareId,
+            shareProjection: true,
+            isPublic: true,
+            ownerUid: uid,
+            createdAt: existing.data()?.createdAt ?? serverTimestamp(),
+            updatedAt: serverTimestamp(),
+        });
+        transaction.update(ownerRef, { publicShareId: resolvedShareId, isPublic: false, updatedAt: serverTimestamp() });
+        return resolvedShareId;
+    });
+    assertCurrentOwner(uid);
+    const saved = await getDoc(doc(db, 'itineraries', shareId));
+    assertCurrentOwner(uid);
+    if (!saved.exists() || saved.data().isPublic !== true || saved.data().ownerUid !== uid) {
+        throw new Error('The public share could not be acknowledged.');
+    }
+    return shareId;
+}
+
+export async function unsharePublicShare(uid: string, shareId: string, ownerItineraryId?: string | null) {
+    assertCurrentOwner(uid);
+    const ref = doc(db, 'itineraries', shareId);
+    await runTransaction(db, async (transaction) => {
+        const current = await transaction.get(ref);
+        const ownerRef = ownerItineraryId ? doc(db, 'users', uid, 'itineraries', ownerItineraryId) : null;
+        const owner = ownerRef ? await transaction.get(ownerRef) : null;
+        if (current.exists() && current.data().ownerUid !== uid) throw new Error('You do not own this public share.');
+        assertCurrentOwner(uid);
+        if (current.exists()) transaction.delete(ref);
+        if (ownerRef && owner?.exists() && owner.data().publicShareId === shareId) {
+            transaction.update(ownerRef, { publicShareId: null, isPublic: false, updatedAt: serverTimestamp() });
+        }
+    });
+    assertCurrentOwner(uid);
+    const remaining = await getDoc(ref);
+    assertCurrentOwner(uid);
+    if (remaining.exists()) throw new Error('The public share is still active.');
+    return { status: 'removed' as const };
 }
 
 /** Real-time listener — used by the [uuid] page to detect when generation completes */
@@ -654,7 +671,12 @@ export function listenToItineraryByUUID(
         return onSnapshot(
             doc(db, 'itineraries', uuid),
             (snap) => {
-                onUpdate(snap.exists() ? (snap.data() as any) : null);
+                const data = snap.data() as any;
+                onUpdate(
+                    snap.exists() && data.shareProjection === true && data.isPublic === true
+                        ? data
+                        : null
+                );
             },
             () => onError?.()
         );
@@ -717,7 +739,9 @@ import type {
 } from './firestoreSchema';
 
 export async function getPassportStats(uid: string): Promise<PassportStatsDoc | null> {
+    assertCurrentOwner(uid);
     const snap = await getDoc(doc(db, 'users', uid, 'passport', 'stats'));
+    assertCurrentOwner(uid);
     return snap.exists() ? (snap.data() as PassportStatsDoc) : null;
 }
 
@@ -753,17 +777,11 @@ export async function addPassportStamp(uid: string, stamp: Omit<PassportStampDoc
 }
 
 export async function getPassportStamps(uid: string): Promise<PassportStampDoc[]> {
-    try {
-        const q = query(
-            collection(db, 'users', uid, 'passport', 'stamps', 'entries'),
-            orderBy('createdAt', 'desc'),
-            limit(100)
-        );
-        const snap = await getDocs(q);
-        return snap.docs.map(d => ({ ...d.data() } as PassportStampDoc));
-    } catch {
-        return [];
-    }
+    assertCurrentOwner(uid);
+    const q = query(collection(db, 'users', uid, 'passport', 'stamps', 'entries'), orderBy('createdAt', 'desc'), limit(100));
+    const snap = await getDocs(q);
+    assertCurrentOwner(uid);
+    return snap.docs.map(d => ({ ...d.data() } as PassportStampDoc));
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════

@@ -4,8 +4,13 @@ import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import Image from 'next/image';
-import { saveSharedItinerary, listenToItinerary, saveItineraryToFirestore, updateSharedPlans, deleteItineraryFromFirestore } from '@/lib/firestore';
+import {
+    createPublicShare,
+    deleteItineraryFromFirestore,
+    unsharePublicShare,
+} from '@/lib/firestore';
 import { useAuth } from '@/lib/AuthContext';
+import { itineraryDayNumber } from '@/lib/itineraryIdentity';
 import { resolveImgSrc } from '@/lib/imageService';
 import PlaceImage from '@/components/shared/PlaceImage';
 import {
@@ -26,7 +31,15 @@ const VideoCard = dynamic(() => import('@/components/shared/VideoCard'), { ssr: 
 interface ResultPageProps {
     form: Record<string, unknown>;
     generatedData?: any;
+    /** An explicit public projection ID. Never pass the owner itinerary ID here. */
     shareId?: string | null;
+    /** Public projection pointer persisted on the owner itinerary. */
+    publicShareId?: string | null;
+    /** Canonical owner document ID (the generation operation ID). */
+    ownerItineraryId?: string | null;
+    /** Catalog previews and public projections never expose mutation controls. */
+    readOnly?: boolean;
+    persistenceStatus?: 'confirmed-saved' | 'unsaved' | 'unknown' | 'public-share';
     isLoaded?: boolean;
     onDayView: (day?: number, currentData?: any) => void;
     onReset: () => void;
@@ -44,19 +57,20 @@ function pickWeatherCenter(d: any): { lat: number; lng: number } | null {
     return null;
 }
 
-export default function ResultPage({ form, generatedData, shareId, onDayView, onReset }: ResultPageProps) {
+export default function ResultPage({ form, generatedData, shareId, publicShareId, ownerItineraryId, readOnly = false, persistenceStatus = 'unknown', onDayView, onReset }: ResultPageProps) {
     const router = useRouter();
     const { user, signInWithGoogle } = useAuth();
-    const { registerItinerary, unregisterItinerary, applyAction, isEditPanelOpen, openEditPanel, closeEditPanel,
+    const { registerItinerary, unregisterItinerary, applyAction, isEditPanelOpen, closeEditPanel,
         editMessages, sendEditMessage, lastAction, clearLastAction } = useAI();
-    const [isSaved, setIsSaved] = useState(false);
-    const [isSaving, setIsSaving] = useState(false);
-    const [saveError, setSaveError] = useState(false);
-    const saveInFlightRef = useRef(false);
+    const isPublicShare = persistenceStatus === 'public-share';
+    const isSaved = persistenceStatus === 'confirmed-saved';
     const [isDeleting, setIsDeleting] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [collaborators, setCollaborators] = useState(1);
     const [isSharing, setIsSharing] = useState(false);
+    const [activeShareId, setActiveShareId] = useState<string | null>(shareId ?? null);
+    const [shareError, setShareError] = useState<string | null>(null);
+    const [clipboardError, setClipboardError] = useState<string | null>(null);
     const [hiddenGems, setHiddenGems] = useState<any[]>([]);
     const [insiderTips, setInsiderTips] = useState<string[]>([]);
     const [packingList, setPackingList] = useState<string[]>([]);
@@ -70,6 +84,7 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
     const destId = (form.destination as string) || (form.destId as string) || '';
     const destName = (form.destName as string) || (form.destination as string) || 'India Expedition';
     const stableTripId = (shareId || form._uuid || form.uuid || form.id || destId) as string;
+    const canonicalOwnerId = ownerItineraryId || (isPublicShare ? null : (form._uuid || form.uuid || form.id || null)) as string | null;
     const purpose = form.purpose as string, group = form.group as string;
     const displayMonth = form.startDate ? new Date(form.startDate as string).toLocaleString('en-US', { month: 'short' }) : 'Jan';
     const staticData = destId ? DEST_DATA[destId.toLowerCase()] : undefined;
@@ -130,77 +145,25 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
     const purposeLabel = PURPOSES.find(p => p.id === purpose)?.label ?? purpose;
     const groupLabel = GROUP_SIZES.find(g => g.id === group)?.label ?? group;
     const weatherForMonth = data.weather?.[displayMonth] ?? data.weather?.['Jan'] ?? '20–30°C';
+    const budgetLabel = typeof form.budget === 'number' ? form.budget.toLocaleString('en-IN') : 'Not set';
 
     // Live-weather anchor: prefer the map center, else the first activity with coords.
     const weatherCenter = pickWeatherCenter(data);
+
+    useEffect(() => {
+        setActiveShareId(isPublicShare ? shareId ?? null : publicShareId ?? null);
+    }, [isPublicShare, publicShareId, shareId]);
 
     // Register itinerary for AI edits — persist changes to Firestore
     useEffect(() => {
         registerItinerary(data, (newData: any) => {
             setLocalData(newData);
-            // Save updated itinerary to Firestore so changes persist
-            if (user?.uid) {
-                saveItineraryToFirestore(user.uid, {
-                    id: stableTripId,
-                    uuid: stableTripId,
-                    destId: (form.destId as string) || destId || 'unknown',
-                    destName: destInfo?.name || destName || 'Unknown',
-                    form: { ...form, _uuid: stableTripId, uuid: stableTripId },
-                    generatedData: newData,
-                }).catch(console.error);
-            }
-            if (shareId) {
-                updateSharedPlans(shareId, newData.dayPlans).catch(console.error);
-            }
         });
         
         return () => {
             unregisterItinerary();
         };
-    }, [data, registerItinerary, unregisterItinerary, shareId, user, form, destId, destName, destInfo, stableTripId]);
-
-    // Live Sync Listener
-    useEffect(() => {
-        if (shareId) {
-            try {
-                const unsub = listenToItinerary(shareId, (liveData) => {
-                    setCollaborators(liveData.collaborators ?? 1);
-                    if (liveData.customPlans && liveData.customPlans.length > 0) {
-                        setLocalData((prev: any) => ({
-                            ...prev,
-                            dayPlans: liveData.customPlans,
-                        }));
-                    }
-                });
-                return () => { if (unsub) unsub(); };
-            } catch (err) {
-                console.warn('[ResultPage] listenToItinerary failed:', err);
-            }
-        }
-    }, [shareId]);
-
-
-    // ── Auto-save itinerary to Firestore ─────────────────────────
-    // Uses deterministic doc ID in Firestore so re-saves just update, never duplicate.
-    const autoSaveRef = useRef(false);
-    useEffect(() => {
-        if (!user?.uid || autoSaveRef.current) return;
-        autoSaveRef.current = true;
-        saveItineraryToFirestore(user.uid, {
-            id: stableTripId,
-            uuid: stableTripId,
-            destId: (form.destId as string) || destId || 'india',
-            destName: destInfo?.name || destName || 'India Expedition',
-            form: { ...form, _uuid: stableTripId, uuid: stableTripId },
-            generatedData: generatedData || null,
-        }).then(() => {
-            setIsSaved(true);
-            console.log('[Itinerary] Auto-saved to Firestore');
-        }).catch((err) => {
-            console.error('[Itinerary] Auto-save failed:', err);
-            autoSaveRef.current = false;
-        });
-    }, [user?.uid, destId, destName, form, generatedData, stableTripId, destInfo]);
+    }, [data, registerItinerary, unregisterItinerary]);
 
 
     useEffect(() => {
@@ -276,82 +239,89 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
     })), [data]);
 
     const handleShare = useCallback(async () => {
+        if (isPublicShare || readOnly) return;
+        if (!user?.uid) {
+            signInWithGoogle();
+            return;
+        }
+        if (!isSaved) {
+            setShareError('Save this itinerary to your Passport before creating a public link.');
+            return;
+        }
+
         setIsSharing(true);
+        setShareError(null);
+        setClipboardError(null);
         try {
-            const id = genShareId();
-            await saveSharedItinerary(id, { 
-                form, 
-                customPlans: localData?.dayPlans || data.dayPlans, 
-                generatedData, 
-                destName 
-            }, user?.uid, user?.email || undefined);
-            
-            const url = `${window.location.origin}/itinerary?shareId=${id}`;
-            await navigator.clipboard.writeText(url);
-            listenToItinerary(id, (liveData) => setCollaborators(liveData.collaborators ?? 1), () => { });
-            alert(`✅ Share link copied to clipboard!\n\nAnyone with this link can view your live itinerary.`);
+            const id = activeShareId || publicShareId || `share_${genShareId()}`;
+            if (!canonicalOwnerId) {
+                setShareError('This itinerary has no confirmed owner record, so it cannot be shared yet.');
+                setIsSharing(false);
+                return;
+            }
+            const confirmedShareId = await createPublicShare(user.uid, id, {
+                form,
+                generatedData: localData || data,
+                destName,
+            }, canonicalOwnerId);
+            setActiveShareId(confirmedShareId);
+
+            const url = `${window.location.origin}/itinerary/plan/${confirmedShareId}?public=1`;
+            try {
+                await navigator.clipboard.writeText(url);
+            } catch {
+                setClipboardError('The public link was created, but it could not be copied automatically. Copy it from the address bar.');
+            }
+            setCollaborators(1);
         } catch (e) {
-            console.error(e);
-            const url = `${window.location.origin}/itinerary?load=${destId}`;
-            navigator.clipboard.writeText(url);
-            alert('Link copied! (Offline mode — link works only for you)');
+            console.error('[ResultPage] Public share failed:', e);
+            setShareError('The public link could not be created. Your private itinerary is unchanged.');
         }
         setIsSharing(false);
-    }, [form, destName, destId, localData, data, generatedData, user]);
+    }, [activeShareId, canonicalOwnerId, data, destName, form, isPublicShare, isSaved, localData, publicShareId, readOnly, signInWithGoogle, user]);
+
+    const handleUnshare = useCallback(async () => {
+        if (!activeShareId || isSharing || readOnly) return;
+        setIsSharing(true);
+        setShareError(null);
+        try {
+            if (!user?.uid) throw new Error('Sign in is required to unshare an itinerary.');
+            await unsharePublicShare(user.uid, activeShareId, canonicalOwnerId || undefined);
+            setActiveShareId(null);
+        } catch (e) {
+            console.error('[ResultPage] Unshare failed:', e);
+            setShareError('The public link is still active. Try unsharing again.');
+        } finally {
+            setIsSharing(false);
+        }
+    }, [activeShareId, canonicalOwnerId, isSharing, readOnly, user?.uid]);
 
     const handleSendEdit = useCallback(async () => {
-        if (!editInput.trim() || editLoading) return;
+        if (readOnly || !editInput.trim() || editLoading) return;
         const msg = editInput;
         setEditInput('');
         setEditLoading(true);
         await sendEditMessage(msg);
         setEditLoading(false);
-    }, [editInput, editLoading, sendEditMessage]);
+    }, [editInput, editLoading, readOnly, sendEditMessage]);
 
     const handleAcceptAction = useCallback(() => {
-        if (!lastAction) return;
+        if (readOnly || !lastAction) return;
         applyAction({ type: lastAction.type, payload: lastAction.payload });
         clearLastAction();
-    }, [lastAction, applyAction, clearLastAction]);
+    }, [lastAction, applyAction, clearLastAction, readOnly]);
 
     const handleSurpriseMe = useCallback(async () => {
+        if (readOnly) return;
         const dayIndex = Math.floor(Math.random() * (data.dayPlans?.length || 1));
         applyAction({ type: 'surpriseActivity', payload: { dayIndex } });
-    }, [data, applyAction]);
-
-    const handleSaveItinerary = useCallback(async () => {
-        if (saveInFlightRef.current || isSaving || isSaved) return;
-        if (!user?.uid) {
-            signInWithGoogle();
-            return;
-        }
-        saveInFlightRef.current = true;
-        setIsSaving(true);
-        setSaveError(false);
-        try {
-            await saveItineraryToFirestore(user.uid, {
-                id: stableTripId,
-                uuid: stableTripId,
-                destId: (form.destId as string) || destId || 'india',
-                destName: destInfo?.name || destName || 'India Expedition',
-                form: { ...form, _uuid: stableTripId, uuid: stableTripId },
-                generatedData: localData || generatedData || null,
-            });
-            setIsSaved(true);
-        } catch (err) {
-            console.error('[ResultPage] Save failed:', err);
-            setSaveError(true);
-        } finally {
-            setIsSaving(false);
-            saveInFlightRef.current = false;
-        }
-    }, [user, isSaving, isSaved, stableTripId, form, destId, destInfo, destName, localData, generatedData, signInWithGoogle]);
+    }, [data, applyAction, readOnly]);
 
     return (
         <div className="min-h-screen bg-paper-warm text-naviigo-brown pt-16 sm:pt-20 font-sans selection:bg-brand-primary selection:text-white">
             {/* Top bar */}
             <div className="sticky top-16 sm:top-20 z-40 bg-paper-light/95 backdrop-blur-md border-b border-[#EADFD4] px-3 sm:px-6 py-2.5 sm:py-3 flex items-center gap-2 sm:gap-4 transition-colors">
-                <button onClick={onReset} className="w-9 h-9 rounded-full border border-[#EADFD4] flex items-center justify-center hover:bg-[#EFE9E0] transition-colors text-sm text-naviigo-brown">←</button>
+                <button type="button" onClick={onReset} aria-label="Return to itinerary planner" className="w-9 h-9 rounded-full border border-[#EADFD4] flex items-center justify-center hover:bg-[#EFE9E0] transition-colors text-sm text-naviigo-brown">←</button>
                 <div className="flex-1 flex items-center gap-4 overflow-x-auto no-scrollbar text-xs text-naviigo-brown/70">
                     <button onClick={() => router.push(destinationExploreHref(destName))} className="text-left group"><div className="text-[10px] font-bold text-naviigo-brown/50 uppercase tracking-wide">Where</div><div className="font-semibold text-naviigo-brown group-hover:text-brand-primary">{destName} ↗</div></button>
                     <div className="w-px h-6 bg-[#EADFD4]" />
@@ -361,38 +331,46 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                 </div>
                 <div className="flex items-center gap-2">
                     {/* Surprise Me button */}
-                    <button onClick={handleSurpriseMe}
+                    {!readOnly && <button onClick={handleSurpriseMe}
                         className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border border-[#EADFD4] text-naviigo-brown hover:bg-[#EFE9E0] transition-colors">
                         🎲 Surprise Me
-                    </button>
-                    <ShareDropdown onCopyLink={handleShare} destName={destName} isSharing={isSharing} collaborators={collaborators} planData={data} />
-                    <button
-                        onClick={handleSaveItinerary}
-                        disabled={isSaving || isSaved}
-                        className={`flex px-4 py-1.5 rounded-full text-xs font-semibold items-center gap-1.5 transition-all ${
-                            isSaved
-                                ? 'bg-brand-primary/10 text-brand-primary cursor-default border border-brand-primary/20'
-                                : isSaving
-                                ? 'bg-naviigo-brown/70 text-white/80 cursor-wait'
-                                : saveError
-                                ? 'bg-red-600 text-white hover:bg-red-700'
-                                : 'bg-naviigo-brown text-white hover:bg-naviigo-brown/90 shadow-sm'
-                        }`}
-                    >
-                        {isSaving ? (
-                            <>
-                                <span className="w-3 h-3 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-                                <span>SAVING…</span>
-                            </>
-                        ) : isSaved ? (
-                            <span>✓ SAVED</span>
-                        ) : saveError ? (
-                            <span>RETRY SAVE</span>
-                        ) : (
-                            <span>💾 SAVE</span>
-                        )}
-                    </button>
+                    </button>}
+                    <ShareDropdown
+                        onCopyLink={handleShare}
+                        onUnshare={handleUnshare}
+                        destName={destName}
+                        isSharing={isSharing}
+                        collaborators={collaborators}
+                        planData={data}
+                        isShared={!!activeShareId}
+                        shareUrl={activeShareId ? `/itinerary/plan/${activeShareId}?public=1` : null}
+                        canManageShare={!isPublicShare && !readOnly}
+                    />
+                    <span className="px-4 py-1.5 rounded-full text-xs font-semibold border border-[#EADFD4] text-naviigo-brown/70">
+                        {isPublicShare ? 'PUBLIC PREVIEW' : readOnly ? 'CATALOG PREVIEW' : isSaved ? '✓ SAVED' : 'OWNER RECORD'}
+                    </span>
                 </div>
+            </div>
+
+            <div className="max-w-7xl mx-auto px-4 md:px-8 pt-5" aria-live="polite">
+                {isPublicShare ? (
+                    <div className="rounded-xl border border-brand-primary/25 bg-brand-primary/5 px-4 py-3 text-sm text-naviigo-brown/80">
+                        <strong className="font-mono text-[11px] uppercase tracking-wider text-brand-primary">Public share · read only</strong>
+                        <span className="ml-2">This is an explicit shared projection. Private preferences and owner controls are not included.</span>
+                    </div>
+                ) : persistenceStatus === 'confirmed-saved' || isSaved ? (
+                    <div className="rounded-xl border border-brand-primary/25 bg-brand-primary/5 px-4 py-3 text-sm text-naviigo-brown/80">
+                        <strong className="font-mono text-[11px] uppercase tracking-wider text-brand-primary">Saved in Passport</strong>
+                        <span className="ml-2">This owner itinerary is available from your history and Passport.</span>
+                    </div>
+                ) : (
+                    <div className="rounded-xl border border-[#EADFD4] bg-paper-light px-4 py-3 text-sm text-naviigo-brown/75">
+                        <strong className="font-mono text-[11px] uppercase tracking-wider text-naviigo-brown">Preview · not confirmed saved</strong>
+                        <span className="ml-2">This preview is not a generated owner record. Start a new journey to create a durable itinerary.</span>
+                    </div>
+                )}
+                {shareError && <p className="mt-2 text-xs text-red-600" role="alert">{shareError}</p>}
+                {clipboardError && <p className="mt-2 text-xs text-naviigo-brown/70" role="status">{clipboardError}</p>}
             </div>
 
             <div className="max-w-7xl mx-auto px-4 md:px-8 py-8 space-y-12">
@@ -452,51 +430,23 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                             {/* Actions */}
                             <div className="flex flex-wrap items-center gap-4">
                                 <button
-                                    onClick={() => onDayView(1, data)}
+                                    onClick={() => onDayView(itineraryDayNumber(data.dayPlans?.[0] || {}, 0), data)}
                                     className="px-8 py-4 bg-brand-primary hover:bg-naviigo-brown text-white font-mono text-xs font-bold uppercase tracking-widest rounded-full shadow-lg shadow-brand-primary/20 transition-all active:scale-95 flex items-center gap-2"
                                 >
                                     <span>OPEN DAY-BY-DAY ROADBOOK</span>
                                     <span>→</span>
                                 </button>
-                                {!user ? (
-                                    <button
-                                        onClick={signInWithGoogle}
-                                        className="px-6 py-4 border-2 border-naviigo-brown/20 hover:border-brand-primary text-naviigo-brown hover:text-brand-primary font-mono text-xs font-bold uppercase tracking-wider rounded-full transition-colors"
-                                    >
-                                        Save to Passport
-                                    </button>
-                                ) : (
-                                    <button
-                                        onClick={handleSaveItinerary}
-                                        disabled={isSaving || isSaved}
-                                        className={`px-6 py-4 border-2 font-mono text-xs font-bold uppercase tracking-wider rounded-full transition-all flex items-center gap-2 ${
-                                            isSaved
-                                                ? 'border-brand-primary text-brand-primary bg-brand-primary/10 cursor-default'
-                                                : isSaving
-                                                ? 'border-brand-primary/40 text-naviigo-brown/60 cursor-wait'
-                                                : saveError
-                                                ? 'border-red-500 text-red-600 hover:bg-red-50'
-                                                : 'border-naviigo-brown/20 hover:border-brand-primary text-naviigo-brown hover:text-brand-primary'
-                                        }`}
-                                    >
-                                        {isSaving ? (
-                                            <>
-                                                <span className="w-3 h-3 border-2 border-brand-primary border-t-transparent rounded-full animate-spin" />
-                                                <span>SAVING ROADBOOK…</span>
-                                            </>
-                                        ) : isSaved ? (
-                                            <span>✓ SAVED IN PASSPORT</span>
-                                        ) : saveError ? (
-                                            <span>RETRY PASSPORT SAVE</span>
-                                        ) : (
-                                            <span>SAVE TO PASSPORT</span>
-                                        )}
-                                    </button>
+                                {!readOnly && isSaved && (
+                                    <span className="px-6 py-4 border-2 border-brand-primary text-brand-primary bg-brand-primary/10 font-mono text-xs font-bold uppercase tracking-wider rounded-full">
+                                        ✓ SAVED IN PASSPORT
+                                    </span>
                                 )}
                                 {/* Delete button — inline with other actions */}
-                                {user && stableTripId && (
+                                {user && stableTripId && isSaved && !isPublicShare && !readOnly && (
                                     <button
+                                        type="button"
                                         onClick={() => setShowDeleteConfirm(true)}
+                                        aria-label="Delete this saved itinerary"
                                         title="Delete this itinerary"
                                         className="w-11 h-11 rounded-full border-2 border-red-200 bg-red-50 flex items-center justify-center text-red-500 hover:bg-red-500 hover:text-white hover:border-red-500 transition-all shrink-0"
                                     >
@@ -630,7 +580,8 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                             </h2>
                         </div>
                         <button
-                            onClick={() => onDayView(1, data)}
+                            type="button"
+                            onClick={() => onDayView(itineraryDayNumber(data.dayPlans?.[0] || {}, 0), data)}
                             className="inline-flex items-center gap-2 font-mono text-xs font-bold uppercase tracking-wider text-brand-primary hover:text-naviigo-brown transition-colors"
                         >
                             Open Day-by-Day View →
@@ -642,7 +593,7 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                         <div className="absolute left-[19px] sm:left-[23px] top-6 bottom-6 w-[2px] bg-brand-primary/20 pointer-events-none" />
 
                         {data.dayPlans?.map((dp: any, idx: number) => {
-                            const dayNum = dp.day || idx + 1;
+                            const dayNum = itineraryDayNumber(dp, idx);
                             const formattedDay = String(dayNum).padStart(2, '0');
                             const actCount = dp.activities?.length || 0;
                             return (
@@ -722,7 +673,7 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                                     <span>TRIP BUDGET PROGRESS</span>
                                 </h3>
                                 <span className="font-mono text-xs font-bold text-naviigo-brown">
-                                    Budget: ₹{(form.budget as number).toLocaleString('en-IN')}
+                                     Budget: {typeof form.budget === 'number' ? `₹${budgetLabel}` : budgetLabel}
                                 </span>
                             </div>
                             
@@ -732,7 +683,7 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                                         Allocated Budget
                                     </span>
                                     <span className="font-display font-bold text-base sm:text-lg text-naviigo-brown">
-                                        ₹{(form.budget as number).toLocaleString('en-IN')}
+                                         {typeof form.budget === 'number' ? `₹${budgetLabel}` : budgetLabel}
                                     </span>
                                 </div>
                                 {data.avgCost && (
@@ -763,7 +714,7 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                         </div>
 
                         {/* Per-trip expense tracker — logs actual spend vs budget */}
-                        <ExpenseTracker shareId={shareId} budget={form.budget as number} />
+                        {!readOnly && <ExpenseTracker shareId={activeShareId} budget={typeof form.budget === 'number' ? form.budget : 0} />}
 
                         {/* Smart Packing List */}
                         {packingList.length > 0 && (
@@ -1283,13 +1234,21 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
                     </p>
                     <div className="flex flex-wrap items-center justify-center gap-4">
                         <button
-                            onClick={() => onDayView(1, data)}
+                            onClick={() => onDayView(itineraryDayNumber(data.dayPlans?.[0] || {}, 0), data)}
                             className="px-8 py-4 bg-brand-primary hover:bg-naviigo-brown text-white font-mono text-xs font-bold uppercase tracking-widest rounded-full shadow-lg shadow-brand-primary/20 transition-all active:scale-95 flex items-center gap-2"
                         >
                             <span>EXPLORE ROADBOOK</span>
                             <span>→</span>
                         </button>
                         <button
+                            type="button"
+                            onClick={() => router.push('/itinerary?new=true')}
+                            className="px-8 py-4 border-2 border-brand-primary/30 hover:border-brand-primary text-brand-primary hover:text-naviigo-brown font-mono text-xs font-bold uppercase tracking-widest rounded-full transition-colors"
+                        >
+                            Plan another trip
+                        </button>
+                        <button
+                            type="button"
                             onClick={() => router.push('/passport')}
                             className="px-8 py-4 border-2 border-naviigo-brown/20 hover:border-brand-primary text-naviigo-brown hover:text-brand-primary font-mono text-xs font-bold uppercase tracking-widest rounded-full transition-colors"
                         >
@@ -1302,7 +1261,7 @@ export default function ResultPage({ form, generatedData, shareId, onDayView, on
 
             {/* AI Edit Panel (Slide-in) */}
             <AnimatePresence>
-                {isEditPanelOpen && (
+                {!readOnly && isEditPanelOpen && (
                     <>
                         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                             className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50"
