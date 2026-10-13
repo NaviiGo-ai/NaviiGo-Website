@@ -38,7 +38,6 @@ CATEGORY_MAPPINGS = {
         "accommodation.hostel",
         "accommodation.guest_house",
         "accommodation.motel",
-        "accommodation.resort",
     ],
 }
 

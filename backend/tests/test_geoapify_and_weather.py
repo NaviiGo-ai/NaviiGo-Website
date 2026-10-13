@@ -10,6 +10,7 @@ from services.geoapify_service import (
     build_destination_candidate_pool,
     calculate_route,
     CATEGORY_MAPPINGS,
+    fetch_places_candidates,
 )
 from services.weather_engine import get_weather, _WEATHER_CACHE
 from services.transport_engine import get_transport
@@ -98,6 +99,30 @@ async def test_geocode_destination_osm_fallback():
         assert res["lat"] == 26.9124
         assert res["lng"] == 75.7873
         assert res["source"] == "osm_nominatim"
+
+
+@pytest.mark.asyncio
+async def test_hotel_candidates_use_supported_geoapify_categories():
+    """A resort category rejects the whole hotel request instead of one result."""
+    feature = {
+        "properties": {"name": "Provider hotel", "lat": 26.9124, "lon": 75.7873},
+    }
+
+    async def provider_get(url, params=None):
+        response = MagicMock()
+        categories = params["categories"].split(",")
+        # Geoapify's actual 400 contract, observed during the release probe.
+        response.status_code = 400 if "accommodation.resort" in categories else 200
+        response.text = "Invalid parameters. Category accommodation.resort is not supported."
+        response.json.return_value = {"features": [feature]}
+        assert "accommodation.hotel" in categories
+        assert "accommodation.guest_house" in categories
+        return response
+
+    with patch("services.geoapify_service.is_geoapify_configured", return_value=True), \
+         patch("httpx.AsyncClient.get", side_effect=provider_get):
+        result = await fetch_places_candidates(26.9124, 75.7873, CATEGORY_MAPPINGS["hotels"])
+    assert result == [feature]
 
 
 @pytest.mark.asyncio
