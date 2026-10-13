@@ -1078,27 +1078,16 @@ async def replan_itinerary(payload: ReplanRequest, request: Request, uid: Curren
     if payload.reason != "I_AM_TIRED":
         raise _phase6_error("REPLAN_VALIDATION_ERROR", 422, "Unsupported replan reason.")
 
-    dest_name = str(trip.get("destName", ""))
-    try:
-        gemini_data = await get_destination_data(
-            dest_name=dest_name,
-            purpose="cultural",
-            budget=(trip.get("form") or {}).get("budget", 15000),
-            days=len(trip.get("dayPlans") or []) or 1,
-        )
-    except Exception as provider_error:
-        print(f"[Replan] Destination provider error: {provider_error}")
-        raise _phase6_error("REPLAN_PROVIDER_UNAVAILABLE", 503, "Replanning data is temporarily unavailable.")
-    if not gemini_data:
-        raise _phase6_error("REPLAN_PROVIDER_UNAVAILABLE", 503, "Replanning data is temporarily unavailable.")
-
     current_index = _day_index(trip.get("dayPlans") or [], day_number)
     if current_index is None:
         raise _phase6_error("REPLAN_VALIDATION_ERROR", 422, "currentDayNumber is not in the itinerary.")
     try:
         proposal = generate_replan_proposal(
             trip=trip,
-            dest_data=gemini_data,
+            # The supported tired replan only simplifies existing owner
+            # activities. The engine does not consume destination candidates,
+            # so provider availability must not block this operation.
+            dest_data={},
             current_time=payload.currentTime,
             reason=payload.reason,
             completed_activity_ids=payload.completedActivityIds,

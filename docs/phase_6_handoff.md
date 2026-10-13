@@ -21,7 +21,7 @@ Old name-only/ambiguous activity identities or missing saved revisions cannot sa
 
 ## Verification
 
-- Backend: full `pytest` suite, **123 passed**; two dependency deprecation warnings, no failing tests.
+- Backend: full `pytest` suite, **124 passed**; two dependency deprecation warnings, no failing tests.
 - Website contracts: `npm test`, **38 passed**, exercising the actual TypeScript helpers/proxies and account-switch, receipts, retries, sharing, history, terminal and failure boundaries.
 - Firestore: `npm run test:rules`, **11 passed** with the official emulator and the actual checked-in rules. Fixtures use synthetic accounts and a loopback `demo-naviigo-phase6` project. Tests load the same generic database rules into emulator `(default)`; deployed named-database configuration is not a live verification.
 - TypeScript, lint with zero warnings and production build passed. Sentry upload credentials were cleared for the local build; no deployment occurred.
@@ -29,6 +29,13 @@ Old name-only/ambiguous activity identities or missing saved revisions cannot sa
 - Next.js is patched to the 16.3.8 line. Compatible dependency updates and a patched `@grpc/grpc-js` override avoid a forced Firebase major downgrade. The final production dependency audit (`npm audit --omit=dev`) reports zero known vulnerabilities; dev-tool advisories are separate, and this is not a security certification.
 
 ## Rollout checks still required
+
+A live proposal smoke test exposed an unnecessary destination-provider dependency
+in the tired replan route. Independent source review confirmed that the supported
+engine never consumes that data. The route now builds from the authoritative
+owner itinerary directly; a regression makes any unused provider call fail and
+verifies proposal creation plus protected-booking acceptance. Generation and
+discovery provider integration are outside this narrow follow-up.
 
 Two independent release reviewers checked the Website/backend and mobile changes. Their concrete findings were fixed with regressions: the Website generation callback now extracts the confirmed owner's nested generated payload; protected must-do stops remain acceptable when no safe later day exists; acceptance replay binds the submitted base revision. Mobile Passport streams and memory dialogs reject cross-account retained data, progress reconciles only by surviving activity IDs, and historical receipt recovery validates its base revision. A separate read-only cross-review found no blocker in the Website callback fix. These bounded source reviews and mocked regression tests do not replace deployed/device validation.
 

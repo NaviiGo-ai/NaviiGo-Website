@@ -490,6 +490,48 @@ async def test_replan_and_accept_return_server_owned_receipts(monkeypatch):
     assert later_replay["itinerary"]["revisionId"] == "rev_2"
 
 
+@pytest.mark.asyncio
+async def test_tired_replan_and_accept_do_not_depend_on_destination_provider(monkeypatch):
+    db = FakeFirestore()
+    uid = "verified-user"
+    itinerary_id = _uuid()
+    operation_id = _uuid()
+    db.documents[("users", uid, "itineraries", itinerary_id)] = _owner_data(uid, itinerary_id)
+    monkeypatch.setattr(itinerary, "get_db", lambda: db)
+
+    async def unavailable_destination(**_kwargs):
+        pytest.fail("The tired replan must not request unused destination data")
+
+    monkeypatch.setattr(itinerary, "get_destination_data", unavailable_destination)
+    proposed = await itinerary.replan_itinerary(
+        itinerary.ReplanRequest(
+            itineraryId=itinerary_id,
+            operationId=operation_id,
+            baseRevisionId="rev_0",
+            currentDayNumber=1,
+            currentTime="22:00",
+            reason="I_AM_TIRED",
+        ),
+        _request(),
+        uid,
+    )
+    assert proposed["proposal"]["ownerUid"] == uid
+    assert proposed["proposal"]["proposalId"] == operation_id
+    accepted = await itinerary.accept_replan(
+        itinerary.ReplanAcceptRequest(
+            itineraryId=itinerary_id,
+            proposalId=operation_id,
+            operationId=_uuid(),
+            baseRevisionId="rev_0",
+        ),
+        _request(),
+        uid,
+    )
+    assert accepted["receipt"]["revisionId"] == "rev_1"
+    assert [activity["activityId"] for activity in accepted["itinerary"]["dayPlans"][0]["activities"]] == ["activity-b"]
+    assert accepted["itinerary"]["dayPlans"][0]["activities"][0]["isBooked"] is True
+
+
 def test_generation_boundary_replaces_duplicate_activity_id_occurrences():
     normalized = itinerary._ensure_activity_identity({
         "dayPlans": [{
