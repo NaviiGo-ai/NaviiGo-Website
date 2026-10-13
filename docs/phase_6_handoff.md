@@ -13,7 +13,7 @@ Branch: `codex/phase-6-contract-alignment`. Canonical interface: [contract packe
 
 ## Compatibility and authority
 
-Private authority remains `users/{uid}/itineraries/{id}`. Public projections are `itineraries/{shareId}`. Firestore proposal documents are owner-readable and backend-writable; client writes are denied by the revised rules. This protection requires deploying the checked-in rules in the later rollout.
+Private authority remains `users/{uid}/itineraries/{id}`. Public projections are `itineraries/{shareId}`. Firestore proposal documents are owner-readable and backend-writable; client writes are denied by the revised rules. The checked-in rules were deployed to `naviigo-firebase/naviigo-db` on 14 October 2026 and read back through the Rules API; their content matches the reviewed file. Release ruleset: `222e174a-a0fe-42ac-8950-c3ccb48b9095`. The previous ruleset `5e68b0b1-e71d-470a-b1c8-31420c1c5a41` and source are preserved locally for rollback.
 
 Old ownerless, private, malformed or markerless public-root records fail closed. An owner must explicitly publish a fresh sanitized share; this change does not bulk-migrate, delete or expose legacy documents. Public snapshots are refreshed only by an explicit owner share action. Guest publication and unscoped collaborative editing are unsupported.
 
@@ -21,8 +21,8 @@ Old name-only/ambiguous activity identities or missing saved revisions cannot sa
 
 ## Verification
 
-- Backend: full `pytest` suite, **118 passed**; three dependency/runtime warnings, no failing tests.
-- Website contracts: `npm test`, **35 passed**, exercising the actual TypeScript helpers/proxies and account-switch, receipts, retries, sharing, history, terminal and failure boundaries.
+- Backend: full `pytest` suite, **123 passed**; two dependency deprecation warnings, no failing tests.
+- Website contracts: `npm test`, **38 passed**, exercising the actual TypeScript helpers/proxies and account-switch, receipts, retries, sharing, history, terminal and failure boundaries.
 - Firestore: `npm run test:rules`, **11 passed** with the official emulator and the actual checked-in rules. Fixtures use synthetic accounts and a loopback `demo-naviigo-phase6` project. Tests load the same generic database rules into emulator `(default)`; deployed named-database configuration is not a live verification.
 - TypeScript, lint with zero warnings and production build passed. Sentry upload credentials were cleared for the local build; no deployment occurred.
 - `git diff --check` passed.
@@ -30,8 +30,8 @@ Old name-only/ambiguous activity identities or missing saved revisions cannot sa
 
 ## Rollout checks still required
 
-Review the draft PR and companion mobile handoff. A fresh independent post-fix agent review was not launched during the Codex takeover; verification consists of direct integrated source/contract review and the listed regression gates.
+Two independent release reviewers checked the Website/backend and mobile changes. Their concrete findings were fixed with regressions: the Website generation callback now extracts the confirmed owner's nested generated payload; protected must-do stops remain acceptable when no safe later day exists; acceptance replay binds the submitted base revision. Mobile Passport streams and memory dialogs reject cross-account retained data, progress reconciles only by surviving activity IDs, and historical receipt recovery validates its base revision. A separate read-only cross-review found no blocker in the Website callback fix. These bounded source reviews and mocked regression tests do not replace deployed/device validation.
 
 Before production release, validate native Firebase account switching and token claims, deployed backend bearer attribution and transaction permissions, named `naviigo-db` configuration, provider failures/timezones, network-loss recovery and cross-platform acceptance/history on a real device and browser. Review and deploy backend, client and rules as a coordinated release. Changing rules before compatibility review can disable old public links.
 
-No production rules/site/backend deployment, live-user data queries, bulk migration, main merge, forced push, credential rotation, billing change or later product phase was performed.
+Production Firestore rules deployment is verified as described above. Website/backend merge and deployment status are tracked separately in the release report. No live-user private-data queries, bulk migration, forced push, credential revocation/rotation, billing change or later product phase was performed. The existing Windows Firebase sign-in was refreshed through its normal OAuth flow.

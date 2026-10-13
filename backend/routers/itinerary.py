@@ -1032,8 +1032,11 @@ def _transactional_owner_write(
                 isinstance(previous_receipt, dict)
                 and previous_receipt.get("itineraryId") == itinerary_id
                 and previous_receipt.get("proposalId") == proposal_id
+                and previous_receipt.get("previousRevisionId") == expected_proposal.get("baseRevisionId")
             ):
                 return "existing", latest_owner
+            if previous_receipt is not None:
+                raise _phase6_error("IDEMPOTENCY_CONFLICT", 409, "operationId was already used for a different acceptance.")
             raise _phase6_error("STALE_PROPOSAL", 409, "The itinerary or proposal changed before acceptance.")
         transaction.set(itinerary_ref, updated_owner)
 
@@ -1171,7 +1174,11 @@ async def accept_replan(payload: ReplanAcceptRequest, request: Request, uid: Cur
     acceptance_receipts = owner_data.get("acceptanceReceipts") or {}
     previous_receipt = acceptance_receipts.get(operation_id)
     if previous_receipt is not None:
-        if previous_receipt.get("proposalId") != payload.proposalId or previous_receipt.get("itineraryId") != payload.itineraryId:
+        if (
+            previous_receipt.get("proposalId") != payload.proposalId
+            or previous_receipt.get("itineraryId") != payload.itineraryId
+            or previous_receipt.get("previousRevisionId") != payload.baseRevisionId
+        ):
             raise _phase6_error("IDEMPOTENCY_CONFLICT", 409, "operationId was already used for a different acceptance.")
         return _acceptance_response(owner_data, uid, payload.itineraryId, previous_receipt)
 

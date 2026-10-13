@@ -494,6 +494,7 @@ def generate_replan_proposal(
     actions: List[ReplanAction] = []
     preserved_bookings: List[str] = []
     updated_timeline: List[Dict[str, Any]] = []
+    warnings: List[str] = []
     activities_removed = 0
     activities_moved = 0
     has_active_keep = False
@@ -552,13 +553,18 @@ def generate_replan_proposal(
                     activities_moved += 1
                     moved = True
             if not moved:
+                # Phase 6 has no durable deferred-activity store. Keep the
+                # protected occurrence instead of proposing an unacceptably
+                # destructive SAVE_FOR_LATER action.
                 actions.append(
                     ReplanAction(
-                        actionType="SAVE_FOR_LATER",
+                        actionType="KEEP",
                         activityId=activity_id,
-                        rationale=f"Saved priority stop for later due to lack of time: {title}.",
+                        rationale=f"Kept priority stop {title}; no later itinerary day can safely fit it.",
                     )
                 )
+                warnings.append(f"{title} remains on Day {current_day_number_value}; no later day can safely fit this priority stop.")
+                has_active_keep = True
         else:
             actions.append(
                 ReplanAction(
@@ -605,6 +611,7 @@ def generate_replan_proposal(
         actions=actions,
         updatedTimeline=updated_timeline,
         preservedBookings=preserved_bookings,
+        warnings=warnings,
         impact=impact,
         generationMetadata={"model": "v1_tired", "destinationTimezone": destinationTimezone},
     )

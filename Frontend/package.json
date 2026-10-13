@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.0.0",
   "scripts": {
-    "test": "node --test tests/firestore.phase6.test.cjs tests/itinerary-proxy.phase6.test.cjs tests/replan.phase6.test.cjs",
+    "test": "node --test tests/firestore.phase6.test.cjs tests/itinerary-proxy.phase6.test.cjs tests/replan.phase6.test.cjs tests/generation-callback.phase6.test.cjs",
     "test:rules": "firebase emulators:exec --only firestore --project demo-naviigo-phase6 --config firebase.phase6-test.json \"node --test tests/firestore.rules.test.cjs\"",
     "dev": "next dev",
     "build": "node --max-old-space-size=4096 ./node_modules/next/dist/bin/next build",

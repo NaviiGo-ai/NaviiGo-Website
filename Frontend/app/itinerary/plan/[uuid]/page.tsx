@@ -4,7 +4,9 @@ import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import LoadingScreen from '@/components/features/itinerary/LoadingScreen';
 import ResultPage from '@/components/features/itinerary/ResultPage';
-import { getItineraryByUUID, getOwnerItinerary } from '@/lib/firestore';
+import { getItineraryByUUID, getOwnerItinerary, type OwnerItinerary } from '@/lib/firestore';
+import { generationResultForOwner } from '@/lib/generationResult';
+import { auth } from '@/lib/firebase';
 import { useAuth } from '@/lib/AuthContext';
 
 
@@ -226,8 +228,17 @@ function ItineraryUUIDContent() {
      * LoadingScreen calls this only after validating the durable generation
      * receipt against the initiating UID and operation ID.
      */
-    const handleGenerationDone = useCallback((data: any) => {
-        if (data) {
+    const handleGenerationDone = useCallback((owner: OwnerItinerary) => {
+        if (user?.uid && auth?.currentUser?.uid === user.uid) {
+            let data: Record<string, unknown>;
+            try {
+                data = generationResultForOwner(owner, user.uid, uuid);
+            } catch {
+                setPersistenceStatus('unknown');
+                setGeneratedData(null);
+                setPhase('error');
+                return;
+            }
             setGeneratedData(data);
             setPersistenceStatus('confirmed-saved');
             setOwnerItineraryId(uuid);

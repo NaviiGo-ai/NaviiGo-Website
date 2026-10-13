@@ -226,7 +226,7 @@ def test_completed_and_skipped_overlap_is_rejected():
         _proposal(trip, completed_activity_ids=["a"], skipped_activity_ids=["a"])
 
 
-def test_full_target_day_saves_protected_stop_for_later():
+def test_full_target_day_keeps_protected_stop_with_warning():
     trip = _trip(
         [
             {"dayNumber": 1, "activities": [_activity("must", "Must Do")]},
@@ -244,8 +244,9 @@ def test_full_target_day_saves_protected_stop_for_later():
 
     proposal = _proposal(trip)
 
-    assert next(action for action in proposal.actions if action.activityId == "must").actionType == "SAVE_FOR_LATER"
-    assert not any(action.actionType == "MOVE_TO_LATER_DAY" for action in proposal.actions)
+    assert next(action for action in proposal.actions if action.activityId == "must").actionType == "KEEP"
+    assert not any(action.actionType in {"MOVE_TO_LATER_DAY", "SAVE_FOR_LATER", "END_DAY_EARLY"} for action in proposal.actions)
+    assert proposal.warnings == ["Must Do remains on Day 1; no later day can safely fit this priority stop."]
 
 
 def test_replan_action_rejects_unsupported_or_unbounded_shapes():

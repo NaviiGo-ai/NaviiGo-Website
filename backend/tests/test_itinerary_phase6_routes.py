@@ -541,3 +541,84 @@ async def test_terminal_journeys_reject_new_replan_and_acceptance(monkeypatch, s
         assert error.value.code == "TRIP_TERMINAL"
         assert error.value.status_code == 409
     assert db.documents == before
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("full_later_day", [False, True])
+async def test_priority_stop_without_safe_later_day_can_be_reviewed_and_accepted(monkeypatch, full_later_day):
+    db = FakeFirestore()
+    uid, itinerary_id = "owner", _uuid()
+    owner = _owner_data(uid, itinerary_id)
+    priority = {"activityId": "priority", "name": "Priority Museum", "durationMins": 60, "isMustDo": True, "details": {"note": "preserve"}}
+    owner["form"]["mustDo"] = [{"activityId": "priority", "name": "Priority Museum"}]
+    owner["generatedData"]["dayPlans"] = [{"dayNumber": 9, "activities": [priority, {"activityId": "optional", "name": "Optional Park"}]}]
+    if full_later_day:
+        owner["generatedData"]["dayPlans"].append({"dayNumber": 12, "activities": [{"activityId": "later", "id": "later", "name": "Full Day", "durationMins": 480}]})
+    db.documents[("users", uid, "itineraries", itinerary_id)] = owner
+    monkeypatch.setattr(itinerary, "get_db", lambda: db)
+    monkeypatch.setattr(itinerary, "get_destination_data", lambda **kwargs: _empty_async_result({"source": "fixture"}))
+
+    requested = await itinerary.replan_itinerary(itinerary.ReplanRequest(
+        itineraryId=itinerary_id, operationId=_uuid(), baseRevisionId="rev_0", currentDayNumber=9,
+        currentTime="15:00", destinationTimezone="Asia/Kolkata", reason="I_AM_TIRED",
+    ), _request(), uid)
+    proposal = requested["proposal"]
+    assert next(action for action in proposal["actions"] if action["activityId"] == "priority")["actionType"] == "KEEP"
+    assert proposal["warnings"]
+    assert not any(action["actionType"] in {"SAVE_FOR_LATER", "END_DAY_EARLY"} for action in proposal["actions"])
+
+    accepted = await itinerary.accept_replan(itinerary.ReplanAcceptRequest(
+        itineraryId=itinerary_id, proposalId=proposal["proposalId"], baseRevisionId="rev_0", operationId=_uuid(),
+    ), _request(), uid)
+    saved_priority = accepted["itinerary"]["dayPlans"][0]["activities"]
+    assert saved_priority == [{**priority, "id": "priority"}]
+    assert accepted["receipt"]["revisionId"] == "rev_1"
+    if full_later_day:
+        assert accepted["itinerary"]["dayPlans"][1] == owner["generatedData"]["dayPlans"][1]
+
+
+@pytest.mark.asyncio
+async def test_acceptance_operation_replay_rejects_changed_base_revision(monkeypatch):
+    db = FakeFirestore()
+    uid, itinerary_id, proposal_id, operation_id = "owner", _uuid(), _uuid(), _uuid()
+    owner = _owner_data(uid, itinerary_id, revision="rev_2")
+    owner["acceptanceReceipts"] = {operation_id: {
+        "status": "accepted", "ownerUid": uid, "itineraryId": itinerary_id,
+        "proposalId": proposal_id, "operationId": operation_id,
+        "previousRevisionId": "rev_0", "revisionId": "rev_1", "idempotent": False,
+    }}
+    db.documents[("users", uid, "itineraries", itinerary_id)] = owner
+    monkeypatch.setattr(itinerary, "get_db", lambda: db)
+    before = deepcopy(db.documents)
+    with pytest.raises(AppError) as error:
+        await itinerary.accept_replan(itinerary.ReplanAcceptRequest(
+            itineraryId=itinerary_id, proposalId=proposal_id, operationId=operation_id, baseRevisionId="rev_other",
+        ), _request(), uid)
+    assert error.value.code == "IDEMPOTENCY_CONFLICT"
+    assert error.value.status_code == 409
+    assert db.documents == before
+
+
+@pytest.mark.parametrize("receipt_base", ["rev_0", "rev_other"])
+def test_competing_acceptance_replay_checks_the_original_base(monkeypatch, receipt_base):
+    db = FakeFirestore()
+    uid, itinerary_id, proposal_id, operation_id = "owner", _uuid(), _uuid(), _uuid()
+    expected_owner = _owner_data(uid, itinerary_id)
+    expected_proposal = {"proposalId": proposal_id, "itineraryId": itinerary_id, "baseRevisionId": "rev_0"}
+    latest_owner = _owner_data(uid, itinerary_id, revision="rev_1")
+    latest_owner["acceptanceReceipts"] = {operation_id: {
+        "itineraryId": itinerary_id, "proposalId": proposal_id, "previousRevisionId": receipt_base,
+    }}
+    owner_ref = db.collection("users").document(uid).collection("itineraries").document(itinerary_id)
+    proposal_ref = owner_ref.collection("proposals").document(proposal_id)
+    db.documents[owner_ref.path] = latest_owner
+    db.documents[proposal_ref.path] = expected_proposal
+    before = deepcopy(db.documents)
+    args = (db, owner_ref, proposal_ref, expected_owner, expected_proposal, expected_owner, operation_id, itinerary_id, proposal_id)
+    if receipt_base == "rev_0":
+        assert itinerary._transactional_owner_write(*args) == ("existing", latest_owner)
+    else:
+        with pytest.raises(AppError) as error:
+            itinerary._transactional_owner_write(*args)
+        assert error.value.code == "IDEMPOTENCY_CONFLICT"
+    assert db.documents == before

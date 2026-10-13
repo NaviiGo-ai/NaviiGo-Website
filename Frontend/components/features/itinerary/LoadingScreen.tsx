@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { DEST_DATA } from '@/app/itinerary/data';
 import { getBrowsingSignals } from '@/lib/browsingSignals';
 import { useAuth } from '@/lib/AuthContext';
-import { getOwnerItinerary, confirmsGenerationReceipt } from '@/lib/firestore';
+import { getOwnerItinerary, confirmsGenerationReceipt, type OwnerItinerary } from '@/lib/firestore';
 import type { ItineraryGenerateResponse } from '@/types/api';
 
 const ItineraryMap = dynamic(() => import('@/components/shared/ItineraryMap'), { ssr: false });
@@ -45,7 +45,7 @@ const REAL_STAGES = [
 interface LoadingScreenProps {
   form: Record<string, unknown>;
   uuid?: string;
-  onDone: (data: any) => void;
+  onDone: (data: OwnerItinerary) => void;
 }
 
 type PersistenceState = 'pending' | 'saved' | 'unsaved' | 'ambiguous';
@@ -97,7 +97,7 @@ export default function LoadingScreen({ form, uuid, onDone }: LoadingScreenProps
   const [activeStageIndex, setActiveStageIndex] = useState(0);
   const [elapsed, setElapsed] = useState(0);
   const [revealedPinsCount, setRevealedPinsCount] = useState(0);
-  const [apiData, setApiData] = useState<any>(null);
+  const [apiData, setApiData] = useState<OwnerItinerary | null>(null);
   const [apiDone, setApiDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [persistenceState, setPersistenceState] = useState<PersistenceState>('pending');
