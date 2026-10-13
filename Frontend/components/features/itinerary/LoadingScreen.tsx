@@ -1,12 +1,14 @@
 'use client';
 
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DEST_DATA } from '@/app/itinerary/data';
 import { getBrowsingSignals } from '@/lib/browsingSignals';
 import { useAuth } from '@/lib/AuthContext';
+import { getOwnerItinerary, confirmsGenerationReceipt } from '@/lib/firestore';
+import type { ItineraryGenerateResponse } from '@/types/api';
 
 const ItineraryMap = dynamic(() => import('@/components/shared/ItineraryMap'), { ssr: false });
 
@@ -46,6 +48,45 @@ interface LoadingScreenProps {
   onDone: (data: any) => void;
 }
 
+type PersistenceState = 'pending' | 'saved' | 'unsaved' | 'ambiguous';
+
+const UUID_V4_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+function hasDurableReceipt(
+  result: ItineraryGenerateResponse,
+  operationId: string,
+  uid: string,
+): result is ItineraryGenerateResponse & {
+  itinerary: Record<string, unknown>;
+  persistence: { status: 'saved'; durable: true; replayed: boolean };
+  receipt: {
+    operationId: string;
+    itineraryId: string;
+    ownerUid: string;
+    revisionId: string;
+    status: 'committed';
+  };
+} {
+  const receipt = result.receipt;
+  const persistence = result.persistence;
+  return Boolean(
+    result.success &&
+      result.itinerary &&
+      result.itinerary.id === operationId &&
+      persistence?.status === 'saved' &&
+      persistence.durable === true &&
+      typeof persistence.replayed === 'boolean' &&
+      receipt &&
+      receipt.operationId === operationId &&
+      receipt.itineraryId === operationId &&
+      receipt.ownerUid === uid &&
+      receipt.revisionId &&
+      receipt.status === 'committed' &&
+      (!result.userId || result.userId === uid) &&
+      (!result.itinerary.userId || result.itinerary.userId === uid),
+  );
+}
+
 export default function LoadingScreen({ form, uuid, onDone }: LoadingScreenProps) {
   const { user, loading: authLoading, signInWithGoogle } = useAuth();
   const destId = (form.destination as string) || '';
@@ -59,9 +100,21 @@ export default function LoadingScreen({ form, uuid, onDone }: LoadingScreenProps
   const [apiData, setApiData] = useState<any>(null);
   const [apiDone, setApiDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [persistenceState, setPersistenceState] = useState<PersistenceState>('pending');
+  const [retryNonce, setRetryNonce] = useState(0);
   const [dynamicCenter, setDynamicCenter] = useState<{ lat: number; lng: number } | null>(null);
   const [dynamicHighlights, setDynamicHighlights] = useState<any[]>([]);
   const fetchedRef = useRef(false);
+  const requestNonceRef = useRef(0);
+  const activeAbortRef = useRef<AbortController | null>(null);
+  const observedAccountRef = useRef<string | null | undefined>(undefined);
+  const latestAccountUidRef = useRef<string | null>(null);
+
+  // Update before passive effects run so a response that resolves during an
+  // account transition cannot commit under the previous UID.
+  useLayoutEffect(() => {
+    latestAccountUidRef.current = user?.uid ?? null;
+  }, [authLoading, user?.uid]);
 
   const activeMapCenter = hardcodedData?.mapCenter ?? dynamicCenter ?? INDIA_CENTER;
 
@@ -106,32 +159,93 @@ export default function LoadingScreen({ form, uuid, onDone }: LoadingScreenProps
     return () => clearInterval(t);
   }, []);
 
+  // Invalidate in-flight work when the authenticated account changes. The
+  // operation ID remains stable so a retry can safely reconcile the backend's
+  // idempotent operation, but stale data can never be shown for a new account.
+  useEffect(() => {
+    if (authLoading) return;
+    const currentUid = user?.uid ?? null;
+    const previousUid = observedAccountRef.current;
+    observedAccountRef.current = currentUid;
+
+    if (previousUid !== undefined && previousUid !== currentUid) {
+      requestNonceRef.current += 1;
+      activeAbortRef.current?.abort();
+      activeAbortRef.current = null;
+      fetchedRef.current = false;
+      queueMicrotask(() => {
+        if (latestAccountUidRef.current !== currentUid) return;
+        setApiData(null);
+        setApiDone(false);
+        setPersistenceState('pending');
+        setError(null);
+      });
+    }
+  }, [authLoading, user?.uid]);
+
   // Real API Generation Call
   useEffect(() => {
     if (authLoading) return; // Wait until Firebase Auth initial session resolves
-    if (fetchedRef.current) return;
+    // React Strict Mode can set up, clean up, and set up an effect again in
+    // development. Only suppress a duplicate while a request is truly live;
+    // an aborted setup must be allowed to establish the single real request.
+    if (fetchedRef.current && activeAbortRef.current) return;
     fetchedRef.current = true;
+
+    const urlOperationId = typeof uuid === 'string' ? uuid.trim().toLowerCase() : '';
+    const formOperationId = typeof form.operationId === 'string' ? form.operationId.trim().toLowerCase() : '';
+    const operationIdsConflict = Boolean(urlOperationId && formOperationId && urlOperationId !== formOperationId);
+    const operationId = urlOperationId || formOperationId;
+    const requestUid = user?.uid ?? null;
+    const requestNonce = ++requestNonceRef.current;
+    const abortController = new AbortController();
+    activeAbortRef.current = abortController;
+    const isCurrentRequest = () =>
+      requestNonceRef.current === requestNonce &&
+      latestAccountUidRef.current === requestUid &&
+      !abortController.signal.aborted;
+
+    const finish = () => {
+      if (isCurrentRequest()) setApiDone(true);
+    };
 
     const generateTrip = async () => {
       try {
-        if (!user) {
+        if (!user || !requestUid) {
           console.warn('[LoadingScreen] No user session found. Sign-in required for itinerary creation.');
-          setError('Sign in is required to generate your personalized itinerary.');
-          setApiDone(true);
+          if (isCurrentRequest()) {
+            setError('Sign in is required to generate your personalized itinerary.');
+            setPersistenceState('unsaved');
+          }
+          finish();
+          return;
+        }
+
+        if (operationIdsConflict || !UUID_V4_PATTERN.test(operationId)) {
+          console.warn('[LoadingScreen] Missing or invalid UUID v4 operation ID.');
+          if (isCurrentRequest()) {
+            setError('This itinerary does not have a valid operation ID. Return to the wizard and start again.');
+            setPersistenceState('unsaved');
+          }
+          finish();
           return;
         }
 
         console.log(`[LoadingScreen] Initiating generation for "${destName}" (${daysCount} days)...`);
         const idToken = await user.getIdToken();
+        if (!isCurrentRequest()) return;
         console.log('[LoadingScreen] Acquired Firebase ID token. Calling POST /api/itinerary/generate...');
 
         const res = await fetch('/api/itinerary/generate', {
           method: 'POST',
+          signal: abortController.signal,
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${idToken}`,
+            'Idempotency-Key': operationId,
           },
           body: JSON.stringify({
+            operationId,
             destination: destId,
             destName,
             purpose: form.purpose,
@@ -139,64 +253,99 @@ export default function LoadingScreen({ form, uuid, onDone }: LoadingScreenProps
             days: form.days,
             budget: form.budget,
             startDate: form.startDate,
-            travelerType: form.travelerType || 'comfort',
-            browsingSignals: getBrowsingSignals(),
-            userId: user.uid,
-            uuid: uuid ?? null,
-            arrivalTime: form.arrivalTime || 'afternoon',
-            arrivalMode: form.arrivalMode || '',
-            departureTime: form.departureTime || '',
-            departureMode: form.departureMode || '',
-            hotelArea: form.hotelArea || '',
-            originCity: form.originCity || '',
-            mustDo: form.mustDo || [],
-            routeStops: form.routeStops || [],
+            endDate: form.endDate,
+            travelerType: form.travelerType,
+            browsingSignals: Object.prototype.hasOwnProperty.call(form, 'browsingSignals')
+              ? form.browsingSignals
+              : getBrowsingSignals(),
+            arrivalTime: form.arrivalTime,
+            arrivalMode: form.arrivalMode,
+            departureTime: form.departureTime,
+            departureMode: form.departureMode,
+            hotelArea: form.hotelArea,
+            originCity: form.originCity,
+            preferences: form.preferences,
+            mustDo: form.mustDo,
+            routeStops: form.routeStops,
           }),
         });
 
-        const result = await res.json();
-        console.log('[LoadingScreen] API response:', { status: res.status, ok: res.ok, success: result?.success });
+        const rawResult: unknown = await res.json();
+        const result: ItineraryGenerateResponse = rawResult && typeof rawResult === 'object'
+          ? rawResult as ItineraryGenerateResponse
+          : { success: false, error: 'The generation service returned an invalid response.' };
+        if (!isCurrentRequest()) return;
+        console.log('[LoadingScreen] API response:', { status: res.status, ok: res.ok, success: result.success });
 
-        if (!res.ok || !result.success || !result.itinerary) {
-          const errMsg = result.error || result.detail || 'Itinerary generation engine encountered an error.';
-          console.error('[LoadingScreen] Generation failed:', errMsg);
+        if (!res.ok || !hasDurableReceipt(result, operationId, requestUid)) {
+          const responsePersistence = result.persistence?.status;
+          const state: PersistenceState = responsePersistence === 'ambiguous' || res.status >= 500
+            ? 'ambiguous'
+            : 'unsaved';
+          const errMsg = state === 'ambiguous'
+            ? 'We could not confirm whether this itinerary was saved. It is not in your history yet; retry to reconcile it safely.'
+            : result.itinerary
+            ? 'A preview was generated, but the backend did not confirm that it was saved. It is not in your history.'
+            : result.error || 'Itinerary generation engine encountered an error.';
+          console.error('[LoadingScreen] Generation was not durably confirmed:', errMsg);
           setError(errMsg);
-          setApiDone(true);
+          setPersistenceState(state);
+          setApiData(null);
+          finish();
           return;
         }
 
-        console.log('[LoadingScreen] Generation succeeded! Setting itinerary data.');
-        setApiData(result.itinerary);
-
-        if (uuid && typeof window !== 'undefined') {
-          import('@/lib/firestore').then(({ saveItineraryByUUID }) => {
-            saveItineraryByUUID(uuid, {
-              form,
-              generatedData: result.itinerary,
-              destName,
-              userId: (form?.userId as string) ?? user?.uid ?? null,
-              isPublic: true,
-            }).catch((fsErr) => {
-              console.warn('[LoadingScreen] Firestore save warning:', fsErr);
-            });
-          });
+        // The response receipt proves the write was acknowledged, but the
+        // owner document remains the canonical generated payload. Read it back
+        // before showing a result so a stale/partial response cannot become a
+        // second client-authored save.
+        const ownerItinerary = await getOwnerItinerary(requestUid, operationId);
+        if (!isCurrentRequest()) return;
+        if (
+          !ownerItinerary ||
+          ownerItinerary.ownerUid && ownerItinerary.ownerUid !== requestUid ||
+          !confirmsGenerationReceipt(ownerItinerary, result.receipt as unknown as Record<string, unknown>) ||
+          !ownerItinerary.generatedData
+        ) {
+          setError('The itinerary was acknowledged, but its owner record could not be confirmed. It is not in your history yet; retry to reconcile it safely.');
+          setPersistenceState('ambiguous');
+          setApiData(null);
+          finish();
+          return;
         }
-      } catch (err: any) {
+
+        console.log('[LoadingScreen] Generation committed. Setting canonical owner itinerary.');
+        setPersistenceState('saved');
+        setApiData(ownerItinerary);
+      } catch (err: unknown) {
+        if (!isCurrentRequest()) return;
+        if (err instanceof DOMException && err.name === 'AbortError') return;
         console.error('[LoadingScreen] Generation caught exception:', err);
-        setError(err.message || 'Network error communicating with the generation engine.');
+        setPersistenceState('ambiguous');
+        setError('We could not confirm whether this itinerary was saved. It is not in your history yet; retry to reconcile it safely.');
       }
-      setApiDone(true);
+      finish();
     };
 
     generateTrip();
-  }, [authLoading, destId, destName, form, user, uuid, daysCount]);
+    return () => {
+      abortController.abort();
+      if (activeAbortRef.current === abortController) activeAbortRef.current = null;
+    };
+  }, [authLoading, destId, destName, form, user, user?.uid, uuid, daysCount, retryNonce]);
 
   const handleRetry = () => {
+    requestNonceRef.current += 1;
+    activeAbortRef.current?.abort();
+    activeAbortRef.current = null;
     fetchedRef.current = false;
     setError(null);
     setApiDone(false);
+    setApiData(null);
+    setPersistenceState('pending');
     setActiveStageIndex(0);
     setElapsed(0);
+    setRetryNonce((nonce) => nonce + 1);
   };
 
   // Progress through the 4 stages while waiting for real API data
@@ -216,13 +365,15 @@ export default function LoadingScreen({ form, uuid, onDone }: LoadingScreenProps
 
   // Once API is done and final stage reached, transition gracefully
   useEffect(() => {
-    if (apiDone && apiData) {
+    if (apiDone && apiData && persistenceState === 'saved') {
+      const accountUidAtCommit = latestAccountUidRef.current;
       const timeout = setTimeout(() => {
+        if (latestAccountUidRef.current !== accountUidAtCommit) return;
         onDone(apiData);
       }, 1000);
       return () => clearTimeout(timeout);
     }
-  }, [apiDone, apiData, onDone]);
+  }, [apiDone, apiData, onDone, persistenceState]);
 
   // Generate mapped pins
   const currentMapPins = useMemo(() => {
@@ -255,8 +406,20 @@ export default function LoadingScreen({ form, uuid, onDone }: LoadingScreenProps
           <span className="text-naviigo-brown/50 uppercase tracking-wider">
             ELAPSED: 00:{elapsed.toString().padStart(2, '0')}
           </span>
-          <span className={`font-bold uppercase tracking-wider ${error ? 'text-red-600' : 'text-brand-primary'}`}>
-            {error ? '⚠ GENERATION PAUSED' : apiDone ? '✦ ROUTE READY' : 'LIVE CONVERGENCE'}
+          <span
+            className={`font-bold uppercase tracking-wider ${
+              error ? 'text-red-600' : 'text-brand-primary'
+            }`}
+            role="status"
+            aria-live="polite"
+          >
+            {error
+              ? persistenceState === 'ambiguous'
+                ? '⚠ SAVE UNCONFIRMED'
+                : '⚠ GENERATION PAUSED'
+              : persistenceState === 'saved' && apiDone
+              ? '✦ ROUTE READY'
+              : 'LIVE CONVERGENCE'}
           </span>
         </div>
       </div>
@@ -269,9 +432,15 @@ export default function LoadingScreen({ form, uuid, onDone }: LoadingScreenProps
 
           {/* Interactive Error Card */}
           {error && (
-            <div className="bg-paper-light border border-red-200 rounded-2xl p-6 shadow-sm space-y-4">
+            <div
+              className="bg-paper-light border border-red-200 rounded-2xl p-6 shadow-sm space-y-4"
+              role="alert"
+              aria-live="assertive"
+            >
               <div className="flex items-center gap-2 text-red-600 font-mono text-xs font-bold uppercase tracking-wider">
-                <span>⚠ Generation Error</span>
+                <span>
+                  {persistenceState === 'ambiguous' ? '⚠ Save Status Unconfirmed' : '⚠ Generation Error'}
+                </span>
               </div>
               <p className="font-sans text-xs sm:text-sm text-naviigo-brown/80 leading-relaxed">
                 {error}

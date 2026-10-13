@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
-import { saveSharedItinerary, listenToItinerary, saveItineraryToFirestore } from '@/lib/firestore';
+import { createPublicShare, unsharePublicShare } from '@/lib/firestore';
 import { useAuth } from '@/lib/AuthContext';
 import PlaceImage from '@/components/shared/PlaceImage';
 import {
@@ -13,17 +13,16 @@ import {
 } from '@/app/itinerary/data';
 import { genShareId, CrowdDot } from './helpers';
 import ShareDropdown from './ShareDropdown';
+import ReplanCard from './ReplanCard';
+import { itineraryDayIndex, itineraryDayNumber } from '@/lib/itineraryIdentity';
 import TransportCompare from './TransportCompare';
 import { useAI } from '@/context/AIContext';
 import { useCheckpoints } from '@/lib/useCheckpoints';
-import { completeTripAndAwardStamp, type AwardResult } from '@/lib/passportService';
-import { updateLeaderboardEntry } from '@/lib/leaderboard';
 import CheckpointToast, { useCheckpointToast } from '@/components/features/passport/CheckpointToast';
-import StampCelebration from '@/components/features/passport/StampCelebration';
 import { DESTINATIONS } from '@/app/itinerary/data';
-import { 
-    CheckCircle2, Circle, Rocket, MapPin, Calendar, 
-    Compass, X, ChevronRight, Navigation, 
+import {
+    CheckCircle2, Circle, Rocket, MapPin, Calendar,
+    Compass, X, ChevronRight, Navigation,
     Camera, UtensilsCrossed, BedDouble, AlertCircle, Clock
 } from 'lucide-react';
 
@@ -32,23 +31,22 @@ const ItineraryMap = dynamic(() => import('@/components/shared/ItineraryMap'), {
 interface DayViewPageProps {
     form: Record<string, unknown>;
     generatedData?: any;
+    readOnly?: boolean;
     onBack: () => void;
 }
 
-export default function DayViewPage({ form, generatedData, onBack }: DayViewPageProps) {
+export default function DayViewPage({ form, generatedData, readOnly = false, onBack }: DayViewPageProps) {
     const router = useRouter();
     const { user } = useAuth();
     const { registerItinerary, unregisterItinerary } = useAI();
-    const [isSaved, setIsSaved] = useState(false);
-    const [isSaving, setIsSaving] = useState(false);
-    const [saveError, setSaveError] = useState(false);
-    const saveInFlightRef = useRef(false);
 
     const destId = (form.destination as string) || (form.destId as string) || '';
     const destName = (form.destName as string) || (form.destination as string) || 'India Expedition';
     const stableItineraryId = (form._uuid || form.uuid || form.id || destId) as string;
     const staticData = destId ? DEST_DATA[destId.toLowerCase()] : undefined;
 
+    const [savedData, setSavedData] = useState<any>(null);
+    const effectiveData = savedData || generatedData;
     const data: any = useMemo(() => {
         const emptyBase = {
             description: destName ? `Curated roadbook through ${destName}` : '',
@@ -64,8 +62,8 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
             estimatedTravelCost: undefined
         };
         const base = staticData ? { ...emptyBase, ...staticData } : emptyBase;
-        return generatedData ? { ...base, ...generatedData } : base;
-    }, [generatedData, staticData, destName]);
+        return effectiveData ? { ...base, ...effectiveData } : base;
+    }, [effectiveData, staticData, destName]);
 
     const availablePlans: DayPlan[] = useMemo(() => {
         if (Array.isArray(generatedData?.dayPlans) && generatedData.dayPlans.length > 0) {
@@ -124,10 +122,10 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
         const urlUuid = planIdx !== -1 ? parts[planIdx + 1] : null;
         const uuid = (form.uuid || form._uuid || urlUuid) as string;
         if (uuid) {
-            window.history.pushState(null, '', `/itinerary/plan/${uuid}/day/${dayIdx + 1}`);
+            window.history.pushState(null, '', `/itinerary/plan/${uuid}/day/${itineraryDayNumber(plansToRender[dayIdx], dayIdx)}${readOnly && window.location.search.includes('public=1') ? '?public=1' : ''}`);
         }
         window.scrollTo({ top: 0, behavior: 'smooth' });
-    }, [plansToRender.length, form.uuid, form._uuid]);
+    }, [plansToRender, form.uuid, form._uuid, readOnly]);
 
     // Sync activeDay with browser history navigation (back/forward)
     useEffect(() => {
@@ -137,51 +135,23 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
             if (dayIdx !== -1 && parts[dayIdx + 1]) {
                 const dayNum = parseInt(parts[dayIdx + 1], 10);
                 if (!isNaN(dayNum) && dayNum >= 1) {
-                    const count = plansToRender.length || 1;
-                    setActiveDay(Math.max(0, Math.min(dayNum - 1, count - 1)));
+                    const index = itineraryDayIndex(plansToRender, dayNum);
+                    if (index >= 0) setActiveDay(index);
                 }
             }
         };
         window.addEventListener('popstate', handlePopState);
         return () => window.removeEventListener('popstate', handlePopState);
-    }, [plansToRender.length]);
+    }, [plansToRender]);
 
     const destState = DESTINATIONS.find(d => d.id === destId)?.state || '';
     const purpose = (form.purpose as string) || 'cultural';
 
     const {
-        isTripActive, checkpoint, startTrip, stopTrip,
-        toggleCheckpoint, isChecked, getProgress,
-        dayJustCompleted, clearDayJustCompleted,
-        tripJustCompleted, clearTripJustCompleted,
+        isTripActive, startTrip, stopTrip, getProgress, commandError, isStarting,
     } = useCheckpoints(destId, destName, destState, purpose, customPlans, stableItineraryId);
 
-    const { toasts, showToast } = useCheckpointToast();
-    const [celebrationResult, setCelebrationResult] = useState<AwardResult | null>(null);
-
-    const handleCheckpointToggle = useCallback((dayIdx: number, actName: string) => {
-        if (!isTripActive) return;
-        const wasChecked = isChecked(dayIdx, actName);
-        toggleCheckpoint(dayIdx, actName);
-        if (!wasChecked) {
-            showToast(actName, 25);
-        }
-    }, [isTripActive, isChecked, toggleCheckpoint, showToast]);
-
-    useEffect(() => {
-        if (tripJustCompleted && checkpoint && user?.uid) {
-            completeTripAndAwardStamp(user.uid, checkpoint).then(result => {
-                setCelebrationResult(result);
-                updateLeaderboardEntry(
-                    user.uid,
-                    user.displayName || 'Traveler',
-                    user.photoURL || null,
-                    result.stats
-                ).catch(console.error);
-            }).catch(console.error);
-            clearTripJustCompleted();
-        }
-    }, [tripJustCompleted, checkpoint, user, clearTripJustCompleted]);
+    const { toasts } = useCheckpointToast();
 
     // Register itinerary with AI context once on mount
     const registeredRef = useRef(false);
@@ -189,43 +159,62 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
         if (registeredRef.current) return;
         registeredRef.current = true;
         registerItinerary({ ...data, dayPlans: customPlans }, (newData: any) => {
-            if (newData.dayPlans) setCustomPlans(newData.dayPlans);
+            // Saved plans change only through an acknowledged server acceptance.
         });
-        
+
         return () => {
             unregisterItinerary();
             registeredRef.current = false;
         };
-    }, [registerItinerary, unregisterItinerary, data, customPlans]);
+    }, [registerItinerary, unregisterItinerary, data, customPlans, readOnly]);
 
     const [isSharing, setIsSharing] = useState(false);
     const [collaborators, setCollaborators] = useState(1);
+    const [activeShareId, setActiveShareId] = useState<string | null>(() => (form.publicShareId as string | undefined) || null);
+    const [shareError, setShareError] = useState<string | null>(null);
+    const [clipboardError, setClipboardError] = useState<string | null>(null);
 
     const handleShare = useCallback(async () => {
+        if (readOnly || !user?.uid || !stableItineraryId) return;
         setIsSharing(true);
+        setShareError(null);
+        setClipboardError(null);
         try {
-            const id = genShareId();
-            await saveSharedItinerary(id, { form, customPlans, destName });
-            const url = `${window.location.origin}/itinerary?shareId=${id}`;
-            await navigator.clipboard.writeText(url);
-            listenToItinerary(id, (data) => setCollaborators(data.collaborators ?? 1), () => { });
+            const id = activeShareId || `share_${genShareId()}`;
+            const confirmedShareId = await createPublicShare(user.uid, id, {
+                form,
+                generatedData: { ...data, dayPlans: customPlans },
+                destName,
+            }, stableItineraryId);
+            setActiveShareId(confirmedShareId);
+            const url = `${window.location.origin}/itinerary/plan/${confirmedShareId}?public=1`;
+            try {
+                await navigator.clipboard.writeText(url);
+            } catch {
+                setClipboardError('The public link is ready, but it could not be copied automatically. Copy it from the address bar.');
+            }
         } catch (e) {
-            const url = `${window.location.origin}/itinerary?load=${destId}`;
-            navigator.clipboard.writeText(url);
+            console.error('[DayView] Public share failed:', e);
+            setShareError('The public link could not be created. Your private itinerary is unchanged.');
+        } finally {
+            setIsSharing(false);
         }
-        setIsSharing(false);
-    }, [form, customPlans, destName, destId]);
+    }, [activeShareId, customPlans, data, destName, form, readOnly, stableItineraryId, user?.uid]);
 
-    const removeActivity = (idx: number) => {
-        setCustomPlans(prev => {
-            const copy = [...prev];
-            const acts = [...copy[activeDay].activities];
-            acts.splice(idx, 1);
-            copy[activeDay] = { ...copy[activeDay], activities: acts };
-            return copy;
-        });
-        setIsSaved(false);
-    };
+    const handleUnshare = useCallback(async () => {
+        if (!activeShareId || !user?.uid || isSharing || readOnly) return;
+        setIsSharing(true);
+        setShareError(null);
+        try {
+            await unsharePublicShare(user.uid, activeShareId, stableItineraryId);
+            setActiveShareId(null);
+        } catch (e) {
+            console.error('[DayView] Unshare failed:', e);
+            setShareError('The public link is still active. Try unsharing again.');
+        } finally {
+            setIsSharing(false);
+        }
+    }, [activeShareId, isSharing, readOnly, stableItineraryId, user?.uid]);
 
     // Prepare pins for the interactive Leaflet map
     const mapPins = useMemo(() => activities.map((a, i) => ({
@@ -329,7 +318,7 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
     // ─────────────────────────────────────────────────────────────
     // Scene 3: Morning Bounded Map Chapter (Stops 0 & 1)
     const morningStops = activities.slice(0, Math.min(2, activities.length));
-    
+
     // Scene 5: Major Destination Moment (Stop 2, or Stop 0 if short itinerary)
     const heroStop = activities.length > 2 ? activities[2] : null;
 
@@ -352,14 +341,14 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
 
     return (
         <div className="min-h-screen bg-paper-warm text-naviigo-brown pt-16 sm:pt-20 font-sans selection:bg-brand-primary selection:text-white">
-            
+
             {/* ── STICKY EXPEDITION CONTROLS (Utility Bar + Chapter Tabs in one cohesive layer) ── */}
             <div className="sticky top-14 sm:top-20 z-30 bg-paper-light/95 backdrop-blur-md border-b border-[#EADFD4] shadow-2xs">
                 {/* Utility Bar */}
                 <div className="px-4 sm:px-8 py-2.5 sm:py-3 flex items-center justify-between gap-3 border-b border-[#EADFD4]/60">
                     <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-                        <button 
-                            onClick={onBack} 
+                        <button
+                            onClick={onBack}
                             className="w-8 h-8 rounded-full border border-[#EADFD4] flex items-center justify-center hover:bg-paper-warm transition-colors text-sm text-naviigo-brown shrink-0 min-h-[36px] min-w-[36px] touch-manipulation"
                             title="Back to Itinerary Overview"
                         >
@@ -378,11 +367,22 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                     </div>
 
                     <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-                        <ShareDropdown onCopyLink={handleShare} destName={destName} isSharing={isSharing} collaborators={collaborators} planData={{ ...data, dayPlans: customPlans }} />
-                        {user && (
+                        <ShareDropdown
+                            onCopyLink={handleShare}
+                            onUnshare={handleUnshare}
+                            destName={destName}
+                            isSharing={isSharing}
+                            collaborators={collaborators}
+                            planData={{ ...data, dayPlans: customPlans }}
+                            isShared={!!activeShareId}
+                            shareUrl={activeShareId ? `/itinerary/plan/${activeShareId}?public=1` : null}
+                            canManageShare={!readOnly}
+                        />
+                        {user && !readOnly && (
                             <motion.button
                                 whileTap={{ scale: 0.98 }}
-                                onClick={() => isTripActive ? stopTrip() : startTrip()}
+                                disabled={isStarting}
+                                onClick={() => { if (isTripActive) stopTrip(); else void startTrip(); }}
                                 className={`px-3 sm:px-3.5 py-1.5 rounded-full text-[11px] sm:text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all min-h-[36px] touch-manipulation ${
                                     isTripActive
                                         ? 'bg-naviigo-teal text-white shadow-md shadow-naviigo-teal/20'
@@ -393,61 +393,18 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                                 <span className="hidden sm:inline">{isTripActive ? 'Live Trip Active' : 'Start Trip'}</span>
                             </motion.button>
                         )}
-                        <motion.button 
-                            whileTap={isSaving || isSaved ? {} : { scale: 0.98 }} 
-                            onClick={async () => {
-                                if (saveInFlightRef.current || isSaving || isSaved) return;
-                                if (!user?.uid) {
-                                    alert('Please sign in to archive your journey to your Passport.');
-                                    return;
-                                }
-                                saveInFlightRef.current = true;
-                                setIsSaving(true);
-                                setSaveError(false);
-                                try {
-                                    await saveItineraryToFirestore(user.uid, {
-                                        id: stableItineraryId,
-                                        uuid: stableItineraryId,
-                                        destId,
-                                        destName,
-                                        form: { ...form, customPlans, _uuid: stableItineraryId, uuid: stableItineraryId },
-                                        generatedData: generatedData || null,
-                                    });
-                                    setIsSaved(true);
-                                } catch (err) {
-                                    console.error('[DayViewPage] Archive failed:', err);
-                                    setSaveError(true);
-                                } finally {
-                                    setIsSaving(false);
-                                    saveInFlightRef.current = false;
-                                }
-                            }} 
-                            disabled={isSaving || isSaved}
-                            className={`px-3 sm:px-3.5 py-1.5 rounded-full text-[11px] sm:text-xs font-mono font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all min-h-[36px] touch-manipulation ${
-                                isSaved
-                                    ? 'bg-brand-primary/10 text-brand-primary cursor-default border border-brand-primary/20'
-                                    : isSaving
-                                    ? 'bg-naviigo-brown/70 text-white/80 cursor-wait'
-                                    : saveError
-                                    ? 'bg-red-600 text-white hover:bg-red-700'
-                                    : 'bg-naviigo-brown text-white hover:bg-naviigo-brown/90 shadow-sm'
-                            }`}
-                        >
-                            {isSaving ? (
-                                <>
-                                    <span className="w-3 h-3 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-                                    <span>SAVING…</span>
-                                </>
-                            ) : isSaved ? (
-                                <span>✓ SAVED</span>
-                            ) : saveError ? (
-                                <span>RETRY ARCHIVE</span>
-                            ) : (
-                                <span>ARCHIVE</span>
-                            )}
-                        </motion.button>
+                        <span className="px-3 sm:px-3.5 py-1.5 rounded-full text-[11px] sm:text-xs font-mono font-bold uppercase tracking-wider border border-[#EADFD4] text-naviigo-brown/70 min-h-[36px] flex items-center">
+                            {readOnly ? 'READ ONLY' : 'OWNER RECORD'}
+                        </span>
                     </div>
                 </div>
+
+                {(shareError || clipboardError) && (
+                    <div className="px-4 sm:px-8 pb-2 max-w-[1440px] mx-auto space-y-1" aria-live="polite">
+                        {shareError && <p className="text-xs text-red-600" role="alert">{shareError}</p>}
+                        {clipboardError && <p className="text-xs text-naviigo-brown/70" role="status">{clipboardError}</p>}
+                    </div>
+                )}
 
                 {/* Day Chapter Index Tabs */}
                 <div className="px-4 sm:px-8 py-2">
@@ -518,12 +475,21 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                 MAIN EDITORIAL STAGE (DESIGNED VIEWPORT BY VIEWPORT)
                 ───────────────────────────────────────────────────────────── */}
             <div className="max-w-[1440px] mx-auto px-4 sm:px-8 py-8 lg:py-12">
+                {commandError && <p role="alert" className="mb-4 text-sm text-red-700">{commandError}</p>}
+                {!readOnly && user?.uid && plan && (
+                    <ReplanCard key={`${user.uid}:${stableItineraryId}:${itineraryDayNumber(plan, activeDay)}`} uid={user.uid} itineraryId={stableItineraryId} dayNumber={itineraryDayNumber(plan, activeDay)} onSaved={owner => {
+                        setSavedData(owner.generatedData);
+                        if (Array.isArray(owner.generatedData?.dayPlans)) setCustomPlans(owner.generatedData.dayPlans as DayPlan[]);
+                        setActiveActivity(-1);
+                        try { sessionStorage.removeItem(`naviigo_plan_${user.uid}_${stableItineraryId}`); } catch {}
+                    }} />
+                )}
                 <AnimatePresence mode="wait">
-                    <motion.div 
-                        key={activeDay} 
-                        initial={{ opacity: 0 }} 
-                        animate={{ opacity: 1 }} 
-                        exit={{ opacity: 0 }} 
+                    <motion.div
+                        key={activeDay}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
                         transition={{ duration: 0.3 }}
                         className="space-y-16 lg:space-y-24"
                     >
@@ -559,14 +525,14 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                                         <span className="px-3 py-1.5 rounded-lg bg-paper-light border border-[#EADFD4] text-naviigo-brown font-bold shadow-2xs">
                                             {activities.length} PLANNED STOPS
                                         </span>
-                                        <button 
-                                            onClick={exportICS} 
+                                        <button
+                                            onClick={exportICS}
                                             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-paper-light border border-[#EADFD4] text-naviigo-brown hover:border-brand-primary hover:text-brand-primary transition-colors shadow-2xs uppercase tracking-wider"
                                             title="Export calendar event (.ics)"
                                         >
                                             <Calendar className="w-3.5 h-3.5" /> Export .ics
                                         </button>
-                                        <button 
+                                        {!readOnly && <button
                                             onClick={() => {
                                                 const currentPlans = customPlans.length > 0 ? [...customPlans] : [...data.dayPlans];
                                                 const currentActs = plan?.activities || [];
@@ -584,18 +550,18 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                                             title="Optimize activity sequence"
                                         >
                                             <span>✨</span> Optimize Order
-                                        </button>
+                                        </button>}
                                     </div>
                                 </div>
 
                                 {/* Right 5 cols: Archival Destination Plate (fills the right side!) */}
                                 <div className="lg:col-span-5">
                                     <div className="relative rounded-2xl overflow-hidden border border-[#EADFD4] shadow-md bg-paper-light aspect-[4/3] w-full group">
-                                        <PlaceImage 
-                                            name={activities[0]?.name || destName} 
-                                            city={destName} 
-                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 brightness-[0.96] contrast-[1.04]" 
-                                            asBackground 
+                                        <PlaceImage
+                                            name={activities[0]?.name || destName}
+                                            city={destName}
+                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 brightness-[0.96] contrast-[1.04]"
+                                            asBackground
                                         />
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent pointer-events-none" />
                                         <div className="absolute bottom-4 left-4 right-4 text-white">
@@ -685,7 +651,7 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                                     {morningStops.map((act, i) => {
                                         const isActive = activeActivity === i;
                                         return (
-                                            <div 
+                                            <div
                                                 key={act.name + i}
                                                 ref={(el) => { activityRefs.current[i] = el; }}
                                                 data-activity-index={i}
@@ -798,7 +764,7 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                             SCENE 5: MAJOR DESTINATION MOMENT (CINEMATIC FULL-WIDTH HERO STOP)
                             ───────────────────────────────────────────────────────────── */}
                         {heroStop && (
-                            <section 
+                            <section
                                 ref={(el) => { activityRefs.current[2] = el; }}
                                 data-activity-index={2}
                                 onClick={() => scrollToActivity(2)}
@@ -812,11 +778,11 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center bg-paper-light border border-[#EADFD4] rounded-3xl p-6 sm:p-10 shadow-md">
                                     {/* Left 7 cols: Massive Landscape Photo */}
                                     <div className="lg:col-span-7 h-64 sm:h-96 rounded-2xl overflow-hidden border border-[#EADFD4] relative group">
-                                        <PlaceImage 
-                                            name={heroStop.name} 
-                                            city={destName} 
-                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" 
-                                            asBackground 
+                                        <PlaceImage
+                                            name={heroStop.name}
+                                            city={destName}
+                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                                            asBackground
                                         />
                                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
                                         <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between text-white">
@@ -880,7 +846,7 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                             SCENE 6: CULINARY INTERLUDE / MIDDAY REPAST (FULL-WIDTH)
                             ───────────────────────────────────────────────────────────── */}
                         {foodStop && (
-                            <section 
+                            <section
                                 ref={(el) => { activityRefs.current[foodStopIndex] = el; }}
                                 data-activity-index={foodStopIndex}
                                 onClick={() => scrollToActivity(foodStopIndex)}
@@ -947,7 +913,7 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                                     const isActive = activeActivity === realIdx;
 
                                     return (
-                                        <div 
+                                        <div
                                             key={act.name + idx}
                                             ref={(el) => { if (realIdx !== -1) activityRefs.current[realIdx] = el; }}
                                             data-activity-index={realIdx}
@@ -1086,10 +1052,10 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                                                 <div className="flex items-center justify-between mt-6 pt-3 border-t border-[#EADFD4]">
                                                     <span className="font-mono text-xs font-semibold text-naviigo-brown">{data.hotels[0].priceRange}</span>
                                                     {data.hotels[0].bookingLink && (
-                                                        <a 
-                                                            href={data.hotels[0].bookingLink} 
-                                                            target="_blank" 
-                                                            rel="noopener noreferrer" 
+                                                        <a
+                                                            href={data.hotels[0].bookingLink}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
                                                             className="px-4 py-2 rounded-lg bg-naviigo-brown text-white hover:bg-brand-primary font-mono text-xs uppercase font-bold tracking-wider transition-colors shadow-2xs"
                                                         >
                                                             Reserve Stay ➔
@@ -1145,8 +1111,8 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
                                     showRoute={true}
                                     activePin={activeActivity >= 0 ? activeActivity : undefined}
                                     onPinClick={scrollToActivity}
-                                    onRouteCalculated={(legs: { distance: string, time: string }[]) => { 
-                                        if (legs && legs.length > 0) setDayRouteInfo(legs[0]); 
+                                    onRouteCalculated={(legs: { distance: string, time: string }[]) => {
+                                        if (legs && legs.length > 0) setDayRouteInfo(legs[0]);
                                     }}
                                     className="w-full h-full"
                                 />
@@ -1359,11 +1325,6 @@ export default function DayViewPage({ form, generatedData, onBack }: DayViewPage
             </AnimatePresence>
 
             <CheckpointToast toasts={toasts} />
-            <StampCelebration
-                result={celebrationResult}
-                onClose={() => setCelebrationResult(null)}
-                onViewPassport={() => router.push('/passport')}
-            />
         </div>
     );
 }

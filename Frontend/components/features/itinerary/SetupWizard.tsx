@@ -10,6 +10,7 @@ import { DESTINATIONS } from '@/app/itinerary/data';
 import { useAuth } from '@/lib/AuthContext';
 import AuthRequiredModal from '@/components/shared/AuthRequiredModal';
 import { saveItineraryByUUID } from '@/lib/firestore';
+import { getBrowsingSignals } from '@/lib/browsingSignals';
 
 /** Resolve a city name to its catalog destination */
 function resolveDestKey(name: string): { id: string; name: string; state?: string; img?: string } | null {
@@ -197,7 +198,9 @@ export default function SetupWizard({ onDone }: SetupWizardProps) {
 
     setIsSubmitting(true);
     try {
-      const uuid = crypto.randomUUID();
+      // This ID is the operation identity for the entire generation attempt:
+      // URL, request body, Idempotency-Key, and backend owner document.
+      const operationId = crypto.randomUUID();
 
       const groupMap: Record<string, string> = {
         solo: 'solo',
@@ -219,6 +222,12 @@ export default function SetupWizard({ onDone }: SetupWizardProps) {
       const selectedStyle = selectedStyles[0] || 'heritage';
       const canonicalGroup = groupMap[travellerGroup] || travellerGroup;
       const canonicalPurpose = purposeMap[selectedStyle] || selectedStyle || 'cultural';
+      const browsingSignals = getBrowsingSignals();
+      const normalizedRouteStops = routeStops.map(stop => ({
+        ...stop,
+        travelMode: 'train' as const,
+        travelTime: 'morning' as const,
+      }));
 
       const payload = {
         destination,
@@ -233,23 +242,44 @@ export default function SetupWizard({ onDone }: SetupWizardProps) {
         rawStyle: selectedStyle,
         budget: budgetPerPerson,
         travelerType: 'comfort',
+        browsingSignals,
         mustDo: mustDoPins.map(p => ({ name: p, dayIndex: null })),
-        routeStops,
-        userId: user.uid,
+        routeStops: normalizedRouteStops,
+        operationId,
         createdAt: new Date().toISOString(),
+        // The owner draft is only a handoff for the plan page. Keeping the
+        // exact backend caller envelope here lets the backend reconcile this
+        // draft by operation ID without treating it as a second save.
+        input: {
+          destination,
+          destName,
+          purpose: canonicalPurpose,
+          group: canonicalGroup,
+          days: Math.min(Math.max(duration.days, 1), 14),
+          budget: budgetPerPerson,
+          startDate,
+          travelerType: 'comfort',
+          browsingSignals,
+          mustDo: mustDoPins.map(p => ({ name: p, dayIndex: null })),
+          routeStops: normalizedRouteStops,
+        },
       };
 
-      console.log('[SetupWizard] Dispatching journey to Firestore & loading screen:', payload);
+      console.log('[SetupWizard] Dispatching journey to loading screen:', payload);
 
-      await saveItineraryByUUID(uuid, {
+      // Keep the form handoff available to /itinerary/plan/[operationId]. This
+      // is only an empty draft; generated data is persisted by the backend
+      // route after it returns a durable receipt, never by this component.
+      await saveItineraryByUUID(operationId, {
         form: payload,
         generatedData: null,
         destName,
-        userId: user?.uid || null,
+        userId: user.uid,
+        isPublic: false,
       });
 
-      if (onDone) onDone({ ...payload, uuid });
-      router.push(`/itinerary/plan/${uuid}`);
+      if (onDone) onDone({ ...payload, uuid: operationId });
+      router.push(`/itinerary/plan/${operationId}`);
     } catch (err) {
       console.error('[SetupWizard] Failed to dispatch journey:', err);
       setIsSubmitting(false);

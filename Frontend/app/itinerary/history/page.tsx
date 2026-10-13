@@ -15,37 +15,56 @@ interface PastTrip {
     duration: string;
     group: string;
     image: string;
+    status: 'completed';
 }
 
 function mapItineraryToPast(itin: SavedItineraryDoc): PastTrip | null {
     const form = itin.form as any;
     const startDate = form.startDate as string;
-    if (!startDate) return null;
+    const lifecycleStatus = (itin as SavedItineraryDoc & { status?: string }).status;
 
-    const start = new Date(startDate);
-    const now = new Date();
-    const daysUntil = Math.ceil((start.getTime() - now.getTime()) / 86400000);
+    // The server lifecycle status is authoritative. Cancelled and active
+    // records are terminal/non-history states even when their dates are old.
+    if (lifecycleStatus === 'cancelled' || (lifecycleStatus && lifecycleStatus !== 'completed')) return null;
+
+    // Legacy records may not have a lifecycle status. Keep the old date rule
+    // only as an explicitly marked fallback for those records.
+    if (!lifecycleStatus && !startDate) return null;
+
     const days = Number(form.days) || 3;
 
-    // Only show past trips (trip has ended)
-    if (daysUntil + days > 0) return null;
+    let start = startDate ? new Date(startDate) : null;
+    if (start && Number.isNaN(start.getTime())) start = null;
 
-    const end = new Date(start);
-    end.setDate(end.getDate() + days - 1);
+    if (!lifecycleStatus) {
+        if (!start) return null;
+        const now = new Date();
+        const daysUntil = Math.ceil((start.getTime() - now.getTime()) / 86400000);
+        // Legacy fallback: only records whose planned window has ended.
+        if (daysUntil + days > 0) return null;
+    }
+
+    const end = start ? new Date(start) : null;
+    if (end) end.setDate(end.getDate() + days - 1);
 
     return {
         id: itin.id,
         destination: itin.destName || 'Unknown',
-        dates: `${start.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })} – ${end.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}`,
+        dates: start && end
+            ? `${start.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })} – ${end.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}`
+            : 'Completion date not recorded',
         duration: `${days} days`,
         group: form.group || 'Solo',
         image: `https://images.unsplash.com/photo-1564507592333-c60657eea523?auto=format&fit=crop&w=1280&q=80`,
+        status: 'completed',
     };
 }
 
 export default function TripHistoryPage() {
     const { user, loading: authLoading, signInWithGoogle } = useAuth();
     const [trips, setTrips] = useState<PastTrip[] | null>(null);
+    const [loadError, setLoadError] = useState<string | null>(null);
+    const [reloadNonce, setReloadNonce] = useState(0);
 
     useEffect(() => {
         if (!user?.uid) return;
@@ -57,10 +76,13 @@ export default function TripHistoryPage() {
                 .filter((t): t is PastTrip => t !== null);
             setTrips(past);
         }).catch(() => {
-            if (active) setTrips([]);
+            if (active) {
+                setTrips(null);
+                setLoadError('Trip history could not be loaded. Your saved itineraries are unchanged.');
+            }
         });
         return () => { active = false; };
-    }, [user?.uid]);
+    }, [user?.uid, reloadNonce]);
 
     const loading = authLoading || (!!user && trips === null);
     const tripList = trips ?? [];
@@ -115,7 +137,16 @@ export default function TripHistoryPage() {
                     </div>
                 )}
 
-                {user && !loading && tripList.length === 0 && (
+                {user && !loading && loadError && (
+                    <div className="text-center py-16 px-6 bg-white dark:bg-muted-900 rounded-2xl border border-red-200 dark:border-red-500/30" role="alert">
+                        <div className="text-3xl mb-3">⚠️</div>
+                        <h3 className="text-lg font-bold text-muted-800 dark:text-muted-200 mb-2">History unavailable</h3>
+                        <p className="text-sm text-muted-500 dark:text-muted-400 mb-6">{loadError}</p>
+                        <button type="button" onClick={() => { setTrips(null); setLoadError(null); setReloadNonce(value => value + 1); }} className="bg-jungle-green-600 text-white px-6 py-3 rounded-xl font-bold text-sm hover:bg-jungle-green-500 transition-colors">Try again</button>
+                    </div>
+                )}
+
+                {user && !loading && !loadError && tripList.length === 0 && (
                     <div className="text-center py-20">
                         <Plane className="w-12 h-12 text-muted-300 dark:text-muted-600 mx-auto mb-4" />
                         <h3 className="text-lg font-bold text-muted-700 dark:text-muted-300 mb-2">No past trips yet</h3>
@@ -124,7 +155,7 @@ export default function TripHistoryPage() {
                     </div>
                 )}
 
-                {user && !loading && tripList.length > 0 && (
+                {user && !loading && !loadError && tripList.length > 0 && (
                     <div className="space-y-6">
                         {tripList.map((trip, i) => (
                             <motion.div
@@ -158,7 +189,7 @@ export default function TripHistoryPage() {
                                         </div>
 
                                         <div className="flex gap-3 mt-4">
-                                            <Link href={`/itinerary?load=${trip.id}`} className="flex-1 bg-marigold-500 hover:bg-marigold-400 text-white text-center py-2.5 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2">
+                                            <Link href={`/itinerary/plan/${trip.id}`} className="flex-1 bg-marigold-500 hover:bg-marigold-400 text-white text-center py-2.5 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2">
                                                 <TrendingUp className="w-4 h-4" /> View Trip
                                             </Link>
                                             <Link href="/itinerary?new=true" className="px-4 py-2.5 rounded-xl border border-muted-200 dark:border-muted-700 text-sm font-semibold text-muted-700 dark:text-muted-300 hover:bg-muted-50 dark:hover:bg-muted-800 transition-colors">
