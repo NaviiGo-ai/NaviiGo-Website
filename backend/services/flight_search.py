@@ -8,19 +8,33 @@ from fastapi import HTTPException
 
 SERPAPI_KEY = os.getenv("SERPAPI_API_KEY", "")
 _cache = {}
-_lock = asyncio.Lock()
+_concurrency = asyncio.Semaphore(4)
+_inflight = {}
 
 
 async def search_flights(origin: str, destination: str, date: str):
+    key = (origin, destination, date)
+    cached = _cache.get(key)
+    if cached and cached[0] > time.monotonic():
+        return cached[1]
+    task = _inflight.get(key)
+    if task is None:
+        task = asyncio.create_task(_search_flights(origin, destination, date))
+        _inflight[key] = task
+        task.add_done_callback(lambda completed: _inflight.pop(key, None))
+    return await asyncio.shield(task)
+
+
+async def _search_flights(origin: str, destination: str, date: str):
     if not SERPAPI_KEY or SERPAPI_KEY.startswith("your_"):
         raise HTTPException(503, "Flight prices are temporarily unavailable")
     key = (origin, destination, date)
-    async with _lock:
+    async with _concurrency:
         cached = _cache.get(key)
         if cached and cached[0] > time.monotonic():
             return cached[1]
         try:
-            async with httpx.AsyncClient(timeout=20) as client:
+            async with httpx.AsyncClient(timeout=45) as client:
                 response = await client.get("https://serpapi.com/search.json", params={
                     "engine": "google_flights", "departure_id": origin, "arrival_id": destination,
                     "outbound_date": date, "type": 2, "currency": "INR",

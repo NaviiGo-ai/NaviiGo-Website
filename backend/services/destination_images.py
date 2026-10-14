@@ -3,6 +3,7 @@
 No caller-controlled upstream URLs, credentials or invented city photographs.
 """
 import asyncio
+import os
 import html
 import re
 import time
@@ -19,26 +20,30 @@ def _plain(value):
     return html.unescape(re.sub(r"<[^>]*>", "", str(value or "")))[:300]
 
 
-async def destination_image(query: str):
+async def destination_image(query: str, reusable: bool = False):
     title = query.strip()[:100]
-    key = title.casefold()
+    key = (title.casefold(), reusable)
     cached = _cache.get(key)
     if cached and cached[0] > time.monotonic():
         return cached[1]
     task = _inflight.get(key)
     if task is None:
-        task = asyncio.create_task(_fetch_destination_image(title))
+        task = asyncio.create_task(_fetch_destination_image(title, reusable))
         _inflight[key] = task
         task.add_done_callback(lambda completed: _inflight.pop(key, None))
     return await asyncio.shield(task)
 
 
-async def _fetch_destination_image(query: str):
+async def _fetch_destination_image(query: str, reusable: bool = False):
     title = query.strip()[:100]
     if len(title) < 2:
         return {"image": None}
     async with _concurrency:
-        cached = _cache.get(title.casefold())
+        if not reusable:
+            google = await _google_photo(title)
+            if google:
+                return google
+        cached = _cache.get((title.casefold(), reusable))
         if cached and cached[0] > time.monotonic():
             return cached[1]
         result = {"image": None}
@@ -79,5 +84,34 @@ async def _fetch_destination_image(query: str):
             pass
         if len(_cache) >= 256:
             _cache.pop(next(iter(_cache)))
-        _cache[title.casefold()] = (time.monotonic() + (86400 if result.get("image") else 120), result)
+        _cache[(title.casefold(), reusable)] = (time.monotonic() + (86400 if result.get("image") else 120), result)
         return result
+
+
+async def _google_photo(title: str):
+    key = os.getenv("GOOGLE_PLACES_API_KEY", "")
+    if not key:
+        return None
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            response = await client.post("https://places.googleapis.com/v1/places:searchText",
+                headers={"X-Goog-Api-Key": key,
+                    "X-Goog-FieldMask": "places.id,places.photos,places.googleMapsUri",
+                    "Referer": "https://naviigo.in/"},
+                json={"textQuery": f"{title} India", "pageSize": 1})
+            response.raise_for_status()
+            places = response.json().get("places") or []
+            if not places or not places[0].get("photos"):
+                return None
+            photo = places[0]["photos"][0]
+            name = photo.get("name", "")
+            if not re.fullmatch(r"places/[A-Za-z0-9_-]+/photos/[A-Za-z0-9_-]+", name):
+                return None
+            authors = photo.get("authorAttributions") or []
+            return {"image": f"/api/places/photo?name={name}&maxwidth=800",
+                "credit": ", ".join(a.get("displayName", "") for a in authors) or "Google Maps",
+                "source": "Google Maps", "license": "Photo supplied through Google Places",
+                "sourceUrl": photo.get("googleMapsUri") or places[0].get("googleMapsUri") or "https://maps.google.com",
+                "attributions": authors}
+    except (httpx.HTTPError, ValueError, TypeError, KeyError, AttributeError):
+        return None
