@@ -21,7 +21,7 @@ Old name-only/ambiguous activity identities or missing saved revisions cannot sa
 
 ## Verification
 
-- Backend: full `pytest` suite, **125 passed**; two dependency deprecation warnings, no failing tests.
+- Backend: full `pytest` suite, **129 passed**; two dependency deprecation warnings, no failing tests.
 - Website contracts: `npm test`, **38 passed**, exercising the actual TypeScript helpers/proxies and account-switch, receipts, retries, sharing, history, terminal and failure boundaries.
 - Firestore: `npm run test:rules`, **11 passed** with the official emulator and the actual checked-in rules. Fixtures use synthetic accounts and a loopback `demo-naviigo-phase6` project. Tests load the same generic database rules into emulator `(default)`; deployed named-database configuration is not a live verification.
 - TypeScript, lint with zero warnings and production build passed. Sentry upload credentials were cleared for the local build; no deployment occurred.
@@ -32,7 +32,9 @@ Old name-only/ambiguous activity identities or missing saved revisions cannot sa
 
 Production Website and backend are live at the PR #22 merge `840f24b`; the exact backend commit was confirmed in Render and the Website production deployment status is successful. Host checks passed 11 deployed-rule cases, seven backend cases, seven Website-proxy cases and four tired-proposal request/acceptance cases, with all fresh synthetic records and identities cleaned up. Native Android emulator checks separately passed real Firebase A/B token claims and owner reads, live proposal acceptance/replay/conflict handling and cross-account denial; three real location-plugin checks passed. Physical-device, process-termination and offline-persistence checks remain unverified.
 
-Fresh generation still fails closed with `DESTINATION_DATA_UNAVAILABLE`: the backend Render environment does not contain `GEOAPIFY_API_KEY`. The existing local key passes actual geocoding, attraction and restaurant requests without being exposed; approval for transferring that secret to Render is pending. A separate actual provider probe isolated hotel HTTP 400 rejection to the unsupported `accommodation.resort` request category. That category is removed from hotel searches, retaining hotel/hostel/guest-house/motel requests and historical resort normalization. The corrected live provider query returns HTTP 200 with real hotels, and a transport regression reproduces the rejected whole-request behavior.
+The production `DESTINATION_DATA_UNAVAILABLE` failure was traced to missing `GEOAPIFY_API_KEY`. The user explicitly approved transferring only the existing local key into Render; it was saved with its value hidden and the configuration deployment was confirmed Live. Actual provider data then exposed a generation HTTP 500: restaurant and hotel ranking multiplied an explicitly unknown `rating: null`. Unknown ratings now contribute no rating boost while source values and known numeric weighting remain unchanged. Four regressions include complete generation with the actual provider normalization format. Final live generation verification after deploying this correction is tracked in the separate release report.
+
+A separate actual provider probe isolated hotel HTTP 400 rejection to the unsupported `accommodation.resort` request category. That category is removed from hotel searches, retaining hotel/hostel/guest-house/motel requests and historical resort normalization. The corrected live provider query returns HTTP 200 with real hotels, and a transport regression reproduces the rejected whole-request behavior.
 
 A live proposal smoke test exposed an unnecessary destination-provider dependency
 in the tired replan route. Independent source review confirmed that the supported

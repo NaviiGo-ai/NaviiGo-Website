@@ -568,7 +568,8 @@ def _score_attraction(attr: dict, index: int, ctx: dict, budget_tier: str, tag_c
 
 def _score_restaurant(rest: dict, ctx: dict, budget_tier: str) -> dict:
     """Score restaurants with dietary fit, ratings, and category alignment."""
-    score = rest.get("rating", 4.0) * 10.0
+    # Provider ratings can be explicitly unknown; add no invented rating boost.
+    score = (rest.get("rating") or 0.0) * 10.0
     category = rest.get("category", "casual")
     cuisine = (rest.get("cuisine") or "").lower()
     tags = [t.lower() for t in rest.get("tags", [])]
@@ -892,7 +893,7 @@ def generate_itinerary(ctx: dict, dest_data: dict) -> Optional[dict]:
     # Score hotels by budget fit
     hotels = list(dest_data.get("hotels", []))
     def _hotel_score(h):
-        s = h.get("rating", 0) * 10
+        s = (h.get("rating") or 0.0) * 10
         h_type = h.get("type", "")
         if budget_tier == "budget":
             if h_type == "Hostel": s += 20
