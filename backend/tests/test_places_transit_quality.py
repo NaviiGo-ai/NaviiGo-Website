@@ -63,3 +63,29 @@ async def test_images_require_reusable_license_and_known_host():
  with patch('httpx.AsyncClient.get',new_callable=AsyncMock,side_effect=[page,info]):
   image=await destination_images.destination_image('Real place')
   assert image['credit']=='Author' and image['license']=='CC BY-SA 4.0'
+
+@pytest.mark.asyncio
+async def test_google_photos_use_key_server_side_and_preserve_attribution(monkeypatch):
+ monkeypatch.setenv('GOOGLE_PLACES_API_KEY','private-test-key')
+ payload={'places':[{'id':'id','googleMapsUri':'https://maps.google.com/?cid=1','photos':[{'name':'places/id/photos/photo','authorAttributions':[{'displayName':'Photographer','uri':'https://maps.google.com/contrib/1'}]}]}]}
+ with patch('httpx.AsyncClient.post',new_callable=AsyncMock,return_value=response(payload)) as post:
+  image=await destination_images._google_photo('Kochi')
+  assert image['source']=='Google Maps' and image['credit']=='Photographer'
+  assert image['image'].startswith('/api/places/photo?name=places/id/photos/photo')
+  assert 'private-test-key' not in str(image)
+  assert post.call_args.kwargs['headers']['X-Goog-Api-Key']=='private-test-key'
+
+@pytest.mark.asyncio
+async def test_different_flight_routes_do_not_block_each_other(monkeypatch):
+ monkeypatch.setattr(flight_search,'SERPAPI_KEY','test-key')
+ flight_search._cache.clear()
+ entered=[]
+ release=asyncio.Event()
+ async def provider(*args, **kwargs):
+  entered.append(kwargs['params']['arrival_id'])
+  if len(entered)==2: release.set()
+  await asyncio.wait_for(release.wait(),timeout=1)
+  return response({'best_flights':[]})
+ with patch('httpx.AsyncClient.get',side_effect=provider):
+  await asyncio.gather(flight_search.search_flights('DED','JAI','2099-02-01'),flight_search.search_flights('DED','DEL','2099-02-01'))
+ assert set(entered)=={'JAI','DEL'}

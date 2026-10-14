@@ -18,9 +18,9 @@ router = APIRouter()
 
 @router.get("/destination-image")
 @limiter.limit("60/minute")
-async def destination_image(request: Request, query: str = Query(..., min_length=2, max_length=100)):
+async def destination_image(request: Request, query: str = Query(..., min_length=2, max_length=100), reusable: bool = False):
     from services.destination_images import destination_image as resolve_image
-    return await resolve_image(query)
+    return await resolve_image(query, reusable=reusable)
 
 # ── Places API (New) constants ────────────────────────────────────────────────
 PLACES_API_BASE = "https://places.googleapis.com/v1"
@@ -257,8 +257,8 @@ async def get_photo(name: str = "", maxwidth: int = 400):
         return Response(content=resp.content, media_type=resp.headers.get("content-type", "image/jpeg"))
     except HTTPException:
         raise
-    except Exception as e:
-        print(f"[Places] Photo proxy error: {e}")
+    except Exception:
+        # Never log credential-bearing upstream request URLs.
         raise HTTPException(status_code=500, detail="Failed to fetch photo")
 
 
