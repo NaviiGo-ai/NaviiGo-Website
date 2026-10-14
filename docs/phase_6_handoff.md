@@ -1,6 +1,6 @@
 # Phase 6 implementation handoff — 14 October 2026
 
-Branch: `codex/phase-6-contract-alignment`. Canonical interface: [contract packet](phase_6_contract_packet.md). Companion mobile branch: `NaviiGoApp/astra/mobile-v2`.
+Branch: `main`. Reviewed Phase 6 source history: PRs #21–#24. Canonical interface: [contract packet](phase_6_contract_packet.md). Companion mobile branch: `NaviiGoApp/astra/mobile-v2`.
 
 ## Delivered behavior
 
@@ -32,7 +32,9 @@ Old name-only/ambiguous activity identities or missing saved revisions cannot sa
 
 Production Website and backend are live at the PR #22 merge `840f24b`; the exact backend commit was confirmed in Render and the Website production deployment status is successful. Host checks passed 11 deployed-rule cases, seven backend cases, seven Website-proxy cases and four tired-proposal request/acceptance cases, with all fresh synthetic records and identities cleaned up. Native Android emulator checks separately passed real Firebase A/B token claims and owner reads, live proposal acceptance/replay/conflict handling and cross-account denial; three real location-plugin checks passed. Physical-device, process-termination and offline-persistence checks remain unverified.
 
-The production `DESTINATION_DATA_UNAVAILABLE` failure was traced to missing `GEOAPIFY_API_KEY`. The user explicitly approved transferring only the existing local key into Render; it was saved with its value hidden and the configuration deployment was confirmed Live. Actual provider data then exposed a generation HTTP 500: restaurant and hotel ranking multiplied an explicitly unknown `rating: null`. Unknown ratings now contribute no rating boost while source values and known numeric weighting remain unchanged. Four regressions include complete generation with the actual provider normalization format. Final live generation verification after deploying this correction is tracked in the separate release report.
+The production `DESTINATION_DATA_UNAVAILABLE` failure was traced to missing `GEOAPIFY_API_KEY`. The user explicitly approved transferring only the existing local key into Render; it was saved with its value hidden and the configuration deployment was confirmed Live. Actual provider data then exposed a generation HTTP 500: restaurant and hotel ranking multiplied an explicitly unknown `rating: null`. Unknown ratings now contribute no rating boost while source values and known numeric weighting remain unchanged. Four regressions include complete generation with the actual provider normalization format.
+
+Fresh authenticated generation and same-operation replay pass against both the deployed backend and Website proxy. The checks confirm a committed owner receipt, actual saved activities, private ownership without a public projection, and exactly one owner itinerary after replay. These add four production checks to the previous 29, for 33 total. Every fresh synthetic identity and record was cleaned up; the earlier failed generation runs also received follow-up cleanup. Private records can omit a publication flag; absence does not imply publication. The check uses the documented nested `persistence.durable` response contract.
 
 A separate actual provider probe isolated hotel HTTP 400 rejection to the unsupported `accommodation.resort` request category. That category is removed from hotel searches, retaining hotel/hostel/guest-house/motel requests and historical resort normalization. The corrected live provider query returns HTTP 200 with real hotels, and a transport regression reproduces the rejected whole-request behavior.
 
