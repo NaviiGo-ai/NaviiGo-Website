@@ -1,0 +1,483 @@
+{
+  "name": "NaviiGo 1 - Free pilot invitations",
+  "nodes": [
+    {
+      "name": "Run manually",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "parameters": {},
+      "id": "naviigo-7",
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "name": "Scheduled run - enable after setup",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 */15 9-18 * * *"
+            }
+          ]
+        }
+      },
+      "id": "naviigo-8",
+      "position": [
+        0,
+        200
+      ],
+      "disabled": true
+    },
+    {
+      "name": "Campaign settings",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "return [{json:{\"sender\":\"NaviiGo24@gmail.com\",\"live\":false,\"campaign_id\":\"pilot-free-2026-10\",\"daily_limit\":20}}];"
+      },
+      "id": "naviigo-9",
+      "position": [
+        240,
+        0
+      ]
+    },
+    {
+      "name": "Verify sender mailbox",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "parameters": {
+        "url": "https://gmail.googleapis.com/gmail/v1/users/me/profile",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "gmailOAuth2",
+        "options": {}
+      },
+      "id": "naviigo-10",
+      "position": [
+        480,
+        0
+      ]
+    },
+    {
+      "name": "Check sender",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "if(String($input.first().json.emailAddress||\"\").toLowerCase()!==\"naviigo24@gmail.com\") throw new Error(\"Connect the NaviiGo24@gmail.com Gmail credential\"); return $input.all();"
+      },
+      "id": "naviigo-11",
+      "position": [
+        720,
+        0
+      ]
+    },
+    {
+      "name": "Read outreach rows",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "parameters": {
+        "resource": "sheet",
+        "documentId": {
+          "__rl": true,
+          "value": "SET_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Outreach",
+          "mode": "name"
+        },
+        "operation": "read",
+        "options": {}
+      },
+      "id": "naviigo-12",
+      "position": [
+        960,
+        0
+      ]
+    },
+    {
+      "name": "Prepare invite",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "function buildReport(rows, now=new Date()) {\n  validateRows(rows);\n  const statuses=['Yes','No','Contact','Question','Needs review','Unsubscribe','Out of office'];\n  const counts=Object.fromEntries(statuses.map(s=>[s,rows.filter(r=>r.reply_status===s).length]));\n  const sent=rows.filter(r=>r.delivery_state==='Sent').length;\n  const noReply=rows.filter(r=>r.delivery_state==='Sent' && (!r.reply_status || r.reply_status==='No reply')).length;\n  const pending=rows.filter(r=>r.delivery_state==='Sending').length;\n  const lines=['NaviiGo pilot outreach / '+indiaDate(now),'', 'Sent: '+sent,'Awaiting reply: '+noReply,\n    ...Object.entries(counts).map(([k,v])=>k+': '+v), 'Unreconciled sends: '+pending,'',\n    'Next actions:',...rows.filter(r=>r.next_action).slice(0,30).map(r=>clean(r.business_name,100)+' — '+clean(r.reply_status,30)+' — '+clean(r.next_action,180)),\n    '', 'Reply labels are triage signals, not verified onboarding approval. No reply does not mean No.'];\n  return {subject:'NaviiGo pilot outreach report / '+indiaDate(now),body_text:lines.join('\\n'),counts,sent,no_reply:noReply,unreconciled:pending};\n}\n\nfunction classifyReply(message, row, now=new Date()) {\n  // Match both sender and the actual Gmail thread; never match by subject alone.\n  if(!message.id || !message.threadId || message.threadId!==row.gmail_thread_id\n     || senderAddress(message)!==String(row.email||'').trim().toLowerCase()) return null;\n  if(message.id===row.reply_message_id) return null;\n  const received=new Date(message.date);\n  if(!Number.isFinite(received.getTime())) return null;\n  if(row.reply_received_at && received.getTime()<=new Date(row.reply_received_at).getTime()) return null;\n  const text=topReply(message.text);\n  const low=text.toLowerCase();\n  let status='Needs review', next='Read the reply and respond manually';\n  let optOut=yes(row.opt_out), contact='';\n  const addresses=(text.match(/[a-z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-z0-9-]+(?:\\.[a-z0-9-]+)+/gi)||[])\n    .filter(a=>!['naviigo24@gmail.com',String(row.email).toLowerCase()].includes(a.toLowerCase()));\n  const negative=/\\b(not interested|no thanks|no thank you|not now|we decline|not looking|do not want|don't want)\\b|^no[.!\\s]*$/i.test(low);\n  const positive=/\\byes\\b|\\b(we are interested|we're interested|happy to join|we would like to join|we'd like to join|interested in joining)\\b/i.test(low);\n  if(/\\b(unsubscribe|remove me|stop emailing|do not contact|don't contact|no more emails|remove us)\\b/.test(low)) {\n    status='Unsubscribe'; optOut=true; next='Suppress further outreach';\n  } else if(optOut) {\n    status='Unsubscribe'; next='Suppression retained; review manually before any change';\n  } else if(/\\b(out of (the )?office|away until|on leave|automatic reply|auto.reply)\\b/.test(low+' '+String(message.subject||'').toLowerCase())) {\n    status='Out of office'; next='Review the return date; no automatic resend';\n  } else if(/\\b(contact|reach|email|speak to|manager|owner)\\b/.test(low) && addresses.length) {\n    status='Contact'; contact=addresses.join(', '); next='Verify the suggested contact before creating a new outreach row';\n  } else if(negative && positive) {\n    status='Needs review'; next='Mixed intent; review manually';\n  } else if(negative) {\n    status='No'; optOut=true; next='Do not send further pilot invitations';\n  } else if(/\\?|\\b(pricing|how much|more details|more information|send details|share details)\\b/.test(low)) {\n    status='Question'; next='Team member to answer the question';\n  } else if(positive) {\n    status='Yes'; next='Arrange onboarding and verify business details; listing still needs approval';\n  }\n  return {business_id:row.business_id,reply_status:status,reply_message_id:message.id,\n    reply_received_at:received.toISOString(),reply_summary:clean(text,500),\n    suggested_contact:contact,opt_out:optOut,next_action:next,last_updated_at:now.toISOString()};\n}\n\nfunction clean(value, limit=200) {\n  return String(value||'').replace(/[\\r\\n\\x00-\\x1f]/g,' ').trim().slice(0,limit);\n}\n\nfunction indiaDate(now=new Date()) {\n  const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Kolkata',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(now);\n  return ['year','month','day'].map(t=>parts.find(p=>p.type===t).value).join('-');\n}\n\nfunction prepareInvite(rows, config, now=new Date()) {\n  validateRows(rows);\n  if(String(config.sender).toLowerCase()!=='naviigo24@gmail.com') throw new Error('Unexpected sender');\n  const today=indiaDate(now);\n  const count=rows.filter(r=>r.sent_at && indiaDate(new Date(r.sent_at))===today).length;\n  if(count>=Math.min(Number(config.daily_limit)||20,50)) return null;\n  // A previously attempted address is never automatically retried or emailed twice.\n  const attempted=new Set(rows.filter(r=>r.delivery_key || r.sent_at || ['Sending','Sent'].includes(r.delivery_state))\n    .map(r=>String(r.email||'').trim().toLowerCase()));\n  const candidate=rows.find(r=>r.delivery_state==='Ready'\n    && yes(r.email_verified) && yes(r.outreach_approved) && !yes(r.opt_out)\n    && !r.delivery_key && !r.gmail_thread_id && !r.sent_at\n    && (!r.reply_status || r.reply_status==='No reply')\n    && validEmail(String(r.email||'').trim())\n    && /^https:\\/\\//i.test(String(r.contact_source_url||''))\n    && !attempted.has(String(r.email).trim().toLowerCase()));\n  if(!candidate) return null;\n  const business=clean(candidate.business_name,120);\n  if(!business) throw new Error('Missing business name');\n  const key=clean(config.campaign_id,60)+':'+candidate.business_id;\n  return {business_id:candidate.business_id,email:String(candidate.email).trim(),\n    delivery_key:key,preview_only:config.live!==true,\n    subject:'NaviiGo pilot invitation | '+business+' ['+candidate.business_id+']',\n    body_text:'Hello '+business+' team,\\n\\n'+\n      'We are inviting businesses to join the NaviiGo pilot. NaviiGo helps travellers discover places and plan their trips.\\n\\n'+\n      'Participation is free during this pilot; no upfront payment is required. Would you like us to share the onboarding details? We will confirm your business information with you before publishing a listing.\\n\\n'+\n      'Please reply Yes, No, or share the right person for us to contact. If you would prefer no further outreach, reply Unsubscribe.\\n\\n'+\n      'Thank you,\\nTeam NaviiGo\\nNaviiGo24@gmail.com',\n    delivery_state:'Sending',last_updated_at:now.toISOString()};\n}\n\nfunction senderAddress(message) {\n  const from=message.from;\n  if(from?.value?.[0]?.address) return String(from.value[0].address).toLowerCase();\n  const text=typeof from==='string'?from:String(from?.text||message.From||'');\n  return (text.match(/<([^<>]+)>/)?.[1]||text).trim().toLowerCase();\n}\n\nfunction topReply(value) {\n  return String(value||'').slice(0,20000)\n    .split(/\\nOn [^\\n]{0,200}wrote:|\\n[- ]*Original Message[- ]*|\\nFrom:\\s/i)[0]\n    .split('\\n').filter(line=>!/^\\s*>/.test(line)).join('\\n').trim().slice(0,5000);\n}\n\nfunction validEmail(value) {\n  return /^[a-z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-z0-9-]+(?:\\.[a-z0-9-]+)+$/i.test(value)\n    && !/@(?:example\\.(?:com|org|net)|.+\\.invalid|.+\\.test)$/i.test(value);\n}\n\nfunction validateRows(rows) {\n  const ids=new Set();\n  for(const row of rows) {\n    const id=String(row.business_id||'');\n    if(!/^[a-z0-9_-]{1,64}$/i.test(id)) throw new Error('Every row needs a stable business_id using letters, digits, underscore or hyphen');\n    if(ids.has(id)) throw new Error('Duplicate business_id');\n    ids.add(id);\n  }\n}\n\nfunction yes(value) {\n  return value === true || /^(true|yes|1)$/i.test(String(value||'').trim());\n}\nconst invite=prepareInvite($input.all().map(i=>i.json),$(\"Campaign settings\").first().json); return invite?[{json:invite}]:[];"
+      },
+      "id": "naviigo-1",
+      "position": [
+        1200,
+        0
+      ]
+    },
+    {
+      "name": "Live sending gate",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "return $input.first().json.preview_only ? [] : $input.all();"
+      },
+      "id": "naviigo-2",
+      "position": [
+        1440,
+        0
+      ]
+    },
+    {
+      "name": "Claim before send",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "parameters": {
+        "resource": "sheet",
+        "documentId": {
+          "__rl": true,
+          "value": "SET_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Outreach",
+          "mode": "name"
+        },
+        "operation": "update",
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "business_id": "={{ $json.business_id }}",
+            "delivery_key": "={{ $json.delivery_key }}",
+            "delivery_state": "={{ $json.delivery_state }}",
+            "last_updated_at": "={{ $json.last_updated_at }}"
+          },
+          "matchingColumns": [
+            "business_id"
+          ],
+          "schema": [
+            {
+              "id": "business_id",
+              "displayName": "business_id",
+              "type": "string",
+              "required": false,
+              "defaultMatch": true,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "delivery_key",
+              "displayName": "delivery_key",
+              "type": "string",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "delivery_state",
+              "displayName": "delivery_state",
+              "type": "string",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "last_updated_at",
+              "displayName": "last_updated_at",
+              "type": "string",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {
+          "cellFormat": "RAW"
+        }
+      },
+      "id": "naviigo-3",
+      "position": [
+        1680,
+        0
+      ]
+    },
+    {
+      "name": "Send pilot invitation",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "sendTo": "={{ $(\"Prepare invite\").first().json.email }}",
+        "subject": "={{ $(\"Prepare invite\").first().json.subject }}",
+        "emailType": "text",
+        "message": "={{ $(\"Prepare invite\").first().json.body_text }}",
+        "options": {
+          "senderName": "Team NaviiGo",
+          "replyTo": "NaviiGo24@gmail.com",
+          "appendAttribution": false
+        }
+      },
+      "id": "naviigo-4",
+      "position": [
+        1920,
+        0
+      ]
+    },
+    {
+      "name": "Record delivery receipt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "const sent=$input.first().json; const invite=$(\"Prepare invite\").first().json; if(!sent.id||!sent.threadId) throw new Error(\"Missing Gmail receipt; reconcile Sending row manually\"); return [{json:{business_id:invite.business_id,delivery_key:invite.delivery_key,delivery_state:\"Sent\",sent_at:new Date().toISOString(),gmail_message_id:sent.id,gmail_thread_id:sent.threadId,reply_status:\"No reply\",last_updated_at:new Date().toISOString()}}];"
+      },
+      "id": "naviigo-5",
+      "position": [
+        2160,
+        0
+      ]
+    },
+    {
+      "name": "Save delivery receipt",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "parameters": {
+        "resource": "sheet",
+        "documentId": {
+          "__rl": true,
+          "value": "SET_GOOGLE_SHEET_ID",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "Outreach",
+          "mode": "name"
+        },
+        "operation": "update",
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "business_id": "={{ $json.business_id }}",
+            "delivery_key": "={{ $json.delivery_key }}",
+            "delivery_state": "={{ $json.delivery_state }}",
+            "sent_at": "={{ $json.sent_at }}",
+            "gmail_message_id": "={{ $json.gmail_message_id }}",
+            "gmail_thread_id": "={{ $json.gmail_thread_id }}",
+            "reply_status": "={{ $json.reply_status }}",
+            "last_updated_at": "={{ $json.last_updated_at }}"
+          },
+          "matchingColumns": [
+            "business_id"
+          ],
+          "schema": [
+            {
+              "id": "business_id",
+              "displayName": "business_id",
+              "type": "string",
+              "required": false,
+              "defaultMatch": true,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "delivery_key",
+              "displayName": "delivery_key",
+              "type": "string",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "delivery_state",
+              "displayName": "delivery_state",
+              "type": "string",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "sent_at",
+              "displayName": "sent_at",
+              "type": "string",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "gmail_message_id",
+              "displayName": "gmail_message_id",
+              "type": "string",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "gmail_thread_id",
+              "displayName": "gmail_thread_id",
+              "type": "string",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "reply_status",
+              "displayName": "reply_status",
+              "type": "string",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "last_updated_at",
+              "displayName": "last_updated_at",
+              "type": "string",
+              "required": false,
+              "defaultMatch": false,
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {
+          "cellFormat": "RAW"
+        }
+      },
+      "id": "naviigo-6",
+      "position": [
+        2400,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Run manually": {
+      "main": [
+        [
+          {
+            "node": "Campaign settings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Campaign settings": {
+      "main": [
+        [
+          {
+            "node": "Verify sender mailbox",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Verify sender mailbox": {
+      "main": [
+        [
+          {
+            "node": "Check sender",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check sender": {
+      "main": [
+        [
+          {
+            "node": "Read outreach rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read outreach rows": {
+      "main": [
+        [
+          {
+            "node": "Prepare invite",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare invite": {
+      "main": [
+        [
+          {
+            "node": "Live sending gate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Live sending gate": {
+      "main": [
+        [
+          {
+            "node": "Claim before send",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claim before send": {
+      "main": [
+        [
+          {
+            "node": "Send pilot invitation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send pilot invitation": {
+      "main": [
+        [
+          {
+            "node": "Record delivery receipt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Record delivery receipt": {
+      "main": [
+        [
+          {
+            "node": "Save delivery receipt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scheduled run - enable after setup": {
+      "main": [
+        [
+          {
+            "node": "Campaign settings",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Asia/Kolkata"
+  },
+  "pinData": {},
+  "tags": []
+}

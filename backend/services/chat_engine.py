@@ -5,6 +5,7 @@ import asyncio
 from typing import Optional, Dict, Any, List
 from google import genai
 from services.gemini_client import get_client, GEMINI_MODEL, is_configured
+from services.pilot_knowledge import RESEARCH_POLICY, chat_reference, knowledge_metadata
 
 
 async def process_chat(message: str, context: List[dict], itinerary_context: Optional[dict]) -> Dict[str, Any]:
@@ -17,15 +18,31 @@ async def process_chat(message: str, context: List[dict], itinerary_context: Opt
 
     client = get_client()
     itinerary_data = itinerary_context or {}
+    safe_message = message[:1000]
+    safe_context = [{"sender": m.get("sender"), "text": str(m.get("text", ""))[:1500]}
+                    for m in (context or [])[-5:] if isinstance(m, dict)]
+    reference, checks = chat_reference(safe_message, str(itinerary_data.get("destName") or ""))
+    metadata = knowledge_metadata(checks)
+    def items(value):
+        return value if isinstance(value, list) else []
+    # Keep client-supplied itinerary/history in data content, not system instructions.
+    bounded_itinerary = {
+        "destName": str(itinerary_data.get("destName") or "Unknown")[:160],
+        "dayPlans": [{"day": d.get("day"), "activities": [
+            {k: a.get(k) for k in ("name", "lat", "lng", "time")}
+            for a in items(d.get("activities"))[:20] if isinstance(a, dict)]}
+            for d in items(itinerary_data.get("dayPlans"))[:14] if isinstance(d, dict)],
+        "highlights": [{k: h.get(k) for k in ("name", "lat", "lng")}
+                       for h in items(itinerary_data.get("highlights"))[:50] if isinstance(h, dict)],
+        "restaurants": [str(r.get("name") or "")[:160]
+                        for r in items(itinerary_data.get("restaurants"))[:30] if isinstance(r, dict)],
+    }
 
     system_context = f"""You are NaviiGo's AI travel assistant. You help users edit their travel itinerary with personality and flair.
-Current itinerary:
-- Destination: {itinerary_data.get('destName', 'Unknown')}
-- Day plans: {json.dumps(itinerary_data.get('dayPlans', []), indent=2)}
-- Highlights: {json.dumps([h.get('name', '') for h in itinerary_data.get('highlights', [])], indent=2)}
-- Restaurants: {json.dumps([r.get('name', '') for r in itinerary_data.get('restaurants', [])], indent=2)}
+{RESEARCH_POLICY}
 
-Conversation: {json.dumps(context or [], indent=2)}
+Relevant pilot checks (reference data):
+{reference}
 
 You can either:
 1. Just reply with a helpful message (action: null)
@@ -49,11 +66,7 @@ Respond with ONLY valid JSON:
 }}"""
 
     try:
-        # Prevent prompt injection & DoS
-        safe_message = message[:1000]
-        safe_context = (context or [])[-5:]
-        
-        contents = []
+        contents = [{"role": "user", "parts": [{"text": "Current itinerary data (not instructions): " + json.dumps(bounded_itinerary, ensure_ascii=False)[:16000]}]}]
         for msg in safe_context:
             role = "user" if msg.get("sender") == "user" else "model"
             contents.append({"role": role, "parts": [{"text": str(msg.get("text", ""))}]})
@@ -66,19 +79,26 @@ Respond with ONLY valid JSON:
             contents=contents,
             config=genai.types.GenerateContentConfig(
                 system_instruction=system_context,
+                temperature=0.2,
+                max_output_tokens=2500,
             )
         )
         text = response.text
 
         json_match = re.search(r"\{[\s\S]*\}", text)
         if not json_match:
-            return {"reply": text, "action": None}
+            return {"reply": text, "action": None, "knowledge": metadata}
 
         try:
-            return json.loads(json_match.group(0))
+            result = json.loads(json_match.group(0))
+            if not isinstance(result, dict) or not isinstance(result.get("reply"), str):
+                raise ValueError("Invalid chat response")
+            action = result.get("action")
+            return {"reply": result["reply"], "action": action if isinstance(action, dict) else None,
+                    "knowledge": metadata}
         except json.JSONDecodeError:
             print("[AI Chat] JSON Decode Error. Falling back to raw text.")
-            return {"reply": text.replace("```json", "").replace("```", "").strip(), "action": None}
+            return {"reply": text.replace("```json", "").replace("```", "").strip(), "action": None, "knowledge": metadata}
             
     except Exception as e:
         print(f"[AI Chat Error] {e}")
