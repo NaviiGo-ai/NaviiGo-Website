@@ -17,6 +17,22 @@ const db = uid => uid ? environment.authenticatedContext(uid).firestore() : envi
 const projection = (ownerUid = 'alice') => ({ shareId: 'share-one', shareProjection: true, isPublic: true, ownerUid, form: { destination: 'jaipur', days: 2 }, generatedData: { dayPlans: [] }, destName: 'Jaipur', createdAt: new Date(), updatedAt: new Date() });
 const seed = async (record, document = 'itineraries/share-one') => environment.withSecurityRulesDisabled(async context => { await context.firestore().doc(document).set(record); });
 
+for (const collection of ['wallet', 'wallet_transactions']) {
+    test(`${collection}: owner can read server records but no client can forge, alter or delete them`, async () => {
+        const document = `users/alice/${collection}/account`;
+        await assertFails(db('alice').doc(document).set({ balance: 999999 }));
+        await assertFails(db('bob').doc(document).set({ balance: 999999 }));
+        await assertFails(db().doc(document).set({ balance: 999999 }));
+        await seed({ balance: 100, amount: 100 }, document);
+        await assertSucceeds(db('alice').doc(document).get());
+        await assertFails(db('bob').doc(document).get());
+        await assertFails(db().doc(document).get());
+        await assertFails(db('alice').doc(document).update({ balance: 999999 }));
+        await assertFails(db('alice').doc(document).delete());
+        await assertFails(db('alice').doc(`${document}/nested/forged`).set({ amount: 999999 }));
+    });
+}
+
 test('owner private itineraries, preferences and Passport remain owner-only', async () => {
     for (const document of ['users/alice/itineraries/trip-one', 'users/alice/preferences/main', 'users/alice/passport/stats', 'users/alice/passport/stamps/entries/stamp-one']) {
         await assertSucceeds(db('alice').doc(document).set({ private: true }));

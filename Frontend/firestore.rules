@@ -39,7 +39,11 @@ service cloud.firestore {
         }
       }
       match /{subcollection}/{document=**} {
-        allow read, write: if isOwner(userId) && subcollection != 'itineraries';
+        allow read: if isOwner(userId) && subcollection != 'itineraries';
+        // Financial mirrors are written only by the trusted backend/Admin SDK.
+        // Keep this exclusion in the catch-all: overlapping rules are ORed.
+        allow write: if isOwner(userId)
+          && !(subcollection in ['itineraries', 'wallet', 'wallet_transactions']);
       }
     }
 

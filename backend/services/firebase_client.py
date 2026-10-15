@@ -115,4 +115,4 @@ def verify_firebase_id_token(id_token: str) -> dict:
     _init()
     if _app is None:
         raise RuntimeError("Firebase Admin is not configured on the backend")
-    return firebase_auth.verify_id_token(id_token, app=_app)
+    return firebase_auth.verify_id_token(id_token, app=_app, check_revoked=True)
