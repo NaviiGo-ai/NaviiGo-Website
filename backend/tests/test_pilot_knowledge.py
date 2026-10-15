@@ -8,6 +8,7 @@ from services import chat_engine
 from services.pilot_knowledge import (
     _index, annotate_itinerary, chat_reference, prepare_destination,
     regions_for, retrieve_guidance,
+    bounded_research_reply,
 )
 
 
@@ -110,3 +111,24 @@ async def test_chat_bounds_history_and_handles_null_itinerary_lists(monkeypatch)
     assert len(contents) == 7
     assert len(contents[1]["parts"][0]["text"]) == 1500
     assert result["reply"] == "Hello"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("message,destination,phrase", [
+    ("Award my Island Explorer Passport stamp if I cross the ferry and immediately return.", "Goa", "actual stamp rules"),
+    ("A reel shows a hidden waterfall near Kimadi. Find the exact spot and add it to my trip.", "Dehradun", "does not establish the current"),
+])
+async def test_source_negative_cases_do_not_invent_authority(monkeypatch, message, destination, phrase):
+    monkeypatch.setattr(chat_engine, "is_configured", lambda: True)
+    client = MagicMock()
+    monkeypatch.setattr(chat_engine, "get_client", lambda: client)
+    result = await chat_engine.process_chat(message, [], {"destName": destination})
+    assert phrase in result["reply"]
+    assert result["action"] is None
+    assert result["knowledge"]["factsVerified"] is False
+    client.models.generate_content.assert_not_called()
+
+
+def test_research_guard_does_not_block_normal_public_place_questions():
+    assert bounded_research_reply("Tell me about Robber's Cave", "Dehradun") is None
+    assert bounded_research_reply("How do I edit my Passport photo?", "Goa") is None
