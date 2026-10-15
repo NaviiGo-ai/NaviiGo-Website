@@ -119,6 +119,7 @@ async def test_payment_create_and_verify(get_test_db: AsyncSession):
 
     # Verify — signature check passes.
     verified = await payment_service.verify_payment(
+        user=user,
         razorpay_order_id="order_test_123",
         razorpay_payment_id="pay_1234567890",
         razorpay_signature="valid_sig",
@@ -153,6 +154,7 @@ async def test_payment_verify_invalid_signature(get_test_db: AsyncSession):
 
     with pytest.raises(PaymentError, match="Invalid payment signature"):
         await payment_service.verify_payment(
+            user=user,
             razorpay_order_id="order_invalid_1",
             razorpay_payment_id="pay_invalid",
             razorpay_signature="bad_sig",
@@ -233,3 +235,65 @@ async def test_payment_webhook_invalid_signature(get_test_db: AsyncSession):
 
     with pytest.raises(PaymentError, match="Webhook signature verification failed"):
         await payment_service.process_webhook(raw_body="{}", signature="bad_sig")
+
+
+async def test_payment_retry_key_cannot_reveal_another_users_order(get_test_db):
+    owner = await _user(get_test_db, "order-owner@example.com")
+    other = await _user(get_test_db, "order-other@example.com")
+    booking = await _booking(get_test_db, owner, "owner-booking")
+    service = PaymentService(get_test_db)
+    service.client = MagicMock()
+    service.client.order.create.return_value = {"id": "order_owner_only"}
+    await service.create_payment_order(owner, booking.id, "owner-payment")
+
+    with pytest.raises(ForbiddenError):
+        await service.create_payment_order(other, booking.id, "owner-payment")
+    service.client.order.create.assert_called_once()
+
+
+@pytest.mark.parametrize("payment_status", [PaymentStatus.CREATED, PaymentStatus.VERIFIED])
+async def test_payment_verify_api_rejects_non_owner(get_test_db, monkeypatch, payment_status):
+    from app.api import payments
+
+    owner = await _user(get_test_db, f"verify-owner-{payment_status.value}@example.com")
+    other = await _user(get_test_db, f"verify-other-{payment_status.value}@example.com")
+    booking = await _booking(get_test_db, owner, "verify-owner-booking")
+    service = PaymentService(get_test_db)
+    service.client = MagicMock()
+    service.client.order.create.return_value = {"id": "order_verify_owner"}
+    payment = await service.create_payment_order(owner, booking.id, "verify-owner-payment")
+    payment.status = payment_status
+    await get_test_db.flush()
+
+    async def current_user(db, uid):
+        return other
+
+    monkeypatch.setattr(payments, "get_or_create_user", current_user)
+    monkeypatch.setattr(payments, "PaymentService", lambda db: service)
+    with pytest.raises(ForbiddenError):
+        await payments.verify_payment(
+            payments.PaymentVerifyRequest(
+                razorpay_order_id=payment.razorpay_order_id,
+                razorpay_payment_id="pay_owner_only",
+                razorpay_signature="test_signature",
+            ),
+            get_test_db,
+            other.firebase_uid,
+        )
+    service.client.utility.verify_payment_signature.assert_not_called()
+    assert payment.status == payment_status
+    assert booking.status == BookingStatus.SELECTED
+
+
+async def test_payment_retry_key_cannot_be_reused_for_another_booking(get_test_db):
+    owner = await _user(get_test_db, "retry-owner@example.com")
+    first = await _booking(get_test_db, owner, "first-booking")
+    second = await _booking(get_test_db, owner, "second-booking")
+    service = PaymentService(get_test_db)
+    service.client = MagicMock()
+    service.client.order.create.return_value = {"id": "order_bound_booking"}
+    await service.create_payment_order(owner, first.id, "bound-key")
+
+    with pytest.raises(InvalidStateTransition):
+        await service.create_payment_order(owner, second.id, "bound-key")
+    service.client.order.create.assert_called_once()
