@@ -12,8 +12,10 @@ from app.core.errors import (
     CouponExpiredError,
     CouponMinBookingAmountError,
     CouponUsageLimitError,
+    ForbiddenError,
     InsufficientBalanceError,
     InvalidCouponError,
+    WalletError,
     WalletLockedError,
 )
 from app.core.logging import get_logger
@@ -33,6 +35,28 @@ logger = get_logger(__name__)
 class WalletService:
     def __init__(self, db: AsyncSession):
         self.db = db
+
+    @staticmethod
+    def _validate_replay(
+        tx: WalletTransaction,
+        user: User,
+        tx_type: WalletTxType,
+        amount_minor: int,
+        reference_id: Optional[str],
+    ) -> None:
+        if tx.user_id != user.id:
+            raise ForbiddenError()
+        if (
+            tx.type != tx_type
+            or tx.amount_minor != amount_minor
+            or tx.reference_id != reference_id
+            or tx.status != WalletTxStatus.COMPLETED
+        ):
+            raise WalletError(
+                "This idempotency key was already used for a different transaction.",
+                code="IDEMPOTENCY_CONFLICT",
+                status_code=409,
+            )
 
     async def get_or_create_account(self, user: User) -> WalletAccount:
         """Fetch the authoritative WalletAccount or initialize a zero-balance account."""
@@ -86,6 +110,9 @@ class WalletService:
             )
             existing_tx = await self.db.scalar(stmt)
             if existing_tx is not None:
+                self._validate_replay(
+                    existing_tx, user, WalletTxType.DEBIT, amount_minor, reference_id
+                )
                 logger.info(
                     "Replaying idempotent wallet debit",
                     extra={"idempotency_key": idempotency_key, "tx_id": str(existing_tx.id)},
@@ -164,6 +191,9 @@ class WalletService:
             )
             existing_tx = await self.db.scalar(stmt)
             if existing_tx is not None:
+                self._validate_replay(
+                    existing_tx, user, WalletTxType.REFUND, amount_minor, reference_id
+                )
                 logger.info(
                     "Replaying idempotent wallet refund",
                     extra={"idempotency_key": idempotency_key, "tx_id": str(existing_tx.id)},
