@@ -1,122 +1,116 @@
-# ─── SSRF-safe URL fetching ────────────────────────────────────────────────────
-# Every user-supplied URL passes through this module before any HTTP request.
-# We block private IPs, metadata services, non-http schemes, and cap response
-# size and redirects.
-from __future__ import annotations
-
+"""DNS-pinned public fetches with pre-connect redirect checks and streaming caps."""
+import asyncio
 import ipaddress
 import socket
-from urllib.parse import urlparse
+from urllib.parse import urljoin, urlparse
 
 import httpx
-
 from app.core.config import get_settings
 from app.core.errors import UnsafeUrlError
-from app.core.logging import get_logger
-
-logger = get_logger(__name__)
-
-# Private / dangerous ranges to block for user-supplied URLs.
-_BLOCKED_NETWORKS = [
-    ipaddress.ip_network("127.0.0.0/8"),     # loopback v4
-    ipaddress.ip_network("::1/128"),          # loopback v6
-    ipaddress.ip_network("10.0.0.0/8"),
-    ipaddress.ip_network("172.16.0.0/12"),
-    ipaddress.ip_network("192.168.0.0/16"),
-    ipaddress.ip_network("0.0.0.0/8"),
-    ipaddress.ip_network("100.64.0.0/10"),    # CGNAT
-    ipaddress.ip_network("169.254.0.0/16"),   # link-local v4
-    ipaddress.ip_network("fe80::/10"),         # link-local v6
-    ipaddress.ip_network("fd00::/8"),          # ULA v6
-    ipaddress.ip_network("fc00::/7"),          # unique-local v6
-    ipaddress.ip_network("ff00::/8"),          # multicast v6
-    # Cloud metadata services
-    ipaddress.ip_network("169.254.169.254/32"),
-]
-
-_ALLOWED_SCHEMES = {"http", "https"}
 
 
-def _is_private_ip(host: str) -> bool:
-    """Check whether a hostname resolves to a blocked IP.
-
-    Literal IPs are checked directly (no DNS re-resolution) so a redirect to
-    ``http://127.0.0.1`` or ``http://169.254.169.254`` can never sneak past the
-    guard even if a resolver is tricked or offline.
-    """
+def _public_addresses(host, port):
     try:
-        direct = ipaddress.ip_address(host.strip("[]"))
+        addresses = [str(ipaddress.ip_address(host))]
     except ValueError:
-        direct = None
-    else:
-        for net in _BLOCKED_NETWORKS:
-            if direct in net:
-                return True
-        # A literal public IP is safe — no need to consult DNS at all.
-        return False
+        try:
+            addresses = list(dict.fromkeys(r[4][0] for r in socket.getaddrinfo(host, port, socket.AF_UNSPEC, socket.SOCK_STREAM)))
+        except OSError as error:
+            raise UnsafeUrlError("The URL hostname could not be resolved safely.") from error
+    if not addresses:
+        raise UnsafeUrlError("The URL hostname could not be resolved safely.")
+    for address in addresses:
+        ip = ipaddress.ip_address(address)
+        ip = getattr(ip, "ipv4_mapped", None) or ip
+        if not ip.is_global or ip.is_multicast or ip.is_reserved or ip.is_unspecified:
+            raise UnsafeUrlError("This URL points to a private or internal network address.")
+    return addresses
 
+
+def _is_private_ip(host):
     try:
-        addr_infos = socket.getaddrinfo(host, None, socket.AF_UNSPEC, socket.SOCK_STREAM)
-    except socket.gaierror:
-        return True  # unresolvable → block
-    for (_, _, _, _, sockaddr) in addr_infos:
-        ip = ipaddress.ip_address(sockaddr[0])
-        for net in _BLOCKED_NETWORKS:
-            if ip in net:
-                return True
-    return False
+        _public_addresses(host.strip("[]"), 443)
+        return False
+    except (UnsafeUrlError, ValueError):
+        return True
 
 
-def validate_url(url: str) -> str:
-    """Validate and return a safe URL, or raise UnsafeUrlError."""
-    parsed = urlparse(url)
-    if parsed.scheme.lower() not in _ALLOWED_SCHEMES:
-        raise UnsafeUrlError(f"URL scheme '{parsed.scheme}' is not allowed. Use http:// or https://.")
-    if not parsed.hostname:
-        raise UnsafeUrlError("Invalid URL: no hostname found.")
-    hostname = parsed.hostname.lower()
-    if hostname in ("localhost", "localhost.localdomain"):
-        raise UnsafeUrlError("URLs pointing to localhost are blocked for safety.")
-    if _is_private_ip(hostname):
-        raise UnsafeUrlError("This URL points to a private or internal network address.")
+def _validated_target(url):
+    if not isinstance(url, str) or len(url) > 4096 or any(ord(c) <= 32 or ord(c) == 127 for c in url):
+        raise UnsafeUrlError("Invalid URL.")
+    try:
+        parsed = urlparse(url)
+        if parsed.scheme.lower() not in {"http", "https"}:
+            raise UnsafeUrlError("URL scheme is not allowed. Use http:// or https://.")
+        if not parsed.hostname:
+            raise UnsafeUrlError("Invalid URL: no hostname found.")
+        hostname = parsed.hostname.lower().rstrip(".")
+        if hostname in {"localhost", "localhost.localdomain"}:
+            raise UnsafeUrlError("URLs pointing to localhost are blocked for safety.")
+        if parsed.username is not None or parsed.password is not None:
+            raise UnsafeUrlError("URLs containing credentials are not allowed.")
+        port = parsed.port or (443 if parsed.scheme == "https" else 80)
+        return parsed, _public_addresses(hostname, port)
+    except ValueError as error:
+        raise UnsafeUrlError("Invalid URL.") from error
+
+
+def validate_url(url):
+    _validated_target(url)
     return url
 
 
-async def safe_fetch(url: str, *, headers: dict | None = None) -> httpx.Response:
-    """Fetch a user-supplied URL after SSRF validation.
+async def safe_fetch(url, *, headers=None, transport=None):
+    """Pin validated DNS results; preserve Host and TLS identity, never disable TLS.
 
-    Caps response size, follows limited redirects, enforces timeout.
+    The optional transport is a hermetic test seam. No environment proxy or
+    automatic redirects can bypass validation. Deadline covers DNS, hops and body.
     """
     settings = get_settings()
-    safe_url = validate_url(url)
-
-    default_headers = {
-        "User-Agent": "Mozilla/5.0 (compatible; NaviiGoBot/2.0; +https://naviigo.in)",
-        "Accept": "text/html,application/xhtml+xml",
-    }
-    if headers:
-        default_headers.update(headers)
-
-    async with httpx.AsyncClient(
-        timeout=settings.URL_FETCH_TIMEOUT_SECONDS,
-        max_redirects=settings.URL_FETCH_MAX_REDIRECTS,
-        follow_redirects=True,
-    ) as client:
-        resp = await client.get(safe_url, headers=default_headers)
-        # Also validate the final resolved URL after redirects
-        final_url = str(resp.url)
-        final_parsed = urlparse(final_url)
-        if final_parsed.hostname and _is_private_ip(final_parsed.hostname):
-            raise UnsafeUrlError("This URL redirected to a private network address.")
-
-        # Cap response body size
-        if resp.headers.get("content-length"):
-            try:
-                if int(resp.headers["content-length"]) > settings.URL_FETCH_MAX_BYTES:
-                    raise UnsafeUrlError("Response is too large.")
-            except ValueError:
-                pass
-        if len(resp.content) > settings.URL_FETCH_MAX_BYTES:
-            raise UnsafeUrlError("Response is too large.")
-
-        return resp
+    request_headers = httpx.Headers({"User-Agent": "NaviiGoBot/2.0 (+https://naviigo.in)",
+        "Accept": "text/html,application/xhtml+xml", "Accept-Encoding": "identity"})
+    request_headers.update(headers or {})
+    current = url
+    try:
+        async with asyncio.timeout(settings.URL_FETCH_TIMEOUT_SECONDS):
+            async with httpx.AsyncClient(timeout=settings.URL_FETCH_TIMEOUT_SECONDS, follow_redirects=False,
+                                         trust_env=False, transport=transport,
+                                         limits=httpx.Limits(max_keepalive_connections=0)) as client:
+                for hop in range(settings.URL_FETCH_MAX_REDIRECTS + 1):
+                    parsed, addresses = await asyncio.to_thread(_validated_target, current)
+                    original = httpx.URL(current)
+                    pinned = original.copy_with(host=addresses[0])
+                    request_headers["Host"] = original.netloc.decode("ascii")
+                    async with client.stream("GET", pinned, headers=request_headers,
+                                             extensions={"sni_hostname": original.host}) as response:
+                        if response.status_code in {301, 302, 303, 307, 308}:
+                            if hop == settings.URL_FETCH_MAX_REDIRECTS:
+                                raise UnsafeUrlError("Too many URL redirects.")
+                            location = response.headers.get("location")
+                            if not location:
+                                raise UnsafeUrlError("Invalid URL redirect.")
+                            target = urljoin(current, location)
+                            if httpx.URL(target).netloc != original.netloc or urlparse(target).scheme != parsed.scheme:
+                                for key in ("Authorization", "Cookie", "Proxy-Authorization"):
+                                    request_headers.pop(key, None)
+                            current = target
+                            continue
+                        try:
+                            length = int(response.headers.get("content-length", "0"))
+                        except ValueError:
+                            length = 0
+                        if length > settings.URL_FETCH_MAX_BYTES:
+                            raise UnsafeUrlError("Response is too large.")
+                        content = bytearray()
+                        async for chunk in response.aiter_bytes():
+                            if len(content) + len(chunk) > settings.URL_FETCH_MAX_BYTES:
+                                raise UnsafeUrlError("Response is too large.")
+                            content.extend(chunk)
+                        output_headers = httpx.Headers(response.headers)
+                        for key in ("content-encoding", "content-length", "transfer-encoding", "set-cookie"):
+                            output_headers.pop(key, None)
+                        return httpx.Response(response.status_code, headers=output_headers, content=bytes(content),
+                                              request=httpx.Request("GET", current))
+    except TimeoutError as error:
+        raise UnsafeUrlError("The URL fetch timed out.") from error
+    raise UnsafeUrlError("URL could not be fetched safely.")

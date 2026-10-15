@@ -4,12 +4,14 @@ from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
 from services.recommendations_engine import get_recommendations
 from services.user_data import get_full_user_context, update_browsing_signals
+from app.core.dependencies import OptionalUserId
+from app.core.errors import AppError, AuthRequiredError, ForbiddenError
 
 router = APIRouter()
 
 
 class RecommendationsRequest(BaseModel):
-    userId: Optional[str] = None  # Firebase UID — enriches with stored user data
+    userId: Optional[str] = None  # Optional compatibility field; never establishes identity
     budget: Optional[int] = 15000
     month: Optional[int] = None
     group: Optional[str] = None
@@ -21,9 +23,14 @@ class RecommendationsRequest(BaseModel):
 
 
 @router.post("/")
-async def recommendations(request: RecommendationsRequest):
+async def recommendations(request: RecommendationsRequest, uid: OptionalUserId):
+    if request.userId:
+        if not uid:
+            raise AuthRequiredError()
+        if request.userId != uid:
+            raise ForbiddenError("Recommendations must use the signed-in account.")
     try:
-        # If userId provided, enrich request with stored user data
+        # Only a verified token enables stored user context
         taste_vector = request.tasteVector
         browsing_signals = request.browsingSignals
         past_destinations = request.pastDestinations
@@ -31,8 +38,8 @@ async def recommendations(request: RecommendationsRequest):
         group = request.group
         purpose = request.purpose
 
-        if request.userId:
-            user_ctx = await get_full_user_context(request.userId)
+        if uid:
+            user_ctx = await get_full_user_context(uid)
             # Use stored data as fallback (request data takes priority)
             if not taste_vector and user_ctx.get("tasteVector"):
                 taste_vector = user_ctx["tasteVector"]
@@ -47,7 +54,7 @@ async def recommendations(request: RecommendationsRequest):
 
             # Persist incoming browsing signals to Firebase
             if request.browsingSignals:
-                await update_browsing_signals(request.userId, request.browsingSignals)
+                await update_browsing_signals(uid, request.browsingSignals)
 
         results = await get_recommendations(
             budget=request.budget or 15000,
@@ -60,5 +67,7 @@ async def recommendations(request: RecommendationsRequest):
             browsing_signals=browsing_signals,
         )
         return {"success": True, "recommendations": results}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    except AppError:
+        raise
+    except Exception:
+        raise HTTPException(status_code=500, detail="Recommendations are temporarily unavailable.")
