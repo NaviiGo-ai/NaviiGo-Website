@@ -5,7 +5,9 @@ import asyncio
 from typing import Optional, Dict, Any, List
 from google import genai
 from services.gemini_client import get_client, GEMINI_MODEL, is_configured
-from services.pilot_knowledge import RESEARCH_POLICY, chat_reference, knowledge_metadata
+from services.pilot_knowledge import (
+    RESEARCH_POLICY, bounded_research_reply, chat_reference, knowledge_metadata,
+)
 
 
 async def process_chat(message: str, context: List[dict], itinerary_context: Optional[dict]) -> Dict[str, Any]:
@@ -23,6 +25,9 @@ async def process_chat(message: str, context: List[dict], itinerary_context: Opt
                     for m in (context or [])[-5:] if isinstance(m, dict)]
     reference, checks = chat_reference(safe_message, str(itinerary_data.get("destName") or ""))
     metadata = knowledge_metadata(checks)
+    grounded_reply = bounded_research_reply(safe_message, str(itinerary_data.get("destName") or ""))
+    if grounded_reply:
+        return {"reply": grounded_reply, "action": None, "knowledge": metadata}
     def items(value):
         return value if isinstance(value, list) else []
     # Keep client-supplied itinerary/history in data content, not system instructions.

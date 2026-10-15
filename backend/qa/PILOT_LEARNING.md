@@ -16,6 +16,9 @@ weight update or a claim that all test cases pass.
   system instructions. Generation uses a lower temperature and bounded output.
 - The planner filters the explicit Dehradun Kimadi/unnamed-waterfall negative
   cases before route selection. Kimadi village itself is not excluded.
+- Chat enforces bounded replies for sensitive Dehradun waterfall-route requests
+  and requests to award/confirm Passport achievements. It does not infer current
+  access from research reports or invent stamp criteria/verified completion.
 - Existing provider places with exact research-name matches receive visible
   “Before you go” cautions in their descriptions. Research rows never add venues.
 - Cautions/metadata are generated server-side and persist with newly generated
