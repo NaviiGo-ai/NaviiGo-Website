@@ -4,12 +4,10 @@
 
 from __future__ import annotations
 
-import uuid
-from typing import Optional
-
 from fastapi import APIRouter, Query, status
 
 from app.core.dependencies import CurrentUserId, DBSession
+from app.core.errors import WalletError
 from app.users.service import get_or_create_user
 from app.wallet.schemas import (
     CouponApplyRequest,
@@ -51,18 +49,12 @@ async def debit_wallet(
     db: DBSession,
     firebase_uid: CurrentUserId,
 ) -> WalletTransactionRead:
-    """Deduct balance from user's wallet with row locking and idempotency."""
-    user = await get_or_create_user(db, firebase_uid)
-    service = WalletService(db)
-    tx = await service.debit_wallet(
-        user=user,
-        amount_minor=payload.amount_minor,
-        reference_id=payload.reference_id,
-        idempotency_key=payload.idempotency_key,
-        description=payload.description,
+    """Unavailable until checkout derives the amount from an owned booking."""
+    raise WalletError(
+        "Wallet checkout is not available yet.",
+        code="WALLET_CHECKOUT_UNAVAILABLE",
+        status_code=503,
     )
-    await db.commit()
-    return tx
 
 
 @router.post(
@@ -75,18 +67,12 @@ async def refund_wallet(
     db: DBSession,
     firebase_uid: CurrentUserId,
 ) -> WalletTransactionRead:
-    """Credit refund back to user's wallet with row locking and idempotency."""
-    user = await get_or_create_user(db, firebase_uid)
-    service = WalletService(db)
-    tx = await service.refund_wallet(
-        user=user,
-        amount_minor=payload.amount_minor,
-        reference_id=payload.reference_id,
-        idempotency_key=payload.idempotency_key,
-        reason=payload.reason,
+    """Unavailable until cancellation verifies the original debit and amount."""
+    raise WalletError(
+        "Wallet refunds are not available yet. Please contact support.",
+        code="WALLET_REFUND_UNAVAILABLE",
+        status_code=503,
     )
-    await db.commit()
-    return tx
 
 
 @router.get("/account", response_model=WalletAccountRead)
