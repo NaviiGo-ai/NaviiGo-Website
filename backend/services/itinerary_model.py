@@ -13,6 +13,7 @@ from services.feasibility_validator import (
     validate_itinerary_feasibility,
     repair_itinerary_feasibility,
 )
+from services.pilot_knowledge import prepare_destination, annotate_itinerary
 
 
 # ─── Purpose → tag affinity weights ──────────────────────────────────────────
@@ -769,6 +770,8 @@ def generate_itinerary(ctx: dict, dest_data: dict) -> Optional[dict]:
     """
     if not dest_data:
         return None
+
+    dest_data = prepare_destination(ctx, dest_data)
 
     days = max(1, int(ctx.get("days", 3)))
     budget = ctx.get("budget", 15000)
@@ -1696,4 +1699,4 @@ def generate_itinerary(ctx: dict, dest_data: dict) -> Optional[dict]:
         f"Dup Restaurants: {feasibility_report['duplicate_restaurants_count']}"
     )
 
-    return repaired_result
+    return annotate_itinerary(repaired_result, ctx)
