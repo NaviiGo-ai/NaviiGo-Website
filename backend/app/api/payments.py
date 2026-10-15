@@ -46,11 +46,11 @@ async def verify_payment(
     db: DBSession,
     firebase_uid: CurrentUserId
 ) -> PaymentRead:
-    # We load user to establish auth, although verification is theoretically bound to the order ID.
-    _ = await get_or_create_user(db, firebase_uid)
+    user = await get_or_create_user(db, firebase_uid)
     service = PaymentService(db)
 
     payment = await service.verify_payment(
+        user=user,
         razorpay_order_id=payload.razorpay_order_id,
         razorpay_payment_id=payload.razorpay_payment_id,
         razorpay_signature=payload.razorpay_signature

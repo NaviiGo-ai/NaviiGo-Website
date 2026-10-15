@@ -43,6 +43,11 @@ class PaymentService:
         result = await self.db.execute(select(Payment).where(Payment.idempotency_key == idempotency_key))
         existing = result.scalar_one_or_none()
         if existing:
+            existing_booking = await self.db.get(Booking, existing.booking_id)
+            if not existing_booking or existing_booking.user_id != user.id:
+                raise ForbiddenError("You do not own this payment.")
+            if existing.booking_id != booking_id:
+                raise InvalidStateTransition("Payment retry key belongs to another booking.")
             return existing
 
         # Fetch booking to ensure it belongs to the user and is valid for payment
@@ -112,6 +117,7 @@ class PaymentService:
 
     async def verify_payment(
         self,
+        user: User,
         razorpay_order_id: str,
         razorpay_payment_id: str,
         razorpay_signature: str
@@ -124,6 +130,10 @@ class PaymentService:
 
         if not payment:
             raise PaymentError("Payment not found for order ID")
+
+        booking = await self.db.get(Booking, payment.booking_id)
+        if not booking or booking.user_id != user.id:
+            raise ForbiddenError("You do not own this payment.")
 
         if payment.status in {PaymentStatus.VERIFIED, PaymentStatus.CAPTURED}:
             return payment  # Already processed
@@ -152,7 +162,6 @@ class PaymentService:
         self.db.add(payment)
 
         # Also update booking status
-        booking = await self.db.get(Booking, payment.booking_id)
         if booking and booking.status in {BookingStatus.SELECTED, BookingStatus.PRICE_CONFIRMED}:
             booking.status = BookingStatus.CONFIRMED
             booking.booked_at = datetime.now(timezone.utc)
