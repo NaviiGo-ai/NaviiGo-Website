@@ -12,6 +12,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     '/itinerary',
     '/passport',
     '/about',
+    '/founder-travels',
   ].map((route) => ({
     url: `${BASE_URL}${route}`,
     lastModified: new Date().toISOString(),
