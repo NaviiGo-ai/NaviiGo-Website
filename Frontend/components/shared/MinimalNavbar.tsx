@@ -10,6 +10,7 @@ import { useAuth } from '@/lib/AuthContext';
 const NAV_LINKS = [
   { name: 'Discover', href: '/explore', chapter: '02' },
   { name: 'Plan', href: '/plan', chapter: '03' },
+  { name: 'Founder Travels', href: '/founder-travels', chapter: 'FT' },
   { name: 'Passport', href: '/passport', chapter: '04' },
   { name: 'Bookings', href: '/bookings', chapter: '05' },
   { name: 'About', href: '/about', chapter: '06' },
@@ -78,7 +79,7 @@ export default function MinimalNavbar() {
           </Link>
 
           {/* Desktop Editorial Navigation */}
-          <nav className="hidden md:flex items-center gap-8 text-sm font-sans" aria-label="Main Navigation">
+          <nav className="hidden xl:flex items-center gap-5 text-sm font-sans" aria-label="Main Navigation">
             {NAV_LINKS.map((link) => {
               const active = pathname === link.href || (link.href === '/plan' && pathname.startsWith('/itinerary'));
               return (
@@ -162,7 +163,7 @@ export default function MinimalNavbar() {
             {/* Mobile Hamburger Button */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 rounded-lg text-naviigo-brown hover:bg-naviigo-brown/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-naviigo-orange touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center"
+              className="xl:hidden p-2 rounded-lg text-naviigo-brown hover:bg-naviigo-brown/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-naviigo-orange touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center"
               aria-label={mobileMenuOpen ? 'Close Navigation Menu' : 'Open Navigation Menu'}
               aria-expanded={mobileMenuOpen}
             >
@@ -175,7 +176,7 @@ export default function MinimalNavbar() {
       {/* ── Mobile Full-Screen Branded Menu ──────────────────────── */}
       {mobileMenuOpen && (
         <div
-          className="fixed inset-0 z-40 bg-paper-warm text-naviigo-text flex flex-col justify-between p-6 sm:p-8 md:hidden animate-fade-up overflow-y-auto"
+          className="fixed inset-0 z-40 bg-paper-warm text-naviigo-text flex flex-col justify-between p-6 sm:p-8 xl:hidden animate-fade-up overflow-y-auto"
           role="dialog"
           aria-modal="true"
           aria-label="Mobile Navigation"

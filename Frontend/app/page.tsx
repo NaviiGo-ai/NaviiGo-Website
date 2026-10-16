@@ -10,6 +10,7 @@ import PlanExperienceSection from '@/components/features/home/04-plan-experience
 import ManageChapter from '@/components/features/home/05-manage-chapter';
 import RememberMemoryField from '@/components/features/home/06-remember-memory-field';
 import NextJourneyFooter from '@/components/features/home/07-next-journey-footer';
+import FounderTravelsSection from '@/components/features/home/FounderTravelsSection';
 
 if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger);
@@ -43,6 +44,8 @@ export default function HomePage() {
     <div className="relative w-full bg-paper-warm overflow-x-hidden selection:bg-brand-primary selection:text-white">
       {/* Chapter 01: Arrival (Geographic Window Zoom to Fullscreen) */}
       <ArrivalHero />
+
+      <FounderTravelsSection />
 
       {/* Chapter 02: Complete Discover Journey Connected by Continuous Chapter-Level Line */}
       <Chapter02Discover />
