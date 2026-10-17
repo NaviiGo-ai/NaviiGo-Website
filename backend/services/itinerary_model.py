@@ -14,6 +14,7 @@ from services.feasibility_validator import (
     repair_itinerary_feasibility,
 )
 from services.pilot_knowledge import prepare_destination, annotate_itinerary
+from services.pilgrimage_intent import with_pilgrimage_anchor
 
 
 # ─── Purpose → tag affinity weights ──────────────────────────────────────────
@@ -797,6 +798,9 @@ def generate_itinerary(ctx: dict, dest_data: dict) -> Optional[dict]:
 
     scored_attractions.sort(key=lambda a: a["score"], reverse=True)
     scored_attractions, flagged_attractions = _geo_filter_and_snap(scored_attractions, map_center)
+    # The pilgrimage's main visit must not disappear during spatial clustering.
+    # Only pin a real, geo-accepted candidate that survived user exclusions.
+    ctx = with_pilgrimage_anchor(ctx, scored_attractions)
 
     # Day-of-week filtering
     start_date = ctx.get("startDate", "")

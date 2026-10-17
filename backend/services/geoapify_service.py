@@ -6,6 +6,7 @@ import os
 import re
 import math
 import asyncio
+import unicodedata
 from typing import Optional, Dict, Any, List
 import httpx
 from services.itinerary_engine import get_pool_requirements, DEST_DATA_VERSION
@@ -63,6 +64,15 @@ async def geocode_destination(dest_name: str) -> Optional[Dict[str, Any]]:
         return None
 
     clean_name = dest_name.strip()
+    # Disambiguate the app registry's pilgrimage cities, especially Dwarka
+    # (Gujarat) versus the Delhi neighbourhood. Explicit qualified queries stay.
+    clean_name = {
+        'ujjain': 'Ujjain, Madhya Pradesh',
+        'varanasi': 'Varanasi, Uttar Pradesh',
+        'mathura': 'Mathura, Uttar Pradesh',
+        'dwarka': 'Dwarka, Gujarat',
+        'puri': 'Puri, Odisha',
+    }.get(clean_name.casefold(), clean_name)
     if not is_geoapify_configured():
         # Fallback to OpenStreetMap Nominatim for geocoding if Geoapify key is missing
         try:
@@ -213,6 +223,8 @@ def _infer_highlight_category(categories: List[str], rank: Optional[Dict[str, An
     """
     cat_set = set(categories)
 
+    if "religion" in cat_set or any(c.startswith("religion.") for c in categories):
+        return "religious"
     if "heritage.unesco" in cat_set or "tourism.attraction" in cat_set:
         return "attraction"
     if "activity" in cat_set or "entertainment" in cat_set or "leisure.park" in cat_set:
@@ -234,6 +246,11 @@ def _infer_dining_category(categories: List[str]) -> str:
     return "casual"
 
 
+def _place_name_key(name: str) -> str:
+    return ''.join(c for c in unicodedata.normalize('NFC', name).casefold()
+                   if unicodedata.category(c)[0] in {'L', 'M', 'N'})
+
+
 def normalize_geoapify_place(feature: Dict[str, Any], place_type: str = "highlight", idx: int = 0) -> Optional[Dict[str, Any]]:
     """
     Normalize a raw Geoapify feature into NaviiGo's truthful POI candidate schema.
@@ -247,11 +264,17 @@ def normalize_geoapify_place(feature: Dict[str, Any], place_type: str = "highlig
     geometry = feature.get("geometry", {})
     coords = geometry.get("coordinates", [None, None])
 
-    raw_name = props.get("name") or props.get("address_line1") or props.get("formatted")
+    # An address is not a named venue, hotel or dining recommendation.
+    raw_name = props.get("name")
     if not raw_name or len(raw_name.strip()) < 2:
         return None
 
     name = raw_name.strip()
+    if place_type == "highlight" and (
+        name.casefold() in {"religious monuments", "tourist attraction", "monument", "statue", "ghats"}
+        or re.fullmatch(r"(?:NH|SH|AH)\s*\d+[A-Z]?", name, re.IGNORECASE)
+    ):
+        return None
     # Reject raw house numbers or generic addresses as place names
     if re.match(r'^\d+[\w\s,-]*$', name) and not any(c.isalpha() for c in name):
         return None
@@ -269,6 +292,10 @@ def normalize_geoapify_place(feature: Dict[str, Any], place_type: str = "highlig
 
     # Clean tags from categories
     tags = [c.split(".")[-1].capitalize() for c in categories if "." in c][:4]
+    if "religion" in categories or any(c.startswith("religion.") for c in categories):
+        # Translate provider taxonomy into the existing scorer's vocabulary.
+        # No scoring weights or user preferences change here.
+        tags = list(dict.fromkeys(["Spiritual", *tags]))
 
     if place_type == "highlight":
         category = _infer_highlight_category(categories, rank, idx)
@@ -413,8 +440,12 @@ async def build_destination_candidate_pool(
     rest_task = fetch_places_candidates(lat, lng, CATEGORY_MAPPINGS["restaurants"], limit=max(reqs["restaurants"] + 10, 25))
     hotel_task = fetch_places_candidates(lat, lng, CATEGORY_MAPPINGS["hotels"], limit=max(reqs["hotels"] + 5, 15))
 
-    hl_features, rest_features, hotel_features = await asyncio.gather(
-        hl_task, rest_task, hotel_task, return_exceptions=True
+    spiritual = purpose in {"spiritual", "sacred"}
+    # A broad mixed-category page can be filled entirely by nearby parks and
+    # artworks. Reserve a separate provider query for the requested intent.
+    faith_task = fetch_places_candidates(lat, lng, ["religion.place_of_worship"], limit=40) if spiritual else asyncio.sleep(0, result=[])
+    hl_features, rest_features, hotel_features, faith_features = await asyncio.gather(
+        hl_task, rest_task, hotel_task, faith_task, return_exceptions=True
     )
 
     if isinstance(hl_features, Exception):
@@ -426,6 +457,12 @@ async def build_destination_candidate_pool(
     if isinstance(hotel_features, Exception):
         print(f"[Geoapify Pool] Hotel fetch exception: {hotel_features}")
         hotel_features = []
+    if isinstance(faith_features, Exception):
+        faith_features = []
+    if spiritual and not faith_features:
+        # Do not silently label an unrelated sightseeing pool a pilgrimage.
+        return None
+    hl_features = faith_features + hl_features
 
     # Normalize highlights and deduplicate by normalized name
     seen_hl = set()
@@ -433,7 +470,7 @@ async def build_destination_candidate_pool(
     for idx, f in enumerate(hl_features):
         item = normalize_geoapify_place(f, "highlight", idx)
         if item and item["name"]:
-            norm_k = re.sub(r'[^a-z0-9]+', '', item["name"].lower())
+            norm_k = _place_name_key(item["name"])
             if norm_k not in seen_hl:
                 seen_hl.add(norm_k)
                 highlights.append(item)
@@ -444,7 +481,7 @@ async def build_destination_candidate_pool(
     for idx, f in enumerate(rest_features):
         item = normalize_geoapify_place(f, "restaurant", idx)
         if item and item["name"]:
-            norm_k = re.sub(r'[^a-z0-9]+', '', item["name"].lower())
+            norm_k = _place_name_key(item["name"])
             if norm_k not in seen_rest:
                 seen_rest.add(norm_k)
                 restaurants.append(item)
@@ -455,7 +492,7 @@ async def build_destination_candidate_pool(
     for idx, f in enumerate(hotel_features):
         item = normalize_geoapify_place(f, "hotel", idx)
         if item and item["name"]:
-            norm_k = re.sub(r'[^a-z0-9]+', '', item["name"].lower())
+            norm_k = _place_name_key(item["name"])
             if norm_k not in seen_hotel:
                 seen_hotel.add(norm_k)
                 hotels.append(item)

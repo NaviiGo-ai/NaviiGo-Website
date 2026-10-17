@@ -19,7 +19,7 @@ from pathlib import Path
 from typing import Optional, Dict, Any, List
 from collections import OrderedDict
 from services.itinerary_engine import fetch_destination_data_with_gemini, DEST_DATA_VERSION, get_pool_requirements
-from services.geoapify_service import build_destination_candidate_pool, is_geoapify_configured
+from services.geoapify_service import build_destination_candidate_pool, is_geoapify_configured, _place_name_key
 
 ENABLE_GEMINI_DESTINATION_FALLBACK = (
     os.getenv("ENABLE_GEMINI_DESTINATION_FALLBACK", "false").lower() == "true"
@@ -329,10 +329,10 @@ def _merge_destination_data(existing: Optional[Dict[str, Any]], fresh: Optional[
     merged["dataSources"] = merged_ds
 
     # Merge highlights deduplicating by normalized name
-    hl_map = {re.sub(r'[^a-z0-9]+', '', h.get('name', '').lower()): h for h in existing.get("highlights", []) if isinstance(h, dict) and h.get("name")}
+    hl_map = {_place_name_key(h['name']): h for h in existing.get("highlights", []) if isinstance(h, dict) and h.get("name")}
     for h in fresh.get("highlights", []):
         if isinstance(h, dict) and h.get("name"):
-            norm_name = re.sub(r'[^a-z0-9]+', '', h["name"].lower())
+            norm_name = _place_name_key(h["name"])
             if norm_name not in hl_map:
                 hl_map[norm_name] = h
             else:
@@ -341,10 +341,10 @@ def _merge_destination_data(existing: Optional[Dict[str, Any]], fresh: Optional[
     merged["highlights"] = list(hl_map.values())
 
     # Merge restaurants deduplicating by normalized name
-    rest_map = {re.sub(r'[^a-z0-9]+', '', r.get('name', '').lower()): r for r in existing.get("restaurants", []) if isinstance(r, dict) and r.get("name")}
+    rest_map = {_place_name_key(r['name']): r for r in existing.get("restaurants", []) if isinstance(r, dict) and r.get("name")}
     for r in fresh.get("restaurants", []):
         if isinstance(r, dict) and r.get("name"):
-            norm_name = re.sub(r'[^a-z0-9]+', '', r["name"].lower())
+            norm_name = _place_name_key(r["name"])
             if norm_name not in rest_map:
                 rest_map[norm_name] = r
             else:
@@ -352,10 +352,10 @@ def _merge_destination_data(existing: Optional[Dict[str, Any]], fresh: Optional[
     merged["restaurants"] = list(rest_map.values())
 
     # Merge hotels deduplicating by normalized name
-    hotel_map = {re.sub(r'[^a-z0-9]+', '', h.get('name', '').lower()): h for h in existing.get("hotels", []) if isinstance(h, dict) and h.get("name")}
+    hotel_map = {_place_name_key(h['name']): h for h in existing.get("hotels", []) if isinstance(h, dict) and h.get("name")}
     for h in fresh.get("hotels", []):
         if isinstance(h, dict) and h.get("name"):
-            norm_name = re.sub(r'[^a-z0-9]+', '', h["name"].lower())
+            norm_name = _place_name_key(h["name"])
             if norm_name not in hotel_map:
                 hotel_map[norm_name] = h
             else:
@@ -421,6 +421,11 @@ async def get_destination_data(
     duration, it is enriched so multi-day itineraries never suffer from starvation.
     """
     key = _normalize_key(dest_name)
+    if purpose in {"spiritual", "sacred"}:
+        # Existing generic pools may contain no places of worship at all.
+        # Keep the intent-specific, provider-backed pool separate, including
+        # on disk and after a restart. Do not reuse an old generic cache hit.
+        key += "_spiritual_v2"
     reqs = get_pool_requirements(days)
     crit_hl = max(10, days * 3)
     crit_rest = max(4, days * 2)

@@ -360,7 +360,7 @@ async def generate(payload: ItineraryRequest, request: Request, authenticated_us
         print(f"[Itinerary] Fetching data for \"{dest_name}\" (cache-first)...")
         gemini_data = await get_destination_data(
             dest_name=dest_name,
-            purpose=payload.purpose,
+            purpose=resolved_purpose,
             budget=budget,
             days=days,
         )
