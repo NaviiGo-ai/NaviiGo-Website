@@ -138,7 +138,7 @@ export default function RememberMemoryField() {
           </div>
           <div className="md:col-span-4">
             <p className="font-sans text-sm md:text-base text-naviigo-text/75 leading-relaxed">
-              Coordinates, timestamps, and unspoken observations. Keep the memory intact, making the next departure lighter and more intuitive.
+              Keep the moments that matter. The cards below illustrate a travel journal; they are examples, not recorded customer journeys or founder field reports.
             </p>
           </div>
         </div>
@@ -183,7 +183,7 @@ export default function RememberMemoryField() {
 
                   <div className="mt-3 pt-2.5 border-t border-naviigo-brown/10 flex items-center justify-between text-[10px] font-mono text-naviigo-text/50">
                     <span>{item.coordinates}</span>
-                    <span className="text-naviigo-orange font-semibold">JOURNEY SAVED</span>
+                    <span className="text-naviigo-orange font-semibold">JOURNAL EXAMPLE</span>
                   </div>
                 </div>
               </div>

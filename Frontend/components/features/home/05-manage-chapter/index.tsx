@@ -67,7 +67,7 @@ export default function ManageChapter() {
           </div>
           <div className="md:col-span-4">
             <p className="font-sans text-sm md:text-base text-naviigo-text/75 leading-relaxed">
-              Active schedules, confirmed transport, shared expenses, and sanctuary check-ins in one calm, glanceable companion.
+              Keep your saved schedule and recorded booking references close at hand. Confirm transport, accommodation and changes directly with the provider.
             </p>
           </div>
         </div>
@@ -80,19 +80,19 @@ export default function ManageChapter() {
             </div>
             <div>
               <div className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-wider text-naviigo-teal font-semibold">
-                <span>SPECIMEN TELEMETRY</span>
+                <span>JOURNEY WORKSPACE</span>
                 <span>•</span>
-                <span>EN ROUTE TRANSIT CORRIDOR</span>
+                <span>ILLUSTRATIVE PRODUCT VIEW</span>
               </div>
               <div className="text-sm sm:text-base font-display font-bold text-naviigo-brown">
-                Corridor Telemetry Preview • Real-Time Gate, Transit & Acclimation Sync
+                Your plan, practical notes and booking references in context
               </div>
             </div>
           </div>
 
           <div className="flex items-center gap-4 text-xs font-mono text-naviigo-text/60">
-            <span>LIVE DISPATCH FEED</span>
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span>CHECK CURRENT DETAILS</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-naviigo-teal" />
           </div>
         </div>
 
@@ -109,17 +109,17 @@ export default function ManageChapter() {
                 <Clock className="w-3.5 h-3.5 text-naviigo-orange" />
               </div>
               <h3 className="font-display font-bold text-xl text-naviigo-brown mt-3">
-                Altitude Acclimatization Brief
+                Room for the Unexpected
               </h3>
               <p className="font-sans text-xs text-naviigo-text/70 mt-1 leading-relaxed">
-                Expedition schedules adapt automatically to daylight, mountain road buffers, and local guide rendezvous.
+                Review the next part of your plan and leave time for transfers, rest and changes. Confirm current conditions before setting out.
               </p>
             </div>
 
             <div className="mt-6 pt-4 border-t border-naviigo-brown/5 flex items-center justify-between text-xs font-mono text-naviigo-text/60">
-              <span>SYSTEM ADAPTIVE PACE</span>
+              <span>JOURNEY PREPARATION</span>
               <span className="text-naviigo-orange font-semibold flex items-center gap-1">
-                <Check className="w-3.5 h-3.5" /> AUTOMATED
+                <Check className="w-3.5 h-3.5" /> REVIEW YOUR PLAN
               </span>
             </div>
           </div>
@@ -132,18 +132,18 @@ export default function ManageChapter() {
                 <Calendar className="w-3.5 h-3.5 text-naviigo-teal" />
               </div>
               <h3 className="font-display font-bold text-xl text-naviigo-brown mt-3">
-                Offline Document Wallet
+                Booking References
               </h3>
               <p className="font-sans text-xs text-naviigo-text/70 mt-1 leading-relaxed">
-                Every verified booking, heritage estate key, and transport voucher cached locally for remote mountain zones.
+                Review recorded booking details in one place. Keep provider confirmations separately and load important information before you travel offline.
               </p>
             </div>
 
             <div className="mt-6 pt-4 border-t border-naviigo-brown/5 flex items-center justify-between text-xs font-mono text-naviigo-text/60">
               <span className="flex items-center gap-1">
-                <Luggage className="w-3.5 h-3.5" /> OFFLINE ACCESS
+                <Luggage className="w-3.5 h-3.5" /> KEEP CONFIRMATIONS
               </span>
-              <span className="text-naviigo-teal font-semibold">VERIFIED</span>
+              <span className="text-naviigo-teal font-semibold">CHECK WITH PROVIDER</span>
             </div>
           </div>
 
@@ -151,23 +151,23 @@ export default function ManageChapter() {
           <div className="bg-paper-light border border-naviigo-brown/10 rounded-2xl p-6 sm:p-7 shadow-sm flex flex-col justify-between">
             <div>
               <div className="flex items-center justify-between pb-3 border-b border-naviigo-brown/10 font-mono text-[10px] text-naviigo-text/50 uppercase tracking-wider">
-                <span>03 / SHARED EXPENSES</span>
+                <span>03 / ACCOUNT HISTORY</span>
                 <Users className="w-3.5 h-3.5 text-naviigo-yellow" />
               </div>
               <h3 className="font-display font-bold text-xl text-naviigo-brown mt-3">
-                Transparent Group Ledgers
+                A Clearer Travel Record
               </h3>
               <p className="font-sans text-xs text-naviigo-text/70 mt-1 leading-relaxed">
-                4x4 transport, permits, fuel, and shared meals reconciled continuously with zero post-trip spreadsheet friction.
+                View recorded bookings and supported account activity. Payment, refund and provider status must be confirmed before you rely on them.
               </p>
             </div>
 
             <div className="mt-6 pt-4 border-t border-naviigo-brown/5 flex items-center justify-between text-xs font-mono text-naviigo-text/60">
               <span className="flex items-center gap-1">
-                <CreditCard className="w-3.5 h-3.5" /> MULTI-CURRENCY
+                <CreditCard className="w-3.5 h-3.5" /> ACCOUNT RECORDS
               </span>
               <span className="text-emerald-600 font-semibold flex items-center gap-1">
-                <ShieldCheck className="w-3.5 h-3.5" /> REALTIME
+                <ShieldCheck className="w-3.5 h-3.5" /> REVIEW STATUS
               </span>
             </div>
           </div>

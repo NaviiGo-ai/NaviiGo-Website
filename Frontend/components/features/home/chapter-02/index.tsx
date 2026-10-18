@@ -23,16 +23,16 @@ const ROUTES: RouteCard[] = [
     name: 'LADAKH',
     category: 'END-TO-END EXPEDITION MANAGEMENT',
     region: 'High Himalayas · 3,500m Plateau',
-    narrative: 'Where winds carve red sandstone and high-altitude monasteries keep pace with centuries. Flights, transfers, itineraries — handled seamlessly.',
+    narrative: 'Where high-altitude monasteries keep pace with centuries. Bring route ideas, transfer questions and your journey plan together; confirm bookings with each provider.',
     primaryImage: '/api/places/photo?name=Nubra+Valley&city=Ladakh&w=1400&redirect=true',
   },
   {
     number: '02',
     badge: 2,
     name: 'VARANASI',
-    category: '24/7 CLIENT ASSISTANCE',
+    category: 'GUIDANCE THROUGH THE JOURNEY',
     region: 'Sacred River Bend · Uttar Pradesh',
-    narrative: 'Dawn oars cutting through river mist. The oldest continuous human ritual in motion, with real people always reachable.',
+    narrative: 'Dawn oars cutting through river mist. Prepare your visits, keep your plan accessible and know what to recheck when circumstances change. Human support availability is confirmed separately.',
     primaryImage: '/api/places/photo?name=Dashashwamedh+Ghat&city=Varanasi&w=1600&redirect=true',
   },
   {
@@ -50,7 +50,7 @@ const ROUTES: RouteCard[] = [
     name: 'UDAIPUR',
     category: 'UNFILTERED DISCOVERY',
     region: 'Lake Pichola · Mewar Heritage',
-    narrative: 'Sun-drenched marble courtyards, private boat access, and living royal traditions preserved in quiet stillness.',
+    narrative: 'Sun-drenched marble courtyards, lake views, and living royal traditions. Confirm access and boat arrangements directly with the operator.',
     primaryImage: '/api/places/photo?name=Lake+Pichola&city=Udaipur&w=1600&redirect=true',
   },
 ];
@@ -151,7 +151,7 @@ export default function Chapter02Discover() {
           <span className="font-semibold text-naviigo-brown">EVERY JOURNEY</span>
         </h2>
         <p className="mt-5 font-sans text-base sm:text-lg text-naviigo-brown/70 font-light leading-relaxed max-w-xl mx-auto">
-          We travel the routes before proposing them. Every destination is selected for character, rhythm, and quiet authenticity.
+          Discover places with character, prepare the practical details and keep the journey together. Founder Travels will share what we learn in the field.
         </p>
       </div>
 

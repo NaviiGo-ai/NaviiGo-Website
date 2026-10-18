@@ -82,12 +82,30 @@ def test_provider_backed_main_visit_is_reserved_without_inventing_a_place(city,n
     assert with_pilgrimage_anchor(ctx,[]) is ctx
 
 
-def test_generation_keeps_main_visit_in_first_day_after_spatial_clustering():
+def test_generation_keeps_main_visit_after_late_arrival_and_spatial_clustering():
     name='श्री महाकालेश्वर ज्योतिर्लिंग'
     highlights=[geo.normalize_geoapify_place(feature(f'Temple {i}')) for i in range(18)]
     highlights.append(geo.normalize_geoapify_place(feature(name)))
     ctx={'destName':'Ujjain','purpose':'spiritual','days':2,'budget':10000,'group':'solo','travelerType':'comfort','arrivalTime':'afternoon'}
     result=generate_itinerary(ctx,{'mapCenter':{'lat':23.18,'lng':75.77},'highlights':highlights,'restaurants':[],'hotels':[]})
-    assert name in [a['name'] for a in result['dayPlans'][0]['activities']]
+    assert name in [a['name'] for a in result['dayPlans'][1]['activities']]
     excluded=generate_itinerary({**ctx,'visitedPlaces':[name]}, {'mapCenter':{'lat':23.18,'lng':75.77},'highlights':highlights,'restaurants':[],'hotels':[]})
     assert name not in [a['name'] for day in excluded['dayPlans'] for a in day['activities']]
+
+
+def test_canonical_dwarka_visit_uses_next_full_day_and_preserves_user_pins():
+    ctx={'destName':'Dwarka','purpose':'spiritual','days':3,'arrivalTime':'afternoon','mustDo':[]}
+    candidates=[{'name':'Dwarkadish temple','category':'religious'},{'name':'Shree Dwarkadhish Temple','category':'religious'}]
+    result=with_pilgrimage_anchor(ctx,candidates)
+    assert result['mustDo']==[{'name':'Shree Dwarkadhish Temple','dayIndex':1}]
+    explicit={**ctx,'mustDo':[{'name':'Shree Dwarkadhish Temple','dayIndex':2}]}
+    assert with_pilgrimage_anchor(explicit,candidates) is explicit
+
+
+def test_repair_does_not_move_afternoon_arrival_or_late_checkout_earlier():
+    from services.feasibility_validator import repair_itinerary_feasibility
+    plan={'dayPlans':[{'activities':[{'name':'Check-in at stay','type':'hotel','time':'02:00 PM','durationMins':45}]},
+                      {'activities':[{'name':'Checkout from stay','type':'hotel','time':'11:00 AM','durationMins':30}]}]}
+    result=repair_itinerary_feasibility(plan,{}, {})
+    assert result['dayPlans'][0]['activities'][0]['time']=='02:00 PM'
+    assert result['dayPlans'][1]['activities'][0]['time']=='11:00 AM'

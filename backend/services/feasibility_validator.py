@@ -211,7 +211,10 @@ def repair_itinerary_feasibility(
             continue
 
         repaired_activities: List[Dict[str, Any]] = []
-        clock = 9.0  # Start day at 9:00 AM if not specified
+        # Preserve the generator's arrival/checkout boundary. Restarting every
+        # day at 09:00 could schedule a traveller before their afternoon arrival.
+        first_time = _parse_clock_str(activities[0].get('time'))
+        clock = first_time if first_time is not None else 9.0
 
         for act_idx, act in enumerate(activities):
             name = (act.get("name") or "").strip()
